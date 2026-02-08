@@ -23,6 +23,7 @@ from core.compilers.postman import (
     _extract_body_params,
     _extract_auth_scheme,
     _infer_type,
+    _is_likely_optional,
     _collect_variables,
     _fields_from_dict,
 )
@@ -502,6 +503,54 @@ class TestTokenBenchmark:
 # ═══════════════════════════════════════════════════════════════════
 # CLI integration
 # ═══════════════════════════════════════════════════════════════════
+
+class TestIsLikelyOptional:
+    """Tests for raw JSON body required/optional heuristics."""
+
+    def test_none_is_optional(self):
+        assert _is_likely_optional('field', None) is True
+
+    def test_empty_string_is_optional(self):
+        assert _is_likely_optional('field', '') is True
+        assert _is_likely_optional('field', '  ') is True
+
+    def test_empty_list_is_optional(self):
+        assert _is_likely_optional('field', []) is True
+
+    def test_postman_variable_is_required(self):
+        assert _is_likely_optional('token', '{{auth_token}}') is False
+
+    def test_non_empty_string_is_required(self):
+        assert _is_likely_optional('name', 'hello') is False
+
+    def test_number_is_required(self):
+        assert _is_likely_optional('count', 42) is False
+
+    def test_populated_list_is_required(self):
+        assert _is_likely_optional('ids', [1, 2]) is False
+
+    def test_raw_body_optional_fields(self):
+        """Empty strings and null in raw JSON body should produce optional params."""
+        request = {
+            'body': {
+                'mode': 'raw',
+                'raw': json.dumps({
+                    'channel': '{{channel_id}}',
+                    'thread_ts': '',
+                    'metadata': None,
+                    'tags': [],
+                    'limit': 100,
+                }),
+            }
+        }
+        params = _extract_body_params(request)
+        by_name = {p.name: p for p in params}
+        assert by_name['channel'].required is True
+        assert by_name['thread_ts'].required is False
+        assert by_name['metadata'].required is False
+        assert by_name['tags'].required is False
+        assert by_name['limit'].required is True
+
 
 class TestCLI:
     def test_postman_subcommand(self):

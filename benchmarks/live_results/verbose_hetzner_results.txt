@@ -1,0 +1,19 @@
+TASK 1: curl -X POST -H "Authorization: Bearer YOUR_API_TOKEN" -H "Content-Type: application/json" -d '{"name":"web-fw","rules":[{"direction":"in","protocol":"tcp","port":"443","source_ips":["0.0.0.0/0","::/0"]}]}' https://api.hetzner.cloud/v1/firewalls
+
+TASK 2: curl -H "Authorization: Bearer YOUR_API_TOKEN" https://api.hetzner.cloud/v1/servers?label_selector=env=production
+
+TASK 3: curl -X POST -H "Authorization: Bearer YOUR_API_TOKEN" -H "Content-Type: application/json" -d '{"name":"server-1","server_type":"cx21","datacenter":"fsn1-dc14","image":"ubuntu-22.04"}' https://api.hetzner.cloud/v1/servers
+
+TASK 4: curl -X POST -H "Authorization: Bearer YOUR_API_TOKEN" -H "Content-Type: application/json" -d '{"server":67890}' https://api.hetzner.cloud/v1/floating_ips/12345/actions/assign
+
+TASK 5: curl -X POST -H "Authorization: Bearer YOUR_API_TOKEN" -H "Content-Type: application/json" -d '{"name":"deploy-key","public_key":"ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC..."}' https://api.hetzner.cloud/v1/ssh_keys
+
+TASK 6: curl -H "Authorization: Bearer YOUR_API_TOKEN" https://api.hetzner.cloud/v1/servers/99999/actions
+
+TASK 7: curl -X POST -H "Authorization: Bearer YOUR_API_TOKEN" -H "Content-Type: application/json" -d '{"name":"web-lb","load_balancer_type":"lb11","location":"fsn1"}' https://api.hetzner.cloud/v1/load_balancers
+
+TASK 8: curl -X DELETE -H "Authorization: Bearer YOUR_API_TOKEN" https://api.hetzner.cloud/v1/firewalls/54321
+
+TASK 9: curl -X PUT -H "Authorization: Bearer YOUR_API_TOKEN" -H "Content-Type: application/json" -d '{"name":"new-server-name","labels":{"env":"production","app":"web"}}' https://api.hetzner.cloud/v1/servers/67890
+
+TASK 10: curl -H "Authorization: Bearer YOUR_API_TOKEN" https://api.hetzner.cloud/v1/datacenters/fsn1-dc14

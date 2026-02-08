@@ -1,0 +1,10 @@
+TASK 1: curl -X POST https://api.hetzner.cloud/v1/firewalls -H "Content-Type: application/json" -d '{"name":"web-fw","rules":[{"direction":"in","protocol":"tcp","port":"443","source_ips":["0.0.0.0/0","::/0"]}]}'
+TASK 2: curl -X GET "https://api.hetzner.cloud/v1/servers?label_selector=env=production"
+TASK 3: curl -X POST https://api.hetzner.cloud/v1/servers -H "Content-Type: application/json" -d '{"name":"server-name","server_type":"cx21","image":"ubuntu-22.04","datacenter":"fsn1-dc14"}'
+TASK 4: curl -X POST https://api.hetzner.cloud/v1/floating_ips/12345/actions/assign -H "Content-Type: application/json" -d '{"server":67890}'
+TASK 5: curl -X POST https://api.hetzner.cloud/v1/ssh_keys -H "Content-Type: application/json" -d '{"name":"deploy-key","public_key":"ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC..."}'
+TASK 6: curl -X GET https://api.hetzner.cloud/v1/servers/99999/actions
+TASK 7: curl -X POST https://api.hetzner.cloud/v1/load_balancers -H "Content-Type: application/json" -d '{"name":"web-lb","load_balancer_type":"lb11","algorithm":{"type":"round_robin"}}'
+TASK 8: curl -X DELETE https://api.hetzner.cloud/v1/firewalls/54321
+TASK 9: curl -X PUT https://api.hetzner.cloud/v1/servers/67890 -H "Content-Type: application/json" -d '{"name":"new-server-name","labels":{"key":"value"}}'
+TASK 10: curl -X GET https://api.hetzner.cloud/v1/datacenters/fsn1-dc14
