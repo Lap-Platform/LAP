@@ -1,0 +1,145 @@
+asyncapi: 2.6.0
+info:
+  title: IoT Sensor Network
+  version: 1.0.0
+  description: MQTT-based IoT sensor data collection and device control
+
+servers:
+  production:
+    url: mqtt://iot.example.com:1883
+    protocol: mqtt
+
+channels:
+  sensors/{sensorId}/telemetry:
+    parameters:
+      sensorId:
+        description: Unique sensor identifier
+        schema:
+          type: string
+    subscribe:
+      summary: Receive sensor telemetry data
+      message:
+        name: SensorReading
+        summary: Periodic sensor reading
+        headers:
+          type: object
+          properties:
+            correlationId:
+              type: string
+              description: Correlation ID for tracking
+        payload:
+          type: object
+          required:
+            - sensorId
+            - timestamp
+            - temperature
+          properties:
+            sensorId:
+              type: string
+              description: Sensor identifier
+            timestamp:
+              type: string
+              format: date-time
+              description: Reading timestamp
+            temperature:
+              type: number
+              format: float
+              description: Temperature in Celsius
+            humidity:
+              type: number
+              format: float
+              description: Relative humidity percentage
+            pressure:
+              type: number
+              format: float
+              description: Atmospheric pressure in hPa
+            battery:
+              type: integer
+              description: Battery level percentage
+      bindings:
+        mqtt:
+          qos: 1
+          retain: false
+
+  sensors/{sensorId}/commands:
+    parameters:
+      sensorId:
+        schema:
+          type: string
+    publish:
+      summary: Send command to sensor
+      message:
+        name: SensorCommand
+        payload:
+          type: object
+          required:
+            - command
+          properties:
+            command:
+              type: string
+              enum:
+                - reboot
+                - calibrate
+                - sleep
+                - wake
+              description: Command to execute
+            parameters:
+              type: object
+              description: Command-specific parameters
+      bindings:
+        mqtt:
+          qos: 2
+          retain: true
+
+  devices/status:
+    subscribe:
+      summary: Device online/offline status
+      message:
+        name: DeviceStatus
+        payload:
+          type: object
+          required:
+            - deviceId
+            - status
+          properties:
+            deviceId:
+              type: string
+            status:
+              type: string
+              enum:
+                - online
+                - offline
+                - error
+            lastSeen:
+              type: string
+              format: date-time
+            firmware:
+              type: string
+
+  alerts/critical:
+    subscribe:
+      summary: Critical system alerts
+      message:
+        name: CriticalAlert
+        payload:
+          type: object
+          required:
+            - alertId
+            - severity
+            - message
+          properties:
+            alertId:
+              type: string
+            severity:
+              type: string
+              enum:
+                - warning
+                - critical
+                - emergency
+            message:
+              type: string
+            source:
+              type: string
+            timestamp:
+              type: string
+              format: date-time

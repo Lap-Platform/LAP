@@ -1,0 +1,13 @@
+TASK 1: grpcurl -d '{"id": "user-123"}' grpc://user.v1 UserService/GetUser
+TASK 2: grpcurl -d '{"email": "john@example.com", "display_name": "John Doe", "role": "VIEWER"}' grpc://user.v1 UserService/CreateUser
+TASK 3: grpcurl -d '{"id": "user-123", "email": "newemail@example.com"}' grpc://user.v1 UserService/UpdateUser
+TASK 4: grpcurl -d '{"id": "user-456"}' grpc://user.v1 UserService/DeleteUser
+TASK 5: grpcurl -d '{"page_size": 20, "page_token": "token_value"}' grpc://user.v1 UserService/ListUsers
+TASK 6: grpcurl -d @ grpc://user.v1 UserService/BulkImportUsers <<EOF
+{"email": "user1@example.com", "display_name": "User One", "role": "VIEWER"}
+{"email": "user2@example.com", "display_name": "User Two", "role": "EDITOR"}
+EOF
+TASK 7: grpcurl -d '{"email": "john@example.com", "display_name": "John Doe", "role": "VIEWER", "metadata": {"phone": "555-1234"}}' grpc://user.v1 UserService/CreateUser
+TASK 8: grpcurl -d '{"id": "user-789", "display_name": "New Name"}' grpc://user.v1 UserService/UpdateUser
+TASK 9: grpcurl -d '{"id": "user-999"}' grpc://user.v1 UserService/GetUser
+TASK 10: grpcurl -d '{"page_size": 50, "filter": "created_at > 1609459200"}' grpc://user.v1 UserService/ListUsers

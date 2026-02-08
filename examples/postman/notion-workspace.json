@@ -1,0 +1,211 @@
+{
+  "info": {
+    "name": "Notion API",
+    "_postman_id": "notion-001",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://api.notion.com/v1"
+    }
+  ],
+  "item": [
+    {
+      "name": "Search",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/search",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "search"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"query\": \"meeting notes\", \"filter\": {\"property\": \"object\", \"value\": \"page\"}, \"sort\": {\"direction\": \"descending\", \"timestamp\": \"last_edited_time\"}}"
+        },
+        "header": [
+          {
+            "key": "Notion-Version",
+            "value": "2022-06-28",
+            "description": "API version"
+          }
+        ]
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"results\": [{\"id\": \"page1\", \"object\": \"page\", \"properties\": {}}], \"has_more\": false}"
+        }
+      ]
+    },
+    {
+      "name": "Get Page",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/pages/:pageId",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "pages",
+            ":pageId"
+          ],
+          "variable": [
+            {
+              "key": "pageId",
+              "value": "page1"
+            }
+          ]
+        },
+        "header": [
+          {
+            "key": "Notion-Version",
+            "value": "2022-06-28",
+            "description": ""
+          }
+        ]
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"id\": \"page1\", \"object\": \"page\", \"created_time\": \"2024-01-01T00:00:00Z\"}"
+        }
+      ]
+    },
+    {
+      "name": "Create Page",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/pages",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "pages"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"parent\": {\"database_id\": \"db1\"}, \"properties\": {\"Name\": {\"title\": [{\"text\": {\"content\": \"New Page\"}}]}}}"
+        },
+        "header": [
+          {
+            "key": "Notion-Version",
+            "value": "2022-06-28",
+            "description": ""
+          }
+        ]
+      },
+      "response": [
+        {
+          "name": "Created",
+          "code": 200,
+          "body": "{\"id\": \"page2\", \"object\": \"page\"}"
+        }
+      ]
+    },
+    {
+      "name": "Query Database",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/databases/:databaseId/query",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "databases",
+            ":databaseId",
+            "query"
+          ],
+          "variable": [
+            {
+              "key": "databaseId",
+              "value": "db1"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"filter\": {\"property\": \"Status\", \"select\": {\"equals\": \"Done\"}}, \"page_size\": 100}"
+        },
+        "header": [
+          {
+            "key": "Notion-Version",
+            "value": "2022-06-28",
+            "description": ""
+          }
+        ]
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"results\": [], \"has_more\": false}"
+        }
+      ]
+    },
+    {
+      "name": "Get Block Children",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/blocks/:blockId/children",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "blocks",
+            ":blockId",
+            "children"
+          ],
+          "query": [
+            {
+              "key": "page_size",
+              "value": "100",
+              "description": ""
+            }
+          ],
+          "variable": [
+            {
+              "key": "blockId",
+              "value": "page1"
+            }
+          ]
+        },
+        "header": [
+          {
+            "key": "Notion-Version",
+            "value": "2022-06-28",
+            "description": ""
+          }
+        ]
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"results\": [{\"id\": \"b1\", \"type\": \"paragraph\", \"paragraph\": {\"text\": []}}]}"
+        }
+      ]
+    }
+  ]
+}

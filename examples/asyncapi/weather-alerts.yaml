@@ -1,0 +1,82 @@
+asyncapi: 2.6.0
+info:
+  title: Weather Alert System
+  version: 1.0.0
+  description: Real-time weather alerts and forecasts
+
+servers:
+  production:
+    url: wss://weather.alerts.example.com
+    protocol: ws
+
+channels:
+  alerts/{region}:
+    parameters:
+      region:
+        schema: {type: string}
+    subscribe:
+      summary: Weather alert
+      message:
+        name: WeatherAlert
+        payload:
+          type: object
+          required: [alertId, type, severity, region]
+          properties:
+            alertId: {type: string}
+            type: {type: string, enum: [tornado, hurricane, flood, blizzard, heat, thunderstorm, fog, wind]}
+            severity: {type: string, enum: [advisory, watch, warning, emergency]}
+            region: {type: string}
+            headline: {type: string}
+            description: {type: string}
+            onset: {type: string, format: date-time}
+            expires: {type: string, format: date-time}
+            affectedZones:
+              type: array
+              items: {type: string}
+
+  forecast/{location}:
+    parameters:
+      location:
+        schema: {type: string}
+    subscribe:
+      summary: Forecast update
+      message:
+        name: ForecastUpdate
+        payload:
+          type: object
+          required: [location, periods]
+          properties:
+            location: {type: string}
+            periods:
+              type: array
+              items:
+                type: object
+                properties:
+                  name: {type: string}
+                  temperature: {type: number}
+                  temperatureUnit: {type: string}
+                  windSpeed: {type: string}
+                  shortForecast: {type: string}
+                  detailedForecast: {type: string}
+
+  conditions/{stationId}:
+    parameters:
+      stationId:
+        schema: {type: string}
+    publish:
+      summary: Current conditions from station
+      message:
+        name: CurrentConditions
+        payload:
+          type: object
+          required: [stationId, temperature, timestamp]
+          properties:
+            stationId: {type: string}
+            temperature: {type: number}
+            humidity: {type: number}
+            pressure: {type: number}
+            windSpeed: {type: number}
+            windDirection: {type: integer}
+            visibility: {type: number}
+            condition: {type: string}
+            timestamp: {type: string, format: date-time}

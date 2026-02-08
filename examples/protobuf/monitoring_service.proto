@@ -1,0 +1,280 @@
+syntax = "proto3";
+
+package monitoring.v1;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/empty.proto";
+
+service MetricsService {
+  rpc WriteMetrics(WriteMetricsRequest) returns (WriteMetricsResponse);
+  rpc QueryMetrics(QueryMetricsRequest) returns (QueryMetricsResponse);
+  rpc QueryRange(QueryRangeRequest) returns (QueryRangeResponse);
+  rpc GetMetricMetadata(GetMetricMetadataRequest) returns (MetricMetadata);
+  rpc ListMetricNames(ListMetricNamesRequest) returns (ListMetricNamesResponse);
+  rpc ListLabelValues(ListLabelValuesRequest) returns (ListLabelValuesResponse);
+}
+
+service AlertService {
+  rpc CreateAlert(CreateAlertRequest) returns (Alert);
+  rpc GetAlert(GetAlertRequest) returns (Alert);
+  rpc UpdateAlert(UpdateAlertRequest) returns (Alert);
+  rpc DeleteAlert(DeleteAlertRequest) returns (google.protobuf.Empty);
+  rpc ListAlerts(ListAlertsRequest) returns (ListAlertsResponse);
+  rpc EvaluateAlert(EvaluateAlertRequest) returns (EvaluateAlertResponse);
+}
+
+service HealthCheckService {
+  rpc Check(HealthCheckRequest) returns (HealthCheckResponse);
+  rpc Watch(HealthCheckRequest) returns (stream HealthCheckResponse);
+  rpc RegisterService(RegisterServiceRequest) returns (google.protobuf.Empty);
+  rpc UnregisterService(UnregisterServiceRequest) returns (google.protobuf.Empty);
+}
+
+message TimeSeries {
+  repeated Label labels = 1;
+  repeated Sample samples = 2;
+}
+
+message Label {
+  string name = 1;
+  string value = 2;
+}
+
+message Sample {
+  google.protobuf.Timestamp timestamp = 1;
+  double value = 2;
+}
+
+message WriteMetricsRequest {
+  repeated TimeSeries timeseries = 1;
+  map<string, string> metadata = 2;
+}
+
+message WriteMetricsResponse {
+  int32 samples_ingested = 1;
+  repeated WriteError errors = 2;
+}
+
+message WriteError {
+  int32 timeseries_index = 1;
+  string error = 2;
+}
+
+message QueryMetricsRequest {
+  string query = 1;
+  google.protobuf.Timestamp time = 2;
+  google.protobuf.Duration timeout = 3;
+}
+
+message QueryMetricsResponse {
+  ResultType result_type = 1;
+  repeated QueryResult result = 2;
+}
+
+enum ResultType {
+  RESULT_TYPE_UNSPECIFIED = 0;
+  MATRIX = 1;
+  VECTOR = 2;
+  SCALAR = 3;
+  STRING = 4;
+}
+
+message QueryResult {
+  map<string, string> metric = 1;
+  repeated Sample values = 2;
+  Sample value = 3;
+}
+
+message QueryRangeRequest {
+  string query = 1;
+  google.protobuf.Timestamp start = 2;
+  google.protobuf.Timestamp end = 3;
+  google.protobuf.Duration step = 4;
+  google.protobuf.Duration timeout = 5;
+}
+
+message QueryRangeResponse {
+  ResultType result_type = 1;
+  repeated QueryResult result = 2;
+}
+
+message GetMetricMetadataRequest {
+  string metric = 1;
+}
+
+message MetricMetadata {
+  string name = 1;
+  MetricType type = 2;
+  string help = 3;
+  string unit = 4;
+}
+
+enum MetricType {
+  METRIC_TYPE_UNSPECIFIED = 0;
+  COUNTER = 1;
+  GAUGE = 2;
+  HISTOGRAM = 3;
+  SUMMARY = 4;
+}
+
+message ListMetricNamesRequest {
+  google.protobuf.Timestamp start = 1;
+  google.protobuf.Timestamp end = 2;
+}
+
+message ListMetricNamesResponse {
+  repeated string names = 1;
+}
+
+message ListLabelValuesRequest {
+  string label = 1;
+  google.protobuf.Timestamp start = 2;
+  google.protobuf.Timestamp end = 3;
+  repeated string matchers = 4;
+}
+
+message ListLabelValuesResponse {
+  repeated string values = 1;
+}
+
+message Alert {
+  string id = 1;
+  string name = 2;
+  string query = 3;
+  google.protobuf.Duration for_duration = 4;
+  map<string, string> labels = 5;
+  map<string, string> annotations = 6;
+  AlertState state = 7;
+  AlertSeverity severity = 8;
+  repeated AlertCondition conditions = 9;
+  repeated NotificationChannel notification_channels = 10;
+  google.protobuf.Timestamp created_at = 11;
+  google.protobuf.Timestamp updated_at = 12;
+}
+
+enum AlertState {
+  ALERT_STATE_UNSPECIFIED = 0;
+  INACTIVE = 1;
+  PENDING = 2;
+  FIRING = 3;
+}
+
+enum AlertSeverity {
+  SEVERITY_UNSPECIFIED = 0;
+  INFO = 1;
+  WARNING = 2;
+  ERROR = 3;
+  CRITICAL = 4;
+}
+
+message AlertCondition {
+  string metric = 1;
+  ComparisonOperator operator = 2;
+  double threshold = 3;
+  google.protobuf.Duration window = 4;
+}
+
+enum ComparisonOperator {
+  OPERATOR_UNSPECIFIED = 0;
+  GREATER_THAN = 1;
+  GREATER_THAN_OR_EQUAL = 2;
+  LESS_THAN = 3;
+  LESS_THAN_OR_EQUAL = 4;
+  EQUAL = 5;
+  NOT_EQUAL = 6;
+}
+
+message NotificationChannel {
+  string id = 1;
+  ChannelType type = 2;
+  map<string, string> config = 3;
+}
+
+enum ChannelType {
+  CHANNEL_TYPE_UNSPECIFIED = 0;
+  EMAIL = 1;
+  SLACK = 2;
+  PAGERDUTY = 3;
+  WEBHOOK = 4;
+}
+
+message CreateAlertRequest {
+  string name = 1;
+  string query = 2;
+  google.protobuf.Duration for_duration = 3;
+  map<string, string> labels = 4;
+  map<string, string> annotations = 5;
+  AlertSeverity severity = 6;
+  repeated AlertCondition conditions = 7;
+  repeated NotificationChannel notification_channels = 8;
+}
+
+message GetAlertRequest {
+  string id = 1;
+}
+
+message UpdateAlertRequest {
+  string id = 1;
+  string name = 2;
+  string query = 3;
+  google.protobuf.Duration for_duration = 4;
+  map<string, string> labels = 5;
+  map<string, string> annotations = 6;
+  AlertSeverity severity = 7;
+  repeated AlertCondition conditions = 8;
+  repeated NotificationChannel notification_channels = 9;
+}
+
+message DeleteAlertRequest {
+  string id = 1;
+}
+
+message ListAlertsRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+  AlertState state = 3;
+  AlertSeverity severity = 4;
+}
+
+message ListAlertsResponse {
+  repeated Alert alerts = 1;
+  string next_page_token = 2;
+}
+
+message EvaluateAlertRequest {
+  string id = 1;
+}
+
+message EvaluateAlertResponse {
+  bool firing = 1;
+  double value = 2;
+  google.protobuf.Timestamp evaluated_at = 3;
+}
+
+message HealthCheckRequest {
+  string service = 1;
+}
+
+message HealthCheckResponse {
+  ServingStatus status = 1;
+  string message = 2;
+  map<string, string> details = 3;
+}
+
+enum ServingStatus {
+  STATUS_UNSPECIFIED = 0;
+  SERVING = 1;
+  NOT_SERVING = 2;
+  SERVICE_UNKNOWN = 3;
+}
+
+message RegisterServiceRequest {
+  string service = 1;
+  string endpoint = 2;
+  map<string, string> metadata = 3;
+}
+
+message UnregisterServiceRequest {
+  string service = 1;
+}

@@ -1,0 +1,210 @@
+syntax = "proto3";
+
+package buildkite.agent.v1;
+
+// Buildkite Agent API for managing builds, jobs, and artifacts.
+service AgentService {
+  // Register an agent with the server.
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+
+  // Heartbeat to keep the agent alive.
+  rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse);
+
+  // Accept a job for execution.
+  rpc AcceptJob(AcceptJobRequest) returns (AcceptJobResponse);
+
+  // Acquire a job from the queue.
+  rpc AcquireJob(AcquireJobRequest) returns (AcquireJobResponse);
+
+  // Update job status during execution.
+  rpc UpdateJob(UpdateJobRequest) returns (UpdateJobResponse);
+
+  // Stream job logs.
+  rpc StreamLogs(stream LogChunk) returns (StreamLogsResponse);
+
+  // Upload an artifact.
+  rpc UploadArtifact(UploadArtifactRequest) returns (UploadArtifactResponse);
+
+  // Search for artifacts.
+  rpc SearchArtifacts(SearchArtifactsRequest) returns (SearchArtifactsResponse);
+
+  // Get pipeline configuration.
+  rpc GetPipeline(GetPipelineRequest) returns (GetPipelineResponse);
+}
+
+// Agent metadata.
+message AgentMetadata {
+  string name = 1;
+  string version = 2;
+  string hostname = 3;
+  string os = 4;
+  string arch = 5;
+  string machine_id = 6;
+  int32 priority = 7;
+  repeated string tags = 8;
+  map<string, string> meta_data = 9;
+}
+
+message RegisterRequest {
+  string token = 1;
+  AgentMetadata metadata = 2;
+}
+
+message RegisterResponse {
+  string agent_id = 1;
+  string access_token = 2;
+  string endpoint = 3;
+  int32 ping_interval = 4;
+  int32 job_status_interval = 5;
+}
+
+message HeartbeatRequest {
+  string agent_id = 1;
+}
+
+message HeartbeatResponse {
+  int64 sent_at = 1;
+  bool should_disconnect = 2;
+}
+
+// Job definition.
+enum JobState {
+  JOB_STATE_UNSPECIFIED = 0;
+  SCHEDULED = 1;
+  ACCEPTED = 2;
+  ASSIGNED = 3;
+  RUNNING = 4;
+  PASSED = 5;
+  FAILED = 6;
+  BLOCKED = 7;
+  CANCELED = 8;
+  TIMING_OUT = 9;
+  TIMED_OUT = 10;
+}
+
+message Job {
+  string id = 1;
+  string build_id = 2;
+  string pipeline_id = 3;
+  string step_key = 4;
+  string command = 5;
+  map<string, string> env = 6;
+  repeated string agent_query_rules = 7;
+  JobState state = 8;
+  int64 created_at = 9;
+  int64 scheduled_at = 10;
+  int64 started_at = 11;
+  int64 finished_at = 12;
+  int32 exit_status = 13;
+  string signal = 14;
+  string signal_reason = 15;
+  int32 retried_count = 16;
+  bool retry_source = 17;
+}
+
+message AcceptJobRequest {
+  string agent_id = 1;
+  string job_id = 2;
+}
+
+message AcceptJobResponse {
+  Job job = 1;
+}
+
+message AcquireJobRequest {
+  string agent_id = 1;
+}
+
+message AcquireJobResponse {
+  Job job = 1;
+}
+
+message UpdateJobRequest {
+  string job_id = 1;
+  JobState state = 2;
+  int32 exit_status = 3;
+  string signal = 4;
+  string signal_reason = 5;
+  int64 started_at = 6;
+  int64 finished_at = 7;
+  int64 chunks_failed_count = 8;
+}
+
+message UpdateJobResponse {
+  Job job = 1;
+}
+
+message LogChunk {
+  string job_id = 1;
+  int64 sequence = 2;
+  bytes data = 3;
+  int64 offset = 4;
+  int64 size = 5;
+}
+
+message StreamLogsResponse {
+  int64 chunks_received = 1;
+}
+
+message Artifact {
+  string id = 1;
+  string job_id = 2;
+  string path = 3;
+  string absolute_path = 4;
+  string glob_path = 5;
+  string content_type = 6;
+  int64 file_size = 7;
+  string sha1sum = 8;
+  string sha256sum = 9;
+  string url = 10;
+  int64 uploaded_at = 11;
+}
+
+message UploadArtifactRequest {
+  string job_id = 1;
+  Artifact artifact = 2;
+  bytes content = 3;
+}
+
+message UploadArtifactResponse {
+  Artifact artifact = 1;
+}
+
+message SearchArtifactsRequest {
+  string build_id = 1;
+  string query = 2;
+  string step = 3;
+  bool include_retried = 4;
+  int32 page = 5;
+  int32 per_page = 6;
+}
+
+message SearchArtifactsResponse {
+  repeated Artifact artifacts = 1;
+  int32 total_count = 2;
+}
+
+message GetPipelineRequest {
+  string pipeline_id = 1;
+}
+
+message PipelineStep {
+  string key = 1;
+  string label = 2;
+  string command = 3;
+  repeated string agent_query_rules = 4;
+  map<string, string> env = 5;
+  int32 timeout_in_minutes = 6;
+  bool soft_fail = 7;
+  int32 retry_automatic_limit = 8;
+  repeated string depends_on = 9;
+}
+
+message GetPipelineResponse {
+  string id = 1;
+  string name = 2;
+  string slug = 3;
+  string repository = 4;
+  repeated PipelineStep steps = 5;
+  map<string, string> env = 6;
+}

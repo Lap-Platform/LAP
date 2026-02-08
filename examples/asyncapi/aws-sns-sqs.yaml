@@ -1,0 +1,70 @@
+asyncapi: 2.6.0
+info:
+  title: AWS SNS/SQS Notifications
+  version: 1.0.0
+  description: AWS-style pub/sub notification system
+
+servers:
+  production:
+    url: sqs.us-east-1.amazonaws.com
+    protocol: sqs
+
+channels:
+  order-notifications:
+    publish:
+      summary: Publish order notification
+      message:
+        name: OrderNotification
+        payload:
+          type: object
+          required: [Type, MessageId, Message]
+          properties:
+            Type: {type: string, enum: [Notification]}
+            MessageId: {type: string}
+            TopicArn: {type: string}
+            Subject: {type: string}
+            Message: {type: string}
+            Timestamp: {type: string, format: date-time}
+    subscribe:
+      summary: Receive order notification
+      message:
+        name: OrderNotification
+        payload:
+          type: object
+          required: [orderId, status]
+          properties:
+            orderId: {type: string}
+            status: {type: string, enum: [placed, confirmed, shipped, delivered]}
+            customerId: {type: string}
+            totalAmount: {type: number}
+
+  alarm-notifications:
+    subscribe:
+      summary: CloudWatch alarm notification
+      message:
+        name: AlarmNotification
+        payload:
+          type: object
+          required: [AlarmName, NewStateValue]
+          properties:
+            AlarmName: {type: string}
+            AlarmDescription: {type: string}
+            NewStateValue: {type: string, enum: [OK, ALARM, INSUFFICIENT_DATA]}
+            OldStateValue: {type: string}
+            NewStateReason: {type: string}
+            StateChangeTime: {type: string, format: date-time}
+
+  dead-letter-queue:
+    subscribe:
+      summary: Dead letter queue messages
+      message:
+        name: DeadLetterMessage
+        payload:
+          type: object
+          required: [originalMessageId, failureReason]
+          properties:
+            originalMessageId: {type: string}
+            failureReason: {type: string}
+            retryCount: {type: integer}
+            originalPayload: {type: string}
+            failedAt: {type: string, format: date-time}

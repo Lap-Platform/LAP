@@ -1,0 +1,233 @@
+{
+  "info": {
+    "name": "HubSpot CRM API",
+    "_postman_id": "hs-001",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://api.hubapi.com/crm/v3"
+    }
+  ],
+  "item": [
+    {
+      "name": "Contacts",
+      "item": [
+        {
+          "name": "List Contacts",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/objects/contacts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "objects",
+                "contacts"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": ""
+                },
+                {
+                  "key": "properties",
+                  "value": "email,firstname,lastname",
+                  "description": ""
+                },
+                {
+                  "key": "after",
+                  "value": "",
+                  "description": "Cursor"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "OK",
+              "code": 200,
+              "body": "{\"results\": [{\"id\": \"1\", \"properties\": {\"email\": \"john@example.com\", \"firstname\": \"John\"}}], \"paging\": {\"next\": {\"after\": \"2\"}}}"
+            }
+          ]
+        },
+        {
+          "name": "Create Contact",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/objects/contacts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "objects",
+                "contacts"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"properties\": {\"email\": \"new@example.com\", \"firstname\": \"Jane\", \"lastname\": \"Doe\", \"phone\": \"+1234567890\"}}"
+            }
+          },
+          "response": [
+            {
+              "name": "Created",
+              "code": 201,
+              "body": "{\"id\": \"2\", \"properties\": {\"email\": \"new@example.com\"}}"
+            }
+          ]
+        },
+        {
+          "name": "Get Contact",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/objects/contacts/:contactId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "objects",
+                "contacts",
+                ":contactId"
+              ],
+              "query": [
+                {
+                  "key": "properties",
+                  "value": "email,firstname",
+                  "description": ""
+                }
+              ],
+              "variable": [
+                {
+                  "key": "contactId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "OK",
+              "code": 200,
+              "body": "{\"id\": \"1\", \"properties\": {\"email\": \"john@example.com\"}}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Deals",
+      "item": [
+        {
+          "name": "Create Deal",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/objects/deals",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "objects",
+                "deals"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"properties\": {\"dealname\": \"Big Contract\", \"amount\": \"50000\", \"pipeline\": \"default\", \"dealstage\": \"appointmentscheduled\"}}"
+            }
+          },
+          "response": [
+            {
+              "name": "Created",
+              "code": 201,
+              "body": "{\"id\": \"d1\", \"properties\": {\"dealname\": \"Big Contract\"}}"
+            }
+          ]
+        },
+        {
+          "name": "List Deals",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/objects/deals",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "objects",
+                "deals"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": ""
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "OK",
+              "code": 200,
+              "body": "{\"results\": [{\"id\": \"d1\", \"properties\": {\"dealname\": \"Big Contract\", \"amount\": \"50000\"}}]}"
+            }
+          ]
+        },
+        {
+          "name": "Associate Contact",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{baseUrl}}/objects/deals/:dealId/associations/contacts/:contactId/deal_to_contact",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "objects",
+                "deals",
+                ":dealId",
+                "associations",
+                "contacts",
+                ":contactId",
+                "deal_to_contact"
+              ],
+              "variable": [
+                {
+                  "key": "dealId",
+                  "value": "d1"
+                },
+                {
+                  "key": "contactId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "OK",
+              "code": 200,
+              "body": "{}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

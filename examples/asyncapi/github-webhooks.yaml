@@ -1,0 +1,112 @@
+asyncapi: 2.6.0
+info:
+  title: GitHub Webhooks
+  version: 1.0.0
+  description: GitHub repository event webhooks
+
+servers:
+  production:
+    url: https://api.github.com/webhooks
+    protocol: https
+
+channels:
+  push:
+    subscribe:
+      summary: Push event
+      message:
+        name: PushEvent
+        payload:
+          type: object
+          required: [ref, repository, pusher]
+          properties:
+            ref: {type: string, description: "Git ref e.g. refs/heads/main"}
+            before: {type: string}
+            after: {type: string}
+            commits:
+              type: array
+              items:
+                type: object
+                properties:
+                  id: {type: string}
+                  message: {type: string}
+                  author:
+                    type: object
+                    properties:
+                      name: {type: string}
+                      email: {type: string}
+            repository:
+              type: object
+              properties:
+                id: {type: integer}
+                full_name: {type: string}
+            pusher:
+              type: object
+              properties:
+                name: {type: string}
+                email: {type: string}
+
+  pull_request:
+    subscribe:
+      summary: Pull request event
+      message:
+        name: PullRequestEvent
+        payload:
+          type: object
+          required: [action, pull_request]
+          properties:
+            action: {type: string, enum: [opened, closed, synchronize, reopened]}
+            pull_request:
+              type: object
+              properties:
+                id: {type: integer}
+                number: {type: integer}
+                title: {type: string}
+                state: {type: string}
+                merged: {type: boolean}
+                user:
+                  type: object
+                  properties:
+                    login: {type: string}
+
+  issues:
+    subscribe:
+      summary: Issue event
+      message:
+        name: IssueEvent
+        payload:
+          type: object
+          required: [action, issue]
+          properties:
+            action: {type: string, enum: [opened, closed, edited, labeled]}
+            issue:
+              type: object
+              properties:
+                id: {type: integer}
+                number: {type: integer}
+                title: {type: string}
+                state: {type: string}
+                labels:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name: {type: string}
+                      color: {type: string}
+
+  workflow_run:
+    subscribe:
+      summary: Workflow run completed
+      message:
+        name: WorkflowRunEvent
+        payload:
+          type: object
+          required: [action, workflow_run]
+          properties:
+            action: {type: string, enum: [completed, requested]}
+            workflow_run:
+              type: object
+              properties:
+                id: {type: integer}
+                name: {type: string}
+                conclusion: {type: string, enum: [success, failure, cancelled]}
+                head_branch: {type: string}

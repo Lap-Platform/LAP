@@ -1,0 +1,117 @@
+syntax = "proto3";
+
+package payments.v1;
+
+// Payment processing service.
+service PaymentService {
+  // Create a payment intent.
+  rpc CreatePayment(CreatePaymentRequest) returns (Payment);
+
+  // Get payment details.
+  rpc GetPayment(GetPaymentRequest) returns (Payment);
+
+  // Refund a payment.
+  rpc RefundPayment(RefundPaymentRequest) returns (Refund);
+
+  // List payments for a customer.
+  rpc ListPayments(ListPaymentsRequest) returns (ListPaymentsResponse);
+}
+
+enum PaymentStatus {
+  PAYMENT_STATUS_UNSPECIFIED = 0;
+  PAYMENT_STATUS_PENDING = 1;
+  PAYMENT_STATUS_PROCESSING = 2;
+  PAYMENT_STATUS_SUCCEEDED = 3;
+  PAYMENT_STATUS_FAILED = 4;
+  PAYMENT_STATUS_REFUNDED = 5;
+}
+
+enum Currency {
+  CURRENCY_UNSPECIFIED = 0;
+  CURRENCY_USD = 1;
+  CURRENCY_EUR = 2;
+  CURRENCY_GBP = 3;
+  CURRENCY_JPY = 4;
+}
+
+message Money {
+  int64 amount_cents = 1;
+  Currency currency = 2;
+}
+
+message PaymentMethod {
+  oneof method {
+    CardPayment card = 1;
+    BankTransfer bank_transfer = 2;
+    WalletPayment wallet = 3;
+  }
+}
+
+message CardPayment {
+  string card_number_last4 = 1;
+  string brand = 2;
+  int32 exp_month = 3;
+  int32 exp_year = 4;
+}
+
+message BankTransfer {
+  string routing_number = 1;
+  string account_last4 = 2;
+  string bank_name = 3;
+}
+
+message WalletPayment {
+  string wallet_type = 1;
+  string wallet_id = 2;
+}
+
+message Payment {
+  string id = 1;
+  string customer_id = 2;
+  Money amount = 3;
+  PaymentStatus status = 4;
+  PaymentMethod payment_method = 5;
+  string description = 6;
+  map<string, string> metadata = 7;
+  int64 created_at_unix = 8;
+}
+
+message CreatePaymentRequest {
+  string customer_id = 1;
+  Money amount = 2;
+  PaymentMethod payment_method = 3;
+  string description = 4;
+  string idempotency_key = 5;
+  map<string, string> metadata = 6;
+}
+
+message GetPaymentRequest {
+  string id = 1;
+}
+
+message RefundPaymentRequest {
+  string payment_id = 1;
+  Money amount = 2;  // partial refund amount; if empty, full refund
+  string reason = 3;
+}
+
+message Refund {
+  string id = 1;
+  string payment_id = 2;
+  Money amount = 3;
+  string status = 4;
+  string reason = 5;
+  int64 created_at_unix = 6;
+}
+
+message ListPaymentsRequest {
+  string customer_id = 1;
+  int32 page_size = 2;
+  string page_token = 3;
+  PaymentStatus status_filter = 4;
+}
+
+message ListPaymentsResponse {
+  repeated Payment payments = 1;
+  string next_page_token = 2;
+}

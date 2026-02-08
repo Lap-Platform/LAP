@@ -1,0 +1,89 @@
+enum PriceLevel { ONE TWO THREE FOUR }
+enum SortBy { BEST_MATCH RATING REVIEW_COUNT DISTANCE }
+enum DayOfWeek { MONDAY TUESDAY WEDNESDAY THURSDAY FRIDAY SATURDAY SUNDAY }
+
+type Business {
+  id: ID!
+  name: String!
+  alias: String!
+  url: String!
+  phone: String
+  displayPhone: String
+  rating: Float!
+  reviewCount: Int!
+  price: String
+  photos: [String!]!
+  categories: [Category!]!
+  coordinates: Coordinates!
+  location: Location!
+  hours: [Hours!]
+  transactions: [String!]!
+  isClaimed: Boolean!
+  isClosed: Boolean!
+  attributes: BusinessAttributes
+  reviews(limit: Int, offset: Int, sort: SortBy): ReviewConnection!
+}
+
+type Category { alias: String! title: String! parentAliases: [String!] countryWhitelist: [String!] }
+type Coordinates { latitude: Float! longitude: Float! }
+type Location { address1: String address2: String address3: String city: String! state: String zipCode: String country: String! displayAddress: [String!]! crossStreets: String }
+type Hours { hoursType: String! isOpenNow: Boolean! open: [HoursOpen!]! }
+type HoursOpen { day: Int! start: String! end: String! isOvernight: Boolean! }
+type BusinessAttributes { businessTempClosed: Boolean waitlistReservation: Boolean businessUrl: String }
+
+type Review {
+  id: ID!
+  text: String!
+  rating: Int!
+  timeCreated: String!
+  url: String!
+  user: ReviewUser!
+}
+
+type ReviewUser { id: ID! name: String! imageUrl: String profileUrl: String! }
+
+type Event {
+  id: ID!
+  name: String!
+  description: String!
+  businessId: ID
+  url: String!
+  imageUrl: String
+  category: String
+  isFree: Boolean!
+  cost: Float
+  costMax: Float
+  attending: Int
+  interested: Int
+  timeStart: String!
+  timeEnd: String
+  location: Location!
+}
+
+type SearchResult { total: Int! businesses: [Business!]! region: Region }
+type Region { center: Coordinates }
+
+type ReviewConnection { reviews: [Review!]! total: Int! }
+type EventConnection { events: [Event!]! total: Int! }
+type AutocompleteResult { terms: [Term!]! businesses: [Business!]! categories: [Category!]! }
+type Term { text: String! }
+
+type Query {
+  business(id: ID): Business
+  businessMatch(name: String!, address1: String!, city: String!, state: String!, country: String!): Business
+  search(term: String, location: String, latitude: Float, longitude: Float, radius: Int, categories: String, locale: String, limit: Int, offset: Int, sortBy: SortBy, price: [PriceLevel!], openNow: Boolean, openAt: Int, attributes: [String!]): SearchResult!
+  phone(phone: String!): SearchResult!
+  reviews(businessId: ID!, locale: String, limit: Int, offset: Int, sort: SortBy): ReviewConnection!
+  autocomplete(text: String!, latitude: Float, longitude: Float, locale: String): AutocompleteResult!
+  eventSearch(locale: String, limit: Int, offset: Int, sortBy: String, sortOn: String, categories: [String!], isFree: Boolean, location: String, latitude: Float, longitude: Float, radius: Int, startDate: Int, endDate: Int): EventConnection!
+  event(id: ID!): Event
+  categories(locale: String): [Category!]!
+}
+
+type Mutation {
+  respondToReview(reviewId: ID!, text: String!): ReviewResponsePayload!
+  reportReview(reviewId: ID!, reason: String!): ReportPayload!
+}
+
+type ReviewResponsePayload { success: Boolean! }
+type ReportPayload { success: Boolean! }

@@ -1,0 +1,338 @@
+syntax = "proto3";
+
+package stripe.v1;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+service PaymentService {
+  rpc CreatePaymentIntent(CreatePaymentIntentRequest) returns (PaymentIntent);
+  rpc GetPaymentIntent(GetPaymentIntentRequest) returns (PaymentIntent);
+  rpc UpdatePaymentIntent(UpdatePaymentIntentRequest) returns (PaymentIntent);
+  rpc ConfirmPaymentIntent(ConfirmPaymentIntentRequest) returns (PaymentIntent);
+  rpc CancelPaymentIntent(CancelPaymentIntentRequest) returns (PaymentIntent);
+  rpc CapturePaymentIntent(CapturePaymentIntentRequest) returns (PaymentIntent);
+  rpc ListPaymentIntents(ListPaymentIntentsRequest) returns (ListPaymentIntentsResponse);
+}
+
+service CustomerService {
+  rpc CreateCustomer(CreateCustomerRequest) returns (Customer);
+  rpc GetCustomer(GetCustomerRequest) returns (Customer);
+  rpc UpdateCustomer(UpdateCustomerRequest) returns (Customer);
+  rpc DeleteCustomer(DeleteCustomerRequest) returns (google.protobuf.Empty);
+  rpc ListCustomers(ListCustomersRequest) returns (ListCustomersResponse);
+}
+
+service PaymentMethodService {
+  rpc CreatePaymentMethod(CreatePaymentMethodRequest) returns (PaymentMethod);
+  rpc GetPaymentMethod(GetPaymentMethodRequest) returns (PaymentMethod);
+  rpc AttachPaymentMethod(AttachPaymentMethodRequest) returns (PaymentMethod);
+  rpc DetachPaymentMethod(DetachPaymentMethodRequest) returns (PaymentMethod);
+  rpc ListPaymentMethods(ListPaymentMethodsRequest) returns (ListPaymentMethodsResponse);
+}
+
+service RefundService {
+  rpc CreateRefund(CreateRefundRequest) returns (Refund);
+  rpc GetRefund(GetRefundRequest) returns (Refund);
+  rpc ListRefunds(ListRefundsRequest) returns (ListRefundsResponse);
+}
+
+message PaymentIntent {
+  string id = 1;
+  int64 amount = 2;
+  string currency = 3;
+  PaymentIntentStatus status = 4;
+  string customer = 5;
+  string payment_method = 6;
+  string description = 7;
+  map<string, string> metadata = 8;
+  google.protobuf.Timestamp created = 9;
+  CaptureMethod capture_method = 10;
+  ConfirmationMethod confirmation_method = 11;
+  string client_secret = 12;
+  repeated Charge charges = 13;
+}
+
+enum PaymentIntentStatus {
+  STATUS_UNSPECIFIED = 0;
+  REQUIRES_PAYMENT_METHOD = 1;
+  REQUIRES_CONFIRMATION = 2;
+  REQUIRES_ACTION = 3;
+  PROCESSING = 4;
+  REQUIRES_CAPTURE = 5;
+  CANCELED = 6;
+  SUCCEEDED = 7;
+}
+
+enum CaptureMethod {
+  CAPTURE_METHOD_UNSPECIFIED = 0;
+  AUTOMATIC = 1;
+  MANUAL = 2;
+}
+
+enum ConfirmationMethod {
+  CONFIRMATION_METHOD_UNSPECIFIED = 0;
+  AUTOMATIC_CONFIRMATION = 1;
+  MANUAL_CONFIRMATION = 2;
+}
+
+message Charge {
+  string id = 1;
+  int64 amount = 2;
+  string currency = 3;
+  ChargeStatus status = 4;
+  bool paid = 5;
+  bool refunded = 6;
+  int64 amount_refunded = 7;
+  google.protobuf.Timestamp created = 8;
+}
+
+enum ChargeStatus {
+  CHARGE_STATUS_UNSPECIFIED = 0;
+  PENDING = 1;
+  CHARGE_SUCCEEDED = 2;
+  FAILED = 3;
+}
+
+message Customer {
+  string id = 1;
+  string email = 2;
+  string name = 3;
+  string phone = 4;
+  Address address = 5;
+  string description = 6;
+  map<string, string> metadata = 7;
+  google.protobuf.Timestamp created = 8;
+  string default_payment_method = 9;
+  int64 balance = 10;
+  string currency = 11;
+}
+
+message Address {
+  string line1 = 1;
+  string line2 = 2;
+  string city = 3;
+  string state = 4;
+  string postal_code = 5;
+  string country = 6;
+}
+
+message PaymentMethod {
+  string id = 1;
+  PaymentMethodType type = 2;
+  oneof details {
+    CardDetails card = 3;
+    BankAccountDetails bank_account = 4;
+  }
+  string customer = 5;
+  map<string, string> metadata = 6;
+  google.protobuf.Timestamp created = 7;
+}
+
+enum PaymentMethodType {
+  PAYMENT_METHOD_TYPE_UNSPECIFIED = 0;
+  CARD = 1;
+  BANK_ACCOUNT = 2;
+  SEPA_DEBIT = 3;
+  IDEAL = 4;
+}
+
+message CardDetails {
+  string brand = 1;
+  string country = 2;
+  int32 exp_month = 3;
+  int32 exp_year = 4;
+  string last4 = 5;
+  string fingerprint = 6;
+  CardFunding funding = 7;
+}
+
+enum CardFunding {
+  CARD_FUNDING_UNSPECIFIED = 0;
+  CREDIT = 1;
+  DEBIT = 2;
+  PREPAID = 3;
+}
+
+message BankAccountDetails {
+  string account_holder_name = 1;
+  string account_holder_type = 2;
+  string bank_name = 3;
+  string country = 4;
+  string currency = 5;
+  string last4 = 6;
+  string routing_number = 7;
+}
+
+message Refund {
+  string id = 1;
+  int64 amount = 2;
+  string currency = 3;
+  RefundStatus status = 4;
+  string payment_intent = 5;
+  string charge = 6;
+  string reason = 7;
+  map<string, string> metadata = 8;
+  google.protobuf.Timestamp created = 9;
+}
+
+enum RefundStatus {
+  REFUND_STATUS_UNSPECIFIED = 0;
+  REFUND_PENDING = 1;
+  REFUND_SUCCEEDED = 2;
+  REFUND_FAILED = 3;
+  REFUND_CANCELED = 4;
+}
+
+message CreatePaymentIntentRequest {
+  int64 amount = 1;
+  string currency = 2;
+  string customer = 3;
+  string payment_method = 4;
+  string description = 5;
+  map<string, string> metadata = 6;
+  CaptureMethod capture_method = 7;
+  ConfirmationMethod confirmation_method = 8;
+  bool confirm = 9;
+}
+
+message GetPaymentIntentRequest {
+  string id = 1;
+}
+
+message UpdatePaymentIntentRequest {
+  string id = 1;
+  int64 amount = 2;
+  string currency = 3;
+  string customer = 4;
+  string payment_method = 5;
+  string description = 6;
+  map<string, string> metadata = 7;
+}
+
+message ConfirmPaymentIntentRequest {
+  string id = 1;
+  string payment_method = 2;
+}
+
+message CancelPaymentIntentRequest {
+  string id = 1;
+  string cancellation_reason = 2;
+}
+
+message CapturePaymentIntentRequest {
+  string id = 1;
+  int64 amount_to_capture = 2;
+}
+
+message ListPaymentIntentsRequest {
+  string customer = 1;
+  int32 limit = 2;
+  string starting_after = 3;
+  string ending_before = 4;
+}
+
+message ListPaymentIntentsResponse {
+  repeated PaymentIntent data = 1;
+  bool has_more = 2;
+}
+
+message CreateCustomerRequest {
+  string email = 1;
+  string name = 2;
+  string phone = 3;
+  Address address = 4;
+  string description = 5;
+  map<string, string> metadata = 6;
+  string payment_method = 7;
+}
+
+message GetCustomerRequest {
+  string id = 1;
+}
+
+message UpdateCustomerRequest {
+  string id = 1;
+  string email = 2;
+  string name = 3;
+  string phone = 4;
+  Address address = 5;
+  string description = 6;
+  map<string, string> metadata = 7;
+  string default_payment_method = 8;
+}
+
+message DeleteCustomerRequest {
+  string id = 1;
+}
+
+message ListCustomersRequest {
+  string email = 1;
+  int32 limit = 2;
+  string starting_after = 3;
+  string ending_before = 4;
+}
+
+message ListCustomersResponse {
+  repeated Customer data = 1;
+  bool has_more = 2;
+}
+
+message CreatePaymentMethodRequest {
+  PaymentMethodType type = 1;
+  oneof details {
+    CardDetails card = 2;
+    BankAccountDetails bank_account = 3;
+  }
+  map<string, string> metadata = 4;
+}
+
+message GetPaymentMethodRequest {
+  string id = 1;
+}
+
+message AttachPaymentMethodRequest {
+  string id = 1;
+  string customer = 2;
+}
+
+message DetachPaymentMethodRequest {
+  string id = 1;
+}
+
+message ListPaymentMethodsRequest {
+  string customer = 1;
+  PaymentMethodType type = 2;
+  int32 limit = 3;
+  string starting_after = 4;
+  string ending_before = 5;
+}
+
+message ListPaymentMethodsResponse {
+  repeated PaymentMethod data = 1;
+  bool has_more = 2;
+}
+
+message CreateRefundRequest {
+  string payment_intent = 1;
+  int64 amount = 2;
+  string reason = 3;
+  map<string, string> metadata = 4;
+}
+
+message GetRefundRequest {
+  string id = 1;
+}
+
+message ListRefundsRequest {
+  string payment_intent = 1;
+  string charge = 2;
+  int32 limit = 3;
+  string starting_after = 4;
+  string ending_before = 5;
+}
+
+message ListRefundsResponse {
+  repeated Refund data = 1;
+  bool has_more = 2;
+}

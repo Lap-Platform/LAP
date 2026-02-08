@@ -1,0 +1,10 @@
+TASK 1: query { viewer { login email } }
+TASK 2: query { repository(owner: "octocat", name: "Hello-World") { name description } }
+TASK 3: query { user(login: "octocat") { bio avatarUrl } }
+TASK 4: query { searchRepositories(query: "machine learning", first: 10) { nodes { name fullName } pageInfo { hasNextPage endCursor } totalCount } }
+TASK 5: mutation { createIssue(input: {repositoryId: "abc123", title: "Bug report", body: "Description..."}) { id number title body state } }
+TASK 6: mutation { updateIssue(input: {id: "xyz789", title: "Updated Bug", state: CLOSED}) { id number title state } }
+TASK 7: mutation { addStar(repositoryId: "repo_abc123") { id name stargazerCount } }
+TASK 8: mutation { removeStar(repositoryId: "repo_xyz789") { id name stargazerCount } }
+TASK 9: subscription { issueCreated(repositoryId: "repo_123") { id number title author { login } createdAt } }
+TASK 10: subscription { pullRequestUpdated(repositoryId: "repo_456") { id number title state mergeable } }

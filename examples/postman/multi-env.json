@@ -1,0 +1,118 @@
+{
+  "info": {
+    "name": "Multi-Environment Config API",
+    "_postman_id": "env-001",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {"key": "baseUrl", "value": "https://api.configservice.io/v1"},
+    {"key": "env", "value": "production"},
+    {"key": "apiKey", "value": "key-123"}
+  ],
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      {"key": "key", "value": "X-API-Key"},
+      {"key": "in", "value": "header"},
+      {"key": "value", "value": "{{apiKey}}"}
+    ]
+  },
+  "item": [
+    {
+      "name": "Environments",
+      "item": [
+        {
+          "name": "List Environments",
+          "request": {
+            "method": "GET",
+            "url": {"raw": "{{baseUrl}}/environments", "host": ["{{baseUrl}}"], "path": ["environments"]}
+          },
+          "response": [
+            {"name": "OK", "code": 200, "body": "{\"environments\": [\"production\", \"staging\", \"development\"]}"}
+          ]
+        },
+        {
+          "name": "Get Environment Config",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/environments/:envName/config?format=json",
+              "host": ["{{baseUrl}}"],
+              "path": ["environments", ":envName", "config"],
+              "variable": [{"key": "envName", "value": "production"}],
+              "query": [
+                {"key": "format", "value": "json", "description": "Output format (json/yaml)"},
+                {"key": "decrypt", "value": "false", "description": "Decrypt secrets", "disabled": true}
+              ]
+            }
+          },
+          "response": [
+            {"name": "Config", "code": 200, "body": "{\"env\": \"production\", \"db_host\": \"db.prod.internal\", \"cache_ttl\": 300}"}
+          ]
+        },
+        {
+          "name": "Update Config Key",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{baseUrl}}/environments/:envName/config",
+              "host": ["{{baseUrl}}"],
+              "path": ["environments", ":envName", "config"],
+              "variable": [{"key": "envName", "value": "staging"}]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"key\": \"cache_ttl\", \"value\": \"600\"}"
+            }
+          },
+          "response": [
+            {"name": "Updated", "code": 200, "body": "{\"key\": \"cache_ttl\", \"value\": \"600\", \"updated_at\": \"2024-06-01T12:00:00Z\"}"}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Secrets",
+      "item": [
+        {
+          "name": "List Secrets",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/environments/:envName/secrets",
+              "host": ["{{baseUrl}}"],
+              "path": ["environments", ":envName", "secrets"],
+              "variable": [{"key": "envName", "value": "production"}]
+            }
+          },
+          "response": [
+            {"name": "Secrets", "code": 200, "body": "{\"secrets\": [{\"name\": \"DB_PASSWORD\", \"created\": \"2024-01-01\", \"version\": 3}]}"}
+          ]
+        },
+        {
+          "name": "Set Secret",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{baseUrl}}/environments/:envName/secrets/:secretName",
+              "host": ["{{baseUrl}}"],
+              "path": ["environments", ":envName", "secrets", ":secretName"],
+              "variable": [
+                {"key": "envName", "value": "production"},
+                {"key": "secretName", "value": "DB_PASSWORD"}
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"value\": \"s3cret!\", \"encrypt\": true}"
+            }
+          },
+          "response": [
+            {"name": "Set", "code": 200, "body": "{\"name\": \"DB_PASSWORD\", \"version\": 4}"},
+            {"name": "Forbidden", "code": 403, "body": "{\"error\": \"Insufficient permissions\"}"}
+          ]
+        }
+      ]
+    }
+  ]
+}

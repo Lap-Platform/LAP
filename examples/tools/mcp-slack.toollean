@@ -1,0 +1,30 @@
+# slack
+# MCP server for Slack workspace interaction
+
+@toollean v0.1
+@tool send_message
+@desc Send a message to a Slack channel
+@in channel:str Channel ID or name
+@in text:str Message text (supports mrkdwn)
+@in thread_ts:str? Thread timestamp to reply to
+@in unfurl_links:bool? Unfurl URLs in message
+
+@toollean v0.1
+@tool list_channels
+@desc List channels in the workspace
+@in types:str?(public_channel/private_channel/mpim/im) Channel type filter
+@in limit:int?=100 Max results
+
+@toollean v0.1
+@tool search_messages
+@desc Search messages across the workspace
+@in query:str Search query
+@in sort:str?(score/timestamp) Sort order
+@in count:int?=20 Number of results
+
+@toollean v0.1
+@tool add_reaction
+@desc Add an emoji reaction to a message
+@in channel:str Channel ID
+@in timestamp:str Message timestamp
+@in name:str Emoji name (without colons)

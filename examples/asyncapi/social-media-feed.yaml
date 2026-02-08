@@ -1,0 +1,73 @@
+asyncapi: 2.6.0
+info:
+  title: Social Media Feed Events
+  version: 1.0.0
+  description: Real-time social media feed
+
+servers:
+  production:
+    url: wss://stream.social.example.com
+    protocol: ws
+
+channels:
+  feed/{userId}/posts:
+    parameters:
+      userId:
+        schema: {type: string}
+    subscribe:
+      summary: New post in user feed
+      message:
+        name: NewPost
+        payload:
+          type: object
+          required: [postId, authorId, content, createdAt]
+          properties:
+            postId: {type: string}
+            authorId: {type: string}
+            authorName: {type: string}
+            content: {type: string}
+            media:
+              type: array
+              items:
+                type: object
+                properties:
+                  type: {type: string, enum: [image, video, link]}
+                  url: {type: string}
+            likes: {type: integer}
+            createdAt: {type: string, format: date-time}
+
+  feed/{userId}/notifications:
+    parameters:
+      userId:
+        schema: {type: string}
+    subscribe:
+      summary: User notification
+      message:
+        name: Notification
+        payload:
+          type: object
+          required: [type, actorId, message]
+          properties:
+            type: {type: string, enum: [like, comment, follow, mention, share]}
+            actorId: {type: string}
+            actorName: {type: string}
+            message: {type: string}
+            targetId: {type: string}
+            read: {type: boolean}
+
+  feed/trending:
+    subscribe:
+      summary: Trending topics
+      message:
+        name: TrendingTopics
+        payload:
+          type: object
+          properties:
+            topics:
+              type: array
+              items:
+                type: object
+                properties:
+                  tag: {type: string}
+                  postCount: {type: integer}
+                  trend: {type: string, enum: [rising, stable, falling]}

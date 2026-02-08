@@ -1,0 +1,265 @@
+{
+  "info": {
+    "name": "GitHub Repos API",
+    "_postman_id": "github-001",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://api.github.com"
+    }
+  ],
+  "item": [
+    {
+      "name": "Repositories",
+      "item": [
+        {
+          "name": "List Repos",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/user/repos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user",
+                "repos"
+              ],
+              "query": [
+                {
+                  "key": "sort",
+                  "value": "updated",
+                  "description": ""
+                },
+                {
+                  "key": "per_page",
+                  "value": "30",
+                  "description": ""
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": ""
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "OK",
+              "code": 200,
+              "body": "[{\"id\": 1, \"full_name\": \"octocat/Hello-World\", \"private\": false}]"
+            }
+          ]
+        },
+        {
+          "name": "Get Repo",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/repos/:owner/:repo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "repos",
+                ":owner",
+                ":repo"
+              ],
+              "variable": [
+                {
+                  "key": "owner",
+                  "value": "octocat"
+                },
+                {
+                  "key": "repo",
+                  "value": "Hello-World"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "OK",
+              "code": 200,
+              "body": "{\"id\": 1, \"full_name\": \"octocat/Hello-World\", \"stargazers_count\": 100}"
+            }
+          ]
+        },
+        {
+          "name": "Create Repo",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/user/repos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user",
+                "repos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"new-repo\", \"private\": true, \"description\": \"A new repo\"}"
+            }
+          },
+          "response": [
+            {
+              "name": "Created",
+              "code": 201,
+              "body": "{\"id\": 2, \"full_name\": \"octocat/new-repo\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Issues",
+      "item": [
+        {
+          "name": "List Issues",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/repos/:owner/:repo/issues",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "repos",
+                ":owner",
+                ":repo",
+                "issues"
+              ],
+              "query": [
+                {
+                  "key": "state",
+                  "value": "open",
+                  "description": ""
+                },
+                {
+                  "key": "labels",
+                  "value": "",
+                  "description": "Comma-separated"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "owner",
+                  "value": "octocat"
+                },
+                {
+                  "key": "repo",
+                  "value": "Hello-World"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "OK",
+              "code": 200,
+              "body": "[{\"id\": 1, \"title\": \"Bug\", \"state\": \"open\"}]"
+            }
+          ]
+        },
+        {
+          "name": "Create Issue",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/repos/:owner/:repo/issues",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "repos",
+                ":owner",
+                ":repo",
+                "issues"
+              ],
+              "variable": [
+                {
+                  "key": "owner",
+                  "value": "octocat"
+                },
+                {
+                  "key": "repo",
+                  "value": "Hello-World"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"title\": \"Found a bug\", \"body\": \"Description here\", \"labels\": [\"bug\"]}"
+            }
+          },
+          "response": [
+            {
+              "name": "Created",
+              "code": 201,
+              "body": "{\"id\": 2, \"number\": 42, \"title\": \"Found a bug\"}"
+            }
+          ]
+        },
+        {
+          "name": "Update Issue",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{baseUrl}}/repos/:owner/:repo/issues/:issue_number",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "repos",
+                ":owner",
+                ":repo",
+                "issues",
+                ":issue_number"
+              ],
+              "variable": [
+                {
+                  "key": "owner",
+                  "value": "octocat"
+                },
+                {
+                  "key": "repo",
+                  "value": "Hello-World"
+                },
+                {
+                  "key": "issue_number",
+                  "value": "42"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"state\": \"closed\"}"
+            }
+          },
+          "response": [
+            {
+              "name": "OK",
+              "code": 200,
+              "body": "{\"id\": 2, \"state\": \"closed\"}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

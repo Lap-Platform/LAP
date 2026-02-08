@@ -1,0 +1,156 @@
+enum ParentType { DATABASE_ID PAGE_ID WORKSPACE BLOCK_ID }
+enum PropertyType { TITLE RICH_TEXT NUMBER SELECT MULTI_SELECT DATE PEOPLE FILES CHECKBOX URL EMAIL PHONE_NUMBER FORMULA RELATION ROLLUP CREATED_TIME CREATED_BY LAST_EDITED_TIME LAST_EDITED_BY STATUS }
+enum BlockType { PARAGRAPH HEADING_1 HEADING_2 HEADING_3 BULLETED_LIST_ITEM NUMBERED_LIST_ITEM TO_DO TOGGLE CODE CHILD_PAGE CHILD_DATABASE EMBED IMAGE VIDEO FILE BOOKMARK CALLOUT QUOTE DIVIDER TABLE_OF_CONTENTS TABLE TABLE_ROW COLUMN_LIST COLUMN SYNCED_BLOCK }
+enum Color { DEFAULT GRAY BROWN ORANGE YELLOW GREEN BLUE PURPLE PINK RED }
+enum NumberFormat { NUMBER NUMBER_WITH_COMMAS PERCENT DOLLAR CANADIAN_DOLLAR EURO POUND YEN }
+enum SortDirection { ASCENDING DESCENDING }
+enum FilterCondition { EQUALS DOES_NOT_EQUAL CONTAINS DOES_NOT_CONTAIN STARTS_WITH ENDS_WITH IS_EMPTY IS_NOT_EMPTY GREATER_THAN LESS_THAN }
+
+type RichText { plainText: String! href: String annotations: Annotations! type: String! }
+type Annotations { bold: Boolean! italic: Boolean! strikethrough: Boolean! underline: Boolean! code: Boolean! color: Color! }
+
+type User {
+  id: ID!
+  type: String!
+  name: String
+  avatarUrl: String
+  email: String
+  person: PersonInfo
+  bot: BotInfo
+}
+type PersonInfo { email: String! }
+type BotInfo { owner: BotOwner }
+type BotOwner { type: String! workspace: Boolean }
+
+type Page {
+  id: ID!
+  createdTime: String!
+  lastEditedTime: String!
+  createdBy: User!
+  lastEditedBy: User!
+  archived: Boolean!
+  icon: IconObject
+  cover: FileObject
+  parent: Parent!
+  url: String!
+  properties: [PageProperty!]!
+  children(startCursor: String, pageSize: Int): BlockList!
+}
+
+type Database {
+  id: ID!
+  createdTime: String!
+  lastEditedTime: String!
+  title: [RichText!]!
+  description: [RichText!]
+  icon: IconObject
+  cover: FileObject
+  parent: Parent!
+  url: String!
+  isInline: Boolean!
+  properties: [DatabaseProperty!]!
+  pages(startCursor: String, pageSize: Int, filter: JSON, sorts: [SortInput!]): PageList!
+}
+
+scalar JSON
+
+type Parent { type: ParentType! databaseId: ID pageId: ID workspaceId: String blockId: ID }
+type IconObject { type: String! emoji: String external: FileObject }
+type FileObject { type: String url: String expiryTime: String }
+
+type DatabaseProperty { id: String! name: String! type: PropertyType! select: SelectConfig multiSelect: SelectConfig number: NumberConfig formula: FormulaConfig relation: RelationConfig rollup: RollupConfig status: StatusConfig }
+type SelectConfig { options: [SelectOption!]! }
+type SelectOption { id: ID! name: String! color: Color }
+type NumberConfig { format: NumberFormat! }
+type FormulaConfig { expression: String! }
+type RelationConfig { databaseId: ID! type: String }
+type RollupConfig { relationPropertyName: String rollupPropertyName: String function: String }
+type StatusConfig { options: [SelectOption!]! groups: [StatusGroup!]! }
+type StatusGroup { id: ID! name: String! color: Color optionIds: [ID!]! }
+
+type PageProperty { id: String! name: String! type: PropertyType! title: [RichText!] richText: [RichText!] number: Float select: SelectOption multiSelect: [SelectOption!] date: DateValue people: [User!] files: [FileObject!] checkbox: Boolean url: String email: String phone: String formula: FormulaValue relation: [RelationRef!] rollup: RollupValue status: SelectOption createdTime: String createdBy: User lastEditedTime: String lastEditedBy: User }
+type DateValue { start: String! end: String timeZone: String }
+type FormulaValue { type: String! string: String number: Float boolean: Boolean date: DateValue }
+type RelationRef { id: ID! }
+type RollupValue { type: String! number: Float date: DateValue array: [PageProperty!] }
+
+type Block {
+  id: ID!
+  type: BlockType!
+  createdTime: String!
+  lastEditedTime: String!
+  hasChildren: Boolean!
+  archived: Boolean!
+  parent: Parent!
+  paragraph: ParagraphBlock
+  heading1: HeadingBlock
+  heading2: HeadingBlock
+  heading3: HeadingBlock
+  bulletedListItem: ListItemBlock
+  numberedListItem: ListItemBlock
+  toDo: ToDoBlock
+  toggle: ListItemBlock
+  code: CodeBlock
+  callout: CalloutBlock
+  image: MediaBlock
+  video: MediaBlock
+  file: MediaBlock
+  bookmark: BookmarkBlock
+  children(startCursor: String, pageSize: Int): BlockList
+}
+
+type ParagraphBlock { richText: [RichText!]! color: Color }
+type HeadingBlock { richText: [RichText!]! color: Color isToggleable: Boolean }
+type ListItemBlock { richText: [RichText!]! color: Color }
+type ToDoBlock { richText: [RichText!]! checked: Boolean! color: Color }
+type CodeBlock { richText: [RichText!]! language: String! caption: [RichText!] }
+type CalloutBlock { richText: [RichText!]! icon: IconObject color: Color }
+type MediaBlock { type: String! external: FileObject file: FileObject caption: [RichText!] }
+type BookmarkBlock { url: String! caption: [RichText!] }
+
+type PageList { results: [Page!]! nextCursor: String hasMore: Boolean! }
+type BlockList { results: [Block!]! nextCursor: String hasMore: Boolean! }
+type UserList { results: [User!]! nextCursor: String hasMore: Boolean! }
+type DatabaseList { results: [Database!]! nextCursor: String hasMore: Boolean! }
+type SearchResults { results: [SearchResult!]! nextCursor: String hasMore: Boolean! }
+union SearchResult = Page | Database
+
+input SortInput { property: String! direction: SortDirection! }
+input CreatePageInput { parentDatabaseId: ID parentPageId: ID properties: JSON! children: [BlockInput!] icon: IconInput cover: FileInput }
+input BlockInput { type: BlockType! paragraph: ParagraphInput heading1: HeadingInput toDo: ToDoInput code: CodeInput bookmark: BookmarkInput }
+input ParagraphInput { richText: [RichTextInput!]! color: Color }
+input HeadingInput { richText: [RichTextInput!]! }
+input ToDoInput { richText: [RichTextInput!]! checked: Boolean }
+input CodeInput { richText: [RichTextInput!]! language: String! }
+input BookmarkInput { url: String! }
+input RichTextInput { text: TextInput! annotations: AnnotationsInput }
+input TextInput { content: String! link: String }
+input AnnotationsInput { bold: Boolean italic: Boolean strikethrough: Boolean underline: Boolean code: Boolean color: Color }
+input IconInput { emoji: String external: FileInput }
+input FileInput { url: String! }
+input UpdatePropertyInput { pageId: ID! properties: JSON! }
+
+type PagePayload { page: Page }
+type BlockPayload { block: Block }
+type DeletePayload { success: Boolean! }
+
+type Query {
+  page(id: ID!): Page
+  database(id: ID!): Database
+  block(id: ID!): Block
+  user(id: ID!): User
+  users(startCursor: String, pageSize: Int): UserList!
+  me: User!
+  search(query: String!, filter: JSON, startCursor: String, pageSize: Int): SearchResults!
+  databases(startCursor: String, pageSize: Int): DatabaseList!
+}
+
+type Mutation {
+  createPage(input: CreatePageInput!): PagePayload!
+  updatePageProperties(input: UpdatePropertyInput!): PagePayload!
+  archivePage(id: ID!): PagePayload!
+  appendBlockChildren(blockId: ID!, children: [BlockInput!]!): BlockPayload!
+  updateBlock(id: ID!, input: BlockInput!): BlockPayload!
+  deleteBlock(id: ID!): DeletePayload!
+  createDatabase(parentPageId: ID!, title: [RichTextInput!]!, properties: JSON!): Database
+}

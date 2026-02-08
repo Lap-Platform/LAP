@@ -1,0 +1,198 @@
+{
+  "info": {
+    "name": "PagerDuty Incidents API",
+    "_postman_id": "pd-001",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://api.pagerduty.com"
+    }
+  ],
+  "item": [
+    {
+      "name": "List Incidents",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/incidents",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "incidents"
+          ],
+          "query": [
+            {
+              "key": "statuses[]",
+              "value": "triggered",
+              "description": ""
+            },
+            {
+              "key": "sort_by",
+              "value": "created_at",
+              "description": ""
+            },
+            {
+              "key": "limit",
+              "value": "25",
+              "description": ""
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"incidents\": [{\"id\": \"P123\", \"title\": \"Server Down\", \"status\": \"triggered\", \"urgency\": \"high\"}]}"
+        }
+      ]
+    },
+    {
+      "name": "Create Incident",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/incidents",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "incidents"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"incident\": {\"type\": \"incident\", \"title\": \"Database unresponsive\", \"service\": {\"id\": \"PSVC1\", \"type\": \"service_reference\"}, \"urgency\": \"high\", \"body\": {\"type\": \"incident_body\", \"details\": \"Connection timeouts\"}}}"
+        },
+        "header": [
+          {
+            "key": "From",
+            "value": "admin@example.com",
+            "description": "Requester email"
+          }
+        ]
+      },
+      "response": [
+        {
+          "name": "Created",
+          "code": 201,
+          "body": "{\"incident\": {\"id\": \"P124\", \"title\": \"Database unresponsive\", \"status\": \"triggered\"}}"
+        }
+      ]
+    },
+    {
+      "name": "Acknowledge Incident",
+      "request": {
+        "method": "PUT",
+        "url": {
+          "raw": "{{baseUrl}}/incidents/:id",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "incidents",
+            ":id"
+          ],
+          "variable": [
+            {
+              "key": "id",
+              "value": "P123"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"incident\": {\"type\": \"incident\", \"status\": \"acknowledged\"}}"
+        },
+        "header": [
+          {
+            "key": "From",
+            "value": "oncall@example.com",
+            "description": ""
+          }
+        ]
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"incident\": {\"id\": \"P123\", \"status\": \"acknowledged\"}}"
+        }
+      ]
+    },
+    {
+      "name": "Resolve Incident",
+      "request": {
+        "method": "PUT",
+        "url": {
+          "raw": "{{baseUrl}}/incidents/:id",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "incidents",
+            ":id"
+          ],
+          "variable": [
+            {
+              "key": "id",
+              "value": "P123"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"incident\": {\"type\": \"incident\", \"status\": \"resolved\", \"resolution\": \"Fixed DB connection pool\"}}"
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"incident\": {\"id\": \"P123\", \"status\": \"resolved\"}}"
+        }
+      ]
+    },
+    {
+      "name": "List Services",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/services",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "services"
+          ],
+          "query": [
+            {
+              "key": "limit",
+              "value": "25",
+              "description": ""
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"services\": [{\"id\": \"PSVC1\", \"name\": \"Production API\", \"status\": \"active\"}]}"
+        }
+      ]
+    }
+  ]
+}

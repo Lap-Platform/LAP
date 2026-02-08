@@ -1,0 +1,191 @@
+syntax = "proto3";
+
+package google.pubsub.v1;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/empty.proto";
+
+service Publisher {
+  rpc CreateTopic(Topic) returns (Topic);
+  rpc UpdateTopic(UpdateTopicRequest) returns (Topic);
+  rpc Publish(PublishRequest) returns (PublishResponse);
+  rpc GetTopic(GetTopicRequest) returns (Topic);
+  rpc ListTopics(ListTopicsRequest) returns (ListTopicsResponse);
+  rpc DeleteTopic(DeleteTopicRequest) returns (google.protobuf.Empty);
+}
+
+service Subscriber {
+  rpc CreateSubscription(Subscription) returns (Subscription);
+  rpc GetSubscription(GetSubscriptionRequest) returns (Subscription);
+  rpc UpdateSubscription(UpdateSubscriptionRequest) returns (Subscription);
+  rpc ListSubscriptions(ListSubscriptionsRequest) returns (ListSubscriptionsResponse);
+  rpc DeleteSubscription(DeleteSubscriptionRequest) returns (google.protobuf.Empty);
+  rpc Pull(PullRequest) returns (PullResponse);
+  rpc StreamingPull(stream StreamingPullRequest) returns (stream StreamingPullResponse);
+  rpc Acknowledge(AcknowledgeRequest) returns (google.protobuf.Empty);
+  rpc ModifyAckDeadline(ModifyAckDeadlineRequest) returns (google.protobuf.Empty);
+}
+
+message Topic {
+  string name = 1;
+  map<string, string> labels = 2;
+  MessageStoragePolicy message_storage_policy = 3;
+  string kms_key_name = 4;
+  SchemaSettings schema_settings = 5;
+}
+
+message MessageStoragePolicy {
+  repeated string allowed_persistence_regions = 1;
+}
+
+message SchemaSettings {
+  string schema = 1;
+  Encoding encoding = 2;
+}
+
+enum Encoding {
+  ENCODING_UNSPECIFIED = 0;
+  JSON = 1;
+  BINARY = 2;
+}
+
+message Subscription {
+  string name = 1;
+  string topic = 2;
+  PushConfig push_config = 3;
+  int32 ack_deadline_seconds = 4;
+  bool retain_acked_messages = 5;
+  google.protobuf.Duration message_retention_duration = 6;
+  map<string, string> labels = 7;
+  ExpirationPolicy expiration_policy = 8;
+  DeadLetterPolicy dead_letter_policy = 9;
+  RetryPolicy retry_policy = 10;
+}
+
+message PushConfig {
+  string push_endpoint = 1;
+  map<string, string> attributes = 2;
+  OidcToken oidc_token = 3;
+}
+
+message OidcToken {
+  string service_account_email = 1;
+  string audience = 2;
+}
+
+message ExpirationPolicy {
+  google.protobuf.Duration ttl = 1;
+}
+
+message DeadLetterPolicy {
+  string dead_letter_topic = 1;
+  int32 max_delivery_attempts = 2;
+}
+
+message RetryPolicy {
+  google.protobuf.Duration minimum_backoff = 1;
+  google.protobuf.Duration maximum_backoff = 2;
+}
+
+message PublishRequest {
+  string topic = 1;
+  repeated PubsubMessage messages = 2;
+}
+
+message PublishResponse {
+  repeated string message_ids = 1;
+}
+
+message PubsubMessage {
+  bytes data = 1;
+  map<string, string> attributes = 2;
+  string message_id = 3;
+  google.protobuf.Timestamp publish_time = 4;
+  string ordering_key = 5;
+}
+
+message PullRequest {
+  string subscription = 1;
+  int32 max_messages = 2;
+}
+
+message PullResponse {
+  repeated ReceivedMessage received_messages = 1;
+}
+
+message ReceivedMessage {
+  string ack_id = 1;
+  PubsubMessage message = 2;
+  int32 delivery_attempt = 3;
+}
+
+message StreamingPullRequest {
+  string subscription = 1;
+  repeated string ack_ids = 2;
+  repeated int32 modify_deadline_seconds = 3;
+  int32 stream_ack_deadline_seconds = 4;
+}
+
+message StreamingPullResponse {
+  repeated ReceivedMessage received_messages = 1;
+}
+
+message AcknowledgeRequest {
+  string subscription = 1;
+  repeated string ack_ids = 2;
+}
+
+message ModifyAckDeadlineRequest {
+  string subscription = 1;
+  repeated string ack_ids = 2;
+  int32 ack_deadline_seconds = 3;
+}
+
+message GetTopicRequest {
+  string topic = 1;
+}
+
+message UpdateTopicRequest {
+  Topic topic = 1;
+  string update_mask = 2;
+}
+
+message ListTopicsRequest {
+  string project = 1;
+  int32 page_size = 2;
+  string page_token = 3;
+}
+
+message ListTopicsResponse {
+  repeated Topic topics = 1;
+  string next_page_token = 2;
+}
+
+message DeleteTopicRequest {
+  string topic = 1;
+}
+
+message GetSubscriptionRequest {
+  string subscription = 1;
+}
+
+message UpdateSubscriptionRequest {
+  Subscription subscription = 1;
+  string update_mask = 2;
+}
+
+message ListSubscriptionsRequest {
+  string project = 1;
+  int32 page_size = 2;
+  string page_token = 3;
+}
+
+message ListSubscriptionsResponse {
+  repeated Subscription subscriptions = 1;
+  string next_page_token = 2;
+}
+
+message DeleteSubscriptionRequest {
+  string subscription = 1;
+}

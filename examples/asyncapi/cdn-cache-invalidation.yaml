@@ -1,0 +1,79 @@
+asyncapi: 2.6.0
+info:
+  title: CDN Cache Invalidation Events
+  version: 1.0.0
+  description: CDN cache purge and invalidation events
+
+servers:
+  production:
+    url: amqp://cdn-broker.internal:5672
+    protocol: amqp
+
+channels:
+  cache/purge:
+    publish:
+      summary: Cache purge request
+      message:
+        name: PurgeRequest
+        payload:
+          type: object
+          required: [purgeId, type]
+          properties:
+            purgeId: {type: string}
+            type: {type: string, enum: [url, tag, prefix, all]}
+            urls:
+              type: array
+              items: {type: string}
+            tags:
+              type: array
+              items: {type: string}
+            prefix: {type: string}
+            requestedBy: {type: string}
+            timestamp: {type: string, format: date-time}
+
+  cache/purge-status:
+    subscribe:
+      summary: Purge completion status
+      message:
+        name: PurgeStatus
+        payload:
+          type: object
+          required: [purgeId, status]
+          properties:
+            purgeId: {type: string}
+            status: {type: string, enum: [queued, propagating, completed, failed]}
+            nodesCompleted: {type: integer}
+            nodesTotal: {type: integer}
+            completedAt: {type: string, format: date-time}
+
+  cache/hit-miss:
+    subscribe:
+      summary: Cache hit/miss analytics
+      message:
+        name: CacheMetric
+        payload:
+          type: object
+          required: [url, cacheStatus, pop]
+          properties:
+            url: {type: string}
+            cacheStatus: {type: string, enum: [hit, miss, stale, revalidated, expired]}
+            pop: {type: string, description: Point of presence}
+            ttl: {type: integer}
+            responseTime: {type: integer}
+            contentType: {type: string}
+            bytes: {type: integer}
+
+  cache/origin-health:
+    subscribe:
+      summary: Origin server health check
+      message:
+        name: OriginHealth
+        payload:
+          type: object
+          required: [originId, status]
+          properties:
+            originId: {type: string}
+            status: {type: string, enum: [healthy, degraded, down]}
+            responseTime: {type: integer}
+            errorRate: {type: number}
+            lastCheck: {type: string, format: date-time}

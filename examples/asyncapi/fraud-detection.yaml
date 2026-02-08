@@ -1,0 +1,89 @@
+asyncapi: 2.6.0
+info:
+  title: Fraud Detection Pipeline
+  version: 1.0.0
+  description: Real-time fraud detection events
+
+servers:
+  production:
+    url: kafka-fraud:9092
+    protocol: kafka
+
+channels:
+  transactions/incoming:
+    publish:
+      summary: Transaction to analyze
+      message:
+        name: TransactionEvent
+        payload:
+          type: object
+          required: [transactionId, amount, merchantId, cardHash]
+          properties:
+            transactionId: {type: string}
+            amount: {type: number}
+            currency: {type: string}
+            merchantId: {type: string}
+            merchantCategory: {type: string}
+            cardHash: {type: string}
+            ipAddress: {type: string}
+            deviceFingerprint: {type: string}
+            location:
+              type: object
+              properties:
+                country: {type: string}
+                city: {type: string}
+            timestamp: {type: string, format: date-time}
+
+  fraud/scores:
+    subscribe:
+      summary: Fraud risk score result
+      message:
+        name: FraudScore
+        payload:
+          type: object
+          required: [transactionId, score, decision]
+          properties:
+            transactionId: {type: string}
+            score: {type: number}
+            decision: {type: string, enum: [approve, review, decline]}
+            riskFactors:
+              type: array
+              items:
+                type: object
+                properties:
+                  factor: {type: string}
+                  weight: {type: number}
+            modelVersion: {type: string}
+            latencyMs: {type: integer}
+
+  fraud/alerts:
+    subscribe:
+      summary: Fraud alert for investigation
+      message:
+        name: FraudAlert
+        payload:
+          type: object
+          required: [alertId, transactionId, severity]
+          properties:
+            alertId: {type: string}
+            transactionId: {type: string}
+            severity: {type: string, enum: [low, medium, high, critical]}
+            pattern: {type: string, enum: [velocity, geolocation, amount_anomaly, device_change, account_takeover]}
+            details: {type: string}
+            relatedTransactions:
+              type: array
+              items: {type: string}
+
+  fraud/feedback:
+    publish:
+      summary: Analyst feedback on fraud decision
+      message:
+        name: FraudFeedback
+        payload:
+          type: object
+          required: [transactionId, actualFraud]
+          properties:
+            transactionId: {type: string}
+            actualFraud: {type: boolean}
+            analystId: {type: string}
+            notes: {type: string}

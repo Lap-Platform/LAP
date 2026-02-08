@@ -1,0 +1,3545 @@
+{
+	"info": {
+		"_postman_id": "",
+		"name": "Example-Postman",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": ""
+	},
+	"item": [
+		{
+			"name": "OAuth",
+			"item": [
+				{
+					"name": "3.0 OAuth Client Credentials Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {},
+						"disableCookies": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"client_id\": \"XXXXXXXXXX\",\r\n    \"client_secret\": \"XXXXXXXXXX\",\r\n    \"grant_type\": \"client_credentials\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://apis.usps.com/oauth2/v3/token",
+							"protocol": "https",
+							"host": [
+								"apis",
+								"usps",
+								"com"
+							],
+							"path": [
+								"oauth2",
+								"v3",
+								"token"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3.0 OAuth Authorization Code Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {},
+						"disableCookies": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"client_id\": \"XXXXXXXXXX\",\r\n    \"client_secret\": \"XXXXXXXXXX\",\r\n    \"code\": \"xxxxxxxx\",\r\n    \"redirect_uri\": \"https://mycompany.com/authorize\",\r\n    \"scope\": \"prices labels tracking\",\r\n    \"state\": \"nonce=abscdefg#\",\r\n    \"grant_type\": \"authorization_code\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://apis.usps.com/oauth2/v3/token",
+							"protocol": "https",
+							"host": [
+								"apis",
+								"usps",
+								"com"
+							],
+							"path": [
+								"oauth2",
+								"v3",
+								"token"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3.0 OAuth Refresh Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {},
+						"disableCookies": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"client_id\": \"XXXXXXXXXX\",\r\n    \"client_secret\": \"XXXXXXXXXX\",\r\n    \"grant_type\": \"refresh_token\",\r\n    \"refresh_token\": \"XXXXXXXXXX\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://apis.usps.com/oauth2/v3/token",
+							"protocol": "https",
+							"host": [
+								"apis",
+								"usps",
+								"com"
+							],
+							"path": [
+								"oauth2",
+								"v3",
+								"token"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3.0 Revoke OAuth Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {},
+						"disableCookies": true,
+						"followAuthorizationHeader": false
+					},
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "client_secret",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "client_id",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"token\": \"XXXXXXXXXX\",\r\n    \"token_type_hint\": \"refresh_token\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://apis.usps.com/oauth2/v3/revoke",
+							"protocol": "https",
+							"host": [
+								"apis",
+								"usps",
+								"com"
+							],
+							"path": [
+								"oauth2",
+								"v3",
+								"revoke"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Payments",
+			"item": [
+				{
+					"name": "3.0 Domestic Label Payment",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableCookies": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "authorization",
+								"value": "",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"roles\": [\r\n        {\r\n            \"roleName\": \"PAYER\",\r\n            \"CRID\": \"XXXXXXXXXX\",\r\n            \"MID\": \"XXXXXXXXXX\",\r\n            \"manifestMID\": \"XXXXXXXXXX\",\r\n            \"accountType\": \"EPS\",\r\n            \"accountNumber\": \"XXXXXXXXXX\"\r\n        },\r\n        {\r\n            \"roleName\": \"LABEL_OWNER\",\r\n            \"CRID\": \"XXXXXXXXXX\",\r\n            \"MID\": \"XXXXXXXXXX\",\r\n            \"manifestMID\": \"XXXXXXXXXX\",\r\n            \"accountType\": \"EPS\",\r\n            \"accountNumber\": \"XXXXXXXXXX\"\r\n        }\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://apis.usps.com/payments/v3/payment-authorization",
+							"protocol": "https",
+							"host": [
+								"apis",
+								"usps",
+								"com"
+							],
+							"path": [
+								"payments",
+								"v3",
+								"payment-authorization"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3.0 International Label Payment",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableCookies": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "authorization",
+								"value": "",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"roles\": [\r\n        {\r\n            \"roleName\": \"PAYER\",\r\n            \"CRID\": \"XXXXXXXXXX\",\r\n            \"MID\": \"XXXXXXXXXX\",\r\n            \"manifestMID\": \"XXXXXXXXXX\",\r\n            \"accountType\": \"EPS\",\r\n            \"accountNumber\": \"XXXXXXXXXX\"\r\n        },\r\n        {\r\n            \"roleName\": \"LABEL_OWNER\",\r\n            \"CRID\": \"XXXXXXXXXX\",\r\n            \"MID\": \"XXXXXXXXXX\",\r\n            \"manifestMID\": \"XXXXXXXXXX\",\r\n            \"accountType\": \"EPS\",\r\n            \"accountNumber\": \"XXXXXXXXXX\"\r\n        }\r\n    ]\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://apis.usps.com/payments/v3/payment-authorization",
+							"protocol": "https",
+							"host": [
+								"apis",
+								"usps",
+								"com"
+							],
+							"path": [
+								"payments",
+								"v3",
+								"payment-authorization"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3.0 Payment Account Inquiry",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableCookies": true,
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://apis.usps.com/payments/v3/payment-account/XXXXXXXXXX?accountType=EPS&amount=100",
+							"protocol": "https",
+							"host": [
+								"apis",
+								"usps",
+								"com"
+							],
+							"path": [
+								"payments",
+								"v3",
+								"payment-account",
+								"XXXXXXXXXX"
+							],
+							"query": [
+								{
+									"key": "accountType",
+									"value": "EPS"
+								},
+								{
+									"key": "amount",
+									"value": "100"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Addresses",
+			"item": [
+				{
+					"name": "3.0 get-address",
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "accessTokenUrl",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "clientSecret",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "tokenType",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "accessToken",
+									"value": "{{token}}",
+									"type": "string"
+								},
+								{
+									"key": "challengeAlgorithm",
+									"value": "S256",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "client_credentials",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "body",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "accept",
+								"value": "application/json"
+							},
+							{
+								"key": "x-user-id",
+								"value": ""
+							},
+							{
+								"key": "authorization",
+								"value": ""
+							}
+						],
+						"url": {
+							"raw": "https://apis.usps.com/addresses/v3/address?streetAddress=3120 M St&secondaryAddress=NW&city=Washington&state=DC",
+							"protocol": "https",
+							"host": [
+								"apis",
+								"usps",
+								"com"
+							],
+							"path": [
+								"addresses",
+								"v3",
+								"address"
+							],
+							"query": [
+								{
+									"key": "streetAddress",
+									"value": "3120 M St"
+								},
+								{
+									"key": "secondaryAddress",
+									"value": "NW"
+								},
+								{
+									"key": "city",
+									"value": "Washington"
+								},
+								{
+									"key": "state",
+									"value": "DC"
+								},
+								{
+									"key": "ZIPCode",
+									"value": "20027",
+									"disabled": true
+								},
+								{
+									"key": "ZIPPlus4",
+									"value": "3704",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3.0 get-city-and-state",
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "clientSecret",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "tokenType",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "accessToken",
+									"value": "{{token}}",
+									"type": "string"
+								},
+								{
+									"key": "challengeAlgorithm",
+									"value": "S256",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "client_credentials",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "body",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "accept",
+								"value": "application/json"
+							},
+							{
+								"key": "X-User-Id",
+								"value": ""
+							},
+							{
+								"key": "Authorization",
+								"value": ""
+							}
+						],
+						"url": {
+							"raw": "https://apis.usps.com/addresses/v3/city-state?ZIPCode=10018",
+							"protocol": "https",
+							"host": [
+								"apis",
+								"usps",
+								"com"
+							],
+							"path": [
+								"addresses",
+								"v3",
+								"city-state"
+							],
+							"query": [
+								{
+									"key": "ZIPCode",
+									"value": "10018"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3.0 get-zip-code",
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "clientSecret",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "tokenType",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "accessToken",
+									"value": "{{token}}",
+									"type": "string"
+								},
+								{
+									"key": "challengeAlgorithm",
+									"value": "S256",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "client_credentials",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "body",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "accept",
+								"value": "application/json"
+							},
+							{
+								"key": "x-user-id",
+								"value": ""
+							},
+							{
+								"key": "authorization",
+								"value": ""
+							}
+						],
+						"url": {
+							"raw": "https://apis.usps.com/addresses/v3/zipcode?streetAddress=520 Maryville Centre Drive&city=Saint Louis&state=MO",
+							"protocol": "https",
+							"host": [
+								"apis",
+								"usps",
+								"com"
+							],
+							"path": [
+								"addresses",
+								"v3",
+								"zipcode"
+							],
+							"query": [
+								{
+									"key": "streetAddress",
+									"value": "520 Maryville Centre Drive"
+								},
+								{
+									"key": "city",
+									"value": "Saint Louis"
+								},
+								{
+									"key": "state",
+									"value": "MO"
+								},
+								{
+									"key": "ZIPCode",
+									"value": "96913",
+									"disabled": true
+								},
+								{
+									"key": "ZIPPlus4",
+									"value": "4208",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Carrier Pickup",
+			"item": [
+				{
+					"name": "3.0 Carrier Pickup - Eligibility",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const testName= pm.info.requestName;\r",
+									"pm.test(testName, () => {\r",
+									"  pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true,
+						"disabledSystemHeaders": {
+							"connection": true,
+							"accept": true
+						}
+					},
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Accept",
+								"value": "appplication/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://apis.usps.com/pickup/v3/carrier-pickup/eligibility?streetAddress=4120 Bingham Ave&city=Saint Louis&state=MO&ZIPCode=63116",
+							"protocol": "https",
+							"host": [
+								"apis",
+								"usps",
+								"com"
+							],
+							"path": [
+								"pickup",
+								"v3",
+								"carrier-pickup",
+								"eligibility"
+							],
+							"query": [
+								{
+									"key": "streetAddress",
+									"value": "4120 Bingham Ave"
+								},
+								{
+									"key": "city",
+									"value": "Saint Louis"
+								},
+								{
+									"key": "state",
+									"value": "MO"
+								},
+								{
+									"key": "ZIPCode",
+									"value": "63116"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3.0 Carrier Pickup - Create",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const testName= pm.info.requestName;\r",
+									"pm.test(testName, () => {\r",
+									"  pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"let responseData = pm.response.json();\r",
+									"  pm.environment.set(\"pickup_confirmation_Num\", responseData.confirmationNumber);\r",
+									"\r",
+									"let ETagValue = pm.response.headers.get(\"ETag\");\r",
+									"    pm.environment.set(\"eTag\", ETagValue);\r",
+									"    \r",
+									"console.log(\"pickup_confirmation_Num = \", pm.environment.replaceIn('{{pickup_confirmation_Num}}'));\r",
+									"console.log(\"ETag number = \", pm.environment.replaceIn('{{eTag}}'));"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"var moment = require('moment');\r",
+									"pm.collectionVariables.set('current_date', moment().format(\"YYYY-MM-DD\"));\r",
+									"// pm.globals.set('future_date_global', moment().add(2, 'days').format(\"YYYY-MM-DD\"));\r",
+									"pm.collectionVariables.set('future_date', moment().add(175, 'hours').format(\"YYYY-MM-DD\"));\r",
+									"\r",
+									"current_date = new Date(pm.collectionVariables.get('current_date'));\r",
+									"future_date = new Date(pm.collectionVariables.get('future_date'));\r",
+									"console.log(\"future day  ==> \" + future_date + \" is a \" + future_date.getDay().format(\"YYYY-MM-DD\") ); \r",
+									"console.log(\"curent day = \" + current_date + \" is a \" + current_date.getDay().format(\"YYYY-MM-DD\") );\r",
+									"Holidays = [new Date ('2023-01-02'),   new Date ('2023-01-16'),    new Date ('2023-02-20'),\r",
+									"             new Date ('2023-05-29'),   new Date ('2023-06-19'),    new Date ('2023-07-04'),\r",
+									"             new Date ('2023-09-04'),   new Date ('2023-10-09'),    new Date ('2023-11-11'),\r",
+									"             new Date ('2023-11-23'),   new Date ('2023-12-25')]\r",
+									"function checkHoliday(x) {\r",
+									"    console.log(\"X day = \" + x + \" is a \" + x.getDay() );\r",
+									"    for (i = 0; i < Holidays.length; i++) {\r",
+									"        if (x == Holidays[i]) {\r",
+									"            console.log(\"X day = \" + x + \" is a holiday\" + x.getDay() );\r",
+									"            return true;\r",
+									"        }\r",
+									"    }\r",
+									"    return false;\r",
+									"}  \r",
+									"// let isHoliday = checkHoliday(future_date);\r",
+									"if (future_date.getDay()== 0){\r",
+									"    pm.collectionVariables.set('future_date', moment().add(9, 'days').format(\"YYYY-MM-DD\"));\r",
+									"    future_date = new Date(pm.collectionVariables.get('future_date'));\r",
+									"}else if (checkHoliday(future_date)) {\r",
+									"    pm.collectionVariables.set('future_date', moment().add(9, 'days').format(\"YYYY-MM-DD\"));\r",
+									"    future_date = new Date(pm.collectionVariables.get('future_date'));\r",
+									"    console.log(\"future day = \" + future_date + \" is a \" + future_date.getDay() );\r",
+									"}\r",
+									"else\r",
+									"    console.log(\"future day = \" + future_date + \" is a \" + future_date.getDay() );\r",
+									"\r",
+									"if (future_date.getDay()!= 0 ) {\r",
+									"    if (checkHoliday(future_date)) {\r",
+									"        pm.environment.set('future_date', moment().add(8, 'days').format(\"YYYY-MM-DD\"));\r",
+									"        console.log(\"future day + 1 = \" + future_date + \" is a \" + future_date.getDay() );\r",
+									"    }\r",
+									"    else\r",
+									"        console.log(\"future day = \" + future_date + \" is a \" + future_date.getDay() );\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"connection": true,
+							"accept": true
+						}
+					},
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Accept",
+								"value": "appplication/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"pickupDate\": \"{{currentDatePlus3}}\",\r\n  \"pickupAddress\": {\r\n    \"firstName\": \"Jason\",\r\n    \"lastName\": \"Bourne\",\r\n    \"firm\": \"ABC\",\r\n    \"address\": {\r\n      \"streetAddress\": \"4120 Bingham\",\r\n      \"secondaryAddress\": \"null\",\r\n      \"city\": \"Saint Louis\",\r\n      \"state\": \"MO\",\r\n      \"ZIPCode\": \"63116\",\r\n      \"ZIPPlus4\": \"2520\",\r\n      \"urbanization\": \"\"\r\n    },\r\n    \"contact\": [\r\n      {\"email\":\"Jason.Bourne@test.com\"},\r\n      {\"cellNumber\": \"3333333333\"}\r\n    ]\r\n  },\r\n  \"packages\": [\r\n    {\r\n      \"packageType\": \"USPS_GROUND_ADVANTAGE\",\r\n      \"packageCount\": 1\r\n    }\r\n  ],\r\n  \"estimatedWeight\": 5,\r\n  \"pickupLocation\": {\r\n    \"packageLocation\": \"FRONT_DOOR\",\r\n    \"specialInstructions\": \"Have a nice day\"\r\n  }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://apis.usps.com/pickup/v3/carrier-pickup",
+							"protocol": "https",
+							"host": [
+								"apis",
+								"usps",
+								"com"
+							],
+							"path": [
+								"pickup",
+								"v3",
+								"carrier-pickup"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3.0 Carrier Pickup - Get",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const testName= pm.info.requestName;\r",
+									"pm.test(testName, () => {\r",
+									"  pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"connection": true,
+							"accept": true
+						}
+					},
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Accept",
+								"value": "appplication/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "https://apis.usps.com/pickup/v3/carrier-pickup/{{pickup_confirmation_Num}}",
+							"protocol": "https",
+							"host": [
+								"apis",
+								"usps",
+								"com"
+							],
+							"path": [
+								"pickup",
+								"v3",
+								"carrier-pickup",
+								"{{pickup_confirmation_Num}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3.0 Carrier Pickup - Update",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const testName= pm.info.requestName;\r",
+									"pm.test(testName, () => {\r",
+									"  pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"accept": true,
+							"content-type": true
+						}
+					},
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "If-Match",
+								"value": "{{eTag}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"confirmationNumber\": \"{{pickup_confirmation_Num}}\",\r\n    \"pickupDate\": \"{{currentDatePlus3}}\",\r\n    \"carrierPickupRequest\": {\r\n        \"pickupDate\": \"2024-06-28\",\r\n        \"pickupAddress\": {\r\n            \"firstName\": \"Jason\",\r\n            \"lastName\": \"Bourne\",\r\n            \"firm\": \"ABC\",\r\n            \"address\": {\r\n                \"streetAddress\": \"4120 Bingham\",\r\n                \"city\": \"Saint Louis\",\r\n                \"state\": \"MO\",\r\n                \"ZIPCode\": \"63116\",\r\n                \"ZIPPlus4\": \"2520\"\r\n            },\r\n            \"contact\": [\r\n                {\r\n                    \"email\": \"Jason.Bourne@test.com\"\r\n                },\r\n                {\r\n                    \"cellNumber\": \"3333333333\"\r\n                }\r\n            ]\r\n        },\r\n        \"packages\": [\r\n            {\r\n                \"packageType\": \"PRIORITY_MAIL\",\r\n                \"packageCount\": 1\r\n            }\r\n        ],\r\n        \"estimatedWeight\": 1,\r\n        \"pickupLocation\": {\r\n            \"packageLocation\": \"FRONT_DOOR\",\r\n            \"specialInstructions\": \"string\"\r\n        }\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://apis.usps.com/pickup/v3/carrier-pickup/{{pickup_confirmation_Num}}",
+							"protocol": "https",
+							"host": [
+								"apis",
+								"usps",
+								"com"
+							],
+							"path": [
+								"pickup",
+								"v3",
+								"carrier-pickup",
+								"{{pickup_confirmation_Num}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3.0 Carrier Pickup - Delete",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const testName= pm.info.requestName;\r",
+									"pm.test(testName, () => {\r",
+									"  pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"connection": true,
+							"accept": true
+						}
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Accept",
+								"value": "appplication/json",
+								"type": "text"
+							},
+							{
+								"key": "If-Match",
+								"value": "{{eTag}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "xml"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://apis.usps.com/pickup/v3/carrier-pickup/{{pickup_confirmation_Num}}",
+							"protocol": "https",
+							"host": [
+								"apis",
+								"usps",
+								"com"
+							],
+							"path": [
+								"pickup",
+								"v3",
+								"carrier-pickup",
+								"{{pickup_confirmation_Num}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Containers",
+			"item": [
+				{
+					"name": "3.0 Add to Container",
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"trackingNumbers\": [\r\n        \"9261212345678900019471\" //Add Tracking Number/s\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://apis.usps.com/containers/v3/containers/99M900066875EMA00002R/packages",
+							"protocol": "https",
+							"host": [
+								"apis",
+								"usps",
+								"com"
+							],
+							"path": [
+								"containers",
+								"v3",
+								"containers",
+								"99M900066875EMA00002R",
+								"packages"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3.0 Create Container Label",
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"imageInfo\": {\r\n        \"imageType\": \"PDF\",\r\n        \"labelType\": \"6X4LABEL\"\r\n    },\r\n    \"sortType\": \"TRUCK_BEDLOAD\",\r\n    \"trackingNumbers\": [\r\n        \"9261212345678900019471\" //Add Tracking Number/s\r\n    ],\r\n    \"destinationEntryFacilityType\": \"DESTINATION_NETWORK_DISTRIBUTION_CENTER\",\r\n    \"destinationZIPCode\": \"97872\",\r\n    \"mailClass\": \"PARCEL_SELECT\",\r\n    \"originAddress\": {\r\n        \"streetAddress\": \"900 BRENTWOOD RD NE\",\r\n        \"secondaryAddress\": \"\",\r\n        \"city\": \"Washington\",\r\n        \"state\": \"DC\",\r\n        \"ZIPCode\": \"20018\",\r\n        \"ZIPPlus4\": \"0000\",\r\n        \"urbanization\": \"\"\r\n    },\r\n    \"mailerName\": \"John Smith AC.\",\r\n    \"processingCategory\": \"MACHINABLE\",\r\n    \"containerTopology\": \"NESTED\",\r\n    \"MID\": \"XXXXXXXXX\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://apis.usps.com/containers/v3/containers",
+							"protocol": "https",
+							"host": [
+								"apis",
+								"usps",
+								"com"
+							],
+							"path": [
+								"containers",
+								"v3",
+								"containers"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3.0 Remove All Packages from Container",
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://apis.usps.com/containers/v3/containers/99M900066875EMA00002R/packages",
+							"protocol": "https",
+							"host": [
+								"apis",
+								"usps",
+								"com"
+							],
+							"path": [
+								"containers",
+								"v3",
+								"containers",
+								"99M900066875EMA00002R",
+								"packages"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3.0 Remove Individual Package from Container",
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://apis.usps.com/containers/v3/containers/99M900066875EMA00002R/packages/9261212345678900019471",
+							"protocol": "https",
+							"host": [
+								"apis",
+								"usps",
+								"com"
+							],
+							"path": [
+								"containers",
+								"v3",
+								"containers",
+								"99M900066875EMA00002R",
+								"packages",
+								"9261212345678900019471"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3.0 Close Container",
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"mailingDate\": \"2024-09-26\",\r\n    \"containers\": [\r\n        \"99M900066875EMA00002R\"\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://apis.usps.com/containers/v3/containers/manifest",
+							"protocol": "https",
+							"host": [
+								"apis",
+								"usps",
+								"com"
+							],
+							"path": [
+								"containers",
+								"v3",
+								"containers",
+								"manifest"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Domestic Labels",
+			"item": [
+				{
+					"name": "3.0 Domestic Label",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"const responseCollection= pm.response.text().split(\"\\n\");\r",
+									"const labelImageData = responseCollection[10]\r",
+									"const labelType = responseCollection[6].split(\" \")[1]\r",
+									"let template = `data:${labelType};base64,${labelImageData}`\r",
+									"//let template = `data:application/octet-stream;base64, ${labelImageData}`\r",
+									"pm.visualizer.set(template)"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableCookies": true
+					},
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "accessTokenUrl",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "clientSecret",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "tokenType",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "accessToken",
+									"value": "{{token}}",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "body",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "client_credentials",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Payment-Authorization-Token",
+								"value": "{{payment_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"imageInfo\": {\r\n        \"imageType\": \"PDF\"\r\n        \r\n    },\r\n    \"toAddress\": {\r\n        \"firstName\": \"Joe\",\r\n        \"lastName\": \"Doe\",\r\n        \"streetAddress\": \"1100 Wyoming\",\r\n        \"secondaryAddress\": \"Suite 150\",\r\n        \"city\": \"St. Louis\",\r\n        \"state\": \"MO\",\r\n        \"ZIPCode\": \"63118\"\r\n    },\r\n    \"fromAddress\": {\r\n        \"firstName\": \"John\",\r\n        \"lastName\": \"Smith\",\r\n        \"streetAddress\": \"4120 Bingham\",\r\n        \"city\": \"St. Louis\",\r\n        \"state\": \"MO\",\r\n        \"ZIPCode\": \"63116\"\r\n    },\r\n    \"packageDescription\": {\r\n        \"mailClass\": \"USPS_GROUND_ADVANTAGE\",\r\n        \"rateIndicator\": \"SP\",\r\n        \"weightUOM\": \"lb\",\r\n        \"weight\": 0.5,\r\n        \"dimensionsUOM\": \"in\",\r\n        \"length\": 9,\r\n        \"height\": 6,\r\n        \"width\": 0.25,\r\n        \"processingCategory\": \"MACHINABLE\",\r\n        \"mailingDate\": \"{{date}}\",\r\n        \"extraServices\": [\r\n            930\r\n        ],\r\n        \"destinationEntryFacilityType\": \"NONE\",\r\n        \"packageOptions\": {\r\n            \"packageValue\": 400\r\n        }\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://apis.usps.com/labels/v3/label",
+							"protocol": "https",
+							"host": [
+								"apis",
+								"usps",
+								"com"
+							],
+							"path": [
+								"labels",
+								"v3",
+								"label"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3.0 Edit Label",
+					"protocolProfileBehavior": {
+						"disableCookies": true
+					},
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "X-Payment-Authorization-Token",
+								"value": "{{payment_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\r\n  {\r\n    \"op\": \"replace\",\r\n    \"path\": \"/packageDescription/weight\",\r\n    \"value\": 1\r\n  },\r\n  {\r\n    \"op\": \"replace\",\r\n    \"path\": \"/packageDescription/length\",\r\n    \"value\": 10\r\n  },\r\n  {\r\n    \"op\": \"replace\",\r\n    \"path\": \"/packageDescription/height\",\r\n    \"value\": 7\r\n  },\r\n  {\r\n    \"op\": \"replace\",\r\n    \"path\": \"/packageDescription/width\",\r\n    \"value\": 4.5\r\n  },\r\n  {\r\n    \"op\": \"replace\",\r\n    \"path\": \"/packageDescription/girth\",\r\n    \"value\": 0.50\r\n  },\r\n  {\r\n    \"op\": \"replace\",\r\n    \"path\": \"/packageDescription/processingCategory\",\r\n    \"value\": \"NON_MACHINABLE\"\r\n  },\r\n  {\r\n    \"op\": \"replace\",\r\n    \"path\": \"/packageDescription/containers\",\r\n    \"value\": [\r\n      {\r\n        \"containerID\": \"123456789012345\",\r\n        \"sortType\": \"PALLET\"\r\n      }\r\n    ]\r\n  },\r\n  {\r\n    \"op\": \"replace\",\r\n    \"path\": \"/packageDescription/rateIndicator\",\r\n    \"value\": \"CP\"\r\n  }\r\n]"
+						},
+						"url": {
+							"raw": "https://apis.usps.com/labels/v3/label/1234568790123546879012",
+							"protocol": "https",
+							"host": [
+								"apis",
+								"usps",
+								"com"
+							],
+							"path": [
+								"labels",
+								"v3",
+								"label",
+								"1234568790123546879012"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3.0 First-Class Letter or Flat Indicia",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"const responseCollection= pm.response.text().split(\"\\n\");\r",
+									"const labelImageData = responseCollection[10]\r",
+									"const labelType = responseCollection[6].split(\" \")[1]\r",
+									"let template = `data:${labelType};base64,${labelImageData}`\r",
+									"//let template = `data:application/octet-stream;base64, ${labelImageData}`\r",
+									"pm.visualizer.set(template)"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableCookies": true
+					},
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "accessTokenUrl",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "clientSecret",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "tokenType",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "accessToken",
+									"value": "{{token}}",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "body",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "client_credentials",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Payment-Authorization-Token",
+								"value": "{{payment_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"indiciaDescription\": {\r\n        \"processingCategory\": \"LETTERS\",\r\n        \"weight\": 3.5,\r\n        \"mailingDate\": \"2024-07-11\",\r\n        \"length\": 6.0,\r\n        \"height\": 4.0,\r\n        \"thickness\": 0.25,\r\n        \"nonMachinableIndicators\": {\r\n            \"isPolybagged\": true,\r\n            \"hasClosureDevices\": true,\r\n            \"hasLooseItems\": true,\r\n            \"isRigid\": true,\r\n            \"isSelfMailer\": true,\r\n            \"isBooklet\": true\r\n        }\r\n    },\r\n    \"imageInfo\": {\r\n        \"imageType\": \"PDF\",\r\n        \"receiptOption\": \"SEPARATE_PAGE\"\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://apis.usps.com/labels/v3/indicia",
+							"protocol": "https",
+							"host": [
+								"apis",
+								"usps",
+								"com"
+							],
+							"path": [
+								"labels",
+								"v3",
+								"indicia"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Domestic Prices",
+			"item": [
+				{
+					"name": "3.0 Domestic Prices - Base Rates",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableCookies": true
+					},
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "tokenType",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "accessToken",
+									"value": "{{token}}",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "body",
+									"type": "string"
+								},
+								{
+									"key": "tokenName",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"originZIPCode\": \"78664\",\r\n    \"destinationZIPCode\": \"78665\",\r\n    \"weight\": 7,\r\n    \"length\": 9,\r\n    \"width\": 0.25,\r\n    \"height\": 6,\r\n    \"mailClass\": \"PARCEL_SELECT\",\r\n    \"processingCategory\": \"MACHINABLE\",\r\n    \"destinationEntryFacilityType\": \"NONE\",\r\n    \"rateIndicator\": \"DR\",\r\n    \"priceType\": \"COMMERCIAL\",\r\n    \"accountType\": \"EPS\",\r\n    \"accountNumber\": \"XXXXXXXXXX\",\r\n    \"mailingDate\": \"2023-05-23\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://apis.usps.com/prices/v3/base-rates/search",
+							"protocol": "https",
+							"host": [
+								"apis",
+								"usps",
+								"com"
+							],
+							"path": [
+								"prices",
+								"v3",
+								"base-rates",
+								"search"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3.0 Domestic Prices - Extra Service Rates",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableCookies": true
+					},
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "tokenType",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "accessToken",
+									"value": "{{token}}",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "body",
+									"type": "string"
+								},
+								{
+									"key": "tokenName",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"extraService\": 415,\r\n  \"mailClass\": \"PARCEL_SELECT\",\r\n  \"priceType\": \"RETAIL\",\r\n  \"itemValue\": 0,\r\n  \"weight\": 5,\r\n  \"mailingDate\": \"2023-05-23\",\r\n  \"accountType\": \"EPS\",\r\n  \"accountNumber\": \"XXXXXXXXXX\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://apis.usps.com/prices/v3/extra-service-rates/search",
+							"protocol": "https",
+							"host": [
+								"apis",
+								"usps",
+								"com"
+							],
+							"path": [
+								"prices",
+								"v3",
+								"extra-service-rates",
+								"search"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3.0 Domestic Prices - Total Rates",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableCookies": true
+					},
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "tokenType",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "accessToken",
+									"value": "{{token}}",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "body",
+									"type": "string"
+								},
+								{
+									"key": "tokenName",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"originZIPCode\": \"36105\",\r\n    \"destinationZIPCode\": \"78207\",\r\n    \"weight\": 7,\r\n    \"length\": 9,\r\n    \"width\": 0.25,\r\n    \"height\": 6,\r\n    \"mailClass\": \"PARCEL_SELECT\",\r\n    \"priceType\": \"COMMERCIAL\",\r\n    \"mailingDate\": \"2023-07-28\",\r\n    \"accountType\": \"EPS\",\r\n    \"accountNumber\": \"XXXXXXXXXX\",\r\n    \"itemValue\": 500,\r\n    \"extraServices\": [\r\n        415\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://apis.usps.com/prices/v3/total-rates/search",
+							"protocol": "https",
+							"host": [
+								"apis",
+								"usps",
+								"com"
+							],
+							"path": [
+								"prices",
+								"v3",
+								"total-rates",
+								"search"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3.0 Domestic Prices - Letter Rates",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableCookies": true
+					},
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "tokenType",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "accessToken",
+									"value": "{{token}}",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "body",
+									"type": "string"
+								},
+								{
+									"key": "tokenName",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"weight\": 3.5,\r\n    \"length\": 4.0,\r\n    \"height\": 5.0,\r\n    \"thickness\": 0.25,\r\n    \"processingCategory\": \"LETTERS\",\r\n    \"mailingDate\": \"2023-11-29\",\r\n    \"nonMachinableIndicators\": {\r\n        \"isPolybagged\": true,\r\n        \"hasClosureDevices\": true,\r\n        \"hasLooseItems\": true,\r\n        \"isRigid\": true,\r\n        \"isSelfMailer\": true,\r\n        \"isBooklet\": true\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://apis.usps.com/prices/v3/letter-rates/search",
+							"protocol": "https",
+							"host": [
+								"apis",
+								"usps",
+								"com"
+							],
+							"path": [
+								"prices",
+								"v3",
+								"letter-rates",
+								"search"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "International Labels",
+			"item": [
+				{
+					"name": "3.0 International Label",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const responseCollection= pm.response.text().split(\"\\n\");\r",
+									"const labelImageData = responseCollection[10]\r",
+									"const labelType = responseCollection[6].split(\" \")[1]\r",
+									"let template = `data:${labelType};base64,${labelImageData}`\r",
+									"//let template = `data:application/octet-stream;base64, ${labelImageData}`\r",
+									"pm.visualizer.set(template)"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableCookies": true,
+						"disabledSystemHeaders": {
+							"accept": true
+						}
+					},
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "clientSecret",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "tokenType",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "accessToken",
+									"value": "{{token}}",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "body",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "client_credentials",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Payment-Authorization-Token",
+								"value": "",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"imageInfo\": {\r\n        \"imageType\": \"PDF\",\r\n        \"labelType\": \"4X6LABEL\",\r\n        \"packageNumber\": 5,\r\n        \"totalPackages\": 50,\r\n        \"holdForManifest\": true\r\n    },\r\n    \"toAddress\": {\r\n        \"firstName\": \"Charlie\",\r\n        \"lastName\": \"Collins\",\r\n        \"firm\": \"MRIF\",\r\n        \"phone\": \"33153235555\",\r\n        \"streetAddress\": \"118 Avenue De France\",\r\n        \"streetAddressAbbreviation\": \"\",\r\n        \"secondaryAddress\": \"\",\r\n        \"city\": \"Paris\",\r\n        \"postalCode\": \"3100020\",\r\n        \"province\": \"\",\r\n        \"urbanization\": \"yes\",\r\n        \"country\": \"France\",\r\n        \"countryISOAlpha2Code\": \"FR\"\r\n    },\r\n    \"fromAddress\": {\r\n        \"firstName\": \"Bob\",\r\n        \"lastName\": \"Dole\",\r\n        \"firm\": \"Postal Service\",\r\n        \"phone\": \"1234567890\",\r\n        \"streetAddress\": \"901 D ST SW\",\r\n        \"streetAddressAbbreviation\": \"\",\r\n        \"secondaryAddress\": \"STE 101\",\r\n        \"city\": \"Washington\",\r\n        \"cityAbbreviation\": \"\",\r\n        \"urbanization\": \"\",\r\n        \"state\": \"DC\",\r\n        \"ZIPCode\": \"20042\",\r\n        \"ZIPPlus4\": \"2198\",\r\n        \"country\": \"USA\",\r\n        \"countryISOAlpha2Code\": \"US\"\r\n    },\r\n    \"senderAddress\": {\r\n        \"firstName\": \"Jill\",\r\n        \"lastName\": \"Biden\",\r\n        \"firm\": \"Postal Service\",\r\n        \"phone\": \"1234567890\",\r\n        \"streetAddress\": \"901 D ST SW\",\r\n        \"streetAddressAbbreviation\": \"\",\r\n        \"secondaryAddress\": \"STE 101\",\r\n        \"city\": \"Washington\",\r\n        \"cityAbbreviation\": \"\",\r\n        \"urbanization\": \"\",\r\n        \"state\": \"DC\",\r\n        \"ZIPCode\": \"20042\",\r\n        \"ZIPPlus4\": \"2198\",\r\n        \"country\": \"USA\",\r\n        \"countryISOAlpha2Code\": \"US\"\r\n    },\r\n    \"packageDescription\": {\r\n        \"mailClass\": \"PRIORITY_MAIL_EXPRESS_INTERNATIONAL\",\r\n        \"rateIndicator\": \"PA\",\r\n        \"weightUOM\": \"lb\",\r\n        \"dimensionsUOM\": \"in\",\r\n        \"length\": 11.0,\r\n        \"width\": 0.5,\r\n        \"height\": 0.5,\r\n        \"girth\": 3.0,\r\n        \"weight\": 0.5,\r\n        \"processingCategory\": \"NON_MACHINABLE\",\r\n        \"extraServices\": [],\r\n        \"packageOptions\": {\r\n            \"packageValue\": 35,\r\n            \"nonDeliveryOption\": \"RETURN\"\r\n        },\r\n        \"destinationEntryFacilityType\": \"NONE\",\r\n        \"mailingDate\": \"2023-05-26\",\r\n        \"customerReference\": []\r\n    },\r\n    \"customsForm\": {\r\n        \"customsContentType\": \"GIFT\",\r\n        \"contentComments\": \"Gift inside!\",\r\n        \"restrictionType\": \"QUARANTINE\",\r\n        \"restrictionComments\": \"Covid\",\r\n        \"AESITN\": \"4783947658\",\r\n        \"invoiceNumber\": \"389403\",\r\n        \"licenseNumber\": \"092747893\",\r\n        \"certificateNumber\": \"CER3629004\",\r\n        \"contents\": [\r\n            {\r\n                \"itemDescription\": \"Gift for Grandma\",\r\n                \"itemQuantity\": 1,\r\n                \"itemValue\": 2,\r\n                \"weightUOM\": \"lb\",\r\n                \"itemWeight\": 0.2,\r\n                \"HSTariffNumber\": \"HST1234\",\r\n                \"countryofOrigin\": \"CA\"\r\n            },\r\n            {\r\n                \"itemDescription\": \"Gift for Grandma\",\r\n                \"itemQuantity\": 2,\r\n                \"itemValue\": 3,\r\n                \"weightUOM\": \"lb\",\r\n                \"itemWeight\": 0.3,\r\n                \"HSTariffNumber\": \"TN4567\",\r\n                \"countryofOrigin\": \"AU\"\r\n            }\r\n        ]\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://apis.usps.com/international-labels/v3/international-label",
+							"protocol": "https",
+							"host": [
+								"apis",
+								"usps",
+								"com"
+							],
+							"path": [
+								"international-labels",
+								"v3",
+								"international-label"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "International Prices",
+			"item": [
+				{
+					"name": "3.0 International Prices - Base Rates",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableCookies": true
+					},
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "tokenType",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "accessToken",
+									"value": "{{token}}",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "body",
+									"type": "string"
+								},
+								{
+									"key": "tokenName",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"originZIPCode\": \"22407\",\r\n    \"foreignPostalCode\": \"10109\",\r\n    \"destinationCountryCode\": \"CA\",\r\n    \"destinationEntryFacilityType\": \"NONE\",\r\n    \"weight\": 0.5,\r\n    \"length\": 9,\r\n    \"width\": 15,\r\n    \"height\": 6,\r\n    \"mailClass\": \"FIRST-CLASS_PACKAGE_INTERNATIONAL_SERVICE\",\r\n    \"processingCategory\": \"NON_MACHINABLE\",\r\n    \"rateIndicator\": \"SP\",\r\n    \"priceType\": \"COMMERCIAL\",\r\n    \"accountType\": \"EPS\",\r\n    \"accountNumber\": \"XXXXXXXXXX\",\r\n    \"mailingDate\": \"2023-05-23\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://apis.usps.com/international-prices/v3/base-rates/search",
+							"protocol": "https",
+							"host": [
+								"apis",
+								"usps",
+								"com"
+							],
+							"path": [
+								"international-prices",
+								"v3",
+								"base-rates",
+								"search"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3.0 International Prices - Extra Service Rates",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableCookies": true
+					},
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "tokenType",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "accessToken",
+									"value": "{{token}}",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "body",
+									"type": "string"
+								},
+								{
+									"key": "tokenName",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"extraService\": 930,\r\n  \"mailClass\": \"PRIORITY_MAIL_INTERNATIONAL\",\r\n  \"priceType\": \"RETAIL\",\r\n  \"itemValue\": \"500\",\r\n  \"weight\": 4,\r\n  \"mailingDate\": \"2023-05-23\",\r\n  \"rateIndicator\": \"SP\",\r\n  \"destinationCountryCode\": \"CR\",\r\n  \"accountType\": \"EPS\",\r\n  \"accountNumber\": \"XXXXXXXXXX\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://apis.usps.com/international-prices/v3/extra-service-rates/search",
+							"protocol": "https",
+							"host": [
+								"apis",
+								"usps",
+								"com"
+							],
+							"path": [
+								"international-prices",
+								"v3",
+								"extra-service-rates",
+								"search"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3.0 International Prices - Base Rates List",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableCookies": true
+					},
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "tokenType",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "accessToken",
+									"value": "{{token}}",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "body",
+									"type": "string"
+								},
+								{
+									"key": "tokenName",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"originZIPCode\": \"22407\",\r\n    \"foreignPostalCode\": \"10109\",\r\n    \"destinationCountryCode\": \"CA\",\r\n    \"weight\": 4,\r\n    \"mailingDate\": \"2024-02-29\",\r\n    \"length\": 6,\r\n    \"width\": 0.25,\r\n    \"height\": 3,\r\n    \"mailClass\": \"PRIORITY_MAIL_INTERNATIONAL\",\r\n    \"accountType\": \"EPS\",\r\n    \"accountNumber\": \"XXXXXXXXXX\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://apis.usps.com/international-prices/v3/base-rates-list/search",
+							"protocol": "https",
+							"host": [
+								"apis",
+								"usps",
+								"com"
+							],
+							"path": [
+								"international-prices",
+								"v3",
+								"base-rates-list",
+								"search"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3.0 International Prices - Total Rates",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableCookies": true
+					},
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "tokenType",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "accessToken",
+									"value": "{{token}}",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "body",
+									"type": "string"
+								},
+								{
+									"key": "tokenName",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"originZIPCode\": \"22407\",\r\n    \"foreignPostalCode\": \"63118\",\r\n    \"destinationCountryCode\": \"CA\",\r\n    \"weight\": 1.2,\r\n    \"length\": 6,\r\n    \"width\": 6,\r\n    \"height\": 6,\r\n    \"mailClass\": \"PRIORITY_MAIL_EXPRESS_INTERNATIONAL\",\r\n    \"priceType\": \"COMMERCIAL\",\r\n    \"mailingDate\": \"2024-02-29\",\r\n    \"accountType\": \"EPS\",\r\n    \"accountNumber\": \"XXXXXXXXXX\",\r\n    \"itemValue\": 300,\r\n    \"extraServices\": [\r\n        955\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://apis.usps.com/international-prices/v3/total-rates/search",
+							"protocol": "https",
+							"host": [
+								"apis",
+								"usps",
+								"com"
+							],
+							"path": [
+								"international-prices",
+								"v3",
+								"total-rates",
+								"search"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Locations",
+			"item": [
+				{
+					"name": "3.0 Dropoff Locator",
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"accept": true
+						},
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "tokenType",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "accessToken",
+									"value": "{{token}}",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://apis.usps.com/locations/v3/dropoff-locations?mailClass=PARCEL_SELECT&destinationZIPCode=30343",
+							"protocol": "https",
+							"host": [
+								"apis",
+								"usps",
+								"com"
+							],
+							"path": [
+								"locations",
+								"v3",
+								"dropoff-locations"
+							],
+							"query": [
+								{
+									"key": "processingCategory",
+									"value": "JUNK_VALUE",
+									"disabled": true
+								},
+								{
+									"key": "palletized",
+									"value": "JUNK_VALUE",
+									"disabled": true
+								},
+								{
+									"key": "destinationEntryFacilityType",
+									"value": "DESTINATION_DELIVERY_UNIT",
+									"disabled": true
+								},
+								{
+									"key": "mailClass",
+									"value": "PARCEL_SELECT"
+								},
+								{
+									"key": "destinationZIPCode",
+									"value": "30343"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3.0 Post Office Locator",
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "clientSecret",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "tokenType",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "accessToken",
+									"value": "{{token}}",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "body",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "client_credentials",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://apis.usps.com/locations/v3/post-office-locations?radius=1&ZIPCode=10463",
+							"protocol": "https",
+							"host": [
+								"apis",
+								"usps",
+								"com"
+							],
+							"path": [
+								"locations",
+								"v3",
+								"post-office-locations"
+							],
+							"query": [
+								{
+									"key": "postOfficeType",
+									"value": "POST_OFFICE",
+									"disabled": true
+								},
+								{
+									"key": "servicesOperator",
+									"value": "AND",
+									"disabled": true
+								},
+								{
+									"key": "radius",
+									"value": "1"
+								},
+								{
+									"key": "units",
+									"value": "MI",
+									"disabled": true
+								},
+								{
+									"key": "sortBy",
+									"value": "asc(distance)",
+									"disabled": true
+								},
+								{
+									"key": "offset",
+									"value": "40",
+									"disabled": true
+								},
+								{
+									"key": "limit",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "mailingService",
+									"value": "CARRIER_SERVICES",
+									"disabled": true
+								},
+								{
+									"key": "mailingService",
+									"value": "GENERAL_DELIVERY",
+									"disabled": true
+								},
+								{
+									"key": "businessService",
+									"value": "CALL_REFERRAL",
+									"disabled": true
+								},
+								{
+									"key": "passportService",
+									"value": "PASSPORT_APPOINTMENT",
+									"disabled": true
+								},
+								{
+									"key": "pickupService",
+									"value": "PICKUP_HOLD_MAIL",
+									"disabled": true
+								},
+								{
+									"key": "financialService",
+									"value": "MONEY_ORDER_DOMESTIC",
+									"disabled": true
+								},
+								{
+									"key": "LAT",
+									"value": "41",
+									"disabled": true
+								},
+								{
+									"key": "LONG",
+									"value": "-77",
+									"disabled": true
+								},
+								{
+									"key": "hours",
+									"value": "SUNDAY_HOURS",
+									"disabled": true
+								},
+								{
+									"key": "ZIPCode",
+									"value": "10463"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Service Standards",
+			"item": [
+				{
+					"name": "3.0 get-estimates",
+					"protocolProfileBehavior": {
+						"disableCookies": true
+					},
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "tokenType",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "accessToken",
+									"value": "{{token}}",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://apis.usps.com/service-standards/v3/estimates?originZIPCode=10018&destinationZIPCode=95823&acceptanceDate=2023-05-26&mailClass=PRIORITY_MAIL&destinationType=HOLD_FOR_PICKUP&serviceTypeCodes=925",
+							"protocol": "https",
+							"host": [
+								"apis",
+								"usps",
+								"com"
+							],
+							"path": [
+								"service-standards",
+								"v3",
+								"estimates"
+							],
+							"query": [
+								{
+									"key": "originZIPCode",
+									"value": "10018"
+								},
+								{
+									"key": "destinationZIPCode",
+									"value": "95823"
+								},
+								{
+									"key": "acceptanceDate",
+									"value": "2023-05-26"
+								},
+								{
+									"key": "mailClass",
+									"value": "PRIORITY_MAIL"
+								},
+								{
+									"key": "destinationType",
+									"value": "HOLD_FOR_PICKUP"
+								},
+								{
+									"key": "serviceTypeCodes",
+									"value": "925"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3.0 get-standards",
+					"protocolProfileBehavior": {
+						"disableCookies": true
+					},
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "tokenType",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "accessToken",
+									"value": "{{token}}",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://apis.usps.com/service-standards/v3/standards?originZIPCode=10018&destinationZIPCode=95823&mailClass=PRIORITY_MAIL&destinationType=HOLD_FOR_PICKUP&serviceTypeCodes=925",
+							"protocol": "https",
+							"host": [
+								"apis",
+								"usps",
+								"com"
+							],
+							"path": [
+								"service-standards",
+								"v3",
+								"standards"
+							],
+							"query": [
+								{
+									"key": "originZIPCode",
+									"value": "10018"
+								},
+								{
+									"key": "destinationZIPCode",
+									"value": "95823"
+								},
+								{
+									"key": "mailClass",
+									"value": "PRIORITY_MAIL"
+								},
+								{
+									"key": "destinationType",
+									"value": "HOLD_FOR_PICKUP"
+								},
+								{
+									"key": "serviceTypeCodes",
+									"value": "925"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "SCAN Form",
+			"item": [
+				{
+					"name": "3.0 Label Shipment",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const labelImageData = pm.response.json().scanFormImage;\r",
+									"const labelType = \"application/\"+JSON.parse(pm.request.body.raw).imageType;\r",
+									"let template = `data:${labelType};base64,${labelImageData}`\r",
+									"//let template = `data:application/octet-stream;base64, ${labelImageData}`\r",
+									"pm.visualizer.set(template)"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"accept": true
+						}
+					},
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "client_authentication",
+									"value": "body",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "client_credentials",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"form\": \"5630\",\r\n    \"imageType\": \"PDF\",\r\n    \"labelType\": \"8.5x11LABEL\",\r\n    \"mailingDate\": \"2023-07-09\",\r\n    \"entryFacilityZIPCode\": \"45011\",\r\n    \"entryFacilityZIPPlus4\": \"\",\r\n    \"destinationEntryFacilityType\": \"NONE\",\r\n    \"overwriteMailingDate\": false,\r\n    \"shipment\": {\r\n        \"trackingNumbers\": [\r\n            \"XXXXXXXXXXXXXXXXXXXXXX\"\r\n        ]\r\n    },\r\n    \"fromAddress\": {\r\n        \"firstName\": \"Leroy\",\r\n        \"lastName\": \"Brown\",\r\n        \"firm\": \"USPS\",\r\n        \"streetAddress\": \"4261 Port Union Road\",\r\n        \"streetAddressAbbreviation\": \"\",\r\n        \"secondaryAddress\": \"APT N\",\r\n        \"city\": \"West Chester\",\r\n        \"cityAbbreviation\": \"\",\r\n        \"state\": \"OH\",\r\n        \"ZIPCode\": \"45011\",\r\n        \"ZIPPlus4\": \"1175\",\r\n        \"urbanization\": \"\"\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://apis.usps.com/scan-forms/v3/scan-form",
+							"protocol": "https",
+							"host": [
+								"apis",
+								"usps",
+								"com"
+							],
+							"path": [
+								"scan-forms",
+								"v3",
+								"scan-form"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3.0 MID Shipment",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const labelImageData = pm.response.json().scanFormImage;\r",
+									"const labelType = \"application/\"+JSON.parse(pm.request.body.raw).imageType;\r",
+									"let template = `data:${labelType};base64,${labelImageData}`\r",
+									"//let template = `data:application/octet-stream;base64, ${labelImageData}`\r",
+									"pm.visualizer.set(template)"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"accept": true
+						}
+					},
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "client_authentication",
+									"value": "body",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "client_credentials",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"form\": \"5630\",\r\n    \"imageType\": \"PDF\",\r\n    \"labelType\": \"8.5x11LABEL\",\r\n    \"mailingDate\": \"2023-07-09\",\r\n    \"entryFacilityZIPCode\": \"45011\",\r\n    \"entryFacilityZIPPlus4\": \"\",\r\n    \"destinationEntryFacilityType\": \"NONE\",\r\n    \"overwriteMailingDate\": false,\r\n    \"shipment\": {\r\n        \"MID\": \"XXXXXXXXX\"\r\n    },\r\n    \"fromAddress\": {\r\n        \"firstName\": \"Leroy\",\r\n        \"lastName\": \"Brown\",\r\n        \"firm\": \"USPS\",\r\n        \"streetAddress\": \"4261 Port Union Road\",\r\n        \"streetAddressAbbreviation\": \"\",\r\n        \"secondaryAddress\": \"APT N\",\r\n        \"city\": \"West Chester\",\r\n        \"cityAbbreviation\": \"\",\r\n        \"state\": \"OH\",\r\n        \"ZIPCode\": \"45011\",\r\n        \"ZIPPlus4\": \"1175\",\r\n        \"urbanization\": \"\"\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://apis.usps.com/scan-forms/v3/scan-form",
+							"protocol": "https",
+							"host": [
+								"apis",
+								"usps",
+								"com"
+							],
+							"path": [
+								"scan-forms",
+								"v3",
+								"scan-form"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3.0 Manifest MID Shipment",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const labelImageData = pm.response.json().scanFormImage;\r",
+									"const labelType = \"application/\"+JSON.parse(pm.request.body.raw).imageType;\r",
+									"let template = `data:${labelType};base64,${labelImageData}`\r",
+									"//let template = `data:application/octet-stream;base64, ${labelImageData}`\r",
+									"pm.visualizer.set(template)"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"accept": true
+						}
+					},
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "client_authentication",
+									"value": "body",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "client_credentials",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"form\": \"5630\",\r\n    \"imageType\": \"PDF\",\r\n    \"labelType\": \"8.5x11LABEL\",\r\n    \"mailingDate\": \"2023-07-09\",\r\n    \"entryFacilityZIPCode\": \"45011\",\r\n    \"entryFacilityZIPPlus4\": \"\",\r\n    \"destinationEntryFacilityType\": \"NONE\",\r\n    \"overwriteMailingDate\": false,\r\n    \"shipment\": {\r\n        \"manifestMID\": \"XXXXXXXXX\"\r\n    },\r\n    \"fromAddress\": {\r\n        \"firstName\": \"Leroy\",\r\n        \"lastName\": \"Brown\",\r\n        \"firm\": \"USPS\",\r\n        \"streetAddress\": \"4261 Port Union Road\",\r\n        \"streetAddressAbbreviation\": \"\",\r\n        \"secondaryAddress\": \"APT N\",\r\n        \"city\": \"West Chester\",\r\n        \"cityAbbreviation\": \"\",\r\n        \"state\": \"OH\",\r\n        \"ZIPCode\": \"45011\",\r\n        \"ZIPPlus4\": \"1175\",\r\n        \"urbanization\": \"\"\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://apis.usps.com/scan-forms/v3/scan-form",
+							"protocol": "https",
+							"host": [
+								"apis",
+								"usps",
+								"com"
+							],
+							"path": [
+								"scan-forms",
+								"v3",
+								"scan-form"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Shipping Options",
+			"item": [
+				{
+					"name": "Shipping Options - POST",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"pricingOptions\": [\r\n        {\r\n            \"priceType\": \"COMMERCIAL\",\r\n            \"paymentAccount\": {\r\n                \"accountType\": \"EPS\",\r\n                \"accountNumber\": \"XXXXXXXXXX\"\r\n            }\r\n        }\r\n    ],\r\n    \"originZIPCode\": \"05485-8016\",\r\n    \"destinationZIPCode\": \"38746 0230\",\r\n    \"destinationEntryFacilityType\": \"NONE\",\r\n    \"packageDescription\": {\r\n        \"weight\": 1,\r\n        \"length\": 1,\r\n        \"height\": 1,\r\n        \"width\": 1,\r\n        \"girth\": 1,\r\n        \"mailClass\": \"PRIORITY_MAIL\",\r\n        \"extraServices\": [\r\n            920\r\n        ],\r\n        \"mailingDate\": \"2024-11-14\",\r\n        \"packageValue\": 35\r\n    },\r\n    \"shippingFilter\": \"PRICE\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://apis.usps.com/shipments/v3/options/search",
+							"protocol": "https",
+							"host": [
+								"apis",
+								"usps",
+								"com"
+							],
+							"path": [
+								"shipments",
+								"v3",
+								"options",
+								"search"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Tracking",
+			"item": [
+				{
+					"name": "3.0 getPackageTrackingStatus",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "accessTokenUrl",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "clientSecret",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "tokenType",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "accessToken",
+									"value": "{{token}}",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "body",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "client_credentials",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Forwarded-For",
+								"value": "127.0.01",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://apis.usps.com/tracking/v3/tracking/{Tracking Number}?expand=SUMMARY",
+							"protocol": "https",
+							"host": [
+								"apis",
+								"usps",
+								"com"
+							],
+							"path": [
+								"tracking",
+								"v3",
+								"tracking",
+								"{Tracking Number}"
+							],
+							"query": [
+								{
+									"key": "expand",
+									"value": "SUMMARY"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3.0 getPackageTrackingStatus",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "clientSecret",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "tokenType",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "accessToken",
+									"value": "{{token}}",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "body",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "client_credentials",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Forwarded-For",
+								"value": "127.0.01",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://apis.usps.com/tracking/v3/tracking/{Tracking Number}?expand=DETAIL",
+							"protocol": "https",
+							"host": [
+								"apis",
+								"usps",
+								"com"
+							],
+							"path": [
+								"tracking",
+								"v3",
+								"tracking",
+								"{Tracking Number}"
+							],
+							"query": [
+								{
+									"key": "expand",
+									"value": "DETAIL"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3.0 createNotification",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {}
+					},
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "clientId",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "clientSecret",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "tokenType",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "accessToken",
+									"value": "{{token}}",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "body",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "client_credentials",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Forwarded-For",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"uniqueMailPieceId\": \"{{uniqueMailPieceId}}\",\r\n  \"mailPieceIntakeDate\": \"2024-08-14\",\r\n  \"notifyEventTypes\": [\r\n    \"EMAIL_ALERT\"\r\n  ],\r\n  \"firstName\": \"John\",\r\n  \"lastName\": \"Doe\",\r\n  \"notifications\": [\r\n    {\r\n      \"email\": \"user@example.com\"\r\n    },\r\n    {\r\n      \"cellNumber\": \"9995432211\"\r\n    }\r\n  ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://apis.usps.com/tracking/v3/tracking/{Tracking Number}/notifications",
+							"protocol": "https",
+							"host": [
+								"apis",
+								"usps",
+								"com"
+							],
+							"path": [
+								"tracking",
+								"v3",
+								"tracking",
+								"{Tracking Number}",
+								"notifications"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3.0 Proof of Delivery",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {}
+					},
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "clientId",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "clientSecret",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "tokenType",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "accessToken",
+									"value": "{{token}}",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "body",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "client_credentials",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Forwarded-For",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"uniqueMailPieceID\": \"{{uniqueMailPieceID}}\",\r\n    \"mailPieceIntakeDate\": \"2024-08-01\",\r\n    \"tableCode\": \"T\",\r\n    \"requestType\": \"email\",\r\n    \"firstName\": \"John\",\r\n    \"lastName\": \"Smith\",\r\n    \"email\": [\r\n        \"first.last@test.com\"\r\n    ],\r\n    \"faxNumber\": \"1234567890\",\r\n    \"streetAddress\": \"475 L'Enfant Plaza SW\",\r\n    \"city\": \"Washington\",\r\n    \"state\": \"DC\",\r\n    \"ZIPCode\": \"20260\",\r\n    \"CRID\": \"{{CRID}}\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://apis.usps.com/tracking/v3/tracking/{Tracking Number}/proof-of-delivery",
+							"protocol": "https",
+							"host": [
+								"apis",
+								"usps",
+								"com"
+							],
+							"path": [
+								"tracking",
+								"v3",
+								"tracking",
+								"{Tracking Number}",
+								"proof-of-delivery"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

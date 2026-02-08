@@ -1,0 +1,86 @@
+asyncapi: 2.6.0
+info:
+  title: Stock Market Data Feed
+  version: 1.0.0
+  description: Real-time stock market data via WebSocket
+
+servers:
+  production:
+    url: wss://stream.marketdata.example.com/v1
+    protocol: ws
+
+channels:
+  trades/{symbol}:
+    parameters:
+      symbol:
+        schema: {type: string}
+    subscribe:
+      summary: Real-time trade executions
+      message:
+        name: TradeEvent
+        payload:
+          type: object
+          required: [symbol, price, volume, timestamp]
+          properties:
+            symbol: {type: string}
+            price: {type: number}
+            volume: {type: integer}
+            timestamp: {type: integer, description: Unix nanos}
+            exchange: {type: string}
+            conditions:
+              type: array
+              items: {type: string}
+
+  quotes/{symbol}:
+    parameters:
+      symbol:
+        schema: {type: string}
+    subscribe:
+      summary: Level 1 quote updates
+      message:
+        name: QuoteUpdate
+        payload:
+          type: object
+          required: [symbol, bid, ask]
+          properties:
+            symbol: {type: string}
+            bid: {type: number}
+            bidSize: {type: integer}
+            ask: {type: number}
+            askSize: {type: integer}
+            last: {type: number}
+            timestamp: {type: integer}
+
+  bars/{symbol}:
+    parameters:
+      symbol:
+        schema: {type: string}
+    subscribe:
+      summary: OHLCV bar updates
+      message:
+        name: BarUpdate
+        payload:
+          type: object
+          required: [symbol, open, high, low, close, volume]
+          properties:
+            symbol: {type: string}
+            open: {type: number}
+            high: {type: number}
+            low: {type: number}
+            close: {type: number}
+            volume: {type: integer}
+            vwap: {type: number}
+            timestamp: {type: string, format: date-time}
+
+  market/status:
+    subscribe:
+      summary: Market status changes
+      message:
+        name: MarketStatus
+        payload:
+          type: object
+          required: [market, status]
+          properties:
+            market: {type: string}
+            status: {type: string, enum: [pre_market, open, closed, after_hours]}
+            timestamp: {type: string, format: date-time}

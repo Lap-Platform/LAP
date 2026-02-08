@@ -1,0 +1,1119 @@
+{
+	"info": {
+		"_postman_id": "5bbbf61e-9d74-4a20-be50-a0ed9c10c548",
+		"name": "Auth0 Authentication API",
+		"description": "The Authentication API exposes all of the identity functionality of Auth0 as well as all of the supported identity protocols such as OpenID Connect, OAuth, and SAML. Generally speaking you will consume this API through one of our SDKs like Auth0.js or libraries such as the Lock widget. However, if you are building all of your authentication UI manually you will likely interact with this API directly.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "DB Connections",
+			"item": [
+				{
+					"name": "Signup using a username/password",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "client_id",
+									"value": null,
+									"type": "text"
+								},
+								{
+									"key": "email",
+									"value": null,
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": null,
+									"type": "text"
+								},
+								{
+									"key": "connection",
+									"value": null,
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://{{auth0_domain}}/dbconnections/signup",
+							"protocol": "https",
+							"host": [
+								"{{auth0_domain}}"
+							],
+							"path": [
+								"dbconnections",
+								"signup"
+							]
+						},
+						"description": "Given the user credentials, the connection specified and the Auth0 account information, it will create a new user. You can then authenticate with this user using the /oauth/ro endpoint. This endpoint only works for database connections."
+					},
+					"response": []
+				},
+				{
+					"name": "Ask to change a password for a given user",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "client_id",
+									"value": null,
+									"type": "text"
+								},
+								{
+									"key": "email",
+									"value": null,
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": null,
+									"type": "text"
+								},
+								{
+									"key": "connection",
+									"value": null,
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://{{auth0_domain}}/dbconnections/change_password",
+							"protocol": "https",
+							"host": [
+								"{{auth0_domain}}"
+							],
+							"path": [
+								"dbconnections",
+								"change_password"
+							]
+						},
+						"description": "Given the user email address and the connection specified, Auth0 will send a change password email.\n\n* If password was provided, once the user clicks on the confirm password change link, the new password specified in this POST will be set to this user.\n* If password was NOT provided, once the user clicks on the password change link they will be redirected to a page asking them for a new password.\n\nThis endpoint only works for database connections."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Get Access Token",
+			"item": [
+				{
+					"name": "Authorization Code",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "grant_type",
+									"value": "authorization_code",
+									"type": "text"
+								},
+								{
+									"key": "client_id",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "client_secret",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "code",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "redirect_uri",
+									"value": "",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://{{auth0_domain}}/oauth/token",
+							"protocol": "https",
+							"host": [
+								"{{auth0_domain}}"
+							],
+							"path": [
+								"oauth",
+								"token"
+							]
+						},
+						"description": "This is the OAuth 2.0 grant that regular web apps utilize in order to access an API. Use this endpoint to exchange an Authorization Code for an Access Token."
+					},
+					"response": []
+				},
+				{
+					"name": "Authorization Code (PKCE)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "grant_type",
+									"value": "authorization_code",
+									"type": "text"
+								},
+								{
+									"key": "client_id",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "code",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "code_verifier",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "redirect_uri",
+									"value": "",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://{{auth0_domain}}/oauth/token",
+							"protocol": "https",
+							"host": [
+								"{{auth0_domain}}"
+							],
+							"path": [
+								"oauth",
+								"token"
+							]
+						},
+						"description": "This is the OAuth 2.0 grant that mobile apps utilize in order to access an API. Use this endpoint to exchange an Authorization Code for an Access Token."
+					},
+					"response": []
+				},
+				{
+					"name": "Client Credentials",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "grant_type",
+									"value": "client_credentials",
+									"type": "text"
+								},
+								{
+									"key": "client_id",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "client_secret",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "audience",
+									"value": "",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://{{auth0_domain}}/oauth/token",
+							"protocol": "https",
+							"host": [
+								"{{auth0_domain}}"
+							],
+							"path": [
+								"oauth",
+								"token"
+							]
+						},
+						"description": "This is the OAuth 2.0 grant that server processes utilize in order to access an API. Use this endpoint to directly request an `access_token` by using the Client Credentials (a Client Id and a Client Secret)."
+					},
+					"response": []
+				},
+				{
+					"name": "Resource Owner Password",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "grant_type",
+									"value": "password",
+									"type": "text"
+								},
+								{
+									"key": "client_id",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "client_secret",
+									"value": "",
+									"description": "Required for confidential clients.",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "audience",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "username",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "scope",
+									"value": "",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://{{auth0_domain}}/oauth/token",
+							"protocol": "https",
+							"host": [
+								"{{auth0_domain}}"
+							],
+							"path": [
+								"oauth",
+								"token"
+							]
+						},
+						"description": "This is the OAuth 2.0 grant that highly trusted apps utilize in order to access an API. In this flow the end-user is asked to fill in credentials (username/password) typically using an interactive form. This information is later on sent to the Client and the Authorization Server. It is therefore imperative that the Client is absolutely trusted with this information."
+					},
+					"response": []
+				},
+				{
+					"name": "Resource Owner Password (with realm)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "grant_type",
+									"value": "http://auth0.com/oauth/grant-type/password-realm",
+									"type": "text"
+								},
+								{
+									"key": "client_id",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "client_secret",
+									"value": "",
+									"description": "Required for confidential clients.",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "audience",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "username",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "realm",
+									"value": "",
+									"description": "The connection to use.",
+									"type": "text"
+								},
+								{
+									"key": "scope",
+									"value": "",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://{{auth0_domain}}/oauth/token",
+							"protocol": "https",
+							"host": [
+								"{{auth0_domain}}"
+							],
+							"path": [
+								"oauth",
+								"token"
+							]
+						},
+						"description": "This is the OAuth 2.0 grant that highly trusted apps utilize in order to access an API. In this flow the end-user is asked to fill in credentials (username/password) typically using an interactive form. This information is later on sent to the Client and the Authorization Server. It is therefore imperative that the Client is absolutely trusted with this information.\nWith this extension to the basic Resource Owner Password flow you can provide a `realm` value indicating the connection to use."
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh Token",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "grant_type",
+									"value": "refresh_token",
+									"type": "text"
+								},
+								{
+									"key": "client_id",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "client_secret",
+									"value": "",
+									"description": "Required for confidential clients.",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "refresh_token",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "scope",
+									"value": "",
+									"description": "Optional. You can specify a scope that is equal or less than the one requested in the original authorize request.",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "https://{{auth0_domain}}/oauth/token",
+							"protocol": "https",
+							"host": [
+								"{{auth0_domain}}"
+							],
+							"path": [
+								"oauth",
+								"token"
+							]
+						},
+						"description": "This is the OAuth2 refresh token flow, used to obtain a refreshed access token (and id token if applicable) using the refresh token you got during authorization."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Passwordless",
+			"item": [
+				{
+					"name": "Start Passwordless flow sending an email",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "client_id",
+									"value": null,
+									"type": "text"
+								},
+								{
+									"key": "connection",
+									"value": "email",
+									"type": "text"
+								},
+								{
+									"key": "email",
+									"value": null,
+									"type": "text"
+								},
+								{
+									"key": "send",
+									"value": "link",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://{{auth0_domain}}/passwordless/start",
+							"protocol": "https",
+							"host": [
+								"{{auth0_domain}}"
+							],
+							"path": [
+								"passwordless",
+								"start"
+							]
+						},
+						"description": "Given the user email address, it will send an email with:\n\n* A link (default, send:\"link\"). You can then authenticate with this user opening the link and he will be automatically logged in to the application. Optionally, you can append/override parameters to the link (like scope, redirect_uri, protocol, response_type, etc.) using authParams object.\n* A verification code (send:\"code\"). You can then authenticate with this user using the /oauth/ro endpoint specifying email as username and code as password."
+					},
+					"response": []
+				},
+				{
+					"name": "Start Passwordless flow sending an SMS message",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "client_id",
+									"value": null,
+									"type": "text"
+								},
+								{
+									"key": "connection",
+									"value": "sms",
+									"type": "text"
+								},
+								{
+									"key": "phone_number",
+									"value": null,
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://{{auth0_domain}}/passwordless/start",
+							"protocol": "https",
+							"host": [
+								"{{auth0_domain}}"
+							],
+							"path": [
+								"passwordless",
+								"start"
+							]
+						},
+						"description": "Given the user phone_number, it will send a SMS message with a verification code. You can then authenticate with this user using the /oauth/ro endpoint specifying phone_number as username and code as password:"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "SAML",
+			"item": [
+				{
+					"name": "Accepts a SAML request to initiate a login",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{auth0_domain}}/samlp/:client_id?",
+							"protocol": "https",
+							"host": [
+								"{{auth0_domain}}"
+							],
+							"path": [
+								"samlp",
+								":client_id"
+							],
+							"query": [
+								{
+									"key": "connection",
+									"value": "",
+									"disabled": true
+								}
+							],
+							"variable": [
+								{
+									"key": "client_id",
+									"value": null
+								}
+							]
+						},
+						"description": "Optionally, accepts a connection parameter to login with a specific provider. If no connection is specified, the Auth0 Login Page will be shown."
+					},
+					"response": []
+				},
+				{
+					"name": "Returns the SAML 2.0 metadata",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{auth0_domain}}/samlp/metadata/:client_id",
+							"protocol": "https",
+							"host": [
+								"{{auth0_domain}}"
+							],
+							"path": [
+								"samlp",
+								"metadata",
+								":client_id"
+							],
+							"variable": [
+								{
+									"key": "client_id",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "User Profile",
+			"item": [
+				{
+					"name": "Returns a user profile based on the Auth0 access token",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer YOUR_TOKEN_HERE"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{auth0_domain}}/userinfo",
+							"protocol": "https",
+							"host": [
+								"{{auth0_domain}}"
+							],
+							"path": [
+								"userinfo"
+							]
+						},
+						"description": "Returns the user information based on the Auth0 access token (obtained during login)."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "WS-Fed",
+			"item": [
+				{
+					"name": "Accepts a WS-Fed request to initiate a login",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{auth0_domain}}/wsfed/:client_id?",
+							"protocol": "https",
+							"host": [
+								"{{auth0_domain}}"
+							],
+							"path": [
+								"wsfed",
+								":client_id"
+							],
+							"query": [
+								{
+									"key": "whr",
+									"value": "",
+									"description": "The realm (connection) [optional]",
+									"disabled": true
+								},
+								{
+									"key": "wctx",
+									"value": "",
+									"description": "Your application context (state)",
+									"disabled": true
+								},
+								{
+									"key": "wreply",
+									"value": "",
+									"description": "The callback URL (where to send the response)",
+									"disabled": true
+								},
+								{
+									"key": "wtrealm",
+									"value": "",
+									"description": "Can be used instead of the client id",
+									"disabled": true
+								}
+							],
+							"variable": [
+								{
+									"key": "client_id",
+									"value": null
+								}
+							]
+						},
+						"description": "The client id parameter is optional. You can use wtrealm as well."
+					},
+					"response": []
+				},
+				{
+					"name": "Requests a logout using WS-Fed",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{auth0_domain}}/wsfed/:client_id?wa=wsignout1.0",
+							"protocol": "https",
+							"host": [
+								"{{auth0_domain}}"
+							],
+							"path": [
+								"wsfed",
+								":client_id"
+							],
+							"query": [
+								{
+									"key": "wa",
+									"value": "wsignout1.0"
+								},
+								{
+									"key": "wreply",
+									"value": "",
+									"description": "The callback URL (where to send the response)",
+									"disabled": true
+								}
+							],
+							"variable": [
+								{
+									"key": "client_id",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Returns the WS-Federation Metadata",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{auth0_domain}}/wsfed/FederationMetadata/2007-06/FederationMetadata.xml",
+							"protocol": "https",
+							"host": [
+								"{{auth0_domain}}"
+							],
+							"path": [
+								"wsfed",
+								"FederationMetadata",
+								"2007-06",
+								"FederationMetadata.xml"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "The WS-Fed protocol is used for Microsoft applications (e.g.: Office365, Dynamics CRM, etc.). All the parameters of the SAML assertion can be modified through rules."
+		},
+		{
+			"name": "Deprecated",
+			"item": [
+				{
+					"name": "Authenticate",
+					"item": [
+						{
+							"name": "Login using a social provider's access token",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "client_id",
+											"value": null,
+											"type": "text"
+										},
+										{
+											"key": "access_token",
+											"value": null,
+											"description": "The social provider's Access Token.",
+											"type": "text"
+										},
+										{
+											"key": "connection",
+											"value": null,
+											"type": "text"
+										},
+										{
+											"key": "scope",
+											"value": "openid",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "https://{{auth0_domain}}/oauth/access_token",
+									"protocol": "https",
+									"host": [
+										"{{auth0_domain}}"
+									],
+									"path": [
+										"oauth",
+										"access_token"
+									]
+								},
+								"description": "Given the social provider's access_token and the connection specified, it will do the authentication on the provider and return a JSON with the access_token and id_token. Currently, this endpoint only works for Facebook, Google, Twitter and Weibo. **This endpoint has been deprecated**."
+							},
+							"response": []
+						},
+						{
+							"name": "Login using username and password",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "grant_type",
+											"value": "password",
+											"type": "text"
+										},
+										{
+											"key": "client_id",
+											"value": null,
+											"type": "text"
+										},
+										{
+											"key": "username",
+											"value": null,
+											"type": "text"
+										},
+										{
+											"key": "password",
+											"value": null,
+											"type": "text"
+										},
+										{
+											"key": "connection",
+											"value": null,
+											"type": "text"
+										},
+										{
+											"key": "scope",
+											"value": "openid",
+											"type": "text"
+										},
+										{
+											"key": "device",
+											"value": null,
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "https://{{auth0_domain}}/oauth/ro",
+									"protocol": "https",
+									"host": [
+										"{{auth0_domain}}"
+									],
+									"path": [
+										"oauth",
+										"ro"
+									]
+								},
+								"description": "Given the user credentials and the connection specified, it will do the authentication on the provider and return a JSON with the access_token and id_token. This endpoint only works for database connections, passwordless connections, Active Directory/LDAP, Windows Azure AD and ADFS.\n\n**This endpoint is being deprecated.** Please use the [Resource Owner Password flow](https://auth0.com/docs/api/authentication#resource-owner-password) instead."
+							},
+							"response": []
+						},
+						{
+							"name": "[Deprecated] Return a user profile based on the user's JWT",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "id_token",
+											"value": null,
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "https://{{auth0_domain}}/tokeninfo",
+									"protocol": "https",
+									"host": [
+										"{{auth0_domain}}"
+									],
+									"path": [
+										"tokeninfo"
+									]
+								},
+								"description": "Validates a JSON Web Token (signature and expiration) and returns the user information associated with the user id (sub property) of the token."
+							},
+							"response": []
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Delegated Authentication",
+					"item": [
+						{
+							"name": "Obtain a delegation token (from an id_token)",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "client_id",
+											"value": null,
+											"type": "text"
+										},
+										{
+											"key": "grant_type",
+											"value": "urn:ietf:params:oauth:grant-type:jwt-bearer",
+											"type": "text"
+										},
+										{
+											"key": "id_token",
+											"value": null,
+											"type": "text"
+										},
+										{
+											"key": "target",
+											"value": null,
+											"type": "text"
+										},
+										{
+											"key": "scope",
+											"value": null,
+											"type": "text"
+										},
+										{
+											"key": "api_type",
+											"value": null,
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "https://{{auth0_domain}}/delegation",
+									"protocol": "https",
+									"host": [
+										"{{auth0_domain}}"
+									],
+									"path": [
+										"delegation"
+									]
+								},
+								"description": "Given an existing token, this endpoint will generate a new token signed with the target client secret. This is used to flow the identity of the user from the application to an API or across different APIs that are protected with different secrets. **This endpoint has been deprecated**."
+							},
+							"response": []
+						},
+						{
+							"name": "Obtain a delegation token (from a refresh_token)",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "client_id",
+											"value": null,
+											"type": "text"
+										},
+										{
+											"key": "grant_type",
+											"value": "urn:ietf:params:oauth:grant-type:jwt-bearer",
+											"type": "text"
+										},
+										{
+											"key": "refresh_token",
+											"value": null,
+											"type": "text"
+										},
+										{
+											"key": "scope",
+											"value": null,
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "https://{{auth0_domain}}/delegation",
+									"protocol": "https",
+									"host": [
+										"{{auth0_domain}}"
+									],
+									"path": [
+										"delegation"
+									]
+								},
+								"description": "Given an refrersh token, this endpoint will generate a refreshed id_token and access_token. **This endpoint has been deprecated**, please use the [OAuth2 conformant Refresh Token flow](https://auth0.com/docs/tokens/refresh-token/current)."
+							},
+							"response": []
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Link Accounts",
+					"item": [
+						{
+							"name": "Unlink an account",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "access_token",
+											"value": null,
+											"type": "text"
+										},
+										{
+											"key": "user_id",
+											"value": null,
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "https://{{auth0_domain}}/unlink",
+									"protocol": "https",
+									"host": [
+										"{{auth0_domain}}"
+									],
+									"path": [
+										"unlink"
+									]
+								},
+								"description": "**This endpoint is deprecated**. The `DELETE /api/v2/users/{id}/identities/{provider}/{user_id}` (from Management API v2) should be used instead."
+							},
+							"response": []
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Passwordless",
+					"item": [
+						{
+							"name": "Login using a phone number and verification code",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "client_id",
+											"value": null,
+											"type": "text"
+										},
+										{
+											"key": "connection",
+											"value": "sms",
+											"type": "text"
+										},
+										{
+											"key": "grant_type",
+											"value": "password",
+											"type": "text"
+										},
+										{
+											"key": "username",
+											"value": null,
+											"type": "text"
+										},
+										{
+											"key": "password",
+											"value": null,
+											"type": "text"
+										},
+										{
+											"key": "scope",
+											"value": "openid",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "https://{{auth0_domain}}/oauth/ro",
+									"protocol": "https",
+									"host": [
+										"{{auth0_domain}}"
+									],
+									"path": [
+										"oauth",
+										"ro"
+									]
+								},
+								"description": "Given the user credentials and the connection specified, it will do the authentication on the provider and return a JSON with the access_token and id_token. This endpoint only works for database connections, passwordless connections, Active Directory/LDAP, Windows Azure AD and ADFS.\n**This endpoint is deprecated**."
+							},
+							"response": []
+						}
+					],
+					"_postman_isSubFolder": true
+				}
+			],
+			"description": "These endpoints are deprecated and might not be available depending on the tenant's creation date and configuration in the **Migrations** section of the [tenant Advanced settings](https://manage.auth0.com/#/tenant/advanced).\nNewly created tenants don't have access to deprecated endpoints, so some or all of the legacy features can't be turned on in the **Migrations** section."
+		}
+	]
+}

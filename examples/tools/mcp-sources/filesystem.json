@@ -1,0 +1,76 @@
+{
+  "name": "filesystem",
+  "description": "MCP server for local filesystem operations",
+  "tools": [
+    {
+      "name": "read_file",
+      "description": "Read complete contents of a file",
+      "inputSchema": {
+        "type": "object",
+        "required": ["path"],
+        "properties": {
+          "path": {"type": "string", "description": "Absolute path to file"}
+        }
+      }
+    },
+    {
+      "name": "write_file",
+      "description": "Create or overwrite a file with content",
+      "inputSchema": {
+        "type": "object",
+        "required": ["path", "content"],
+        "properties": {
+          "path": {"type": "string", "description": "Absolute path to file"},
+          "content": {"type": "string", "description": "Content to write"}
+        }
+      }
+    },
+    {
+      "name": "list_directory",
+      "description": "List files and directories at a path",
+      "inputSchema": {
+        "type": "object",
+        "required": ["path"],
+        "properties": {
+          "path": {"type": "string", "description": "Absolute path to directory"}
+        }
+      }
+    },
+    {
+      "name": "search_files",
+      "description": "Recursively search for files matching a pattern",
+      "inputSchema": {
+        "type": "object",
+        "required": ["path", "pattern"],
+        "properties": {
+          "path": {"type": "string", "description": "Starting directory"},
+          "pattern": {"type": "string", "description": "Glob pattern to match"},
+          "excludePatterns": {"type": "array", "items": {"type": "string"}, "description": "Patterns to exclude"}
+        }
+      }
+    },
+    {
+      "name": "move_file",
+      "description": "Move or rename a file/directory",
+      "inputSchema": {
+        "type": "object",
+        "required": ["source", "destination"],
+        "properties": {
+          "source": {"type": "string", "description": "Source path"},
+          "destination": {"type": "string", "description": "Destination path"}
+        }
+      }
+    },
+    {
+      "name": "get_file_info",
+      "description": "Get metadata about a file (size, modified time, permissions)",
+      "inputSchema": {
+        "type": "object",
+        "required": ["path"],
+        "properties": {
+          "path": {"type": "string", "description": "Absolute path to file"}
+        }
+      }
+    }
+  ]
+}

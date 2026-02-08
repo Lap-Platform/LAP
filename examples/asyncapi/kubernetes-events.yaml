@@ -1,0 +1,102 @@
+asyncapi: 2.6.0
+info:
+  title: Kubernetes Cluster Events
+  version: 1.0.0
+  description: Kubernetes cluster event stream
+
+servers:
+  production:
+    url: kafka-k8s:9092
+    protocol: kafka
+
+channels:
+  k8s/pods:
+    subscribe:
+      summary: Pod lifecycle events
+      message:
+        name: PodEvent
+        payload:
+          type: object
+          required: [name, namespace, status]
+          properties:
+            name: {type: string}
+            namespace: {type: string}
+            status: {type: string, enum: [Pending, Running, Succeeded, Failed, Unknown]}
+            containers:
+              type: array
+              items:
+                type: object
+                properties:
+                  name: {type: string}
+                  image: {type: string}
+                  ready: {type: boolean}
+                  restartCount: {type: integer}
+            nodeName: {type: string}
+            reason: {type: string}
+            message: {type: string}
+
+  k8s/deployments:
+    subscribe:
+      summary: Deployment rollout events
+      message:
+        name: DeploymentEvent
+        payload:
+          type: object
+          required: [name, namespace, replicas]
+          properties:
+            name: {type: string}
+            namespace: {type: string}
+            replicas: {type: integer}
+            readyReplicas: {type: integer}
+            updatedReplicas: {type: integer}
+            strategy: {type: string, enum: [RollingUpdate, Recreate]}
+            conditions:
+              type: array
+              items:
+                type: object
+                properties:
+                  type: {type: string}
+                  status: {type: string}
+                  reason: {type: string}
+
+  k8s/nodes:
+    subscribe:
+      summary: Node status events
+      message:
+        name: NodeEvent
+        payload:
+          type: object
+          required: [name, status]
+          properties:
+            name: {type: string}
+            status: {type: string, enum: [Ready, NotReady, SchedulingDisabled]}
+            allocatable:
+              type: object
+              properties:
+                cpu: {type: string}
+                memory: {type: string}
+                pods: {type: string}
+            conditions:
+              type: array
+              items:
+                type: object
+                properties:
+                  type: {type: string}
+                  status: {type: string}
+
+  k8s/hpa:
+    subscribe:
+      summary: Horizontal pod autoscaler events
+      message:
+        name: HPAEvent
+        payload:
+          type: object
+          required: [name, namespace, currentReplicas, desiredReplicas]
+          properties:
+            name: {type: string}
+            namespace: {type: string}
+            currentReplicas: {type: integer}
+            desiredReplicas: {type: integer}
+            currentCPU: {type: integer}
+            targetCPU: {type: integer}
+            scalingEvent: {type: string, enum: [scale_up, scale_down, no_change]}

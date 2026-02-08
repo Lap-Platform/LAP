@@ -1,0 +1,25 @@
+openapi: "3.0.0"
+info:
+  title: Special Chars API
+  version: "1.0.0"
+servers:
+  - url: https://api.special.com
+paths:
+  /items:
+    get:
+      summary: List items with special descriptions
+      parameters:
+        - name: query
+          in: query
+          required: true
+          description: "Search query — supports \"quoted phrases\" & boolean operators (AND/OR/NOT)"
+          schema:
+            type: string
+        - name: format
+          in: query
+          description: "Output format: json, xml, csv (default: json)"
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Success

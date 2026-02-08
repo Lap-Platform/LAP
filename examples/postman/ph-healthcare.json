@@ -1,0 +1,2058 @@
+{
+    "info": {
+        "_postman_id": "ph-healthcare-api-2025",
+        "name": "PH HealthCare API - Complete Collection",
+        "description": "Complete API collection for PH HealthCare Backend with all modules including User, Auth, Admin, Doctor, Patient, Specialties, Schedule, Appointment, Payment, Prescription, Review, and Meta",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "auth": {
+        "type": "bearer",
+        "bearer": [
+            {
+                "key": "token",
+                "value": "{{accessToken}}",
+                "type": "string"
+            }
+        ]
+    },
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:5000/api/v1",
+            "type": "string"
+        },
+        {
+            "key": "accessToken",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "refreshToken",
+            "value": "",
+            "type": "string"
+        }
+    ],
+    "item": [
+        {
+            "name": "1. Auth Module",
+            "item": [
+                {
+                    "name": "Login User",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    if (jsonData.data && jsonData.data.accessToken) {",
+                                    "        pm.collectionVariables.set(\"accessToken\", jsonData.data.accessToken);",
+                                    "    }",
+                                    "    if (jsonData.data && jsonData.data.refreshToken) {",
+                                    "        pm.collectionVariables.set(\"refreshToken\", jsonData.data.refreshToken);",
+                                    "    }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"password123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/login",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "login"
+                            ]
+                        },
+                        "description": "Login with email and password. Returns access token and refresh token."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Refresh Token",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/refresh-token",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "refresh-token"
+                            ]
+                        },
+                        "description": "Get new access token using refresh token"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Change Password",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{accessToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"oldPassword\": \"oldPassword123\",\n  \"newPassword\": \"newPassword123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/change-password",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "change-password"
+                            ]
+                        },
+                        "description": "Change password for authenticated user (All roles)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Forgot Password",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"user@example.com\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/forgot-password",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "forgot-password"
+                            ]
+                        },
+                        "description": "Send password reset link to email"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Reset Password",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"token\": \"reset-token-from-email\",\n  \"newPassword\": \"newPassword123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/reset-password",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "reset-password"
+                            ]
+                        },
+                        "description": "Reset password using token from email"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Me (Auth Check)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/me",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "me"
+                            ]
+                        },
+                        "description": "Verify authentication status"
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Authentication endpoints for login, token refresh, password management"
+        },
+        {
+            "name": "2. User Module",
+            "item": [
+                {
+                    "name": "Get All Users",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{accessToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/user?page=1&limit=10&searchTerm=john",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "user"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                },
+                                {
+                                    "key": "searchTerm",
+                                    "value": "john"
+                                },
+                                {
+                                    "key": "email",
+                                    "value": "user@example.com",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "role",
+                                    "value": "ADMIN",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "status",
+                                    "value": "ACTIVE",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "Get all users with pagination and filtering (SUPER_ADMIN, ADMIN only)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get My Profile",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{accessToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/user/me",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "user",
+                                "me"
+                            ]
+                        },
+                        "description": "Get current user's profile (All authenticated users)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Admin",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{accessToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "file",
+                                    "type": "file",
+                                    "src": []
+                                },
+                                {
+                                    "key": "data",
+                                    "value": "{\n  \"password\": \"admin123\",\n  \"admin\": {\n    \"name\": \"Admin Name\",\n    \"email\": \"admin@example.com\",\n    \"contactNumber\": \"+1234567890\"\n  }\n}",
+                                    "type": "text"
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/user/create-admin",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "user",
+                                "create-admin"
+                            ]
+                        },
+                        "description": "Create new admin user (SUPER_ADMIN, ADMIN only)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Doctor",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{accessToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "file",
+                                    "type": "file",
+                                    "src": []
+                                },
+                                {
+                                    "key": "data",
+                                    "value": "{\n  \"password\": \"doctor123\",\n  \"doctor\": {\n    \"name\": \"Dr. John Smith\",\n    \"email\": \"doctor@example.com\",\n    \"contactNumber\": \"+1234567890\",\n    \"address\": \"123 Medical Plaza\",\n    \"registrationNumber\": \"REG-2024-001\",\n    \"experience\": 10,\n    \"gender\": \"MALE\",\n    \"appointmentFee\": 500,\n    \"qualification\": \"MBBS, MD\",\n    \"currentWorkingPlace\": \"City Hospital\",\n    \"designation\": \"Senior Cardiologist\",\n    \"specialties\": [\"specialty-uuid-1\", \"specialty-uuid-2\"]\n  }\n}",
+                                    "type": "text"
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/user/create-doctor",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "user",
+                                "create-doctor"
+                            ]
+                        },
+                        "description": "Create new doctor with specialties (SUPER_ADMIN, ADMIN only)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Patient",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "file",
+                                    "type": "file",
+                                    "src": []
+                                },
+                                {
+                                    "key": "data",
+                                    "value": "{\n  \"password\": \"patient123\",\n  \"patient\": {\n    \"name\": \"Patient Name\",\n    \"email\": \"patient@example.com\",\n    \"contactNumber\": \"+1234567890\",\n    \"address\": \"123 Main St\"\n  }\n}",
+                                    "type": "text"
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/user/create-patient",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "user",
+                                "create-patient"
+                            ]
+                        },
+                        "description": "Create new patient (Public endpoint)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update User Status",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{accessToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"status\": \"BLOCKED\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/user/:id/status",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "user",
+                                ":id",
+                                "status"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "user-uuid"
+                                }
+                            ]
+                        },
+                        "description": "Update user status: ACTIVE, BLOCKED, DELETED (SUPER_ADMIN, ADMIN only)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update My Profile",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{accessToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PATCH",
+                        "header": [],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "file",
+                                    "type": "file",
+                                    "src": [],
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "data",
+                                    "value": "{\n  \"name\": \"Updated Name\",\n  \"contactNumber\": \"+9876543210\"\n}",
+                                    "type": "text"
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/user/update-my-profile",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "user",
+                                "update-my-profile"
+                            ]
+                        },
+                        "description": "Update own profile (All authenticated users)"
+                    },
+                    "response": []
+                }
+            ],
+            "description": "User management endpoints for creating users, profile management, and status updates"
+        },
+        {
+            "name": "3. Admin Module",
+            "item": [
+                {
+                    "name": "Get All Admins",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{accessToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/admin?page=1&limit=10&searchTerm=admin",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                },
+                                {
+                                    "key": "searchTerm",
+                                    "value": "admin"
+                                },
+                                {
+                                    "key": "email",
+                                    "value": "admin@example.com",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "contactNumber",
+                                    "value": "+1234567890",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "Get all admins with pagination (SUPER_ADMIN, ADMIN only)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Admin By ID",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{accessToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/:id",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "admin-uuid"
+                                }
+                            ]
+                        },
+                        "description": "Get admin details by ID (SUPER_ADMIN, ADMIN only)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Admin",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{accessToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Updated Admin Name\",\n  \"contactNumber\": \"+1234567890\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/:id",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "admin-uuid"
+                                }
+                            ]
+                        },
+                        "description": "Update admin details (SUPER_ADMIN, ADMIN only)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Admin (Hard)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{accessToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/:id",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "admin-uuid"
+                                }
+                            ]
+                        },
+                        "description": "Permanently delete admin (SUPER_ADMIN, ADMIN only)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Admin (Soft)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{accessToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/soft/:id",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "soft",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "admin-uuid"
+                                }
+                            ]
+                        },
+                        "description": "Soft delete admin (set isDeleted flag) (SUPER_ADMIN, ADMIN only)"
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Admin management endpoints"
+        },
+        {
+            "name": "4. Doctor Module",
+            "item": [
+                {
+                    "name": "Get All Doctors",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/doctor?page=1&limit=10&searchTerm=cardio&specialties=Cardiology",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "doctor"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                },
+                                {
+                                    "key": "searchTerm",
+                                    "value": "cardio"
+                                },
+                                {
+                                    "key": "specialties",
+                                    "value": "Cardiology"
+                                },
+                                {
+                                    "key": "email",
+                                    "value": "doctor@example.com",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "gender",
+                                    "value": "MALE",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "appointmentFee",
+                                    "value": "500",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "Get all doctors with filtering and pagination (Public)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Doctor By ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/doctor/:id",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "doctor",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "doctor-uuid"
+                                }
+                            ]
+                        },
+                        "description": "Get doctor details by ID (Public)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get AI Doctor Suggestion",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/doctor/suggestion?symptoms=chest pain, shortness of breath",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "doctor",
+                                "suggestion"
+                            ],
+                            "query": [
+                                {
+                                    "key": "symptoms",
+                                    "value": "chest pain, shortness of breath"
+                                }
+                            ]
+                        },
+                        "description": "Get AI-powered doctor specialty suggestions based on symptoms (Public)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Doctor",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{accessToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Dr. Updated Name\",\n  \"appointmentFee\": 600,\n  \"specialties\": [\"new-specialty-uuid-1\", \"new-specialty-uuid-2\"],\n  \"removeSpecialties\": [\"old-specialty-uuid\"]\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/doctor/:id",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "doctor",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "doctor-uuid"
+                                }
+                            ]
+                        },
+                        "description": "Update doctor details including add/remove specialties (SUPER_ADMIN, ADMIN, DOCTOR)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Doctor (Hard)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{accessToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/doctor/:id",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "doctor",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "doctor-uuid"
+                                }
+                            ]
+                        },
+                        "description": "Permanently delete doctor (SUPER_ADMIN, ADMIN only)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Doctor (Soft)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{accessToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/doctor/soft/:id",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "doctor",
+                                "soft",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "doctor-uuid"
+                                }
+                            ]
+                        },
+                        "description": "Soft delete doctor (SUPER_ADMIN, ADMIN only)"
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Doctor management endpoints including AI suggestions"
+        },
+        {
+            "name": "5. Patient Module",
+            "item": [
+                {
+                    "name": "Get All Patients",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/patient?page=1&limit=10&searchTerm=patient",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "patient"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                },
+                                {
+                                    "key": "searchTerm",
+                                    "value": "patient"
+                                },
+                                {
+                                    "key": "email",
+                                    "value": "patient@example.com",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "contactNumber",
+                                    "value": "+1234567890",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "Get all patients with pagination"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Patient By ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/patient/:id",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "patient",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "patient-uuid"
+                                }
+                            ]
+                        },
+                        "description": "Get patient details by ID"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Patient",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Updated Patient Name\",\n  \"contactNumber\": \"+1234567890\",\n  \"address\": \"Updated Address\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/patient/:id",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "patient",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "patient-uuid"
+                                }
+                            ]
+                        },
+                        "description": "Update patient details"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Patient (Hard)",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/patient/:id",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "patient",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "patient-uuid"
+                                }
+                            ]
+                        },
+                        "description": "Permanently delete patient"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Patient (Soft)",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/patient/soft/:id",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "patient",
+                                "soft",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "patient-uuid"
+                                }
+                            ]
+                        },
+                        "description": "Soft delete patient"
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Patient management endpoints"
+        },
+        {
+            "name": "6. Specialties Module",
+            "item": [
+                {
+                    "name": "Get All Specialties",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/specialties?page=1&limit=10",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "specialties"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                }
+                            ]
+                        },
+                        "description": "Get all specialties with pagination (Public)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Specialty",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "file",
+                                    "type": "file",
+                                    "src": []
+                                },
+                                {
+                                    "key": "data",
+                                    "value": "{\n  \"title\": \"Cardiology\",\n  \"icon\": \"heart-icon-url\"\n}",
+                                    "type": "text"
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/specialties",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "specialties"
+                            ]
+                        },
+                        "description": "Create new specialty with icon upload"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Specialty",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{accessToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/specialties/:id",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "specialties",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "specialty-uuid"
+                                }
+                            ]
+                        },
+                        "description": "Delete specialty by ID (SUPER_ADMIN, ADMIN only)"
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Medical specialties management"
+        },
+        {
+            "name": "7. Schedule Module",
+            "item": [
+                {
+                    "name": "Get All Schedules",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{accessToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/schedule?page=1&limit=10&startDate=2025-11-16&endDate=2025-11-17",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "schedule"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                },
+                                {
+                                    "key": "startDate",
+                                    "value": "2025-11-16"
+                                },
+                                {
+                                    "key": "endDate",
+                                    "value": "2025-11-17"
+                                }
+                            ]
+                        },
+                        "description": "Get all schedules (DOCTOR only)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Schedule By ID",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{accessToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/schedule/:id",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "schedule",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "schedule-uuid"
+                                }
+                            ]
+                        },
+                        "description": "Get schedule by ID (SUPER_ADMIN, ADMIN, DOCTOR)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Schedule",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{accessToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"startDate\": \"2025-11-16\",\n  \"endDate\": \"2025-11-17\",\n  \"startTime\": \"09:00\",\n  \"endTime\": \"17:00\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/schedule",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "schedule"
+                            ]
+                        },
+                        "description": "Create schedule slots (SUPER_ADMIN, ADMIN only)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Schedule",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{accessToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/schedule/:id",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "schedule",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "schedule-uuid"
+                                }
+                            ]
+                        },
+                        "description": "Delete schedule (SUPER_ADMIN, ADMIN only)"
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Schedule management for time slots"
+        },
+        {
+            "name": "8. Doctor Schedule Module",
+            "item": [
+                {
+                    "name": "Get All Doctor Schedules",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{accessToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/doctor-schedule?page=1&limit=10&doctorId=doctor-uuid&isBooked=false",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "doctor-schedule"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                },
+                                {
+                                    "key": "doctorId",
+                                    "value": "doctor-uuid"
+                                },
+                                {
+                                    "key": "isBooked",
+                                    "value": "false"
+                                },
+                                {
+                                    "key": "startDate",
+                                    "value": "2025-11-16",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "endDate",
+                                    "value": "2025-11-17",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "Get all doctor schedules with filtering (All authenticated users)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get My Schedule",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{accessToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/doctor-schedule/my-schedule?page=1&limit=10&startDate=2025-11-16",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "doctor-schedule",
+                                "my-schedule"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                },
+                                {
+                                    "key": "startDate",
+                                    "value": "2025-11-16"
+                                },
+                                {
+                                    "key": "endDate",
+                                    "value": "2025-11-17",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "Get logged-in doctor's schedules (DOCTOR only)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Doctor Schedule",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{accessToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"scheduleIds\": [\"schedule-uuid-1\", \"schedule-uuid-2\"]\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/doctor-schedule",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "doctor-schedule"
+                            ]
+                        },
+                        "description": "Assign schedules to doctor (DOCTOR only)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Doctor Schedule",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{accessToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/doctor-schedule/:id",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "doctor-schedule",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "schedule-uuid"
+                                }
+                            ]
+                        },
+                        "description": "Remove schedule from doctor (DOCTOR only)"
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Doctor schedule assignment and management"
+        },
+        {
+            "name": "9. Appointment Module",
+            "item": [
+                {
+                    "name": "Get All Appointments",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{accessToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/appointment?page=1&limit=10&status=SCHEDULED&paymentStatus=UNPAID",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "appointment"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                },
+                                {
+                                    "key": "status",
+                                    "value": "SCHEDULED"
+                                },
+                                {
+                                    "key": "paymentStatus",
+                                    "value": "UNPAID"
+                                },
+                                {
+                                    "key": "patientEmail",
+                                    "value": "patient@example.com",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "doctorEmail",
+                                    "value": "doctor@example.com",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "Get all appointments (SUPER_ADMIN, ADMIN only)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get My Appointments",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{accessToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/appointment/my-appointment?page=1&limit=10&status=SCHEDULED",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "appointment",
+                                "my-appointment"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                },
+                                {
+                                    "key": "status",
+                                    "value": "SCHEDULED"
+                                }
+                            ]
+                        },
+                        "description": "Get logged-in user's appointments (PATIENT, DOCTOR)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Appointment",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{accessToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"doctorId\": \"doctor-uuid\",\n  \"scheduleId\": \"schedule-uuid\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/appointment",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "appointment"
+                            ]
+                        },
+                        "description": "Create new appointment (PATIENT only)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Change Appointment Status",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{accessToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"status\": \"COMPLETED\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/appointment/status/:id",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "appointment",
+                                "status",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "appointment-uuid"
+                                }
+                            ]
+                        },
+                        "description": "Update appointment status: SCHEDULED, INPROGRESS, COMPLETED, CANCELED (SUPER_ADMIN, ADMIN, DOCTOR)"
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Appointment booking and management"
+        },
+        {
+            "name": "10. Payment Module",
+            "item": [
+                {
+                    "name": "Initialize Payment",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/payment/init-payment/:appointmentId",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "payment",
+                                "init-payment",
+                                ":appointmentId"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "appointmentId",
+                                    "value": "appointment-uuid"
+                                }
+                            ]
+                        },
+                        "description": "Initialize payment for appointment (Returns payment gateway URL)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Validate Payment (IPN Callback)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/payment/ipn?transactionId=txn-123&status=success",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "payment",
+                                "ipn"
+                            ],
+                            "query": [
+                                {
+                                    "key": "transactionId",
+                                    "value": "txn-123"
+                                },
+                                {
+                                    "key": "status",
+                                    "value": "success"
+                                }
+                            ]
+                        },
+                        "description": "Payment gateway IPN callback (Called by payment gateway)"
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Payment processing with Stripe - Webhook handled at POST /webhook"
+        },
+        {
+            "name": "11. Prescription Module",
+            "item": [
+                {
+                    "name": "Get All Prescriptions",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{accessToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/prescription?page=1&limit=10",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "prescription"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                },
+                                {
+                                    "key": "patientEmail",
+                                    "value": "patient@example.com",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "doctorEmail",
+                                    "value": "doctor@example.com",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "Get all prescriptions (SUPER_ADMIN, ADMIN only)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get My Prescriptions",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{accessToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/prescription/my-prescription?page=1&limit=10",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "prescription",
+                                "my-prescription"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                }
+                            ]
+                        },
+                        "description": "Get logged-in patient's prescriptions (PATIENT only)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Prescription",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{accessToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"appointmentId\": \"appointment-uuid\",\n  \"instructions\": \"Take medicine twice daily after meals\",\n  \"followUpDate\": \"2025-11-23\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/prescription",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "prescription"
+                            ]
+                        },
+                        "description": "Create prescription for appointment (DOCTOR only)"
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Prescription management"
+        },
+        {
+            "name": "12. Review Module",
+            "item": [
+                {
+                    "name": "Get All Reviews",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/review?page=1&limit=10&doctorId=doctor-uuid",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "review"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                },
+                                {
+                                    "key": "doctorId",
+                                    "value": "doctor-uuid"
+                                },
+                                {
+                                    "key": "patientId",
+                                    "value": "patient-uuid",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "Get all reviews with filtering (Public)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Review",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{accessToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"appointmentId\": \"appointment-uuid\",\n  \"rating\": 5,\n  \"comment\": \"Excellent doctor! Very professional and caring.\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/review",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "review"
+                            ]
+                        },
+                        "description": "Create review for completed appointment (PATIENT only)"
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Doctor review and rating management"
+        },
+        {
+            "name": "13. Meta Module",
+            "item": [
+                {
+                    "name": "Get Dashboard Metadata",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{accessToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/meta",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "meta"
+                            ]
+                        },
+                        "description": "Get dashboard metadata (counts, statistics) based on user role (All authenticated users)"
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Dashboard metadata and statistics"
+        }
+    ]
+}

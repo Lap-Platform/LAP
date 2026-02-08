@@ -1,0 +1,101 @@
+asyncapi: 2.6.0
+info:
+  title: Ad Bidding Real-time Events
+  version: 1.0.0
+  description: Programmatic ad exchange real-time bidding
+
+servers:
+  production:
+    url: kafka-ads:9092
+    protocol: kafka
+
+channels:
+  bid-requests:
+    publish:
+      summary: Bid request from exchange
+      message:
+        name: BidRequest
+        payload:
+          type: object
+          required: [requestId, impressions, site]
+          properties:
+            requestId: {type: string}
+            impressions:
+              type: array
+              items:
+                type: object
+                properties:
+                  id: {type: string}
+                  banner:
+                    type: object
+                    properties:
+                      w: {type: integer}
+                      h: {type: integer}
+                  bidfloor: {type: number}
+            site:
+              type: object
+              properties:
+                domain: {type: string}
+                page: {type: string}
+                cat:
+                  type: array
+                  items: {type: string}
+            user:
+              type: object
+              properties:
+                id: {type: string}
+                geo:
+                  type: object
+                  properties:
+                    country: {type: string}
+                    region: {type: string}
+
+  bid-responses:
+    subscribe:
+      summary: Bid response
+      message:
+        name: BidResponse
+        payload:
+          type: object
+          required: [requestId, bids]
+          properties:
+            requestId: {type: string}
+            bids:
+              type: array
+              items:
+                type: object
+                properties:
+                  impId: {type: string}
+                  price: {type: number}
+                  adMarkup: {type: string}
+                  campaignId: {type: string}
+            processingTimeMs: {type: integer}
+
+  impressions:
+    subscribe:
+      summary: Ad impression recorded
+      message:
+        name: ImpressionEvent
+        payload:
+          type: object
+          required: [impressionId, campaignId, cost]
+          properties:
+            impressionId: {type: string}
+            campaignId: {type: string}
+            cost: {type: number}
+            viewable: {type: boolean}
+            timestamp: {type: string, format: date-time}
+
+  clicks:
+    subscribe:
+      summary: Ad click event
+      message:
+        name: ClickEvent
+        payload:
+          type: object
+          required: [impressionId, campaignId]
+          properties:
+            impressionId: {type: string}
+            campaignId: {type: string}
+            landingUrl: {type: string}
+            timestamp: {type: string, format: date-time}

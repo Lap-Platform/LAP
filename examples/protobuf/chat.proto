@@ -1,0 +1,118 @@
+syntax = "proto3";
+
+package chat.v1;
+
+// Real-time chat service.
+service ChatService {
+  // Send a message.
+  rpc SendMessage(SendMessageRequest) returns (ChatMessage);
+
+  // Stream messages in a room (server streaming).
+  rpc StreamMessages(StreamMessagesRequest) returns (stream ChatMessage);
+
+  // Bidirectional chat stream.
+  rpc Chat(stream ChatEvent) returns (stream ChatEvent);
+
+  // List rooms for the authenticated user.
+  rpc ListRooms(ListRoomsRequest) returns (ListRoomsResponse);
+
+  // Get message history.
+  rpc GetHistory(GetHistoryRequest) returns (GetHistoryResponse);
+}
+
+enum MessageType {
+  MESSAGE_TYPE_UNSPECIFIED = 0;
+  MESSAGE_TYPE_TEXT = 1;
+  MESSAGE_TYPE_IMAGE = 2;
+  MESSAGE_TYPE_FILE = 3;
+  MESSAGE_TYPE_SYSTEM = 4;
+}
+
+message ChatMessage {
+  string id = 1;
+  string room_id = 2;
+  string sender_id = 3;
+  MessageType type = 4;
+  string content = 5;
+  repeated Attachment attachments = 6;
+  int64 timestamp_ms = 7;
+  string reply_to_id = 8;
+  map<string, int32> reactions = 9;
+}
+
+message Attachment {
+  string url = 1;
+  string filename = 2;
+  string mime_type = 3;
+  int64 size_bytes = 4;
+}
+
+message ChatEvent {
+  oneof event {
+    ChatMessage message = 1;
+    TypingIndicator typing = 2;
+    PresenceUpdate presence = 3;
+    ReadReceipt read_receipt = 4;
+  }
+}
+
+message TypingIndicator {
+  string room_id = 1;
+  string user_id = 2;
+  bool is_typing = 3;
+}
+
+message PresenceUpdate {
+  string user_id = 1;
+  string status = 2;  // online, away, offline
+  int64 last_seen_ms = 3;
+}
+
+message ReadReceipt {
+  string room_id = 1;
+  string user_id = 2;
+  string last_read_message_id = 3;
+}
+
+message SendMessageRequest {
+  string room_id = 1;
+  MessageType type = 2;
+  string content = 3;
+  repeated Attachment attachments = 4;
+  string reply_to_id = 5;
+}
+
+message StreamMessagesRequest {
+  string room_id = 1;
+  int64 since_timestamp_ms = 2;
+}
+
+message Room {
+  string id = 1;
+  string name = 2;
+  repeated string member_ids = 3;
+  bool is_direct = 4;
+  ChatMessage last_message = 5;
+  int32 unread_count = 6;
+}
+
+message ListRoomsRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+}
+
+message ListRoomsResponse {
+  repeated Room rooms = 1;
+  string next_page_token = 2;
+}
+
+message GetHistoryRequest {
+  string room_id = 1;
+  int32 limit = 2;
+  string before_message_id = 3;
+}
+
+message GetHistoryResponse {
+  repeated ChatMessage messages = 1;
+  bool has_more = 2;
+}

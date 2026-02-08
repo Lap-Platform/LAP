@@ -1,0 +1,141 @@
+"""GitHub-like API"""
+
+enum IssueState {
+  OPEN
+  CLOSED
+}
+
+enum PullRequestState {
+  OPEN
+  CLOSED
+  MERGED
+}
+
+interface Node {
+  id: ID!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  endCursor: String
+}
+
+type User implements Node {
+  id: ID!
+  login: String!
+  name: String
+  email: String
+  bio: String
+  avatarUrl: String
+  repositories(first: Int, after: String): RepositoryConnection!
+}
+
+type Repository implements Node {
+  id: ID!
+  name: String!
+  fullName: String!
+  description: String
+  owner: User!
+  isPrivate: Boolean!
+  stargazerCount: Int!
+  forkCount: Int!
+  issues(first: Int, after: String, states: [IssueState!]): IssueConnection!
+  pullRequests(first: Int, after: String, states: [PullRequestState!]): PullRequestConnection!
+}
+
+type Issue implements Node {
+  id: ID!
+  number: Int!
+  title: String!
+  body: String
+  state: IssueState!
+  author: User!
+  labels: [Label!]!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type Label {
+  name: String!
+  color: String!
+}
+
+type PullRequest implements Node {
+  id: ID!
+  number: Int!
+  title: String!
+  body: String
+  state: PullRequestState!
+  author: User!
+  mergeable: Boolean
+  additions: Int!
+  deletions: Int!
+}
+
+type RepositoryConnection {
+  nodes: [Repository!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type IssueConnection {
+  nodes: [Issue!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type PullRequestConnection {
+  nodes: [PullRequest!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+input CreateIssueInput {
+  repositoryId: ID!
+  title: String!
+  body: String
+  labelIds: [ID!]
+}
+
+input UpdateIssueInput {
+  id: ID!
+  title: String
+  body: String
+  state: IssueState
+}
+
+type Query {
+  """Look up a user by login"""
+  user(login: String!): User
+
+  """Look up a repository by owner and name"""
+  repository(owner: String!, name: String!): Repository
+
+  """Search repositories"""
+  searchRepositories(query: String!, first: Int = 10, after: String): RepositoryConnection!
+
+  """Get the currently authenticated user"""
+  viewer: User!
+}
+
+type Mutation {
+  """Create a new issue"""
+  createIssue(input: CreateIssueInput!): Issue!
+
+  """Update an existing issue"""
+  updateIssue(input: UpdateIssueInput!): Issue!
+
+  """Star a repository"""
+  addStar(repositoryId: ID!): Repository!
+
+  """Remove star from a repository"""
+  removeStar(repositoryId: ID!): Repository!
+}
+
+type Subscription {
+  """Watch for new issues on a repository"""
+  issueCreated(repositoryId: ID!): Issue!
+
+  """Watch for pull request updates"""
+  pullRequestUpdated(repositoryId: ID!): PullRequest!
+}

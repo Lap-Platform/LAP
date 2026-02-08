@@ -1,0 +1,142 @@
+enum BroadcastType { LIVE ARCHIVE HIGHLIGHT UPLOAD }
+enum StreamType { LIVE VODCAST }
+enum SubscriptionTier { TIER_1 TIER_2 TIER_3 }
+enum ClipPeriod { DAY WEEK MONTH ALL }
+enum UserType { STAFF ADMIN GLOBAL_MOD NORMAL }
+
+type User {
+  id: ID!
+  login: String!
+  displayName: String!
+  type: UserType!
+  broadcasterType: String
+  description: String
+  profileImageUrl: String!
+  offlineImageUrl: String
+  viewCount: Int!
+  createdAt: String!
+  stream: Stream
+  videos(first: Int, after: String, type: BroadcastType): VideoConnection!
+  clips(first: Int, after: String, period: ClipPeriod): ClipConnection!
+  followers(first: Int, after: String): FollowConnection!
+  following(first: Int, after: String): FollowConnection!
+  schedule: Schedule
+  emotes: [Emote!]!
+  chatBadges: [ChatBadge!]!
+}
+
+type Stream {
+  id: ID!
+  userId: ID!
+  user: User!
+  gameId: ID
+  game: Game
+  type: StreamType!
+  title: String!
+  viewerCount: Int!
+  startedAt: String!
+  language: String!
+  thumbnailUrl: String!
+  tags: [Tag!]!
+  isMature: Boolean!
+}
+
+type Video {
+  id: ID!
+  user: User!
+  title: String!
+  description: String
+  url: String!
+  thumbnailUrl: String!
+  viewCount: Int!
+  language: String!
+  type: BroadcastType!
+  duration: String!
+  createdAt: String!
+  publishedAt: String!
+  mutedSegments: [MutedSegment!]
+}
+
+type MutedSegment { duration: Int! offset: Int! }
+
+type Clip {
+  id: ID!
+  url: String!
+  embedUrl: String!
+  broadcasterId: ID!
+  broadcaster: User!
+  creatorId: ID!
+  creator: User!
+  videoId: ID
+  gameId: ID
+  game: Game
+  title: String!
+  viewCount: Int!
+  duration: Float!
+  thumbnailUrl: String!
+  createdAt: String!
+}
+
+type Game {
+  id: ID!
+  name: String!
+  boxArtUrl: String!
+  igdbId: String
+  streams(first: Int, after: String): StreamConnection!
+}
+
+type Tag { id: ID! name: String! isAuto: Boolean! description: String }
+type Emote { id: ID! name: String! images: EmoteImages! format: [String!]! }
+type EmoteImages { url1x: String! url2x: String! url4x: String! }
+type ChatBadge { setId: String! versions: [BadgeVersion!]! }
+type BadgeVersion { id: String! imageUrl1x: String! imageUrl2x: String! imageUrl4x: String! title: String! description: String! }
+
+type Schedule { segments: [ScheduleSegment!]! broadcasterId: ID! vacation: ScheduleVacation }
+type ScheduleSegment { id: ID! startTime: String! endTime: String! title: String! canceledUntil: String category: Game isRecurring: Boolean! }
+type ScheduleVacation { startTime: String! endTime: String! }
+
+type Follow { fromId: ID! fromUser: User! toId: ID! toUser: User! followedAt: String! }
+type Subscription { broadcasterId: ID! userId: ID! tier: SubscriptionTier! isGift: Boolean! gifterId: ID }
+
+type StreamConnection { edges: [StreamEdge!]! pageInfo: PageInfo! }
+type StreamEdge { cursor: String! node: Stream! }
+type VideoConnection { edges: [VideoEdge!]! pageInfo: PageInfo! }
+type VideoEdge { cursor: String! node: Video! }
+type ClipConnection { edges: [ClipEdge!]! pageInfo: PageInfo! }
+type ClipEdge { cursor: String! node: Clip! }
+type FollowConnection { edges: [FollowEdge!]! pageInfo: PageInfo! totalCount: Int! }
+type FollowEdge { cursor: String! node: Follow! }
+type GameConnection { edges: [GameEdge!]! pageInfo: PageInfo! }
+type GameEdge { cursor: String! node: Game! }
+type PageInfo { hasNextPage: Boolean! endCursor: String }
+
+input UpdateStreamInput { title: String gameId: ID language: String tags: [String!] }
+input CreateClipInput { broadcasterId: ID! hasDelay: Boolean }
+
+type StreamPayload { success: Boolean! }
+type ClipPayload { clip: Clip }
+type FollowPayload { success: Boolean! }
+
+type Query {
+  user(id: ID): User
+  userByLogin(login: String!): User
+  users(ids: [ID!], logins: [String!]): [User!]!
+  stream(userId: ID!): Stream
+  streams(first: Int, after: String, gameId: ID, language: String): StreamConnection!
+  game(id: ID): Game
+  gameByName(name: String!): Game
+  topGames(first: Int, after: String): GameConnection!
+  video(id: ID!): Video
+  clip(id: ID!): Clip
+  searchChannels(query: String!, first: Int, after: String): [User!]!
+  searchCategories(query: String!, first: Int, after: String): [Game!]!
+}
+
+type Mutation {
+  updateStream(broadcasterId: ID!, input: UpdateStreamInput!): StreamPayload!
+  createClip(input: CreateClipInput!): ClipPayload!
+  deleteClip(id: ID!): StreamPayload!
+  followUser(userId: ID!): FollowPayload!
+  unfollowUser(userId: ID!): FollowPayload!
+  createMarker(userId: ID!, description: String): StreamPayload!
+}

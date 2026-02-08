@@ -1,0 +1,10 @@
+TASK 1: grpcurl -d '{"room_id": "general", "type": "MESSAGE_TYPE_TEXT", "content": "Hello!"}' -plaintext localhost:50051 chat.v1.ChatService/SendMessage
+TASK 2: grpcurl -d '{"room_id": "project-team", "type": "MESSAGE_TYPE_TEXT", "content": "Update on the project"}' -plaintext localhost:50051 chat.v1.ChatService/SendMessage
+TASK 3: grpcurl -d '{"room_id": "general", "since_timestamp_ms": 0}' -plaintext localhost:50051 chat.v1.ChatService/StreamMessages
+TASK 4: grpcurl -d @ -plaintext localhost:50051 chat.v1.ChatService/Chat < chat_events.json
+TASK 5: grpcurl -d '{}' -plaintext localhost:50051 chat.v1.ChatService/ListRooms
+TASK 6: grpcurl -d '{"page_size": 10, "page_token": "TOKEN"}' -plaintext localhost:50051 chat.v1.ChatService/ListRooms
+TASK 7: grpcurl -d '{"room_id": "general", "limit": 50}' -plaintext localhost:50051 chat.v1.ChatService/GetHistory
+TASK 8: grpcurl -d '{"room_id": "project-team", "limit": 100, "before_message_id": "msg_123"}' -plaintext localhost:50051 chat.v1.ChatService/GetHistory
+TASK 9: grpcurl -d '{"room_id": "announcements", "since_timestamp_ms": 1640995200000}' -plaintext localhost:50051 chat.v1.ChatService/StreamMessages
+TASK 10: grpcurl -d '{"room_id": "general", "type": "MESSAGE_TYPE_FILE", "content": "Document attached", "attachments": [{"url": "https://example.com/file.pdf", "filename": "document.pdf", "mime_type": "application/pdf", "size_bytes": 102400}]}' -plaintext localhost:50051 chat.v1.ChatService/SendMessage

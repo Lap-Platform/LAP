@@ -1,0 +1,175 @@
+openapi: "3.0.0"
+info:
+  title: Spotify Web API
+  version: "1.0"
+servers:
+  - url: https://api.spotify.com/v1
+security:
+  - oauth2: []
+components:
+  securitySchemes:
+    oauth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://accounts.spotify.com/authorize
+          tokenUrl: https://accounts.spotify.com/api/token
+          scopes: {}
+paths:
+  /tracks/{id}:
+    get:
+      summary: Get a track
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Spotify track ID
+        - name: market
+          in: query
+          schema:
+            type: string
+          description: ISO 3166-1 alpha-2 country code
+      responses:
+        "200":
+          description: Track object
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  artists:
+                    type: array
+                    items:
+                      type: object
+                  album:
+                    type: object
+                  duration_ms:
+                    type: integer
+                  popularity:
+                    type: integer
+                  preview_url:
+                    type: string
+                    nullable: true
+                  uri:
+                    type: string
+  /search:
+    get:
+      summary: Search for items
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Search query
+        - name: type
+          in: query
+          required: true
+          schema:
+            type: string
+          description: "Comma-separated: album, artist, playlist, track, show, episode"
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: market
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tracks:
+                    type: object
+                  artists:
+                    type: object
+                  albums:
+                    type: object
+                  playlists:
+                    type: object
+  /playlists/{playlist_id}:
+    get:
+      summary: Get a playlist
+      parameters:
+        - name: playlist_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: fields
+          in: query
+          schema:
+            type: string
+          description: Filters for the query (sparse fieldset)
+        - name: market
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Playlist object
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  description:
+                    type: string
+                    nullable: true
+                  owner:
+                    type: object
+                  tracks:
+                    type: object
+                  public:
+                    type: boolean
+                    nullable: true
+                  followers:
+                    type: object
+  /me:
+    get:
+      summary: Get current user profile
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  display_name:
+                    type: string
+                  email:
+                    type: string
+                  country:
+                    type: string
+                  product:
+                    type: string
+                  followers:
+                    type: object
+                  images:
+                    type: array
+                    items:
+                      type: object

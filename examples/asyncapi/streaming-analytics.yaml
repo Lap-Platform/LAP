@@ -1,0 +1,155 @@
+asyncapi: 2.6.0
+info:
+  title: Streaming Analytics Pipeline
+  version: 2.0.0
+  description: Real-time analytics event streaming and aggregation
+
+servers:
+  production:
+    url: kafka://analytics.example.com:9092
+    protocol: kafka
+
+channels:
+  analytics/pageviews:
+    subscribe:
+      summary: Page view events
+      message:
+        name: PageView
+        payload:
+          type: object
+          required:
+            - sessionId
+            - url
+            - timestamp
+          properties:
+            sessionId:
+              type: string
+            userId:
+              type: string
+            url:
+              type: string
+            referrer:
+              type: string
+            timestamp:
+              type: string
+              format: date-time
+            userAgent:
+              type: string
+            geo:
+              type: object
+              properties:
+                country:
+                  type: string
+                city:
+                  type: string
+                lat:
+                  type: number
+                lng:
+                  type: number
+
+  analytics/events:
+    subscribe:
+      summary: Custom analytics events
+      message:
+        name: AnalyticsEvent
+        payload:
+          type: object
+          required:
+            - eventName
+            - sessionId
+          properties:
+            eventName:
+              type: string
+            sessionId:
+              type: string
+            userId:
+              type: string
+            properties:
+              type: object
+            value:
+              type: number
+            timestamp:
+              type: string
+              format: date-time
+
+  analytics/aggregates:
+    publish:
+      summary: Publish computed aggregates
+      message:
+        name: AggregateResult
+        payload:
+          type: object
+          required:
+            - metric
+            - value
+            - windowStart
+            - windowEnd
+          properties:
+            metric:
+              type: string
+            value:
+              type: number
+            count:
+              type: integer
+            windowStart:
+              type: string
+              format: date-time
+            windowEnd:
+              type: string
+              format: date-time
+            dimensions:
+              type: object
+      bindings:
+        kafka:
+          key: metric
+
+  analytics/sessions:
+    subscribe:
+      summary: Session lifecycle events
+      message:
+        name: SessionEvent
+        payload:
+          type: object
+          required:
+            - sessionId
+            - eventType
+          properties:
+            sessionId:
+              type: string
+            eventType:
+              type: string
+              enum:
+                - start
+                - end
+                - timeout
+            userId:
+              type: string
+            duration:
+              type: integer
+              description: Session duration in seconds
+            pageCount:
+              type: integer
+
+  analytics/errors:
+    subscribe:
+      summary: Client-side error tracking
+      message:
+        name: ClientError
+        payload:
+          type: object
+          required:
+            - errorType
+            - message
+          properties:
+            errorType:
+              type: string
+            message:
+              type: string
+            stack:
+              type: string
+            url:
+              type: string
+            sessionId:
+              type: string
+            browser:
+              type: string

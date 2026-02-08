@@ -1,0 +1,109 @@
+{
+  "info": {
+    "name": "Task Manager API",
+    "_postman_id": "crud-001",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{"key": "token", "value": "{{authToken}}"}]
+  },
+  "variable": [
+    {"key": "baseUrl", "value": "https://api.taskmanager.io/v1"},
+    {"key": "authToken", "value": "test-token"}
+  ],
+  "item": [
+    {
+      "name": "Tasks",
+      "item": [
+        {
+          "name": "List Tasks",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/tasks?status=active&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks"],
+              "query": [
+                {"key": "status", "value": "active", "description": "Filter by status"},
+                {"key": "limit", "value": "20", "description": "Max results"}
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Success",
+              "code": 200,
+              "body": "{\"tasks\": [{\"id\": 1, \"title\": \"Buy groceries\", \"done\": false}], \"total\": 42}"
+            }
+          ]
+        },
+        {
+          "name": "Create Task",
+          "request": {
+            "method": "POST",
+            "url": {"raw": "{{baseUrl}}/tasks", "host": ["{{baseUrl}}"], "path": ["tasks"]},
+            "body": {
+              "mode": "raw",
+              "raw": "{\"title\": \"New task\", \"description\": \"Details here\", \"priority\": 1}"
+            }
+          },
+          "response": [
+            {"name": "Created", "code": 201, "body": "{\"id\": 2, \"title\": \"New task\", \"done\": false}"},
+            {"name": "Validation Error", "code": 422, "body": "{\"error\": \"title is required\"}"}
+          ]
+        },
+        {
+          "name": "Get Task",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/tasks/:taskId",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks", ":taskId"],
+              "variable": [{"key": "taskId", "value": "1", "description": "Task ID"}]
+            }
+          },
+          "response": [
+            {"name": "Success", "code": 200, "body": "{\"id\": 1, \"title\": \"Buy groceries\", \"done\": false}"},
+            {"name": "Not Found", "code": 404, "body": "{\"error\": \"Task not found\"}"}
+          ]
+        },
+        {
+          "name": "Update Task",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{baseUrl}}/tasks/:taskId",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks", ":taskId"],
+              "variable": [{"key": "taskId", "value": "1"}]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"title\": \"Updated task\", \"done\": true}"
+            }
+          },
+          "response": [
+            {"name": "Updated", "code": 200, "body": "{\"id\": 1, \"title\": \"Updated task\", \"done\": true}"}
+          ]
+        },
+        {
+          "name": "Delete Task",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/tasks/:taskId",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks", ":taskId"],
+              "variable": [{"key": "taskId", "value": "1"}]
+            }
+          },
+          "response": [
+            {"name": "Deleted", "code": 204, "body": ""}
+          ]
+        }
+      ]
+    }
+  ]
+}

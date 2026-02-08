@@ -1,0 +1,354 @@
+syntax = "proto3";
+
+package google.spanner.v1;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/empty.proto";
+
+service Spanner {
+  rpc CreateSession(CreateSessionRequest) returns (Session);
+  rpc BatchCreateSessions(BatchCreateSessionsRequest) returns (BatchCreateSessionsResponse);
+  rpc GetSession(GetSessionRequest) returns (Session);
+  rpc ListSessions(ListSessionsRequest) returns (ListSessionsResponse);
+  rpc DeleteSession(DeleteSessionRequest) returns (google.protobuf.Empty);
+  rpc ExecuteSql(ExecuteSqlRequest) returns (ResultSet);
+  rpc ExecuteStreamingSql(ExecuteSqlRequest) returns (stream PartialResultSet);
+  rpc ExecuteBatchDml(ExecuteBatchDmlRequest) returns (ExecuteBatchDmlResponse);
+  rpc Read(ReadRequest) returns (ResultSet);
+  rpc StreamingRead(ReadRequest) returns (stream PartialResultSet);
+  rpc BeginTransaction(BeginTransactionRequest) returns (Transaction);
+  rpc Commit(CommitRequest) returns (CommitResponse);
+  rpc Rollback(RollbackRequest) returns (google.protobuf.Empty);
+  rpc PartitionQuery(PartitionQueryRequest) returns (PartitionResponse);
+  rpc PartitionRead(PartitionReadRequest) returns (PartitionResponse);
+}
+
+message Session {
+  string name = 1;
+  map<string, string> labels = 2;
+  google.protobuf.Timestamp create_time = 3;
+  google.protobuf.Timestamp approximate_last_use_time = 4;
+}
+
+message CreateSessionRequest {
+  string database = 1;
+  Session session = 2;
+}
+
+message BatchCreateSessionsRequest {
+  string database = 1;
+  int32 session_count = 2;
+  Session session_template = 3;
+}
+
+message BatchCreateSessionsResponse {
+  repeated Session session = 1;
+}
+
+message GetSessionRequest {
+  string name = 1;
+}
+
+message ListSessionsRequest {
+  string database = 1;
+  int32 page_size = 2;
+  string page_token = 3;
+  string filter = 4;
+}
+
+message ListSessionsResponse {
+  repeated Session sessions = 1;
+  string next_page_token = 2;
+}
+
+message DeleteSessionRequest {
+  string name = 1;
+}
+
+message ExecuteSqlRequest {
+  string session = 1;
+  TransactionSelector transaction = 2;
+  string sql = 3;
+  map<string, Value> params = 4;
+  map<string, Type> param_types = 5;
+  QueryMode query_mode = 6;
+  int64 seqno = 7;
+}
+
+enum QueryMode {
+  NORMAL = 0;
+  PLAN = 1;
+  PROFILE = 2;
+}
+
+message TransactionSelector {
+  oneof selector {
+    TransactionOptions begin = 1;
+    bytes id = 2;
+    bool single_use = 3;
+  }
+}
+
+message TransactionOptions {
+  oneof mode {
+    ReadWrite read_write = 1;
+    ReadOnly read_only = 2;
+  }
+}
+
+message ReadWrite {
+  ReadLockMode read_lock_mode = 1;
+}
+
+enum ReadLockMode {
+  READ_LOCK_MODE_UNSPECIFIED = 0;
+  PESSIMISTIC = 1;
+  OPTIMISTIC = 2;
+}
+
+message ReadOnly {
+  bool strong = 1;
+  google.protobuf.Timestamp read_timestamp = 2;
+  google.protobuf.Duration exact_staleness = 3;
+}
+
+message Transaction {
+  bytes id = 1;
+  google.protobuf.Timestamp read_timestamp = 2;
+}
+
+message ResultSet {
+  ResultSetMetadata metadata = 1;
+  repeated ListValue rows = 2;
+  ResultSetStats stats = 3;
+}
+
+message PartialResultSet {
+  ResultSetMetadata metadata = 1;
+  repeated google.protobuf.Value values = 2;
+  bool chunked_value = 3;
+  bytes resume_token = 4;
+  ResultSetStats stats = 5;
+}
+
+message ResultSetMetadata {
+  StructType row_type = 1;
+  Transaction transaction = 2;
+}
+
+message StructType {
+  repeated Field fields = 1;
+}
+
+message Field {
+  string name = 1;
+  Type type = 2;
+}
+
+message Type {
+  TypeCode code = 1;
+  Type array_element_type = 2;
+  StructType struct_type = 3;
+}
+
+enum TypeCode {
+  TYPE_CODE_UNSPECIFIED = 0;
+  BOOL = 1;
+  INT64 = 2;
+  FLOAT64 = 3;
+  TIMESTAMP = 4;
+  DATE = 5;
+  STRING = 6;
+  BYTES = 7;
+  ARRAY = 8;
+  STRUCT = 9;
+  NUMERIC = 10;
+  JSON = 11;
+}
+
+message Value {
+  oneof kind {
+    bool bool_value = 1;
+    int64 int64_value = 2;
+    double double_value = 3;
+    string string_value = 4;
+    bytes bytes_value = 5;
+    google.protobuf.Timestamp timestamp_value = 6;
+    ListValue list_value = 7;
+    StructValue struct_value = 8;
+  }
+}
+
+message ListValue {
+  repeated Value values = 1;
+}
+
+message StructValue {
+  map<string, Value> fields = 1;
+}
+
+message ResultSetStats {
+  oneof row_count {
+    int64 row_count_exact = 1;
+    int64 row_count_lower_bound = 2;
+  }
+  QueryPlan query_plan = 3;
+  QueryStats query_stats = 4;
+}
+
+message QueryPlan {
+  repeated PlanNode plan_nodes = 1;
+}
+
+message PlanNode {
+  int32 index = 1;
+  PlanNodeKind kind = 2;
+  string display_name = 3;
+  repeated int32 child_links = 4;
+  map<string, google.protobuf.Value> metadata = 5;
+  map<string, google.protobuf.Value> execution_stats = 6;
+}
+
+enum PlanNodeKind {
+  KIND_UNSPECIFIED = 0;
+  RELATIONAL = 1;
+  SCALAR = 2;
+}
+
+message QueryStats {
+  map<string, google.protobuf.Value> stats = 1;
+}
+
+message ExecuteBatchDmlRequest {
+  string session = 1;
+  TransactionSelector transaction = 2;
+  repeated Statement statements = 3;
+  int64 seqno = 4;
+}
+
+message Statement {
+  string sql = 1;
+  map<string, Value> params = 2;
+  map<string, Type> param_types = 3;
+}
+
+message ExecuteBatchDmlResponse {
+  repeated ResultSet result_sets = 1;
+  Status status = 2;
+}
+
+message Status {
+  int32 code = 1;
+  string message = 2;
+}
+
+message ReadRequest {
+  string session = 1;
+  TransactionSelector transaction = 2;
+  string table = 3;
+  string index = 4;
+  repeated string columns = 5;
+  KeySet key_set = 6;
+  int64 limit = 7;
+  bytes resume_token = 8;
+}
+
+message KeySet {
+  repeated ListValue keys = 1;
+  repeated KeyRange ranges = 2;
+  bool all = 3;
+}
+
+message KeyRange {
+  oneof start_key_type {
+    ListValue start_closed = 1;
+    ListValue start_open = 2;
+  }
+  oneof end_key_type {
+    ListValue end_closed = 3;
+    ListValue end_open = 4;
+  }
+}
+
+message BeginTransactionRequest {
+  string session = 1;
+  TransactionOptions options = 2;
+}
+
+message CommitRequest {
+  string session = 1;
+  oneof transaction {
+    bytes transaction_id = 2;
+    TransactionOptions single_use_transaction = 3;
+  }
+  repeated Mutation mutations = 4;
+}
+
+message Mutation {
+  oneof operation {
+    Write insert = 1;
+    Write update = 2;
+    Write insert_or_update = 3;
+    Write replace = 4;
+    Delete delete = 5;
+  }
+}
+
+message Write {
+  string table = 1;
+  repeated string columns = 2;
+  repeated ListValue values = 3;
+}
+
+message Delete {
+  string table = 1;
+  KeySet key_set = 2;
+}
+
+message CommitResponse {
+  google.protobuf.Timestamp commit_timestamp = 1;
+  CommitStats commit_stats = 2;
+}
+
+message CommitStats {
+  int64 mutation_count = 1;
+}
+
+message RollbackRequest {
+  string session = 1;
+  bytes transaction_id = 2;
+}
+
+message PartitionQueryRequest {
+  string session = 1;
+  TransactionSelector transaction = 2;
+  string sql = 3;
+  map<string, Value> params = 4;
+  map<string, Type> param_types = 5;
+  PartitionOptions partition_options = 6;
+}
+
+message PartitionReadRequest {
+  string session = 1;
+  TransactionSelector transaction = 2;
+  string table = 3;
+  string index = 4;
+  repeated string columns = 5;
+  KeySet key_set = 6;
+  PartitionOptions partition_options = 7;
+}
+
+message PartitionOptions {
+  int64 partition_size_bytes = 1;
+  int64 max_partitions = 2;
+}
+
+message PartitionResponse {
+  repeated Partition partitions = 1;
+  Transaction transaction = 2;
+}
+
+message Partition {
+  bytes partition_token = 1;
+}

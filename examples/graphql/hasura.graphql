@@ -1,0 +1,175 @@
+enum OrderBy { ASC DESC ASC_NULLS_FIRST ASC_NULLS_LAST DESC_NULLS_FIRST DESC_NULLS_LAST }
+enum CursorOrdering { ASC DESC }
+
+scalar Timestamptz
+scalar Jsonb
+scalar Uuid
+scalar Numeric
+
+# Example tables: users, posts, comments, tags, post_tags (many-to-many)
+
+type Users {
+  id: Uuid!
+  email: String!
+  username: String!
+  displayName: String
+  avatarUrl: String
+  bio: String
+  role: String!
+  metadata: Jsonb
+  createdAt: Timestamptz!
+  updatedAt: Timestamptz!
+  posts(where: PostsBoolExp, orderBy: [PostsOrderBy!], limit: Int, offset: Int): [Posts!]!
+  postsAggregate(where: PostsBoolExp): PostsAggregate!
+  comments(where: CommentsBoolExp, orderBy: [CommentsOrderBy!], limit: Int, offset: Int): [Comments!]!
+  commentsAggregate(where: CommentsBoolExp): CommentsAggregate!
+}
+
+type Posts {
+  id: Uuid!
+  title: String!
+  slug: String!
+  content: String
+  excerpt: String
+  published: Boolean!
+  featuredImageUrl: String
+  author: Users!
+  authorId: Uuid!
+  categoryId: Uuid
+  category: Categories
+  viewCount: Int!
+  likeCount: Int!
+  metadata: Jsonb
+  createdAt: Timestamptz!
+  updatedAt: Timestamptz!
+  publishedAt: Timestamptz
+  comments(where: CommentsBoolExp, orderBy: [CommentsOrderBy!], limit: Int, offset: Int): [Comments!]!
+  commentsAggregate(where: CommentsBoolExp): CommentsAggregate!
+  tags(where: PostTagsBoolExp, limit: Int, offset: Int): [PostTags!]!
+  tagsAggregate(where: PostTagsBoolExp): PostTagsAggregate!
+}
+
+type Comments {
+  id: Uuid!
+  body: String!
+  author: Users!
+  authorId: Uuid!
+  post: Posts!
+  postId: Uuid!
+  parentId: Uuid
+  parent: Comments
+  replies(where: CommentsBoolExp, orderBy: [CommentsOrderBy!], limit: Int, offset: Int): [Comments!]!
+  repliesAggregate(where: CommentsBoolExp): CommentsAggregate!
+  createdAt: Timestamptz!
+  updatedAt: Timestamptz!
+}
+
+type Categories {
+  id: Uuid!
+  name: String!
+  slug: String!
+  description: String
+  parentId: Uuid
+  parent: Categories
+  children(where: CategoriesBoolExp, limit: Int, offset: Int): [Categories!]!
+  posts(where: PostsBoolExp, limit: Int, offset: Int): [Posts!]!
+  postsAggregate(where: PostsBoolExp): PostsAggregate!
+}
+
+type Tags {
+  id: Uuid!
+  name: String!
+  slug: String!
+  postTags(where: PostTagsBoolExp, limit: Int, offset: Int): [PostTags!]!
+  postTagsAggregate(where: PostTagsBoolExp): PostTagsAggregate!
+}
+
+type PostTags {
+  postId: Uuid!
+  tagId: Uuid!
+  post: Posts!
+  tag: Tags!
+}
+
+# Aggregates
+type PostsAggregate { aggregate: PostsAggregateFields nodes: [Posts!]! }
+type PostsAggregateFields { count: Int! avg: PostsAvgFields sum: PostsSumFields max: PostsMaxFields min: PostsMinFields }
+type PostsAvgFields { viewCount: Float likeCount: Float }
+type PostsSumFields { viewCount: Int likeCount: Int }
+type PostsMaxFields { viewCount: Int likeCount: Int createdAt: Timestamptz }
+type PostsMinFields { viewCount: Int likeCount: Int createdAt: Timestamptz }
+
+type CommentsAggregate { aggregate: CommentsAggregateFields nodes: [Comments!]! }
+type CommentsAggregateFields { count: Int! }
+
+type PostTagsAggregate { aggregate: PostTagsAggregateFields nodes: [PostTags!]! }
+type PostTagsAggregateFields { count: Int! }
+
+type UsersAggregate { aggregate: UsersAggregateFields nodes: [Users!]! }
+type UsersAggregateFields { count: Int! }
+
+# Bool expressions (where clauses)
+input PostsBoolExp { _and: [PostsBoolExp!] _or: [PostsBoolExp!] _not: PostsBoolExp id: UuidComparisonExp title: StringComparisonExp slug: StringComparisonExp published: BooleanComparisonExp authorId: UuidComparisonExp categoryId: UuidComparisonExp createdAt: TimestamptzComparisonExp viewCount: IntComparisonExp }
+input CommentsBoolExp { _and: [CommentsBoolExp!] _or: [CommentsBoolExp!] _not: CommentsBoolExp id: UuidComparisonExp authorId: UuidComparisonExp postId: UuidComparisonExp parentId: UuidComparisonExp createdAt: TimestamptzComparisonExp }
+input CategoriesBoolExp { _and: [CategoriesBoolExp!] _or: [CategoriesBoolExp!] id: UuidComparisonExp name: StringComparisonExp slug: StringComparisonExp parentId: UuidComparisonExp }
+input PostTagsBoolExp { _and: [PostTagsBoolExp!] _or: [PostTagsBoolExp!] postId: UuidComparisonExp tagId: UuidComparisonExp }
+
+input UuidComparisonExp { _eq: Uuid _neq: Uuid _in: [Uuid!] _nin: [Uuid!] _isNull: Boolean }
+input StringComparisonExp { _eq: String _neq: String _in: [String!] _like: String _ilike: String _nlike: String _isNull: Boolean }
+input IntComparisonExp { _eq: Int _neq: Int _gt: Int _gte: Int _lt: Int _lte: Int _in: [Int!] _isNull: Boolean }
+input BooleanComparisonExp { _eq: Boolean _neq: Boolean }
+input TimestamptzComparisonExp { _eq: Timestamptz _neq: Timestamptz _gt: Timestamptz _gte: Timestamptz _lt: Timestamptz _lte: Timestamptz }
+
+# Order by
+input PostsOrderBy { id: OrderBy title: OrderBy createdAt: OrderBy updatedAt: OrderBy publishedAt: OrderBy viewCount: OrderBy likeCount: OrderBy }
+input CommentsOrderBy { id: OrderBy createdAt: OrderBy updatedAt: OrderBy }
+
+# Mutation inputs
+input PostsInsertInput { title: String! slug: String! content: String excerpt: String published: Boolean authorId: Uuid! categoryId: Uuid featuredImageUrl: String metadata: Jsonb }
+input PostsSetInput { title: String slug: String content: String excerpt: String published: Boolean categoryId: Uuid featuredImageUrl: String metadata: Jsonb }
+input CommentsInsertInput { body: String! authorId: Uuid! postId: Uuid! parentId: Uuid }
+input UsersInsertInput { email: String! username: String! displayName: String avatarUrl: String bio: String role: String metadata: Jsonb }
+
+type PostsMutationResponse { affectedRows: Int! returning: [Posts!]! }
+type CommentsMutationResponse { affectedRows: Int! returning: [Comments!]! }
+type UsersMutationResponse { affectedRows: Int! returning: [Users!]! }
+
+type Query {
+  users(where: PostsBoolExp, orderBy: [PostsOrderBy!], limit: Int, offset: Int): [Users!]!
+  usersAggregate(where: PostsBoolExp): UsersAggregate!
+  usersByPk(id: Uuid!): Users
+  posts(where: PostsBoolExp, orderBy: [PostsOrderBy!], limit: Int, offset: Int): [Posts!]!
+  postsAggregate(where: PostsBoolExp): PostsAggregate!
+  postsByPk(id: Uuid!): Posts
+  comments(where: CommentsBoolExp, orderBy: [CommentsOrderBy!], limit: Int, offset: Int): [Comments!]!
+  commentsAggregate(where: CommentsBoolExp): CommentsAggregate!
+  commentsByPk(id: Uuid!): Comments
+  categories(where: CategoriesBoolExp, limit: Int, offset: Int): [Categories!]!
+  categoriesByPk(id: Uuid!): Categories
+  tags(limit: Int, offset: Int): [Tags!]!
+  tagsByPk(id: Uuid!): Tags
+}
+
+type Mutation {
+  insertPosts(objects: [PostsInsertInput!]!): PostsMutationResponse!
+  insertPostsOne(object: PostsInsertInput!): Posts
+  updatePosts(where: PostsBoolExp!, _set: PostsSetInput!): PostsMutationResponse!
+  updatePostsByPk(pkColumns: PostsPkColumnsInput!, _set: PostsSetInput!): Posts
+  deletePosts(where: PostsBoolExp!): PostsMutationResponse!
+  deletePostsByPk(id: Uuid!): Posts
+  insertComments(objects: [CommentsInsertInput!]!): CommentsMutationResponse!
+  insertCommentsOne(object: CommentsInsertInput!): Comments
+  deleteComments(where: CommentsBoolExp!): CommentsMutationResponse!
+  deleteCommentsByPk(id: Uuid!): Comments
+  insertUsers(objects: [UsersInsertInput!]!): UsersMutationResponse!
+  insertUsersOne(object: UsersInsertInput!): Users
+}
+
+input PostsPkColumnsInput { id: Uuid! }
+
+type Subscription {
+  posts(where: PostsBoolExp, orderBy: [PostsOrderBy!], limit: Int, offset: Int): [Posts!]!
+  postsByPk(id: Uuid!): Posts
+  comments(where: CommentsBoolExp, orderBy: [CommentsOrderBy!], limit: Int, offset: Int): [Comments!]!
+  usersOnline(where: PostsBoolExp): [Users!]!
+}

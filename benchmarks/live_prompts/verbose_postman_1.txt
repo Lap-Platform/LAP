@@ -1,0 +1,287 @@
+You are an API integration assistant. You will be given API documentation and a series of tasks.
+For each task, write the exact API call (curl command for REST, GraphQL query, protobuf RPC call, etc).
+
+Format your response as:
+TASK 1: <your api call>
+TASK 2: <your api call>
+... etc
+
+--- API DOCUMENTATION ---
+{
+  "info": {
+    "name": "GitHub Repos API",
+    "_postman_id": "github-001",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://api.github.com"
+    }
+  ],
+  "item": [
+    {
+      "name": "Repositories",
+      "item": [
+        {
+          "name": "List Repos",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/user/repos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user",
+                "repos"
+              ],
+              "query": [
+                {
+                  "key": "sort",
+                  "value": "updated",
+                  "description": ""
+                },
+                {
+                  "key": "per_page",
+                  "value": "30",
+                  "description": ""
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": ""
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "OK",
+              "code": 200,
+              "body": "[{\"id\": 1, \"full_name\": \"octocat/Hello-World\", \"private\": false}]"
+            }
+          ]
+        },
+        {
+          "name": "Get Repo",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/repos/:owner/:repo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "repos",
+                ":owner",
+                ":repo"
+              ],
+              "variable": [
+                {
+                  "key": "owner",
+                  "value": "octocat"
+                },
+                {
+                  "key": "repo",
+                  "value": "Hello-World"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "OK",
+              "code": 200,
+              "body": "{\"id\": 1, \"full_name\": \"octocat/Hello-World\", \"stargazers_count\": 100}"
+            }
+          ]
+        },
+        {
+          "name": "Create Repo",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/user/repos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user",
+                "repos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"new-repo\", \"private\": true, \"description\": \"A new repo\"}"
+            }
+          },
+          "response": [
+            {
+              "name": "Created",
+              "code": 201,
+              "body": "{\"id\": 2, \"full_name\": \"octocat/new-repo\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Issues",
+      "item": [
+        {
+          "name": "List Issues",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/repos/:owner/:repo/issues",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "repos",
+                ":owner",
+                ":repo",
+                "issues"
+              ],
+              "query": [
+                {
+                  "key": "state",
+                  "value": "open",
+                  "description": ""
+                },
+                {
+                  "key": "labels",
+                  "value": "",
+                  "description": "Comma-separated"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "owner",
+                  "value": "octocat"
+                },
+                {
+                  "key": "repo",
+                  "value": "Hello-World"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "OK",
+              "code": 200,
+              "body": "[{\"id\": 1, \"title\": \"Bug\", \"state\": \"open\"}]"
+            }
+          ]
+        },
+        {
+          "name": "Create Issue",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/repos/:owner/:repo/issues",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "repos",
+                ":owner",
+                ":repo",
+                "issues"
+              ],
+              "variable": [
+                {
+                  "key": "owner",
+                  "value": "octocat"
+                },
+                {
+                  "key": "repo",
+                  "value": "Hello-World"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"title\": \"Found a bug\", \"body\": \"Description here\", \"labels\": [\"bug\"]}"
+            }
+          },
+          "response": [
+            {
+              "name": "Created",
+              "code": 201,
+              "body": "{\"id\": 2, \"number\": 42, \"title\": \"Found a bug\"}"
+            }
+          ]
+        },
+        {
+          "name": "Update Issue",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{baseUrl}}/repos/:owner/:repo/issues/:issue_number",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "repos",
+                ":owner",
+                ":repo",
+                "issues",
+                ":issue_number"
+              ],
+              "variable": [
+                {
+                  "key": "owner",
+                  "value": "octocat"
+                },
+                {
+                  "key": "repo",
+                  "value": "Hello-World"
+                },
+                {
+                  "key": "issue_number",
+                  "value": "42"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"state\": \"closed\"}"
+            }
+          },
+          "response": [
+            {
+              "name": "OK",
+              "code": 200,
+              "body": "{\"id\": 2, \"state\": \"closed\"}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+--- END DOCUMENTATION ---
+
+TASKS:
+1. List repositories for current user with type 'owner' and sort by 'updated'
+2. Get repository octocat/Hello-World details
+3. Create repository with name 'new-repo' and description 'My new project'
+4. List issues for repository octocat/Hello-World with state 'open'
+5. Create issue in octocat/Hello-World with title 'Bug found' and labels
+6. Update issue #42 in octocat/Hello-World with new title and state 'closed'
+7. List issues with milestone filter and per_page 25
+8. Create repository with name 'private-repo' and private flag true
+9. List user repositories with visibility 'public' and affiliation 'owner,collaborator'
+10. Create issue with title 'Feature request', body text, and assignees list

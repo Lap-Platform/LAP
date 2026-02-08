@@ -1,0 +1,181 @@
+syntax = "proto3";
+
+package logging.v1;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/any.proto";
+import "google/protobuf/empty.proto";
+
+service LoggingService {
+  rpc WriteLog(WriteLogRequest) returns (WriteLogResponse);
+  rpc WriteLogs(stream WriteLogRequest) returns (WriteLogResponse);
+  rpc QueryLogs(QueryLogsRequest) returns (QueryLogsResponse);
+  rpc StreamLogs(StreamLogsRequest) returns (stream LogEntry);
+  rpc GetLog(GetLogRequest) returns (LogEntry);
+  rpc DeleteLogs(DeleteLogsRequest) returns (google.protobuf.Empty);
+}
+
+service LogSinkService {
+  rpc CreateSink(CreateSinkRequest) returns (LogSink);
+  rpc GetSink(GetSinkRequest) returns (LogSink);
+  rpc UpdateSink(UpdateSinkRequest) returns (LogSink);
+  rpc DeleteSink(DeleteSinkRequest) returns (google.protobuf.Empty);
+  rpc ListSinks(ListSinksRequest) returns (ListSinksResponse);
+}
+
+message LogEntry {
+  string log_name = 1;
+  google.protobuf.Timestamp timestamp = 2;
+  LogSeverity severity = 3;
+  oneof payload {
+    string text_payload = 4;
+    google.protobuf.Any json_payload = 5;
+    google.protobuf.Any proto_payload = 6;
+  }
+  map<string, string> labels = 7;
+  HttpRequest http_request = 8;
+  SourceLocation source_location = 9;
+  string trace = 10;
+  string span_id = 11;
+  bool trace_sampled = 12;
+  string insert_id = 13;
+  Resource resource = 14;
+}
+
+enum LogSeverity {
+  DEFAULT = 0;
+  DEBUG = 100;
+  INFO = 200;
+  NOTICE = 300;
+  WARNING = 400;
+  ERROR = 500;
+  CRITICAL = 600;
+  ALERT = 700;
+  EMERGENCY = 800;
+}
+
+message HttpRequest {
+  string request_method = 1;
+  string request_url = 2;
+  int64 request_size = 3;
+  int32 status = 4;
+  int64 response_size = 5;
+  string user_agent = 6;
+  string remote_ip = 7;
+  string server_ip = 8;
+  string referer = 9;
+  google.protobuf.Duration latency = 10;
+  bool cache_hit = 11;
+  string protocol = 12;
+}
+
+message SourceLocation {
+  string file = 1;
+  int64 line = 2;
+  string function = 3;
+}
+
+message Resource {
+  string type = 1;
+  map<string, string> labels = 2;
+}
+
+message WriteLogRequest {
+  repeated LogEntry entries = 1;
+  bool partial_success = 2;
+}
+
+message WriteLogResponse {
+  int32 entries_written = 1;
+  repeated WriteError errors = 2;
+}
+
+message WriteError {
+  int32 entry_index = 1;
+  string error = 2;
+}
+
+message QueryLogsRequest {
+  repeated string resource_names = 1;
+  string filter = 2;
+  string order_by = 3;
+  int32 page_size = 4;
+  string page_token = 5;
+}
+
+message QueryLogsResponse {
+  repeated LogEntry entries = 1;
+  string next_page_token = 2;
+}
+
+message StreamLogsRequest {
+  repeated string resource_names = 1;
+  string filter = 2;
+  google.protobuf.Timestamp start_time = 3;
+}
+
+message GetLogRequest {
+  string log_name = 1;
+  string insert_id = 2;
+}
+
+message DeleteLogsRequest {
+  string log_name = 1;
+  string filter = 2;
+}
+
+message LogSink {
+  string name = 1;
+  SinkDestination destination = 2;
+  string filter = 3;
+  SinkOutputVersionFormat output_version_format = 4;
+  map<string, string> labels = 5;
+  google.protobuf.Timestamp create_time = 6;
+  google.protobuf.Timestamp update_time = 7;
+}
+
+message SinkDestination {
+  oneof destination {
+    string storage_bucket = 1;
+    string pubsub_topic = 2;
+    string bigquery_dataset = 3;
+    string webhook_url = 4;
+  }
+}
+
+enum SinkOutputVersionFormat {
+  VERSION_FORMAT_UNSPECIFIED = 0;
+  V1 = 1;
+  V2 = 2;
+}
+
+message CreateSinkRequest {
+  string parent = 1;
+  LogSink sink = 2;
+}
+
+message GetSinkRequest {
+  string sink_name = 1;
+}
+
+message UpdateSinkRequest {
+  string sink_name = 1;
+  LogSink sink = 2;
+  string update_mask = 3;
+}
+
+message DeleteSinkRequest {
+  string sink_name = 1;
+}
+
+message ListSinksRequest {
+  string parent = 1;
+  int32 page_size = 2;
+  string page_token = 3;
+}
+
+message ListSinksResponse {
+  repeated LogSink sinks = 1;
+  string next_page_token = 2;
+}

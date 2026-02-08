@@ -1,0 +1,161 @@
+enum SortType { HOT NEW TOP RISING CONTROVERSIAL BEST }
+enum TimeFilter { HOUR DAY WEEK MONTH YEAR ALL }
+enum PostType { LINK SELF IMAGE VIDEO POLL CROSSPOST }
+enum VoteDirection { UP DOWN NONE }
+enum FlairType { TEXT RICHTEXT }
+enum DistinguishType { MODERATOR ADMIN }
+
+interface Thing { id: ID! fullname: String! }
+
+type User implements Thing {
+  id: ID!
+  fullname: String!
+  name: String!
+  iconImg: String
+  created: Float!
+  linkKarma: Int!
+  commentKarma: Int!
+  totalKarma: Int!
+  isGold: Boolean!
+  isMod: Boolean!
+  verified: Boolean!
+  hasVerifiedEmail: Boolean!
+  subreddit: UserSubreddit
+  posts(sort: SortType, time: TimeFilter, limit: Int, after: String): PostConnection!
+  comments(sort: SortType, time: TimeFilter, limit: Int, after: String): CommentConnection!
+  savedPosts(limit: Int, after: String): PostConnection!
+  trophies: [Trophy!]!
+}
+
+type UserSubreddit { displayName: String title: String publicDescription: String subscribers: Int bannerImg: String }
+type Trophy { name: String! description: String icon70: String }
+
+type Subreddit implements Thing {
+  id: ID!
+  fullname: String!
+  displayName: String!
+  title: String!
+  publicDescription: String!
+  description: String
+  subscribers: Int!
+  activeUserCount: Int
+  over18: Boolean!
+  lang: String
+  iconImg: String
+  bannerImg: String
+  primaryColor: String
+  created: Float!
+  rules: [SubredditRule!]!
+  flairs: [Flair!]!
+  posts(sort: SortType, time: TimeFilter, limit: Int, after: String): PostConnection!
+  wiki: [WikiPage!]
+}
+
+type SubredditRule { shortName: String! description: String kind: String priority: Int! }
+type Flair { id: ID! text: String! type: FlairType! backgroundColor: String textColor: String }
+
+type Post implements Thing {
+  id: ID!
+  fullname: String!
+  title: String!
+  selftext: String
+  selftextHtml: String
+  author: User
+  subreddit: Subreddit!
+  url: String
+  permalink: String!
+  thumbnail: String
+  postType: PostType!
+  score: Int!
+  upvoteRatio: Float
+  numComments: Int!
+  over18: Boolean!
+  spoiler: Boolean!
+  stickied: Boolean!
+  locked: Boolean!
+  archived: Boolean!
+  linkFlairText: String
+  distinguished: DistinguishType
+  created: Float!
+  edited: Float
+  media: PostMedia
+  preview: PostPreview
+  awards: [Award!]!
+  comments(sort: SortType, limit: Int, depth: Int): CommentConnection!
+  crosspostParent: Post
+  poll: PollData
+}
+
+type PostMedia { type: String oembed: OEmbed redditVideo: RedditVideo }
+type OEmbed { title: String thumbnailUrl: String html: String }
+type RedditVideo { fallbackUrl: String height: Int width: Int duration: Int isGif: Boolean }
+type PostPreview { images: [PreviewImage!]! }
+type PreviewImage { source: ImageSource! resolutions: [ImageSource!]! }
+type ImageSource { url: String! width: Int! height: Int! }
+type Award { name: String! count: Int! iconUrl: String! }
+type PollData { options: [PollOption!]! totalVoteCount: Int! votingEndTimestamp: Float! }
+type PollOption { text: String! voteCount: Int }
+
+type Comment implements Thing {
+  id: ID!
+  fullname: String!
+  body: String!
+  bodyHtml: String
+  author: User
+  post: Post
+  parent: Comment
+  score: Int!
+  depth: Int!
+  stickied: Boolean!
+  distinguished: DistinguishType
+  edited: Float
+  created: Float!
+  replies(limit: Int, depth: Int): CommentConnection!
+  awards: [Award!]!
+  isSubmitter: Boolean!
+}
+
+type WikiPage { title: String! content: String revisionDate: Float revisionBy: User }
+
+type PostConnection { edges: [PostEdge!]! after: String before: String }
+type PostEdge { cursor: String! node: Post! }
+type CommentConnection { edges: [CommentEdge!]! after: String before: String }
+type CommentEdge { cursor: String! node: Comment! }
+type SubredditConnection { edges: [SubredditEdge!]! after: String before: String }
+type SubredditEdge { cursor: String! node: Subreddit! }
+
+input SubmitPostInput { subredditName: String! title: String! kind: PostType! selftext: String url: String nsfw: Boolean spoiler: Boolean flairId: ID sendReplies: Boolean }
+input SubmitCommentInput { parentFullname: String! text: String! }
+input VoteInput { fullname: String! direction: VoteDirection! }
+
+type PostPayload { post: Post }
+type CommentPayload { comment: Comment }
+type VotePayload { success: Boolean! }
+type DeletePayload { success: Boolean! }
+
+type Query {
+  me: User!
+  user(name: String!): User
+  subreddit(name: String!): Subreddit
+  post(id: ID!): Post
+  frontpage(sort: SortType, time: TimeFilter, limit: Int, after: String): PostConnection!
+  popular(sort: SortType, limit: Int, after: String): PostConnection!
+  searchPosts(query: String!, subreddit: String, sort: SortType, time: TimeFilter, limit: Int, after: String): PostConnection!
+  searchSubreddits(query: String!, limit: Int, after: String): SubredditConnection!
+  trendingSubreddits: [Subreddit!]!
+}
+
+type Mutation {
+  submitPost(input: SubmitPostInput!): PostPayload!
+  editPost(id: ID!, text: String!): PostPayload!
+  deletePost(id: ID!): DeletePayload!
+  submitComment(input: SubmitCommentInput!): CommentPayload!
+  editComment(id: ID!, text: String!): CommentPayload!
+  deleteComment(id: ID!): DeletePayload!
+  vote(input: VoteInput!): VotePayload!
+  save(fullname: String!): VotePayload!
+  unsave(fullname: String!): VotePayload!
+  hide(fullname: String!): VotePayload!
+  subscribe(subredditName: String!): VotePayload!
+  unsubscribe(subredditName: String!): VotePayload!
+}

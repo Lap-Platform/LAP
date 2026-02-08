@@ -1,0 +1,111 @@
+You are an API integration assistant. You will be given API documentation and a series of tasks.
+For each task, write the exact API call (curl command for REST, GraphQL query, protobuf RPC call, etc).
+
+Format your response as:
+TASK 1: <your api call>
+TASK 2: <your api call>
+... etc
+
+--- API DOCUMENTATION ---
+@doclean v0.1
+@api Stripe
+@base /graphql
+
+type Address{line1:str,line2:str,city:str,state:str,postalCode:str,country:str}
+type BillingDetails{name:str,email:str,phone:str,address:Address}
+type CardDetails{brand:str!,last4:str!,expMonth:int!,expYear:int!,funding:str,country:str}
+type Charge:Node{id:id!,amount:int!,currency:Currency!,status:ChargeStatus!,customer:Customer,paymentMethod:PaymentMethod,description:str,receiptEmail:str,receiptUrl:str,refunded:bool!,refunds(first:int):RefundConnection!,invoice:Invoice,metadata:JSON,created:int!}
+type ChargeConnection{edges:[ChargeEdge!]!,pageInfo:PageInfo!}
+input ChargeCreateInput{amount:int!,currency:Currency!,customerId:id,description:str,paymentMethodId:id}
+type ChargeEdge{cursor:str!,node:Charge!}
+type ChargePayload{charge:Charge}
+enum ChargeStatus=SUCCEEDED|PENDING|FAILED
+enum Currency=USD|EUR|GBP|CAD|AUD|JPY|CHF
+type Customer:Node{id:id!,email:str,name:str,phone:str,description:str,defaultPaymentMethod:PaymentMethod,subscriptions(first:int,after:str):SubscriptionConnection!,charges(first:int,after:str):ChargeConnection!,invoices(first:int,after:str):InvoiceConnection!,balance:int!,currency:Currency,metadata:JSON,created:int!,livemode:bool!}
+type CustomerConnection{edges:[CustomerEdge!]!,pageInfo:PageInfo!}
+input CustomerCreateInput{email:str,name:str,phone:str,description:str,metadata:JSON}
+type CustomerEdge{cursor:str!,node:Customer!}
+type CustomerPayload{customer:Customer}
+enum Interval=DAY|WEEK|MONTH|YEAR
+type Invoice:Node{id:id!,number:str,status:InvoiceStatus!,customer:Customer!,subscription:Subscription,amountDue:int!,amountPaid:int!,amountRemaining:int!,currency:Currency!,lines(first:int):InvoiceLineItemConnection!,hostedInvoiceUrl:str,invoicePdf:str,dueDate:int,created:int!}
+type InvoiceConnection{edges:[InvoiceEdge!]!,pageInfo:PageInfo!}
+type InvoiceEdge{cursor:str!,node:Invoice!}
+type InvoiceLineItem{id:id!,amount:int!,currency:Currency!,description:str,price:Price,quantity:int}
+type InvoiceLineItemConnection{edges:[InvoiceLineItemEdge!]!,pageInfo:PageInfo!}
+type InvoiceLineItemEdge{cursor:str!,node:InvoiceLineItem!}
+type InvoicePayload{invoice:Invoice}
+enum InvoiceStatus=DRAFT|OPEN|PAID|UNCOLLECTIBLE|VOID
+iface Node{id:id!}
+type PageInfo{hasNextPage:bool!,hasPreviousPage:bool!,startCursor:str,endCursor:str}
+type PaymentMethod:Node{id:id!,type:PaymentMethodType!,card:CardDetails,customer:Customer,billingDetails:BillingDetails,created:int!}
+enum PaymentMethodType=CARD|BANK_TRANSFER|SEPA_DEBIT
+type Price:Node{id:id!,active:bool!,currency:Currency!,unitAmount:int,recurring:Recurring,product:Product!,nickname:str,type:str!}
+type PriceConnection{edges:[PriceEdge!]!,pageInfo:PageInfo!}
+type PriceEdge{cursor:str!,node:Price!}
+type Product:Node{id:id!,name:str!,description:str,active:bool!,images:[str!]!,metadata:JSON,prices(first:int):PriceConnection!,created:int!}
+type ProductConnection{edges:[ProductEdge!]!,pageInfo:PageInfo!}
+type ProductEdge{cursor:str!,node:Product!}
+type Recurring{interval:Interval!,intervalCount:int!,trialPeriodDays:int,usageType:str}
+type Refund:Node{id:id!,amount:int!,currency:Currency!,reason:RefundReason,status:str!,charge:Charge!,created:int!}
+type RefundConnection{edges:[RefundEdge!]!,pageInfo:PageInfo!}
+input RefundCreateInput{chargeId:id!,amount:int,reason:RefundReason}
+type RefundEdge{cursor:str!,node:Refund!}
+type RefundPayload{refund:Refund}
+enum RefundReason=DUPLICATE|FRAUDULENT|REQUESTED_BY_CUSTOMER
+type SubscriptionConnection{edges:[SubscriptionEdge!]!,pageInfo:PageInfo!}
+input SubscriptionCreateInput{customerId:id!,items:[SubscriptionItemInput!]!,trialPeriodDays:int,cancelAtPeriodEnd:bool}
+type SubscriptionEdge{cursor:str!,node:Subscription!}
+type SubscriptionItem:Node{id:id!,price:Price!,quantity:int!}
+type SubscriptionItemConnection{edges:[SubscriptionItemEdge!]!,pageInfo:PageInfo!}
+type SubscriptionItemEdge{cursor:str!,node:SubscriptionItem!}
+input SubscriptionItemInput{priceId:id!,quantity:int}
+type SubscriptionPayload{subscription:Subscription}
+enum SubscriptionStatus=ACTIVE|PAST_DUE|UNPAID|CANCELED|INCOMPLETE|INCOMPLETE_EXPIRED|TRIALING|PAUSED
+
+Q customer(id:id!)->Customer
+Q customers(first:int,after:str,email:str)->CustomerConnection!
+Q charge(id:id!)->Charge
+Q charges(first:int,after:str,customerId:id)->ChargeConnection!
+Q subscription(id:id!)->Subscription
+Q subscriptions(first:int,after:str,customerId:id,status:SubscriptionStatus)->SubscriptionConnection!
+Q invoice(id:id!)->Invoice
+Q invoices(first:int,after:str,customerId:id,status:InvoiceStatus)->InvoiceConnection!
+Q product(id:id!)->Product
+Q products(first:int,after:str,active:bool)->ProductConnection!
+Q node(id:id!)->Node
+M customerCreate(input:CustomerCreateInput!)->CustomerPayload!
+M customerUpdate(id:id!,input:CustomerCreateInput!)->CustomerPayload!
+M chargeCreate(input:ChargeCreateInput!)->ChargePayload!
+M subscriptionCreate(input:SubscriptionCreateInput!)->SubscriptionPayload!
+M subscriptionCancel(id:id!,atPeriodEnd:bool)->SubscriptionPayload!
+M refundCreate(input:RefundCreateInput!)->RefundPayload!
+M invoiceFinalize(id:id!)->InvoicePayload!
+M invoiceVoid(id:id!)->InvoicePayload!
+S id->id!
+S status->SubscriptionStatus!
+S customer->Customer!
+S items(first:int)->SubscriptionItemConnection!
+S currentPeriodStart->int!
+S currentPeriodEnd->int!
+S cancelAtPeriodEnd->bool!
+S canceledAt->int
+S trialStart->int
+S trialEnd->int
+S defaultPaymentMethod->PaymentMethod
+S latestInvoice->Invoice
+S metadata->JSON
+S created->int!
+
+--- END DOCUMENTATION ---
+
+TASKS:
+1. Query customer by ID cus_abc123 with email and metadata
+2. Query first 10 customers with email filter customer@example.com
+3. Query charge by ID ch_abc123 with amount and status
+4. Query first 20 charges for customer ID cus_xyz with after cursor
+5. Create customer with email new@example.com and name 'John Doe'
+6. Update customer cus_abc123 with new email updated@example.com
+7. Create charge for customer cus_abc123 with amount 5000 in USD using payment method pm_123
+8. Create refund for charge ch_abc123 with amount 1000 and reason 'duplicate'
+9. Query invoice by ID inv_123 with status and total
+10. Finalize invoice inv_456 to make it payable

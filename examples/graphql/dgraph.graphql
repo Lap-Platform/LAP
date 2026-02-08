@@ -1,0 +1,285 @@
+# Dgraph-style GraphQL schema (simplified for standard GraphQL compatibility)
+# Represents Dgraph patterns: filters, aggregates, geospatial, auth patterns
+
+enum Role { USER ADMIN MODERATOR }
+enum Visibility { PUBLIC PRIVATE FRIENDS_ONLY }
+enum PostType { TEXT IMAGE VIDEO LINK POLL }
+enum ReactionType { LIKE LOVE HAHA WOW SAD ANGRY }
+enum OrderDirection { ASC DESC }
+
+scalar DateTime
+
+type User {
+  id: ID!
+  username: String!
+  email: String!
+  displayName: String
+  bio: String
+  avatarUrl: String
+  role: Role!
+  verified: Boolean!
+  location: GeoPoint
+  createdAt: DateTime!
+  updatedAt: DateTime
+  posts(filter: PostFilter, order: PostOrder, first: Int, offset: Int): [Post!]!
+  friends(filter: UserFilter, first: Int, offset: Int): [User!]!
+  followers(first: Int, offset: Int): [User!]!
+  following(first: Int, offset: Int): [User!]!
+  profile: UserProfile
+  settings: UserSettings
+  postsAggregate(filter: PostFilter): PostAggregateResult
+}
+
+type UserProfile {
+  website: String
+  birthday: DateTime
+  phone: String
+  gender: String
+  occupation: String
+  interests: [String!]!
+}
+
+type UserSettings {
+  emailNotifications: Boolean!
+  pushNotifications: Boolean!
+  profileVisibility: Visibility!
+  showOnlineStatus: Boolean!
+}
+
+type Post {
+  id: ID!
+  content: String!
+  postType: PostType!
+  visibility: Visibility!
+  author: User!
+  mentions: [User!]!
+  hashtags: [String!]!
+  media: [MediaItem!]!
+  location: GeoPoint
+  comments(filter: CommentFilter, order: CommentOrder, first: Int, offset: Int): [Comment!]!
+  reactions(filter: ReactionFilter, first: Int, offset: Int): [Reaction!]!
+  shares(first: Int, offset: Int): [Share!]!
+  viewCount: Int
+  createdAt: DateTime!
+  updatedAt: DateTime
+  editedAt: DateTime
+  commentsAggregate(filter: CommentFilter): CommentAggregateResult
+  reactionsAggregate(filter: ReactionFilter): ReactionAggregateResult
+}
+
+type Comment {
+  id: ID!
+  content: String!
+  author: User!
+  post: Post!
+  parent: Comment
+  replies(first: Int, offset: Int): [Comment!]!
+  reactions(first: Int): [Reaction!]!
+  createdAt: DateTime!
+  updatedAt: DateTime
+}
+
+type Reaction {
+  id: ID!
+  type: ReactionType!
+  user: User!
+  post: Post
+  comment: Comment
+  createdAt: DateTime!
+}
+
+type Share {
+  id: ID!
+  post: Post!
+  user: User!
+  message: String
+  visibility: Visibility!
+  createdAt: DateTime!
+}
+
+type MediaItem {
+  id: ID!
+  url: String!
+  type: String!
+  width: Int
+  height: Int
+  size: Int
+  caption: String
+  altText: String
+  uploadedAt: DateTime!
+}
+
+type Group {
+  id: ID!
+  name: String!
+  description: String
+  visibility: Visibility!
+  coverImage: String
+  owner: User!
+  admins: [User!]!
+  members: [User!]!
+  posts(filter: PostFilter, first: Int, offset: Int): [Post!]!
+  createdAt: DateTime!
+  membersCount: Int
+  postsCount: Int
+}
+
+type Event {
+  id: ID!
+  title: String!
+  description: String
+  startTime: DateTime!
+  endTime: DateTime
+  location: GeoPoint
+  locationName: String
+  visibility: Visibility!
+  organizer: User!
+  attendees: [User!]!
+  interestedUsers: [User!]!
+  coverImage: String
+  createdAt: DateTime!
+  attendeesCount: Int
+}
+
+type GeoPoint { longitude: Float! latitude: Float! }
+
+# Aggregates
+type PostAggregateResult { count: Int! viewCountMin: Int viewCountMax: Int viewCountSum: Int viewCountAvg: Float }
+type CommentAggregateResult { count: Int! }
+type ReactionAggregateResult { count: Int! }
+type UserAggregateResult { count: Int! }
+
+# Filters - Dgraph-style boolean expressions
+input UserFilter {
+  id: IDFilter
+  username: StringHashFilter
+  displayName: StringFullTextFilter
+  role: RoleFilter
+  verified: Boolean
+  and: [UserFilter!]
+  or: [UserFilter!]
+  not: UserFilter
+}
+
+input PostFilter {
+  id: IDFilter
+  postType: PostTypeFilter
+  visibility: VisibilityFilter
+  createdAt: DateTimeFilter
+  viewCount: IntFilter
+  and: [PostFilter!]
+  or: [PostFilter!]
+  not: PostFilter
+}
+
+input CommentFilter {
+  id: IDFilter
+  createdAt: DateTimeFilter
+  and: [CommentFilter!]
+  or: [CommentFilter!]
+}
+
+input ReactionFilter {
+  type: ReactionTypeFilter
+  createdAt: DateTimeFilter
+  and: [ReactionFilter!]
+  or: [ReactionFilter!]
+}
+
+input GroupFilter {
+  id: IDFilter
+  name: StringFullTextFilter
+  visibility: VisibilityFilter
+  and: [GroupFilter!]
+  or: [GroupFilter!]
+}
+
+input EventFilter {
+  id: IDFilter
+  title: StringFullTextFilter
+  startTime: DateTimeFilter
+  visibility: VisibilityFilter
+  and: [EventFilter!]
+  or: [EventFilter!]
+}
+
+# Comparison operators
+input IDFilter { eq: ID in: [ID!] }
+input StringHashFilter { eq: String in: [String!] }
+input StringFullTextFilter { alloftext: String anyoftext: String }
+input IntFilter { eq: Int le: Int lt: Int ge: Int gt: Int between: IntRange }
+input IntRange { min: Int! max: Int! }
+input DateTimeFilter { eq: DateTime le: DateTime lt: DateTime ge: DateTime gt: DateTime between: DateTimeRange }
+input DateTimeRange { min: DateTime! max: DateTime! }
+input RoleFilter { eq: Role in: [Role!] }
+input PostTypeFilter { eq: PostType in: [PostType!] }
+input VisibilityFilter { eq: Visibility in: [Visibility!] }
+input ReactionTypeFilter { eq: ReactionType in: [ReactionType!] }
+
+# Order
+input UserOrder { field: UserOrderField! direction: OrderDirection! }
+enum UserOrderField { USERNAME DISPLAY_NAME CREATED_AT }
+
+input PostOrder { field: PostOrderField! direction: OrderDirection! }
+enum PostOrderField { CREATED_AT UPDATED_AT VIEW_COUNT }
+
+input CommentOrder { field: CommentOrderField! direction: OrderDirection! }
+enum CommentOrderField { CREATED_AT UPDATED_AT }
+
+input EventOrder { field: EventOrderField! direction: OrderDirection! }
+enum EventOrderField { TITLE START_TIME CREATED_AT }
+
+# Mutation inputs
+input AddUserInput { username: String! email: String! displayName: String bio: String role: Role! verified: Boolean location: GeoPointInput }
+input GeoPointInput { longitude: Float! latitude: Float! }
+input UpdateUserInput { displayName: String bio: String avatarUrl: String }
+
+input AddPostInput { content: String! postType: PostType! visibility: Visibility! authorId: ID! mentionIds: [ID!] hashtags: [String!] location: GeoPointInput }
+input UpdatePostInput { content: String visibility: Visibility }
+
+input AddCommentInput { content: String! authorId: ID! postId: ID! parentId: ID }
+input AddReactionInput { type: ReactionType! userId: ID! postId: ID commentId: ID }
+
+# Payloads - Dgraph style with numUids
+type AddUserPayload { user: [User!]! numUids: Int! }
+type UpdateUserPayload { user: [User!]! numUids: Int! }
+type DeleteUserPayload { user: [User!] msg: String numUids: Int! }
+type AddPostPayload { post: [Post!]! numUids: Int! }
+type UpdatePostPayload { post: [Post!]! numUids: Int! }
+type DeletePostPayload { post: [Post!] msg: String numUids: Int! }
+type AddCommentPayload { comment: [Comment!]! numUids: Int! }
+type DeleteCommentPayload { comment: [Comment!] msg: String numUids: Int! }
+type AddReactionPayload { reaction: [Reaction!]! numUids: Int! }
+type DeleteReactionPayload { reaction: [Reaction!] msg: String numUids: Int! }
+
+# Geospatial filter
+input NearFilter { longitude: Float! latitude: Float! distance: Float! }
+
+type Query {
+  getUser(id: ID, username: String): User
+  queryUser(filter: UserFilter, order: UserOrder, first: Int, offset: Int): [User!]!
+  aggregateUser(filter: UserFilter): UserAggregateResult!
+  getPost(id: ID!): Post
+  queryPost(filter: PostFilter, order: PostOrder, first: Int, offset: Int): [Post!]!
+  aggregatePost(filter: PostFilter): PostAggregateResult!
+  getComment(id: ID!): Comment
+  queryComment(filter: CommentFilter, order: CommentOrder, first: Int, offset: Int): [Comment!]!
+  getGroup(id: ID!): Group
+  queryGroup(filter: GroupFilter, first: Int, offset: Int): [Group!]!
+  getEvent(id: ID!): Event
+  queryEvent(filter: EventFilter, order: EventOrder, first: Int, offset: Int): [Event!]!
+  queryNearbyEvents(location: NearFilter!, first: Int): [Event!]!
+}
+
+type Mutation {
+  addUser(input: AddUserInput!): AddUserPayload!
+  updateUser(id: ID!, input: UpdateUserInput!): UpdateUserPayload!
+  deleteUser(id: ID!): DeleteUserPayload!
+  addPost(input: AddPostInput!): AddPostPayload!
+  updatePost(id: ID!, input: UpdatePostInput!): UpdatePostPayload!
+  deletePost(id: ID!): DeletePostPayload!
+  addComment(input: AddCommentInput!): AddCommentPayload!
+  deleteComment(id: ID!): DeleteCommentPayload!
+  addReaction(input: AddReactionInput!): AddReactionPayload!
+  deleteReaction(id: ID!): DeleteReactionPayload!
+}

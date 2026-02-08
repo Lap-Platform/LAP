@@ -1,0 +1,84 @@
+asyncapi: 2.6.0
+info:
+  title: Slack Events API
+  version: 1.0.0
+  description: Slack real-time events
+
+servers:
+  production:
+    url: wss://wss-primary.slack.com/websocket
+    protocol: ws
+
+channels:
+  message:
+    subscribe:
+      summary: New message in channel
+      message:
+        name: MessageEvent
+        payload:
+          type: object
+          required: [type, channel, user, text, ts]
+          properties:
+            type: {type: string, enum: [message]}
+            channel: {type: string}
+            user: {type: string}
+            text: {type: string}
+            ts: {type: string}
+            thread_ts: {type: string}
+            blocks:
+              type: array
+              items:
+                type: object
+                properties:
+                  type: {type: string}
+                  block_id: {type: string}
+
+  reaction_added:
+    subscribe:
+      summary: Reaction added to message
+      message:
+        name: ReactionAdded
+        payload:
+          type: object
+          required: [type, user, reaction, item]
+          properties:
+            type: {type: string}
+            user: {type: string}
+            reaction: {type: string}
+            item:
+              type: object
+              properties:
+                type: {type: string}
+                channel: {type: string}
+                ts: {type: string}
+
+  presence_change:
+    subscribe:
+      summary: User presence changed
+      message:
+        name: PresenceChange
+        payload:
+          type: object
+          required: [type, user, presence]
+          properties:
+            type: {type: string}
+            user: {type: string}
+            presence: {type: string, enum: [active, away]}
+
+  channel_created:
+    subscribe:
+      summary: Channel created
+      message:
+        name: ChannelCreated
+        payload:
+          type: object
+          required: [type, channel]
+          properties:
+            type: {type: string}
+            channel:
+              type: object
+              properties:
+                id: {type: string}
+                name: {type: string}
+                creator: {type: string}
+                created: {type: integer}

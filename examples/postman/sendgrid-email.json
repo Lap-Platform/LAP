@@ -1,0 +1,180 @@
+{
+  "info": {
+    "name": "SendGrid Email API",
+    "_postman_id": "sendgrid-001",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://api.sendgrid.com/v3"
+    }
+  ],
+  "item": [
+    {
+      "name": "Send Email",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/mail/send",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "mail",
+            "send"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"personalizations\": [{\"to\": [{\"email\": \"user@example.com\"}], \"subject\": \"Hello\"}], \"from\": {\"email\": \"sender@example.com\"}, \"content\": [{\"type\": \"text/plain\", \"value\": \"Body\"}]}"
+        }
+      },
+      "response": [
+        {
+          "name": "Accepted",
+          "code": 202,
+          "body": "{}"
+        },
+        {
+          "name": "Bad Request",
+          "code": 400,
+          "body": "{\"errors\": [{\"message\": \"Invalid email\", \"field\": \"to\"}]}"
+        }
+      ]
+    },
+    {
+      "name": "List Templates",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/templates",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "templates"
+          ],
+          "query": [
+            {
+              "key": "generations",
+              "value": "dynamic",
+              "description": ""
+            },
+            {
+              "key": "page_size",
+              "value": "10",
+              "description": ""
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"templates\": [{\"id\": \"t1\", \"name\": \"Welcome\"}]}"
+        }
+      ]
+    },
+    {
+      "name": "Get Template",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/templates/:id",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "templates",
+            ":id"
+          ],
+          "variable": [
+            {
+              "key": "id",
+              "value": "t1"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"id\": \"t1\", \"name\": \"Welcome\", \"versions\": [{\"id\": \"v1\", \"active\": 1}]}"
+        }
+      ]
+    },
+    {
+      "name": "Add Contacts",
+      "request": {
+        "method": "PUT",
+        "url": {
+          "raw": "{{baseUrl}}/marketing/contacts",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "marketing",
+            "contacts"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"contacts\": [{\"email\": \"new@example.com\", \"first_name\": \"Jane\"}]}"
+        }
+      },
+      "response": [
+        {
+          "name": "Accepted",
+          "code": 202,
+          "body": "{\"job_id\": \"job_123\"}"
+        }
+      ]
+    },
+    {
+      "name": "Get Stats",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/stats",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "stats"
+          ],
+          "query": [
+            {
+              "key": "start_date",
+              "value": "2024-01-01",
+              "description": ""
+            },
+            {
+              "key": "end_date",
+              "value": "2024-01-31",
+              "description": ""
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "[{\"date\": \"2024-01-01\", \"stats\": [{\"metrics\": {\"delivered\": 100, \"opens\": 50}}]}]"
+        }
+      ]
+    }
+  ]
+}

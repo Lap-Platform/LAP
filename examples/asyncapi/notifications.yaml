@@ -1,0 +1,164 @@
+asyncapi: 3.0.0
+info:
+  title: Notification Service
+  version: 1.5.0
+  description: Multi-channel notification delivery system
+
+servers:
+  production:
+    host: amqp.example.com:5672
+    protocol: amqp
+    description: RabbitMQ production
+
+channels:
+  emailQueue:
+    address: notifications/email
+    messages:
+      emailNotification:
+        name: EmailNotification
+        summary: Email notification
+        payload:
+          type: object
+          required:
+            - to
+            - subject
+            - body
+          properties:
+            to:
+              type: string
+              format: email
+            subject:
+              type: string
+            body:
+              type: string
+            html:
+              type: boolean
+              default: false
+            cc:
+              type: array
+              items:
+                type: string
+            attachments:
+              type: array
+              items:
+                type: object
+                properties:
+                  filename:
+                    type: string
+                  content:
+                    type: string
+                    format: base64
+
+  smsQueue:
+    address: notifications/sms
+    messages:
+      smsNotification:
+        name: SMSNotification
+        summary: SMS notification
+        payload:
+          type: object
+          required:
+            - phoneNumber
+            - message
+          properties:
+            phoneNumber:
+              type: string
+            message:
+              type: string
+            sender:
+              type: string
+            priority:
+              type: string
+              enum:
+                - low
+                - normal
+                - high
+                - urgent
+
+  pushQueue:
+    address: notifications/push
+    messages:
+      pushNotification:
+        name: PushNotification
+        summary: Push notification
+        payload:
+          type: object
+          required:
+            - userId
+            - title
+            - body
+          properties:
+            userId:
+              type: string
+            title:
+              type: string
+            body:
+              type: string
+            icon:
+              type: string
+            deepLink:
+              type: string
+            badge:
+              type: integer
+            data:
+              type: object
+
+  deliveryStatus:
+    address: notifications/status
+    messages:
+      statusUpdate:
+        name: DeliveryStatus
+        summary: Notification delivery status
+        payload:
+          type: object
+          required:
+            - notificationId
+            - channel
+            - status
+          properties:
+            notificationId:
+              type: string
+            channel:
+              type: string
+              enum:
+                - email
+                - sms
+                - push
+            status:
+              type: string
+              enum:
+                - queued
+                - sent
+                - delivered
+                - failed
+                - bounced
+            errorMessage:
+              type: string
+            deliveredAt:
+              type: string
+              format: date-time
+
+operations:
+  sendEmail:
+    action: send
+    channel:
+      $ref: '#/channels/emailQueue'
+    summary: Send email notification
+
+  sendSms:
+    action: send
+    channel:
+      $ref: '#/channels/smsQueue'
+    summary: Send SMS notification
+
+  sendPush:
+    action: send
+    channel:
+      $ref: '#/channels/pushQueue'
+    summary: Send push notification
+
+  receiveStatus:
+    action: receive
+    channel:
+      $ref: '#/channels/deliveryStatus'
+    summary: Receive delivery status updates

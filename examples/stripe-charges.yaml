@@ -1,0 +1,299 @@
+openapi: "3.0.0"
+info:
+  title: Stripe Charges API
+  version: "2024-12-18"
+servers:
+  - url: https://api.stripe.com
+security:
+  - bearerAuth: []
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+paths:
+  /v1/charges:
+    post:
+      summary: Create a charge
+      description: >
+        Creates a new charge object. To charge a credit card or other payment source,
+        you create a Charge object. If your API key is in test mode, the supplied payment
+        source (e.g., card) won't actually be charged, although everything else will
+        occur as if in live mode.
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - amount
+                - currency
+              properties:
+                amount:
+                  type: integer
+                  description: Amount intended to be collected by this payment, in cents.
+                currency:
+                  type: string
+                  description: Three-letter ISO 4217 currency code, in lowercase.
+                source:
+                  type: string
+                  description: A payment source to be charged. This can be the ID of a card, a bank account, a source, a token, or a connected account.
+                customer:
+                  type: string
+                  description: The ID of an existing customer that will be charged in this request.
+                description:
+                  type: string
+                  description: An arbitrary string attached to the object. Often useful for displaying to users.
+                metadata:
+                  type: object
+                  description: Set of key-value pairs for storing additional information about the charge.
+                receipt_email:
+                  type: string
+                  description: The email address to which the receipt for this charge will be sent.
+                shipping:
+                  type: object
+                  description: Shipping information for the charge.
+                statement_descriptor:
+                  type: string
+                  description: For card charges, use statement_descriptor_suffix. Otherwise, you can use this value as the complete description.
+                capture:
+                  type: boolean
+                  description: Whether to immediately capture the charge. Defaults to true.
+                transfer_data:
+                  type: object
+                  description: An optional dictionary including the account to automatically transfer to as part of a destination charge.
+                application_fee_amount:
+                  type: integer
+                  description: A fee in cents that will be applied to the charge and transferred to the application owner's Stripe account.
+                on_behalf_of:
+                  type: string
+                  description: The Stripe account ID for which these funds are intended.
+      responses:
+        "200":
+          description: Returns the charge object if the charge succeeded.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  object:
+                    type: string
+                  amount:
+                    type: integer
+                  amount_captured:
+                    type: integer
+                  amount_refunded:
+                    type: integer
+                  currency:
+                    type: string
+                  customer:
+                    type: string
+                    nullable: true
+                  description:
+                    type: string
+                    nullable: true
+                  status:
+                    type: string
+                    enum: [succeeded, pending, failed]
+                  paid:
+                    type: boolean
+                  captured:
+                    type: boolean
+                  livemode:
+                    type: boolean
+                  metadata:
+                    type: object
+                  payment_method:
+                    type: string
+                  receipt_email:
+                    type: string
+                    nullable: true
+                  receipt_url:
+                    type: string
+                    nullable: true
+                  failure_code:
+                    type: string
+                    nullable: true
+                  failure_message:
+                    type: string
+                    nullable: true
+                  created:
+                    type: integer
+                    format: unix-timestamp
+                  billing_details:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                        nullable: true
+                      email:
+                        type: string
+                        nullable: true
+                      phone:
+                        type: string
+                        nullable: true
+                      address:
+                        type: object
+                  outcome:
+                    type: object
+                    properties:
+                      network_status:
+                        type: string
+                      risk_level:
+                        type: string
+                      risk_score:
+                        type: integer
+                      seller_message:
+                        type: string
+                      type:
+                        type: string
+        "400":
+          description: Invalid request parameters.
+        "401":
+          description: Authentication failed. Invalid API key.
+        "402":
+          description: Card was declined.
+        "429":
+          description: Too many requests.
+    get:
+      summary: List all charges
+      description: >
+        Returns a list of charges you've previously created. The charges are returned
+        in sorted order, with the most recent charges appearing first.
+      parameters:
+        - name: customer
+          in: query
+          schema:
+            type: string
+          description: Only return charges for the customer specified by this customer ID.
+        - name: created
+          in: query
+          schema:
+            type: object
+          description: A filter on the list based on the created field.
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+          description: A limit on the number of objects to be returned. Limit can range between 1 and 100.
+        - name: starting_after
+          in: query
+          schema:
+            type: string
+          description: A cursor for pagination. starting_after is the ID of the last object.
+        - name: ending_before
+          in: query
+          schema:
+            type: string
+          description: A cursor for pagination. ending_before is the ID of the first object.
+      responses:
+        "200":
+          description: Returns a list of charge objects.
+        "401":
+          description: Authentication failed.
+  /v1/charges/{charge}:
+    get:
+      summary: Retrieve a charge
+      description: >
+        Retrieves the details of a charge that has previously been created.
+        Supply the unique charge ID that was returned from your previous request,
+        and Stripe will return the corresponding charge information.
+      parameters:
+        - name: charge
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The identifier of the charge to be retrieved.
+      responses:
+        "200":
+          description: Returns the charge object.
+        "404":
+          description: Charge not found.
+    post:
+      summary: Update a charge
+      description: >
+        Updates the specified charge by setting the values of the parameters passed.
+        Any parameters not provided will be left unchanged.
+      parameters:
+        - name: charge
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The identifier of the charge to be updated.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                description:
+                  type: string
+                  description: An arbitrary string attached to the object.
+                metadata:
+                  type: object
+                  description: Set of key-value pairs for additional information.
+                receipt_email:
+                  type: string
+                  description: The email address to send the receipt to.
+                shipping:
+                  type: object
+                  description: Shipping information for the charge.
+                fraud_details:
+                  type: object
+                  description: A set of key-value pairs for fraud details reporting.
+                transfer_group:
+                  type: string
+                  description: A string that identifies this transaction as part of a group.
+      responses:
+        "200":
+          description: Returns the updated charge object.
+        "400":
+          description: Invalid request parameters.
+  /v1/charges/{charge}/capture:
+    post:
+      summary: Capture a charge
+      description: >
+        Capture the payment of an existing, uncaptured charge that was created
+        with the capture option set to false. Uncaptured payments expire a set
+        number of days after they are created, at which point they are marked
+        as refunded and capture attempts will fail.
+      parameters:
+        - name: charge
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The identifier of the charge to be captured.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: integer
+                  description: The amount to capture, which must be less than or equal to the original amount.
+                receipt_email:
+                  type: string
+                  description: The email address to send the receipt to.
+                statement_descriptor:
+                  type: string
+                  description: For card charges, use statement_descriptor_suffix.
+                application_fee_amount:
+                  type: integer
+                  description: An application fee amount to capture, must be less than or equal to the original amount.
+                transfer_data:
+                  type: object
+                  description: Transfer data for destination charges.
+      responses:
+        "200":
+          description: Returns the captured charge object.
+        "400":
+          description: Charge has already been captured or is not capturable.

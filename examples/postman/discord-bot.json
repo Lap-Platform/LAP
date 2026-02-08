@@ -1,0 +1,210 @@
+{
+  "info": {
+    "name": "Discord Bot API",
+    "_postman_id": "discord-001",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      {
+        "key": "key",
+        "value": "Authorization"
+      },
+      {
+        "key": "in",
+        "value": "header"
+      },
+      {
+        "key": "value",
+        "value": "Bot {{botToken}}"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://discord.com/api/v10"
+    },
+    {
+      "key": "botToken",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Send Message",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/channels/:channelId/messages",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "channels",
+            ":channelId",
+            "messages"
+          ],
+          "variable": [
+            {
+              "key": "channelId",
+              "value": "123456"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"content\": \"Hello!\", \"embeds\": [{\"title\": \"Info\", \"description\": \"Details\"}]}"
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"id\": \"msg1\", \"content\": \"Hello!\", \"author\": {\"id\": \"bot1\"}}"
+        }
+      ]
+    },
+    {
+      "name": "Get Guild",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/guilds/:guildId",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "guilds",
+            ":guildId"
+          ],
+          "variable": [
+            {
+              "key": "guildId",
+              "value": "guild1"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"id\": \"guild1\", \"name\": \"My Server\", \"member_count\": 500}"
+        }
+      ]
+    },
+    {
+      "name": "List Channels",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/guilds/:guildId/channels",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "guilds",
+            ":guildId",
+            "channels"
+          ],
+          "variable": [
+            {
+              "key": "guildId",
+              "value": "guild1"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "[{\"id\": \"ch1\", \"name\": \"general\", \"type\": 0}]"
+        }
+      ]
+    },
+    {
+      "name": "Create Reaction",
+      "request": {
+        "method": "PUT",
+        "url": {
+          "raw": "{{baseUrl}}/channels/:channelId/messages/:messageId/reactions/:emoji/@me",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "channels",
+            ":channelId",
+            "messages",
+            ":messageId",
+            "reactions",
+            ":emoji",
+            "@me"
+          ],
+          "variable": [
+            {
+              "key": "channelId",
+              "value": "ch1"
+            },
+            {
+              "key": "messageId",
+              "value": "msg1"
+            },
+            {
+              "key": "emoji",
+              "value": "\ud83d\udc4d"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 204,
+          "body": "{}"
+        }
+      ]
+    },
+    {
+      "name": "Ban User",
+      "request": {
+        "method": "PUT",
+        "url": {
+          "raw": "{{baseUrl}}/guilds/:guildId/bans/:userId",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "guilds",
+            ":guildId",
+            "bans",
+            ":userId"
+          ],
+          "variable": [
+            {
+              "key": "guildId",
+              "value": "guild1"
+            },
+            {
+              "key": "userId",
+              "value": "user1"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"delete_message_seconds\": 604800}"
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 204,
+          "body": "{}"
+        }
+      ]
+    }
+  ]
+}

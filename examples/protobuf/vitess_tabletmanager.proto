@@ -1,0 +1,177 @@
+syntax = "proto3";
+
+package vitess.tabletmanagerservice.v16;
+
+// Vitess Tablet Manager service for managing MySQL tablet instances.
+service TabletManager {
+  // Ping verifies the tablet is alive.
+  rpc Ping(PingRequest) returns (PingResponse);
+
+  // GetSchema returns the schema for a tablet.
+  rpc GetSchema(GetSchemaRequest) returns (GetSchemaResponse);
+
+  // GetPermissions returns the permissions for a tablet.
+  rpc GetPermissions(GetPermissionsRequest) returns (GetPermissionsResponse);
+
+  // ExecuteFetchAsDba executes a query as the DBA user.
+  rpc ExecuteFetchAsDba(ExecuteFetchAsDbaRequest) returns (ExecuteFetchAsDbaResponse);
+
+  // InitPrimary initializes the tablet as a primary.
+  rpc InitPrimary(InitPrimaryRequest) returns (InitPrimaryResponse);
+
+  // PopulateReparentJournal adds an entry to the reparent journal.
+  rpc PopulateReparentJournal(PopulateReparentJournalRequest) returns (PopulateReparentJournalResponse);
+
+  // SetReadOnly sets the tablet to read-only mode.
+  rpc SetReadOnly(SetReadOnlyRequest) returns (SetReadOnlyResponse);
+
+  // SetReadWrite sets the tablet to read-write mode.
+  rpc SetReadWrite(SetReadWriteRequest) returns (SetReadWriteResponse);
+
+  // StartReplication starts MySQL replication.
+  rpc StartReplication(StartReplicationRequest) returns (StartReplicationResponse);
+
+  // StopReplication stops MySQL replication.
+  rpc StopReplication(StopReplicationRequest) returns (StopReplicationResponse);
+
+  // ReplicationStatus returns the replication status.
+  rpc ReplicationStatus(ReplicationStatusRequest) returns (ReplicationStatusResponse);
+}
+
+message PingRequest {
+  string payload = 1;
+}
+
+message PingResponse {
+  string payload = 1;
+}
+
+// Tablet alias uniquely identifies a tablet.
+message TabletAlias {
+  string cell = 1;
+  uint32 uid = 2;
+}
+
+// Schema definition for a table.
+message TableDefinition {
+  string name = 1;
+  string schema = 2;
+  repeated string columns = 3;
+  repeated string primary_key_columns = 4;
+  string type = 5;
+  uint64 data_length = 6;
+  uint64 row_count = 7;
+}
+
+message SchemaDefinition {
+  string database_schema = 1;
+  repeated TableDefinition table_definitions = 2;
+}
+
+message GetSchemaRequest {
+  repeated string tables = 1;
+  bool include_views = 2;
+  repeated string exclude_tables = 3;
+  bool table_schema_only = 4;
+}
+
+message GetSchemaResponse {
+  SchemaDefinition schema_definition = 1;
+}
+
+message GetPermissionsRequest {}
+
+message Permission {
+  string host = 1;
+  string user = 2;
+  uint64 password_checksum = 3;
+  map<string, string> privileges = 4;
+}
+
+message GetPermissionsResponse {
+  repeated Permission user_permissions = 1;
+  repeated Permission db_permissions = 2;
+}
+
+message ExecuteFetchAsDbaRequest {
+  bytes query = 1;
+  string db_name = 2;
+  uint64 max_rows = 3;
+  bool disable_binlogs = 4;
+  bool reload_schema = 5;
+}
+
+message Field {
+  string name = 1;
+  string type = 2;
+  string table = 3;
+  string database = 4;
+  uint32 column_length = 5;
+}
+
+message Row {
+  repeated bytes values = 1;
+  repeated int64 lengths = 2;
+}
+
+message QueryResult {
+  repeated Field fields = 1;
+  uint64 rows_affected = 2;
+  uint64 insert_id = 3;
+  repeated Row rows = 4;
+}
+
+message ExecuteFetchAsDbaResponse {
+  QueryResult result = 1;
+}
+
+message InitPrimaryRequest {
+  bool semi_sync = 1;
+}
+
+message InitPrimaryResponse {
+  string position = 1;
+}
+
+message PopulateReparentJournalRequest {
+  int64 time_created_ns = 1;
+  string action_name = 2;
+  TabletAlias primary_alias = 3;
+  string replication_position = 4;
+}
+
+message PopulateReparentJournalResponse {}
+
+message SetReadOnlyRequest {}
+message SetReadOnlyResponse {}
+message SetReadWriteRequest {}
+message SetReadWriteResponse {}
+
+message StartReplicationRequest {
+  bool semi_sync = 1;
+}
+
+message StartReplicationResponse {}
+
+message StopReplicationRequest {}
+message StopReplicationResponse {}
+
+message ReplicationStatusRequest {}
+
+message ReplicationStatusResponse {
+  ReplicationStatus status = 1;
+}
+
+message ReplicationStatus {
+  string position = 1;
+  string relay_log_position = 2;
+  string file_position = 3;
+  string relay_log_source_binlog_equivalent_position = 4;
+  uint32 source_port = 5;
+  string source_host = 6;
+  int64 replication_lag_seconds = 7;
+  bool source_server_id_set = 8;
+  uint32 source_server_id = 9;
+  bool io_thread_running = 10;
+  bool sql_thread_running = 11;
+}

@@ -1,0 +1,182 @@
+{
+  "info": {
+    "name": "Twilio Messaging API",
+    "_postman_id": "twilio-001",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "basic",
+    "basic": [
+      {
+        "key": "username",
+        "value": "{{accountSid}}"
+      },
+      {
+        "key": "password",
+        "value": "{{authToken}}"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://api.twilio.com/2010-04-01"
+    },
+    {
+      "key": "accountSid",
+      "value": ""
+    },
+    {
+      "key": "authToken",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Send SMS",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/Accounts/:accountSid/Messages.json",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "Accounts",
+            ":accountSid",
+            "Messages.json"
+          ],
+          "variable": [
+            {
+              "key": "accountSid",
+              "value": "{{accountSid}}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"To\": \"+15551234567\", \"From\": \"+15559876543\", \"Body\": \"Hello!\"}"
+        }
+      },
+      "response": [
+        {
+          "name": "Queued",
+          "code": 201,
+          "body": "{\"sid\": \"SM123\", \"status\": \"queued\", \"to\": \"+15551234567\"}"
+        }
+      ]
+    },
+    {
+      "name": "Get Message",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/Accounts/:accountSid/Messages/:sid.json",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "Accounts",
+            ":accountSid",
+            "Messages",
+            ":sid.json"
+          ],
+          "variable": [
+            {
+              "key": "accountSid",
+              "value": "{{accountSid}}"
+            },
+            {
+              "key": "sid",
+              "value": "SM123"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"sid\": \"SM123\", \"status\": \"delivered\"}"
+        }
+      ]
+    },
+    {
+      "name": "List Messages",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/Accounts/:accountSid/Messages.json",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "Accounts",
+            ":accountSid",
+            "Messages.json"
+          ],
+          "query": [
+            {
+              "key": "PageSize",
+              "value": "20",
+              "description": ""
+            },
+            {
+              "key": "To",
+              "value": "",
+              "description": "Filter"
+            }
+          ],
+          "variable": [
+            {
+              "key": "accountSid",
+              "value": "{{accountSid}}"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"messages\": [{\"sid\": \"SM123\"}], \"page\": 0}"
+        }
+      ]
+    },
+    {
+      "name": "Delete Message",
+      "request": {
+        "method": "DELETE",
+        "url": {
+          "raw": "{{baseUrl}}/Accounts/:accountSid/Messages/:sid.json",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "Accounts",
+            ":accountSid",
+            "Messages",
+            ":sid.json"
+          ],
+          "variable": [
+            {
+              "key": "accountSid",
+              "value": "{{accountSid}}"
+            },
+            {
+              "key": "sid",
+              "value": "SM123"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "Deleted",
+          "code": 204,
+          "body": "{}"
+        }
+      ]
+    }
+  ]
+}

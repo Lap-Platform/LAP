@@ -1,0 +1,87 @@
+asyncapi: 2.6.0
+info:
+  title: Ride-sharing Events
+  version: 1.0.0
+  description: Uber-like ride-sharing real-time events
+
+servers:
+  production:
+    url: wss://rides.example.com/stream
+    protocol: ws
+
+channels:
+  rides/{rideId}/status:
+    parameters:
+      rideId:
+        schema: {type: string}
+    subscribe:
+      summary: Ride status updates
+      message:
+        name: RideStatus
+        payload:
+          type: object
+          required: [rideId, status]
+          properties:
+            rideId: {type: string}
+            status: {type: string, enum: [requested, driver_assigned, en_route, arrived, in_progress, completed, cancelled]}
+            driverId: {type: string}
+            driverName: {type: string}
+            vehiclePlate: {type: string}
+            eta: {type: integer, description: Minutes}
+
+  rides/{rideId}/location:
+    parameters:
+      rideId:
+        schema: {type: string}
+    subscribe:
+      summary: Driver location update
+      message:
+        name: DriverLocation
+        payload:
+          type: object
+          required: [lat, lng, timestamp]
+          properties:
+            lat: {type: number}
+            lng: {type: number}
+            heading: {type: number}
+            speed: {type: number}
+            timestamp: {type: string, format: date-time}
+
+  rides/requests:
+    publish:
+      summary: New ride request
+      message:
+        name: RideRequest
+        payload:
+          type: object
+          required: [riderId, pickup, dropoff]
+          properties:
+            riderId: {type: string}
+            pickup:
+              type: object
+              properties:
+                lat: {type: number}
+                lng: {type: number}
+                address: {type: string}
+            dropoff:
+              type: object
+              properties:
+                lat: {type: number}
+                lng: {type: number}
+                address: {type: string}
+            rideType: {type: string, enum: [economy, comfort, premium, pool]}
+            estimatedFare: {type: number}
+
+  surge/pricing:
+    subscribe:
+      summary: Surge pricing update
+      message:
+        name: SurgePricing
+        payload:
+          type: object
+          required: [zoneId, multiplier]
+          properties:
+            zoneId: {type: string}
+            multiplier: {type: number}
+            demandLevel: {type: string, enum: [low, normal, high, very_high]}
+            expiresAt: {type: string, format: date-time}

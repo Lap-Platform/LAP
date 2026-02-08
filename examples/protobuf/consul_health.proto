@@ -1,0 +1,217 @@
+syntax = "proto3";
+
+package hashicorp.consul.v1;
+
+// HashiCorp Consul service discovery and health checking API.
+service ConsulService {
+  // Register a service instance with the catalog.
+  rpc RegisterService(RegisterServiceRequest) returns (RegisterServiceResponse);
+
+  // Deregister a service instance.
+  rpc DeregisterService(DeregisterServiceRequest) returns (DeregisterServiceResponse);
+
+  // Discover healthy service instances.
+  rpc DiscoverServices(DiscoverServicesRequest) returns (DiscoverServicesResponse);
+
+  // Get the health status of a service.
+  rpc GetServiceHealth(GetServiceHealthRequest) returns (GetServiceHealthResponse);
+
+  // Watch for service changes (server streaming).
+  rpc WatchService(WatchServiceRequest) returns (stream ServiceEvent);
+
+  // Get or set key-value entries.
+  rpc KVGet(KVGetRequest) returns (KVGetResponse);
+
+  // Put a key-value entry.
+  rpc KVPut(KVPutRequest) returns (KVPutResponse);
+
+  // Delete a key-value entry.
+  rpc KVDelete(KVDeleteRequest) returns (KVDeleteResponse);
+}
+
+// Health check status values.
+enum HealthStatus {
+  HEALTH_STATUS_UNSPECIFIED = 0;
+  PASSING = 1;
+  WARNING = 2;
+  CRITICAL = 3;
+  MAINTENANCE = 4;
+}
+
+// A health check definition.
+message HealthCheck {
+  string check_id = 1;
+  string name = 2;
+  HealthStatus status = 3;
+  string notes = 4;
+  string output = 5;
+  string service_id = 6;
+  string service_name = 7;
+  string node = 8;
+
+  // Check type configuration.
+  oneof check_type {
+    HTTPCheck http = 9;
+    TCPCheck tcp = 10;
+    GRPCCheck grpc = 11;
+    ScriptCheck script = 12;
+  }
+
+  string interval = 13;
+  string timeout = 14;
+}
+
+message HTTPCheck {
+  string url = 1;
+  map<string, string> headers = 2;
+  string method = 3;
+  bool tls_skip_verify = 4;
+}
+
+message TCPCheck {
+  string address = 1;
+}
+
+message GRPCCheck {
+  string address = 1;
+  bool use_tls = 2;
+}
+
+message ScriptCheck {
+  repeated string command = 1;
+}
+
+// Weights for DNS load balancing.
+message Weights {
+  int32 passing = 1;
+  int32 warning = 2;
+}
+
+// Service instance definition.
+message ServiceInstance {
+  string id = 1;
+  string name = 2;
+  repeated string tags = 3;
+  string address = 4;
+  int32 port = 5;
+  map<string, string> meta = 6;
+  Weights weights = 7;
+  repeated HealthCheck checks = 8;
+  string datacenter = 9;
+  string namespace = 10;
+  string partition = 11;
+}
+
+message RegisterServiceRequest {
+  ServiceInstance service = 1;
+  string datacenter = 2;
+  string token = 3;
+  bool replace_existing_checks = 4;
+}
+
+message RegisterServiceResponse {
+  bool success = 1;
+}
+
+message DeregisterServiceRequest {
+  string service_id = 1;
+  string datacenter = 2;
+  string token = 3;
+}
+
+message DeregisterServiceResponse {
+  bool success = 1;
+}
+
+message DiscoverServicesRequest {
+  string service_name = 1;
+  string datacenter = 2;
+  string tag = 3;
+  bool passing_only = 4;
+  string namespace = 5;
+  string near = 6;
+}
+
+message DiscoverServicesResponse {
+  repeated ServiceInstance instances = 1;
+  uint64 index = 2;
+}
+
+message GetServiceHealthRequest {
+  string service_name = 1;
+  string datacenter = 2;
+  string namespace = 3;
+}
+
+message ServiceHealthEntry {
+  ServiceInstance service = 1;
+  repeated HealthCheck checks = 2;
+  HealthStatus aggregated_status = 3;
+}
+
+message GetServiceHealthResponse {
+  repeated ServiceHealthEntry entries = 1;
+}
+
+message WatchServiceRequest {
+  string service_name = 1;
+  string datacenter = 2;
+  uint64 index = 3;
+  string tag = 4;
+}
+
+message ServiceEvent {
+  enum EventType {
+    REGISTER = 0;
+    DEREGISTER = 1;
+    HEALTH_CHANGE = 2;
+  }
+  EventType type = 1;
+  ServiceInstance service = 2;
+  uint64 index = 3;
+}
+
+message KVGetRequest {
+  string key = 1;
+  string datacenter = 2;
+  bool recurse = 3;
+  string separator = 4;
+}
+
+message KVEntry {
+  string key = 1;
+  bytes value = 2;
+  uint64 create_index = 3;
+  uint64 modify_index = 4;
+  uint64 lock_index = 5;
+  string session = 6;
+  uint32 flags = 7;
+}
+
+message KVGetResponse {
+  repeated KVEntry entries = 1;
+  uint64 index = 2;
+}
+
+message KVPutRequest {
+  string key = 1;
+  bytes value = 2;
+  string datacenter = 3;
+  uint32 flags = 4;
+  uint64 cas = 5;
+}
+
+message KVPutResponse {
+  bool success = 1;
+}
+
+message KVDeleteRequest {
+  string key = 1;
+  string datacenter = 2;
+  bool recurse = 3;
+  uint64 cas = 4;
+}
+
+message KVDeleteResponse {
+  bool success = 1;
+}

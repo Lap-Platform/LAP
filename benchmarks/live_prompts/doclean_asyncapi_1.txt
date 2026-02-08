@@ -1,0 +1,49 @@
+You are an API integration assistant. You will be given API documentation and a series of tasks.
+For each task, write the exact API call (curl command for REST, GraphQL query, protobuf RPC call, etc).
+
+Format your response as:
+TASK 1: <your api call>
+TASK 2: <your api call>
+... etc
+
+--- API DOCUMENTATION ---
+@doclean v0.1
+@api Slack Events API
+@base wss://wss-primary.slack.com/websocket
+@version 1.0.0
+@auth ws
+
+@endpoint SUB message
+@desc New message in channel
+@required {type: str, channel: str, user: str, text: str, ts: str}
+@optional {thread_ts: str, blocks: [map]}
+@returns(SUB) {type: str, channel: str, user: str, text: str, ts: str, thread_ts: str, blocks: [map]} # message payload
+
+@endpoint SUB reaction_added
+@desc Reaction added to message
+@required {type: str, user: str, reaction: str, item: map}
+@returns(SUB) {type: str, user: str, reaction: str, item: map{type: str, channel: str, ts: str}} # message payload
+
+@endpoint SUB presence_change
+@desc User presence changed
+@required {type: str, user: str, presence: str(active/away)}
+@returns(SUB) {type: str, user: str, presence: str} # message payload
+
+@endpoint SUB channel_created
+@desc Channel created
+@required {type: str, channel: map}
+@returns(SUB) {type: str, channel: map{id: str, name: str, creator: str, created: int}} # message payload
+
+--- END DOCUMENTATION ---
+
+TASKS:
+1. Subscribe to message event for new messages in channels
+2. Subscribe to reaction_added event for emoji reactions
+3. Subscribe to presence_change event for user status updates
+4. Subscribe to channel_created event for new channel creation
+5. Handle message event with channel, user, text, and timestamp fields
+6. Handle reaction_added event with reaction name, user, and item details
+7. Handle presence_change event with user ID and new presence status
+8. Handle channel_created event and extract channel ID and name
+9. Verify event challenge for Slack URL verification in message channel
+10. Filter message events for specific channel C123ABC and parse text content

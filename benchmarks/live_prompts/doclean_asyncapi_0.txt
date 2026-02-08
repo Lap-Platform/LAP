@@ -1,0 +1,52 @@
+You are an API integration assistant. You will be given API documentation and a series of tasks.
+For each task, write the exact API call (curl command for REST, GraphQL query, protobuf RPC call, etc).
+
+Format your response as:
+TASK 1: <your api call>
+TASK 2: <your api call>
+... etc
+
+--- API DOCUMENTATION ---
+@doclean v0.1
+@api Stripe Webhooks
+@base https://api.stripe.com/webhooks
+@version 1.0.0
+@auth https
+
+@endpoint SUB payment_intent/succeeded
+@desc Payment succeeded
+@required {id: str # Event ID, type: str, data: map}
+@optional {created: int}
+@returns(SUB) {id: str, type: str, data: map{object: map{id: str, amount: int, currency: str, status: str, customer: str}}, created: int} # message payload
+
+@endpoint SUB payment_intent/failed
+@desc Payment failed
+@required {id: str, type: str}
+@optional {data: map}
+@returns(SUB) {id: str, type: str, data: map{object: map{id: str, amount: int, last_payment_error: map}}} # message payload
+
+@endpoint SUB charge/refunded
+@desc Charge refunded
+@required {id: str, type: str}
+@optional {data: map}
+@returns(SUB) {id: str, type: str, data: map{object: map{id: str, amount_refunded: int, refunds: map}}} # message payload
+
+@endpoint SUB invoice/paid
+@desc Invoice paid
+@required {id: str, type: str}
+@optional {data: map}
+@returns(SUB) {id: str, type: str, data: map{object: map{id: str, customer: str, amount_paid: int, status: str}}} # message payload
+
+--- END DOCUMENTATION ---
+
+TASKS:
+1. Subscribe to payment_intent/succeeded event for successful payment intents
+2. Subscribe to payment_intent/failed event for failed payment attempts
+3. Subscribe to charge/refunded event for charge refunds
+4. Subscribe to invoice/paid event for paid invoices
+5. Handle payment_intent/succeeded webhook with amount, currency, and customer fields
+6. Handle payment_intent/failed webhook and parse error message and code
+7. Handle charge/refunded webhook with refund amount and reason
+8. Handle invoice/paid webhook and extract invoice number and total
+9. Verify webhook signature for payment_intent/succeeded using stripe-signature header
+10. Filter charge/refunded events for amounts greater than $50

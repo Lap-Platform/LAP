@@ -1,0 +1,146 @@
+asyncapi: 2.6.0
+info:
+  title: Real-time Chat
+  version: 2.1.0
+  description: WebSocket-based real-time chat system
+
+servers:
+  production:
+    url: wss://chat.example.com/ws
+    protocol: ws
+
+channels:
+  chat/rooms/{roomId}/messages:
+    parameters:
+      roomId:
+        schema:
+          type: string
+    publish:
+      summary: Send a message to a chat room
+      message:
+        name: ChatMessage
+        payload:
+          type: object
+          required:
+            - content
+            - senderId
+          properties:
+            content:
+              type: string
+              description: Message text content
+            senderId:
+              type: string
+              description: User ID of the sender
+            replyTo:
+              type: string
+              description: Message ID being replied to
+            attachments:
+              type: array
+              items:
+                type: object
+                properties:
+                  url:
+                    type: string
+                  mimeType:
+                    type: string
+                  filename:
+                    type: string
+    subscribe:
+      summary: Receive messages from a chat room
+      message:
+        name: ChatMessageReceived
+        payload:
+          type: object
+          required:
+            - messageId
+            - content
+            - senderId
+            - timestamp
+          properties:
+            messageId:
+              type: string
+            content:
+              type: string
+            senderId:
+              type: string
+            senderName:
+              type: string
+            timestamp:
+              type: string
+              format: date-time
+            edited:
+              type: boolean
+    bindings:
+      ws:
+        method: GET
+
+  chat/rooms/{roomId}/typing:
+    parameters:
+      roomId:
+        schema:
+          type: string
+    publish:
+      summary: Send typing indicator
+      message:
+        name: TypingIndicator
+        payload:
+          type: object
+          required:
+            - userId
+            - isTyping
+          properties:
+            userId:
+              type: string
+            isTyping:
+              type: boolean
+
+  chat/users/{userId}/presence:
+    parameters:
+      userId:
+        schema:
+          type: string
+    subscribe:
+      summary: User presence updates
+      message:
+        name: PresenceUpdate
+        payload:
+          type: object
+          required:
+            - userId
+            - status
+          properties:
+            userId:
+              type: string
+            status:
+              type: string
+              enum:
+                - online
+                - away
+                - dnd
+                - offline
+            lastActive:
+              type: string
+              format: date-time
+
+  chat/rooms/{roomId}/reactions:
+    parameters:
+      roomId:
+        schema:
+          type: string
+    publish:
+      summary: Add reaction to a message
+      message:
+        name: MessageReaction
+        payload:
+          type: object
+          required:
+            - messageId
+            - emoji
+            - userId
+          properties:
+            messageId:
+              type: string
+            emoji:
+              type: string
+            userId:
+              type: string

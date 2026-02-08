@@ -1,0 +1,136 @@
+"""Social Network API"""
+
+enum Privacy {
+  PUBLIC
+  FRIENDS
+  PRIVATE
+}
+
+enum ReactionType {
+  LIKE
+  LOVE
+  LAUGH
+  SAD
+  ANGRY
+}
+
+union FeedItem = Post | SharedPost | Story
+
+type User {
+  id: ID!
+  username: String!
+  displayName: String!
+  avatar: String
+  bio: String
+  followers: [User!]!
+  following: [User!]!
+  followerCount: Int!
+  followingCount: Int!
+  posts(first: Int, after: String): [Post!]!
+}
+
+type Post {
+  id: ID!
+  author: User!
+  content: String!
+  media: [MediaAttachment!]
+  privacy: Privacy!
+  reactions: [Reaction!]!
+  comments(first: Int, after: String): [Comment!]!
+  commentCount: Int!
+  createdAt: String!
+}
+
+type SharedPost {
+  id: ID!
+  sharedBy: User!
+  originalPost: Post!
+  comment: String
+  createdAt: String!
+}
+
+type Story {
+  id: ID!
+  author: User!
+  media: MediaAttachment!
+  expiresAt: String!
+}
+
+type MediaAttachment {
+  url: String!
+  type: String!
+  width: Int
+  height: Int
+}
+
+type Comment {
+  id: ID!
+  author: User!
+  content: String!
+  replies: [Comment!]
+  createdAt: String!
+}
+
+type Reaction {
+  user: User!
+  type: ReactionType!
+}
+
+input CreatePostInput {
+  content: String!
+  privacy: Privacy = PUBLIC
+  mediaUrls: [String!]
+}
+
+type Query {
+  """Get the news feed for the current user"""
+  feed(first: Int = 20, after: String): [FeedItem!]!
+
+  """Look up a user by username"""
+  user(username: String!): User
+
+  """Get a post by ID"""
+  post(id: ID!): Post
+
+  """Search users"""
+  searchUsers(query: String!, first: Int = 10): [User!]!
+}
+
+type Mutation {
+  """Create a new post"""
+  createPost(input: CreatePostInput!): Post!
+
+  """Delete a post"""
+  deletePost(postId: ID!): Boolean!
+
+  """Add a reaction to a post"""
+  react(postId: ID!, type: ReactionType!): Post!
+
+  """Comment on a post"""
+  addComment(postId: ID!, content: String!): Comment!
+
+  """Follow a user"""
+  follow(userId: ID!): User!
+
+  """Unfollow a user"""
+  unfollow(userId: ID!): User!
+
+  """Share a post"""
+  sharePost(postId: ID!, comment: String): SharedPost!
+}
+
+type Subscription {
+  """New items in the feed"""
+  feedUpdated: FeedItem!
+
+  """New notifications"""
+  newNotification(userId: ID!): Notification!
+}
+
+type Notification {
+  id: ID!
+  type: String!
+  message: String!
+  actor: User!
+  createdAt: String!
+}

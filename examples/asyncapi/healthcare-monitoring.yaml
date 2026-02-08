@@ -1,0 +1,92 @@
+asyncapi: 2.6.0
+info:
+  title: Healthcare Monitoring Events
+  version: 1.0.0
+  description: Patient health monitoring and FHIR-like events
+
+servers:
+  production:
+    url: mqtt://health-broker.hospital.example.com:8883
+    protocol: mqtt
+
+channels:
+  patients/{patientId}/vitals:
+    parameters:
+      patientId:
+        schema: {type: string}
+    publish:
+      summary: Patient vital signs
+      message:
+        name: VitalSigns
+        payload:
+          type: object
+          required: [patientId, timestamp]
+          properties:
+            patientId: {type: string}
+            heartRate: {type: integer}
+            bloodPressure:
+              type: object
+              properties:
+                systolic: {type: integer}
+                diastolic: {type: integer}
+            temperature: {type: number}
+            spO2: {type: number}
+            respiratoryRate: {type: integer}
+            timestamp: {type: string, format: date-time}
+    bindings:
+      mqtt:
+        qos: 1
+
+  patients/{patientId}/alerts:
+    parameters:
+      patientId:
+        schema: {type: string}
+    subscribe:
+      summary: Patient health alert
+      message:
+        name: HealthAlert
+        payload:
+          type: object
+          required: [patientId, alertType, severity]
+          properties:
+            patientId: {type: string}
+            alertType: {type: string, enum: [critical_vitals, fall_detected, medication_due, abnormal_lab]}
+            severity: {type: string, enum: [low, medium, high, critical]}
+            message: {type: string}
+            vitalName: {type: string}
+            value: {type: number}
+            threshold: {type: number}
+
+  lab/results:
+    subscribe:
+      summary: Lab result available
+      message:
+        name: LabResult
+        payload:
+          type: object
+          required: [orderId, patientId, testName, result]
+          properties:
+            orderId: {type: string}
+            patientId: {type: string}
+            testName: {type: string}
+            result: {type: string}
+            unit: {type: string}
+            referenceRange: {type: string}
+            flag: {type: string, enum: [normal, low, high, critical]}
+            collectedAt: {type: string, format: date-time}
+
+  admissions:
+    subscribe:
+      summary: Patient admission/discharge
+      message:
+        name: AdmissionEvent
+        payload:
+          type: object
+          required: [patientId, eventType]
+          properties:
+            patientId: {type: string}
+            eventType: {type: string, enum: [admitted, discharged, transferred]}
+            department: {type: string}
+            room: {type: string}
+            attendingPhysician: {type: string}
+            timestamp: {type: string, format: date-time}

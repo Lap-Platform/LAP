@@ -1,0 +1,193 @@
+enum IssueState { BACKLOG UNSTARTED STARTED COMPLETED CANCELLED }
+enum IssuePriority { NO_PRIORITY URGENT HIGH MEDIUM LOW }
+enum CycleStatus { ACTIVE UPCOMING COMPLETED }
+enum ProjectStatus { BACKLOG PLANNED IN_PROGRESS PAUSED COMPLETED CANCELLED }
+
+interface Node { id: ID! }
+type PageInfo { hasNextPage: Boolean! hasPreviousPage: Boolean! startCursor: String endCursor: String }
+
+type Organization {
+  id: ID!
+  name: String!
+  urlKey: String!
+  logoUrl: String
+  createdAt: String!
+  teams(first: Int, after: String): TeamConnection!
+  users(first: Int, after: String): UserConnection!
+  integrations: [Integration!]!
+}
+
+type Team implements Node {
+  id: ID!
+  name: String!
+  key: String!
+  description: String
+  icon: String
+  color: String
+  private: Boolean!
+  issueCount: Int!
+  members(first: Int, after: String): UserConnection!
+  issues(first: Int, after: String, filter: IssueFilter): IssueConnection!
+  projects(first: Int, after: String): ProjectConnection!
+  cycles(first: Int, after: String): CycleConnection!
+  labels(first: Int, after: String): LabelConnection!
+  states: [WorkflowState!]!
+}
+
+type User implements Node {
+  id: ID!
+  name: String!
+  displayName: String!
+  email: String!
+  avatarUrl: String
+  admin: Boolean!
+  active: Boolean!
+  createdAt: String!
+  assignedIssues(first: Int, after: String, filter: IssueFilter): IssueConnection!
+  teams(first: Int, after: String): TeamConnection!
+}
+
+type Issue implements Node {
+  id: ID!
+  identifier: String!
+  title: String!
+  description: String
+  descriptionData: String
+  priority: Int!
+  priorityLabel: String!
+  estimate: Int
+  sortOrder: Float!
+  state: WorkflowState!
+  assignee: User
+  creator: User
+  team: Team!
+  project: Project
+  projectMilestone: ProjectMilestone
+  cycle: Cycle
+  parent: Issue
+  children(first: Int, after: String): IssueConnection!
+  labels(first: Int, after: String): LabelConnection!
+  comments(first: Int, after: String): CommentConnection!
+  attachments(first: Int, after: String): AttachmentConnection!
+  relations(first: Int): IssueRelationConnection!
+  subscribers(first: Int): UserConnection!
+  dueDate: String
+  snoozedUntilAt: String
+  startedAt: String
+  completedAt: String
+  canceledAt: String
+  createdAt: String!
+  updatedAt: String!
+  archivedAt: String
+  url: String!
+  branchName: String!
+}
+
+type WorkflowState implements Node { id: ID! name: String! color: String! type: String! position: Float! team: Team! }
+type IssueLabel implements Node { id: ID! name: String! color: String! description: String creator: User }
+
+type Project implements Node {
+  id: ID!
+  name: String!
+  description: String
+  icon: String
+  color: String
+  state: String!
+  progress: Float!
+  targetDate: String
+  startDate: String
+  lead: User
+  members(first: Int): UserConnection!
+  issues(first: Int, after: String): IssueConnection!
+  milestones(first: Int): ProjectMilestoneConnection!
+  teams(first: Int): TeamConnection!
+  url: String!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type ProjectMilestone implements Node { id: ID! name: String! description: String sortOrder: Float! targetDate: String project: Project! }
+
+type Cycle implements Node {
+  id: ID!
+  number: Int!
+  name: String
+  description: String
+  startsAt: String!
+  endsAt: String!
+  completedAt: String
+  progress: Float!
+  scopeCompleted: Int!
+  scopeTotal: Int!
+  team: Team!
+  issues(first: Int, after: String): IssueConnection!
+}
+
+type Comment implements Node { id: ID! body: String! user: User! issue: Issue! parent: Comment createdAt: String! updatedAt: String! editedAt: String }
+type Attachment implements Node { id: ID! title: String! subtitle: String url: String! source: String creator: User issue: Issue! }
+type IssueRelation implements Node { id: ID! type: String! issue: Issue! relatedIssue: Issue! }
+type Integration { id: ID! service: String! }
+
+# Connections
+type IssueConnection { edges: [IssueEdge!]! pageInfo: PageInfo! totalCount: Int! }
+type IssueEdge { cursor: String! node: Issue! }
+type TeamConnection { edges: [TeamEdge!]! pageInfo: PageInfo! }
+type TeamEdge { cursor: String! node: Team! }
+type UserConnection { edges: [UserEdge!]! pageInfo: PageInfo! }
+type UserEdge { cursor: String! node: User! }
+type ProjectConnection { edges: [ProjectEdge!]! pageInfo: PageInfo! }
+type ProjectEdge { cursor: String! node: Project! }
+type ProjectMilestoneConnection { edges: [ProjectMilestoneEdge!]! pageInfo: PageInfo! }
+type ProjectMilestoneEdge { cursor: String! node: ProjectMilestone! }
+type CycleConnection { edges: [CycleEdge!]! pageInfo: PageInfo! }
+type CycleEdge { cursor: String! node: Cycle! }
+type CommentConnection { edges: [CommentEdge!]! pageInfo: PageInfo! }
+type CommentEdge { cursor: String! node: Comment! }
+type LabelConnection { edges: [LabelEdge!]! pageInfo: PageInfo! }
+type LabelEdge { cursor: String! node: IssueLabel! }
+type AttachmentConnection { edges: [AttachmentEdge!]! pageInfo: PageInfo! }
+type AttachmentEdge { cursor: String! node: Attachment! }
+type IssueRelationConnection { edges: [IssueRelationEdge!]! pageInfo: PageInfo! }
+type IssueRelationEdge { cursor: String! node: IssueRelation! }
+
+input IssueFilter { state: IssueFilterState assignee: IDFilter label: IDFilter priority: IntFilter project: IDFilter team: IDFilter }
+input IssueFilterState { type: [String!] }
+input IDFilter { eq: ID in: [ID!] }
+input IntFilter { eq: Int lt: Int gt: Int }
+
+input IssueCreateInput { title: String! description: String teamId: ID! assigneeId: ID projectId: ID cycleId: ID parentId: ID stateId: ID priority: Int estimate: Int labelIds: [ID!] dueDate: String }
+input IssueUpdateInput { title: String description: String assigneeId: ID stateId: ID priority: Int estimate: Int projectId: ID cycleId: ID parentId: ID labelIds: [ID!] dueDate: String }
+input CommentCreateInput { issueId: ID! body: String! parentId: ID }
+input ProjectCreateInput { name: String! description: String teamIds: [ID!]! leadId: ID targetDate: String startDate: String color: String icon: String }
+
+type IssuePayload { success: Boolean! issue: Issue }
+type CommentPayload { success: Boolean! comment: Comment }
+type ProjectPayload { success: Boolean! project: Project }
+type DeletePayload { success: Boolean! }
+
+type Query {
+  viewer: User!
+  organization: Organization!
+  issue(id: ID!): Issue!
+  issues(first: Int, after: String, filter: IssueFilter, orderBy: String): IssueConnection!
+  project(id: ID!): Project!
+  projects(first: Int, after: String): ProjectConnection!
+  team(id: ID!): Team!
+  teams(first: Int, after: String): TeamConnection!
+  cycle(id: ID!): Cycle!
+  searchIssues(query: String!, first: Int, after: String): IssueConnection!
+  node(id: ID!): Node
+}
+
+type Mutation {
+  issueCreate(input: IssueCreateInput!): IssuePayload!
+  issueUpdate(id: ID!, input: IssueUpdateInput!): IssuePayload!
+  issueArchive(id: ID!): IssuePayload!
+  issueDelete(id: ID!): DeletePayload!
+  commentCreate(input: CommentCreateInput!): CommentPayload!
+  commentUpdate(id: ID!, body: String!): CommentPayload!
+  commentDelete(id: ID!): DeletePayload!
+  projectCreate(input: ProjectCreateInput!): ProjectPayload!
+  projectUpdate(id: ID!, input: ProjectCreateInput!): ProjectPayload!
+  projectArchive(id: ID!): ProjectPayload!
+}

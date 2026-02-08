@@ -1,0 +1,10 @@
+TASK 1: curl -X POST https://api.stripe.com/v1/webhook_endpoints -H "Authorization: Bearer YOUR_API_KEY" -d "url=https://yourdomain.com/webhooks" -d "enabled_events[]=payment_intent.succeeded"
+TASK 2: curl -X POST https://api.stripe.com/v1/webhook_endpoints -H "Authorization: Bearer YOUR_API_KEY" -d "url=https://yourdomain.com/webhooks" -d "enabled_events[]=payment_intent.failed"
+TASK 3: curl -X POST https://api.stripe.com/v1/webhook_endpoints -H "Authorization: Bearer YOUR_API_KEY" -d "url=https://yourdomain.com/webhooks" -d "enabled_events[]=charge.refunded"
+TASK 4: curl -X POST https://api.stripe.com/v1/webhook_endpoints -H "Authorization: Bearer YOUR_API_KEY" -d "url=https://yourdomain.com/webhooks" -d "enabled_events[]=invoice.paid"
+TASK 5: # Webhook handler: event.data.object.amount, event.data.object.currency, event.data.object.customer
+TASK 6: # Webhook handler: event.data.object.last_payment_error.message, event.data.object.last_payment_error.code
+TASK 7: # Webhook handler: event.data.object.amount_refunded, event.data.object.refunds.data[0].reason
+TASK 8: # Webhook handler: event.data.object.number, event.data.object.amount_paid
+TASK 9: # Verify signature: stripe.webhook.constructEvent(payload, request.headers['stripe-signature'], webhook_secret)
+TASK 10: # Filter handler: if (event.data.object.amount_refunded > 5000) { process(event); }

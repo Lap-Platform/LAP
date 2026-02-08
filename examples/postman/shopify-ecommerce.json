@@ -1,0 +1,237 @@
+{
+  "info": {
+    "name": "Shopify Admin API",
+    "_postman_id": "shopify-001",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      {
+        "key": "key",
+        "value": "X-Shopify-Access-Token"
+      },
+      {
+        "key": "in",
+        "value": "header"
+      },
+      {
+        "key": "value",
+        "value": "{{apiKey}}"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://{{shop}}.myshopify.com/admin/api/2024-01"
+    },
+    {
+      "key": "shop",
+      "value": "mystore"
+    }
+  ],
+  "item": [
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "List Products",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/products.json",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products.json"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50",
+                  "description": ""
+                },
+                {
+                  "key": "status",
+                  "value": "active",
+                  "description": ""
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "OK",
+              "code": 200,
+              "body": "{\"products\": [{\"id\": 123, \"title\": \"T-Shirt\", \"vendor\": \"Acme\", \"variants\": [{\"id\": 456, \"price\": \"19.99\"}]}]}"
+            }
+          ]
+        },
+        {
+          "name": "Create Product",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/products.json",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products.json"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"product\": {\"title\": \"New Product\", \"body_html\": \"<p>Description</p>\", \"vendor\": \"Acme\", \"product_type\": \"Clothing\", \"variants\": [{\"price\": \"29.99\", \"sku\": \"SKU001\"}]}}"
+            }
+          },
+          "response": [
+            {
+              "name": "Created",
+              "code": 201,
+              "body": "{\"product\": {\"id\": 124, \"title\": \"New Product\"}}"
+            }
+          ]
+        },
+        {
+          "name": "Get Product",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/products/:id.json",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                ":id.json"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "123"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "OK",
+              "code": 200,
+              "body": "{\"product\": {\"id\": 123, \"title\": \"T-Shirt\"}}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "List Orders",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/orders.json",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders.json"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "any",
+                  "description": ""
+                },
+                {
+                  "key": "limit",
+                  "value": "50",
+                  "description": ""
+                },
+                {
+                  "key": "created_at_min",
+                  "value": "",
+                  "description": "ISO 8601"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "OK",
+              "code": 200,
+              "body": "{\"orders\": [{\"id\": 789, \"total_price\": \"49.99\", \"financial_status\": \"paid\"}]}"
+            }
+          ]
+        },
+        {
+          "name": "Get Order",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/orders/:id.json",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                ":id.json"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "789"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "OK",
+              "code": 200,
+              "body": "{\"order\": {\"id\": 789, \"line_items\": [{\"title\": \"T-Shirt\", \"quantity\": 1}]}}"
+            }
+          ]
+        },
+        {
+          "name": "Cancel Order",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/orders/:id/cancel.json",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                ":id",
+                "cancel.json"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "789"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"reason\": \"customer\"}"
+            }
+          },
+          "response": [
+            {
+              "name": "OK",
+              "code": 200,
+              "body": "{\"order\": {\"id\": 789, \"cancelled_at\": \"2024-01-15T10:00:00Z\"}}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,109 @@
+openapi: "3.0.0"
+info:
+  title: Many Params API
+  version: "1.0.0"
+servers:
+  - url: https://api.manyparams.com
+paths:
+  /search:
+    get:
+      summary: Search with many filters
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: sort
+          in: query
+          schema:
+            type: string
+        - name: order
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+        - name: filter_status
+          in: query
+          schema:
+            type: string
+        - name: filter_type
+          in: query
+          schema:
+            type: string
+        - name: filter_category
+          in: query
+          schema:
+            type: string
+        - name: filter_tag
+          in: query
+          schema:
+            type: string
+        - name: filter_author
+          in: query
+          schema:
+            type: string
+        - name: filter_date_from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: filter_date_to
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: filter_min_score
+          in: query
+          schema:
+            type: number
+        - name: filter_max_score
+          in: query
+          schema:
+            type: number
+        - name: filter_lang
+          in: query
+          schema:
+            type: string
+        - name: filter_region
+          in: query
+          schema:
+            type: string
+        - name: filter_format
+          in: query
+          schema:
+            type: string
+        - name: include_drafts
+          in: query
+          schema:
+            type: boolean
+        - name: include_archived
+          in: query
+          schema:
+            type: boolean
+        - name: fields
+          in: query
+          schema:
+            type: string
+            description: Comma-separated list of fields to return
+        - name: expand
+          in: query
+          schema:
+            type: string
+        - name: callback
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Search results

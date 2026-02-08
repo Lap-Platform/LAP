@@ -1,0 +1,234 @@
+syntax = "proto3";
+
+package tensorflow.serving;
+
+// TensorFlow Serving Prediction Service.
+service PredictionService {
+  // Classify input data.
+  rpc Classify(ClassifyRequest) returns (ClassifyResponse);
+
+  // Perform regression on input data.
+  rpc Regress(RegressRequest) returns (RegressResponse);
+
+  // Run inference on a model.
+  rpc Predict(PredictRequest) returns (PredictResponse);
+
+  // Multi-inference combines multiple inference tasks in a single request.
+  rpc MultiInference(MultiInferenceRequest) returns (MultiInferenceResponse);
+
+  // Get metadata about a model.
+  rpc GetModelMetadata(GetModelMetadataRequest) returns (GetModelMetadataResponse);
+}
+
+// Model management service.
+service ModelService {
+  // Get the status of a model.
+  rpc GetModelStatus(GetModelStatusRequest) returns (GetModelStatusResponse);
+
+  // Reload model configuration.
+  rpc HandleReloadConfigRequest(ReloadConfigRequest) returns (ReloadConfigResponse);
+}
+
+// Model specification identifying which model and version to use.
+message ModelSpec {
+  string name = 1;
+  oneof version_choice {
+    int64 version = 2;
+    string version_label = 3;
+  }
+  string signature_name = 4;
+}
+
+// Tensor representation.
+enum DataType {
+  DT_INVALID = 0;
+  DT_FLOAT = 1;
+  DT_DOUBLE = 2;
+  DT_INT32 = 3;
+  DT_INT64 = 4;
+  DT_STRING = 5;
+  DT_BOOL = 6;
+  DT_COMPLEX64 = 7;
+  DT_INT8 = 8;
+  DT_UINT8 = 9;
+}
+
+message TensorShapeProto {
+  message Dim {
+    int64 size = 1;
+    string name = 2;
+  }
+  repeated Dim dim = 1;
+  bool unknown_rank = 2;
+}
+
+message TensorProto {
+  DataType dtype = 1;
+  TensorShapeProto tensor_shape = 2;
+  repeated float float_val = 3;
+  repeated double double_val = 4;
+  repeated int32 int_val = 5;
+  repeated int64 int64_val = 6;
+  repeated bytes string_val = 7;
+  repeated bool bool_val = 8;
+  bytes tensor_content = 9;
+}
+
+// --- Classification ---
+
+message Example {
+  map<string, Feature> features = 1;
+}
+
+message Feature {
+  oneof kind {
+    FloatList float_list = 1;
+    Int64List int64_list = 2;
+    BytesList bytes_list = 3;
+  }
+}
+
+message FloatList {
+  repeated float value = 1;
+}
+
+message Int64List {
+  repeated int64 value = 1;
+}
+
+message BytesList {
+  repeated bytes value = 1;
+}
+
+message ClassifyRequest {
+  ModelSpec model_spec = 1;
+  repeated Example input = 2;
+}
+
+message ClassifyResult {
+  message Class {
+    string label = 1;
+    float score = 2;
+  }
+  repeated Class classifications = 1;
+}
+
+message ClassifyResponse {
+  ModelSpec model_spec = 1;
+  repeated ClassifyResult results = 2;
+}
+
+// --- Regression ---
+
+message RegressRequest {
+  ModelSpec model_spec = 1;
+  repeated Example input = 2;
+}
+
+message Regression {
+  float value = 1;
+}
+
+message RegressResponse {
+  ModelSpec model_spec = 1;
+  repeated Regression results = 2;
+}
+
+// --- Predict ---
+
+message PredictRequest {
+  ModelSpec model_spec = 1;
+  map<string, TensorProto> inputs = 2;
+  repeated string output_filter = 3;
+}
+
+message PredictResponse {
+  ModelSpec model_spec = 1;
+  map<string, TensorProto> outputs = 2;
+}
+
+// --- Multi-Inference ---
+
+message InferenceTask {
+  ModelSpec model_spec = 1;
+  string method_name = 2;
+}
+
+message MultiInferenceRequest {
+  repeated InferenceTask tasks = 1;
+  repeated Example input = 2;
+}
+
+message InferenceResult {
+  ModelSpec model_spec = 1;
+  oneof result {
+    ClassifyResponse classification_result = 2;
+    RegressResponse regression_result = 3;
+  }
+}
+
+message MultiInferenceResponse {
+  repeated InferenceResult results = 1;
+}
+
+// --- Model Metadata ---
+
+message GetModelMetadataRequest {
+  ModelSpec model_spec = 1;
+  repeated string metadata_field = 2;
+}
+
+message SignatureDefMap {
+  map<string, SignatureDef> signature_def = 1;
+}
+
+message SignatureDef {
+  map<string, TensorInfo> inputs = 1;
+  map<string, TensorInfo> outputs = 2;
+  string method_name = 3;
+}
+
+message TensorInfo {
+  string name = 1;
+  DataType dtype = 2;
+  TensorShapeProto tensor_shape = 3;
+}
+
+message GetModelMetadataResponse {
+  ModelSpec model_spec = 1;
+  map<string, SignatureDefMap> metadata = 2;
+}
+
+// --- Model Status ---
+
+enum ModelState {
+  UNKNOWN = 0;
+  START = 1;
+  LOADING = 2;
+  AVAILABLE = 3;
+  UNLOADING = 4;
+  END = 5;
+}
+
+message ModelVersionStatus {
+  int64 version = 1;
+  ModelState state = 2;
+  string error_message = 3;
+}
+
+message GetModelStatusRequest {
+  ModelSpec model_spec = 1;
+}
+
+message GetModelStatusResponse {
+  repeated ModelVersionStatus model_version_status = 1;
+}
+
+message ReloadConfigRequest {
+  string config = 1;
+}
+
+message ReloadConfigResponse {
+  bool success = 1;
+  string error_message = 2;
+}

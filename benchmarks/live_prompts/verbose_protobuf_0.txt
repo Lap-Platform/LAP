@@ -1,0 +1,123 @@
+You are an API integration assistant. You will be given API documentation and a series of tasks.
+For each task, write the exact API call (curl command for REST, GraphQL query, protobuf RPC call, etc).
+
+Format your response as:
+TASK 1: <your api call>
+TASK 2: <your api call>
+... etc
+
+--- API DOCUMENTATION ---
+syntax = "proto3";
+
+package user.v1;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// User management service.
+service UserService {
+  // Create a new user.
+  rpc CreateUser(CreateUserRequest) returns (User);
+
+  // Get user by ID.
+  rpc GetUser(GetUserRequest) returns (User);
+
+  // Update an existing user.
+  rpc UpdateUser(UpdateUserRequest) returns (User);
+
+  // Delete a user.
+  rpc DeleteUser(DeleteUserRequest) returns (google.protobuf.Empty);
+
+  // List users with pagination.
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse);
+
+  // Bulk import users (client streaming).
+  rpc BulkImportUsers(stream CreateUserRequest) returns (BulkImportResponse);
+}
+
+enum UserRole {
+  USER_ROLE_UNSPECIFIED = 0;
+  USER_ROLE_ADMIN = 1;
+  USER_ROLE_EDITOR = 2;
+  USER_ROLE_VIEWER = 3;
+}
+
+message Address {
+  string street = 1;
+  string city = 2;
+  string state = 3;
+  string zip_code = 4;
+  string country = 5;
+}
+
+message User {
+  string id = 1;
+  string email = 2;
+  string display_name = 3;
+  UserRole role = 4;
+  Address address = 5;
+  map<string, string> metadata = 6;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp updated_at = 8;
+
+  oneof avatar {
+    string avatar_url = 9;
+    bytes avatar_data = 10;
+  }
+}
+
+message CreateUserRequest {
+  string email = 1;
+  string display_name = 2;
+  UserRole role = 3;
+  Address address = 4;
+  map<string, string> metadata = 5;
+}
+
+message GetUserRequest {
+  string id = 1;
+}
+
+message UpdateUserRequest {
+  string id = 1;
+  string email = 2;
+  string display_name = 3;
+  UserRole role = 4;
+  Address address = 5;
+}
+
+message DeleteUserRequest {
+  string id = 1;
+}
+
+message ListUsersRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+  string filter = 3;
+}
+
+message ListUsersResponse {
+  repeated User users = 1;
+  string next_page_token = 2;
+  int32 total_count = 3;
+}
+
+message BulkImportResponse {
+  int32 imported_count = 1;
+  int32 failed_count = 2;
+  repeated string errors = 3;
+}
+
+--- END DOCUMENTATION ---
+
+TASKS:
+1. Call GetUser RPC with user ID 'user-123'
+2. Call CreateUser RPC with name 'John Doe' and email 'john@example.com'
+3. Call UpdateUser RPC to change user-123's email to 'newemail@example.com'
+4. Call DeleteUser RPC for user ID 'user-456'
+5. Call ListUsers RPC with page size 20 and page token
+6. Call BulkImportUsers RPC with array of user records
+7. Call CreateUser RPC with name, email, phone, and metadata fields
+8. Call UpdateUser RPC to update user-789 with new name and bio
+9. Call GetUser RPC for user-999 with field mask for specific fields
+10. Call ListUsers RPC with filter by created_after timestamp

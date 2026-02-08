@@ -1,0 +1,138 @@
+enum NodeType { DOCUMENT CANVAS FRAME GROUP VECTOR BOOLEAN_OPERATION STAR LINE ELLIPSE REGULAR_POLYGON RECTANGLE TEXT SLICE COMPONENT COMPONENT_SET INSTANCE }
+enum BlendMode { NORMAL DARKEN MULTIPLY LINEAR_BURN COLOR_BURN LIGHTEN SCREEN LINEAR_DODGE COLOR_DODGE OVERLAY SOFT_LIGHT HARD_LIGHT DIFFERENCE EXCLUSION HUE SATURATION COLOR LUMINOSITY }
+enum LayoutAlign { MIN CENTER MAX STRETCH }
+enum LayoutMode { NONE HORIZONTAL VERTICAL }
+
+type User { id: ID! handle: String! imgUrl: String! email: String }
+
+type Team {
+  id: ID!
+  name: String!
+  members: [TeamMember!]!
+  projects(first: Int, after: String): ProjectConnection!
+}
+
+type TeamMember { user: User! role: String! }
+
+type FigmaProject {
+  id: ID!
+  name: String!
+  files(first: Int, after: String): FileConnection!
+}
+
+type File {
+  key: String!
+  name: String!
+  lastModified: String!
+  thumbnailUrl: String
+  version: String!
+  document: DocumentNode!
+  components: [ComponentInfo!]!
+  componentSets: [ComponentSetInfo!]!
+  styles: [StyleInfo!]!
+  branches: [FileBranch!]
+}
+
+type FileBranch { key: String! name: String! thumbnailUrl: String lastModified: String! }
+
+type DocumentNode {
+  id: ID!
+  name: String!
+  type: NodeType!
+  children: [SceneNode!]!
+}
+
+type SceneNode {
+  id: ID!
+  name: String!
+  type: NodeType!
+  visible: Boolean!
+  locked: Boolean
+  opacity: Float
+  blendMode: BlendMode
+  absoluteBoundingBox: Rectangle
+  constraints: LayoutConstraint
+  fills: [Paint!]
+  strokes: [Paint!]
+  strokeWeight: Float
+  cornerRadius: Float
+  layoutMode: LayoutMode
+  primaryAxisAlignItems: LayoutAlign
+  counterAxisAlignItems: LayoutAlign
+  padding: Padding
+  itemSpacing: Float
+  children: [SceneNode!]
+  characters: String
+  style: TypeStyle
+  componentId: ID
+  exportSettings: [ExportSetting!]
+}
+
+type Rectangle { x: Float! y: Float! width: Float! height: Float! }
+type LayoutConstraint { vertical: String horizontal: String }
+type Padding { top: Float bottom: Float left: Float right: Float }
+type Paint { type: String! color: RGBAColor opacity: Float visible: Boolean gradientStops: [ColorStop!] imageRef: String }
+type RGBAColor { r: Float! g: Float! b: Float! a: Float! }
+type ColorStop { position: Float! color: RGBAColor! }
+type TypeStyle { fontFamily: String fontSize: Float fontWeight: Int letterSpacing: Float lineHeightPx: Float textAlignHorizontal: String textAlignVertical: String }
+type ExportSetting { suffix: String format: String constraint: ExportConstraint }
+type ExportConstraint { type: String! value: Float! }
+
+type ComponentInfo { key: String! name: String! description: String nodeId: ID! containingFrame: FrameInfo thumbnailUrl: String }
+type ComponentSetInfo { key: String! name: String! description: String nodeId: ID! }
+type StyleInfo { key: String! name: String! description: String styleType: String! nodeId: ID! }
+type FrameInfo { nodeId: ID name: String pageName: String }
+
+type Comment {
+  id: ID!
+  message: String!
+  fileKey: String!
+  parentId: ID
+  user: User!
+  createdAt: String!
+  resolvedAt: String
+  orderId: String
+  clientMeta: ClientMeta
+  reactions: [CommentReaction!]!
+}
+
+type ClientMeta { x: Float y: Float nodeId: ID nodeOffset: Vector2D }
+type Vector2D { x: Float! y: Float! }
+type CommentReaction { user: User! emoji: String! createdAt: String! }
+
+type FileVersion { id: ID! createdAt: String! label: String description: String user: User! }
+
+type PageInfo { hasNextPage: Boolean! endCursor: String }
+type ProjectConnection { edges: [ProjectEdge!]! pageInfo: PageInfo! }
+type ProjectEdge { cursor: String! node: FigmaProject! }
+type FileConnection { edges: [FileEdge!]! pageInfo: PageInfo! }
+type FileEdge { cursor: String! node: FileSummary! }
+type FileSummary { key: String! name: String! lastModified: String! thumbnailUrl: String }
+
+input PostCommentInput { fileKey: String! message: String! parentId: ID x: Float y: Float nodeId: ID }
+input ResolveCommentInput { fileKey: String! commentId: ID! }
+input CreateBranchInput { fileKey: String! name: String! }
+
+type CommentPayload { comment: Comment }
+type BranchPayload { branch: FileBranch }
+type ResolvePayload { success: Boolean! }
+
+type Query {
+  me: User!
+  team(id: ID!): Team
+  project(id: ID!): FigmaProject
+  file(key: String!, version: String, depth: Int, nodeId: ID): File
+  fileVersions(key: String!): [FileVersion!]!
+  comments(fileKey: String!): [Comment!]!
+  componentByKey(key: String!): ComponentInfo
+  teamComponents(teamId: ID!, first: Int, after: String): [ComponentInfo!]!
+  teamStyles(teamId: ID!, first: Int, after: String): [StyleInfo!]!
+}
+
+type Mutation {
+  postComment(input: PostCommentInput!): CommentPayload!
+  resolveComment(input: ResolveCommentInput!): ResolvePayload!
+  deleteComment(fileKey: String!, commentId: ID!): ResolvePayload!
+  reactToComment(fileKey: String!, commentId: ID!, emoji: String!): ResolvePayload!
+  createBranch(input: CreateBranchInput!): BranchPayload!
+}

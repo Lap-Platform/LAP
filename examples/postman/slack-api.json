@@ -1,0 +1,165 @@
+{
+  "info": {
+    "name": "Slack Web API",
+    "_postman_id": "slack-001",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://slack.com/api"
+    }
+  ],
+  "item": [
+    {
+      "name": "Post Message",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/chat.postMessage",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "chat.postMessage"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"channel\": \"C1234567890\", \"text\": \"Hello!\", \"thread_ts\": \"\"}"
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"ok\": true, \"ts\": \"1234567890.123456\", \"channel\": \"C1234567890\"}"
+        }
+      ]
+    },
+    {
+      "name": "List Channels",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/conversations.list",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "conversations.list"
+          ],
+          "query": [
+            {
+              "key": "limit",
+              "value": "100",
+              "description": ""
+            },
+            {
+              "key": "types",
+              "value": "public_channel",
+              "description": ""
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"ok\": true, \"channels\": [{\"id\": \"C1234\", \"name\": \"general\"}]}"
+        }
+      ]
+    },
+    {
+      "name": "Get User Info",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/users.info",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "users.info"
+          ],
+          "query": [
+            {
+              "key": "user",
+              "value": "U1234",
+              "description": "User ID"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"ok\": true, \"user\": {\"id\": \"U1234\", \"name\": \"john\", \"real_name\": \"John Doe\"}}"
+        }
+      ]
+    },
+    {
+      "name": "Upload File",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/files.upload",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "files.upload"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"channels\": \"C1234\", \"content\": \"file content\", \"filename\": \"test.txt\"}"
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"ok\": true, \"file\": {\"id\": \"F1234\", \"name\": \"test.txt\"}}"
+        }
+      ]
+    },
+    {
+      "name": "Add Reaction",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/reactions.add",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "reactions.add"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"channel\": \"C1234\", \"timestamp\": \"1234567890.123456\", \"name\": \"thumbsup\"}"
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"ok\": true}"
+        }
+      ]
+    }
+  ]
+}

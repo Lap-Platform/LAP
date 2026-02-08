@@ -1,0 +1,150 @@
+enum IssueType { STORY BUG TASK EPIC SUBTASK }
+enum IssueStatus { TO_DO IN_PROGRESS IN_REVIEW DONE }
+enum SprintState { ACTIVE CLOSED FUTURE }
+enum Priority { HIGHEST HIGH MEDIUM LOW LOWEST }
+enum BoardType { SCRUM KANBAN }
+enum ResolutionStatus { UNRESOLVED FIXED WONT_FIX DUPLICATE INCOMPLETE CANNOT_REPRODUCE }
+
+interface Node { id: ID! }
+type PageInfo { hasNextPage: Boolean! startAt: Int maxResults: Int total: Int }
+
+type Project implements Node {
+  id: ID!
+  key: String!
+  name: String!
+  description: String
+  lead: JiraUser
+  projectType: String!
+  avatarUrls: AvatarUrls
+  issueTypes: [IssueTypeConfig!]!
+  components: [Component!]!
+  versions: [Version!]!
+  boards: [Board!]!
+  issues(startAt: Int, maxResults: Int, jql: String): IssueConnection!
+}
+
+type JiraUser implements Node {
+  id: ID!
+  accountId: String!
+  displayName: String!
+  emailAddress: String
+  avatarUrls: AvatarUrls
+  active: Boolean!
+  timeZone: String
+}
+
+type AvatarUrls { x16: String x32: String x48: String }
+type IssueTypeConfig { id: ID! name: String! description: String subtask: Boolean! iconUrl: String }
+
+type Issue implements Node {
+  id: ID!
+  key: String!
+  summary: String!
+  description: String
+  issueType: IssueTypeConfig!
+  status: StatusDetail!
+  priority: PriorityDetail!
+  resolution: Resolution
+  assignee: JiraUser
+  reporter: JiraUser!
+  project: Project!
+  parent: Issue
+  subtasks: [Issue!]!
+  epic: Issue
+  sprint: Sprint
+  labels: [String!]!
+  components: [Component!]!
+  fixVersions: [Version!]!
+  storyPoints: Float
+  timeTracking: TimeTracking
+  watchers: [JiraUser!]!
+  comments(startAt: Int, maxResults: Int): CommentConnection!
+  attachments: [JiraAttachment!]!
+  links: [IssueLink!]!
+  transitions: [Transition!]!
+  changelog(startAt: Int, maxResults: Int): ChangelogConnection!
+  created: String!
+  updated: String!
+  dueDate: String
+}
+
+type StatusDetail { id: ID! name: String! statusCategory: StatusCategory! }
+type StatusCategory { id: ID! key: String! name: String! colorName: String! }
+type PriorityDetail { id: ID! name: String! iconUrl: String }
+type Resolution { id: ID! name: String! description: String }
+type TimeTracking { originalEstimate: String remainingEstimate: String timeSpent: String originalEstimateSeconds: Int remainingEstimateSeconds: Int timeSpentSeconds: Int }
+type Component implements Node { id: ID! name: String! description: String lead: JiraUser }
+type Version implements Node { id: ID! name: String! description: String released: Boolean! releaseDate: String archived: Boolean! }
+
+type Sprint implements Node {
+  id: ID!
+  name: String!
+  state: SprintState!
+  startDate: String
+  endDate: String
+  completeDate: String
+  goal: String
+  board: Board!
+  issues(startAt: Int, maxResults: Int): IssueConnection!
+}
+
+type Board implements Node {
+  id: ID!
+  name: String!
+  type: BoardType!
+  project: Project
+  sprints(state: [SprintState!], startAt: Int, maxResults: Int): SprintConnection!
+  backlog(startAt: Int, maxResults: Int): IssueConnection!
+  columns: [BoardColumn!]!
+}
+
+type BoardColumn { name: String! statuses: [StatusDetail!]! min: Int max: Int }
+
+type Comment implements Node { id: ID! body: String! author: JiraUser! updateAuthor: JiraUser created: String! updated: String! }
+type JiraAttachment implements Node { id: ID! filename: String! size: Int! mimeType: String! content: String author: JiraUser created: String! }
+type IssueLink { id: ID! type: LinkType! inwardIssue: Issue outwardIssue: Issue }
+type LinkType { id: ID! name: String! inward: String! outward: String! }
+type Transition { id: ID! name: String! to: StatusDetail! }
+type ChangelogEntry { id: ID! author: JiraUser! created: String! items: [ChangeItem!]! }
+type ChangeItem { field: String! fromString: String toString: String }
+
+type IssueConnection { issues: [Issue!]! startAt: Int! maxResults: Int! total: Int! }
+type CommentConnection { comments: [Comment!]! startAt: Int! maxResults: Int! total: Int! }
+type SprintConnection { sprints: [Sprint!]! startAt: Int! maxResults: Int! total: Int }
+type ChangelogConnection { histories: [ChangelogEntry!]! startAt: Int! maxResults: Int! total: Int! }
+
+input CreateIssueInput { projectKey: String! summary: String! description: String issueType: IssueType! priority: Priority assigneeId: ID parentKey: String labels: [String!] componentIds: [ID!] fixVersionIds: [ID!] storyPoints: Float dueDate: String }
+input UpdateIssueInput { summary: String description: String priority: Priority assigneeId: ID labels: [String!] storyPoints: Float dueDate: String }
+input TransitionInput { issueKey: String! transitionId: ID! comment: String resolution: ResolutionStatus }
+input AddCommentInput { issueKey: String! body: String! }
+input CreateSprintInput { boardId: ID! name: String! startDate: String endDate: String goal: String }
+
+type IssuePayload { issue: Issue }
+type CommentPayload { comment: Comment }
+type SprintPayload { sprint: Sprint }
+type TransitionPayload { success: Boolean! }
+
+type Query {
+  project(keyOrId: String!): Project
+  projects(startAt: Int, maxResults: Int): [Project!]!
+  issue(keyOrId: String!): Issue
+  searchIssues(jql: String!, startAt: Int, maxResults: Int, fields: [String!]): IssueConnection!
+  board(id: ID!): Board
+  boards(projectKeyOrId: String, type: BoardType): [Board!]!
+  sprint(id: ID!): Sprint
+  myself: JiraUser!
+  user(accountId: String!): JiraUser
+}
+
+type Mutation {
+  createIssue(input: CreateIssueInput!): IssuePayload!
+  updateIssue(keyOrId: String!, input: UpdateIssueInput!): IssuePayload!
+  deleteIssue(keyOrId: String!): TransitionPayload!
+  transitionIssue(input: TransitionInput!): TransitionPayload!
+  assignIssue(keyOrId: String!, accountId: ID): IssuePayload!
+  addComment(input: AddCommentInput!): CommentPayload!
+  createSprint(input: CreateSprintInput!): SprintPayload!
+  startSprint(id: ID!): SprintPayload!
+  completeSprint(id: ID!): SprintPayload!
+  moveIssuesToSprint(sprintId: ID!, issueKeys: [String!]!): TransitionPayload!
+}

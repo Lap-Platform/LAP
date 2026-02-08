@@ -1,0 +1,230 @@
+syntax = "proto3";
+
+package prometheus.v1;
+
+// Prometheus Remote Write/Read service.
+service RemoteWriteService {
+  // Write time series data to remote storage.
+  rpc Write(WriteRequest) returns (WriteResponse);
+}
+
+service RemoteReadService {
+  // Read time series data from remote storage.
+  rpc Read(ReadRequest) returns (ReadResponse);
+
+  // StreamRead returns a stream of chunks for large reads.
+  rpc StreamRead(ReadRequest) returns (stream StreamReadResponse);
+}
+
+// Query service for PromQL evaluation.
+service QueryService {
+  // Evaluate an instant query.
+  rpc Query(QueryRequest) returns (QueryResponse);
+
+  // Evaluate a range query.
+  rpc QueryRange(QueryRangeRequest) returns (QueryResponse);
+
+  // Return label names matching a set of matchers.
+  rpc LabelNames(LabelNamesRequest) returns (LabelNamesResponse);
+
+  // Return label values for a given label name.
+  rpc LabelValues(LabelValuesRequest) returns (LabelValuesResponse);
+
+  // Return series matching a set of matchers.
+  rpc Series(SeriesRequest) returns (SeriesResponse);
+}
+
+// A label is a key-value pair.
+message Label {
+  string name = 1;
+  string value = 2;
+}
+
+// A single sample.
+message Sample {
+  double value = 1;
+  int64 timestamp = 2;
+}
+
+// A time series with labels and samples.
+message TimeSeries {
+  repeated Label labels = 1;
+  repeated Sample samples = 2;
+  repeated Exemplar exemplars = 3;
+  repeated Histogram histograms = 4;
+}
+
+// Exemplar associates a label set with a value and timestamp.
+message Exemplar {
+  repeated Label labels = 1;
+  double value = 2;
+  int64 timestamp = 3;
+}
+
+// Native histogram representation.
+message Histogram {
+  int64 count = 1;
+  double sum = 2;
+  int32 schema = 3;
+  double zero_threshold = 4;
+  int64 zero_count = 5;
+  repeated BucketSpan negative_spans = 6;
+  repeated int64 negative_deltas = 7;
+  repeated BucketSpan positive_spans = 8;
+  repeated int64 positive_deltas = 9;
+  int64 timestamp = 10;
+}
+
+message BucketSpan {
+  int32 offset = 1;
+  uint32 length = 2;
+}
+
+// Metadata about a metric.
+enum MetricType {
+  METRIC_TYPE_UNSPECIFIED = 0;
+  COUNTER = 1;
+  GAUGE = 2;
+  SUMMARY = 3;
+  HISTOGRAM = 4;
+  GAUGE_HISTOGRAM = 5;
+  INFO = 6;
+  STATESET = 7;
+}
+
+message MetricMetadata {
+  MetricType type = 1;
+  string metric_family_name = 2;
+  string help = 3;
+  string unit = 4;
+}
+
+// --- Write ---
+
+message WriteRequest {
+  repeated TimeSeries timeseries = 1;
+  repeated MetricMetadata metadata = 2;
+}
+
+message WriteResponse {}
+
+// --- Read ---
+
+message ReadRequest {
+  repeated Query queries = 1;
+  enum ResponseType {
+    SAMPLES = 0;
+    STREAMED_XOR_CHUNKS = 1;
+  }
+  repeated ResponseType accepted_response_types = 2;
+}
+
+message Query {
+  int64 start_timestamp_ms = 1;
+  int64 end_timestamp_ms = 2;
+  repeated LabelMatcher matchers = 3;
+}
+
+message LabelMatcher {
+  enum Type {
+    EQ = 0;
+    NEQ = 1;
+    RE = 2;
+    NRE = 3;
+  }
+  Type type = 1;
+  string name = 2;
+  string value = 3;
+}
+
+message QueryResult {
+  repeated TimeSeries timeseries = 1;
+}
+
+message ReadResponse {
+  repeated QueryResult results = 1;
+}
+
+message ChunkedSeries {
+  repeated Label labels = 1;
+  repeated Chunk chunks = 2;
+}
+
+message Chunk {
+  int64 min_time_ms = 1;
+  int64 max_time_ms = 2;
+  enum Encoding {
+    UNKNOWN = 0;
+    XOR = 1;
+    HISTOGRAM = 2;
+  }
+  Encoding type = 3;
+  bytes data = 4;
+}
+
+message StreamReadResponse {
+  repeated ChunkedSeries chunked_series = 1;
+  uint64 query_index = 2;
+}
+
+// --- PromQL Query ---
+
+message QueryRequest {
+  string query = 1;
+  int64 time_seconds = 2;
+  int64 timeout_seconds = 3;
+}
+
+message QueryRangeRequest {
+  string query = 1;
+  int64 start_seconds = 2;
+  int64 end_seconds = 3;
+  int64 step_seconds = 4;
+  int64 timeout_seconds = 5;
+}
+
+message QueryResponse {
+  enum ResultType {
+    MATRIX = 0;
+    VECTOR = 1;
+    SCALAR = 2;
+    STRING = 3;
+  }
+  ResultType result_type = 1;
+  repeated TimeSeries timeseries = 2;
+}
+
+message LabelNamesRequest {
+  int64 start_timestamp_ms = 1;
+  int64 end_timestamp_ms = 2;
+  repeated LabelMatcher matchers = 3;
+}
+
+message LabelNamesResponse {
+  repeated string names = 1;
+}
+
+message LabelValuesRequest {
+  string label = 1;
+  int64 start_timestamp_ms = 2;
+  int64 end_timestamp_ms = 3;
+  repeated LabelMatcher matchers = 4;
+}
+
+message LabelValuesResponse {
+  repeated string values = 1;
+}
+
+message SeriesRequest {
+  int64 start_timestamp_ms = 1;
+  int64 end_timestamp_ms = 2;
+  repeated LabelMatcher matchers = 3;
+}
+
+message SeriesResponse {
+  repeated Labels series = 1;
+}
+
+message Labels {
+  repeated Label labels = 1;
+}

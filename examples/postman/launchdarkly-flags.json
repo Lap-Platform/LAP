@@ -1,0 +1,222 @@
+{
+  "info": {
+    "name": "LaunchDarkly Feature Flags API",
+    "_postman_id": "ld-001",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      {
+        "key": "key",
+        "value": "Authorization"
+      },
+      {
+        "key": "in",
+        "value": "header"
+      },
+      {
+        "key": "value",
+        "value": "{{apiKey}}"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://app.launchdarkly.com/api/v2"
+    }
+  ],
+  "item": [
+    {
+      "name": "List Flags",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/flags/:projectKey",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "flags",
+            ":projectKey"
+          ],
+          "query": [
+            {
+              "key": "limit",
+              "value": "20",
+              "description": ""
+            },
+            {
+              "key": "filter",
+              "value": "",
+              "description": ""
+            },
+            {
+              "key": "tag",
+              "value": "",
+              "description": ""
+            }
+          ],
+          "variable": [
+            {
+              "key": "projectKey",
+              "value": "default"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"items\": [{\"key\": \"new-checkout\", \"name\": \"New Checkout Flow\", \"kind\": \"boolean\", \"on\": true}], \"totalCount\": 50}"
+        }
+      ]
+    },
+    {
+      "name": "Get Flag",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/flags/:projectKey/:flagKey",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "flags",
+            ":projectKey",
+            ":flagKey"
+          ],
+          "variable": [
+            {
+              "key": "projectKey",
+              "value": "default"
+            },
+            {
+              "key": "flagKey",
+              "value": "new-checkout"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"key\": \"new-checkout\", \"name\": \"New Checkout Flow\", \"kind\": \"boolean\", \"variations\": [{\"value\": true}, {\"value\": false}]}"
+        }
+      ]
+    },
+    {
+      "name": "Create Flag",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/flags/:projectKey",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "flags",
+            ":projectKey"
+          ],
+          "variable": [
+            {
+              "key": "projectKey",
+              "value": "default"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"key\": \"dark-mode\", \"name\": \"Dark Mode\", \"kind\": \"boolean\", \"variations\": [{\"value\": true}, {\"value\": false}], \"tags\": [\"ui\"]}"
+        }
+      },
+      "response": [
+        {
+          "name": "Created",
+          "code": 201,
+          "body": "{\"key\": \"dark-mode\", \"name\": \"Dark Mode\"}"
+        }
+      ]
+    },
+    {
+      "name": "Toggle Flag",
+      "request": {
+        "method": "PATCH",
+        "url": {
+          "raw": "{{baseUrl}}/flags/:projectKey/:flagKey",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "flags",
+            ":projectKey",
+            ":flagKey"
+          ],
+          "variable": [
+            {
+              "key": "projectKey",
+              "value": "default"
+            },
+            {
+              "key": "flagKey",
+              "value": "dark-mode"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "[{\"op\": \"replace\", \"path\": \"/environments/production/on\", \"value\": true}]"
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"key\": \"dark-mode\", \"on\": true}"
+        }
+      ]
+    },
+    {
+      "name": "Evaluate Flag",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/flags/:projectKey/:flagKey/eval",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "flags",
+            ":projectKey",
+            ":flagKey",
+            "eval"
+          ],
+          "variable": [
+            {
+              "key": "projectKey",
+              "value": "default"
+            },
+            {
+              "key": "flagKey",
+              "value": "new-checkout"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"context\": {\"kind\": \"user\", \"key\": \"user-123\", \"email\": \"user@example.com\"}}"
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"value\": true, \"variationIndex\": 0, \"reason\": {\"kind\": \"RULE_MATCH\"}}"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,159 @@
+openapi: "3.0.0"
+info:
+  title: Slack Web API
+  version: "1.0"
+servers:
+  - url: https://slack.com/api
+security:
+  - bearerAuth: []
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+paths:
+  /chat.postMessage:
+    post:
+      summary: Send a message to a channel
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [channel, text]
+              properties:
+                channel:
+                  type: string
+                  description: Channel ID or name
+                text:
+                  type: string
+                  description: Message text (supports mrkdwn)
+                blocks:
+                  type: array
+                  items:
+                    type: object
+                  description: Block Kit layout blocks
+                thread_ts:
+                  type: string
+                  description: Thread timestamp to reply in
+                unfurl_links:
+                  type: boolean
+                  default: true
+      responses:
+        "200":
+          description: Message response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  channel:
+                    type: string
+                  ts:
+                    type: string
+                  message:
+                    type: object
+  /conversations.list:
+    get:
+      summary: List channels in a workspace
+      parameters:
+        - name: types
+          in: query
+          schema:
+            type: string
+            default: public_channel
+          description: "Comma-separated list: public_channel, private_channel, mpim, im"
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+        - name: cursor
+          in: query
+          schema:
+            type: string
+          description: Pagination cursor
+      responses:
+        "200":
+          description: Channel list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  channels:
+                    type: array
+                    items:
+                      type: object
+                  response_metadata:
+                    type: object
+  /users.list:
+    get:
+      summary: List all users in a workspace
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 200
+        - name: cursor
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  members:
+                    type: array
+                    items:
+                      type: object
+                  response_metadata:
+                    type: object
+  /files.upload:
+    post:
+      summary: Upload a file to a channel
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [channels, content]
+              properties:
+                channels:
+                  type: string
+                  description: Comma-separated channel IDs
+                content:
+                  type: string
+                  description: File content (for text files)
+                filename:
+                  type: string
+                filetype:
+                  type: string
+                  description: "File type identifier (e.g. python, csv)"
+                title:
+                  type: string
+                initial_comment:
+                  type: string
+      responses:
+        "200":
+          description: Upload response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  file:
+                    type: object

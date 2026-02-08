@@ -1,0 +1,15 @@
+{
+  "name": "@lap/sdk",
+  "version": "0.1.0",
+  "description": "TypeScript SDK for LAP (LLM API Protocol) - Parse and work with DocLean API specifications",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "tsc && node dist/tests/parser.test.js"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  },
+  "license": "MIT"
+}

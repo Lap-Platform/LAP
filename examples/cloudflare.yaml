@@ -1,0 +1,147 @@
+openapi: "3.0.0"
+info:
+  title: Cloudflare API
+  version: "4"
+servers:
+  - url: https://api.cloudflare.com/client/v4
+security:
+  - bearerAuth: []
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+paths:
+  /zones:
+    get:
+      summary: List zones
+      parameters:
+        - name: name
+          in: query
+          schema:
+            type: string
+          description: Domain name filter
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, pending, initializing, moved, deleted, deactivated]
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Zone list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  result:
+                    type: array
+                    items:
+                      type: object
+                  result_info:
+                    type: object
+  /zones/{zone_id}/dns_records:
+    post:
+      summary: Create DNS record
+      parameters:
+        - name: zone_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type, name, content]
+              properties:
+                type:
+                  type: string
+                  description: "DNS record type (A, AAAA, CNAME, TXT, MX, etc.)"
+                  enum: [A, AAAA, CNAME, TXT, MX, NS, SRV, CAA]
+                name:
+                  type: string
+                  description: DNS record name (e.g. example.com)
+                content:
+                  type: string
+                  description: Record content (e.g. IP address)
+                ttl:
+                  type: integer
+                  description: TTL in seconds (1 = automatic)
+                  default: 1
+                proxied:
+                  type: boolean
+                  description: Whether traffic is proxied through Cloudflare
+                priority:
+                  type: integer
+                  description: Priority for MX records
+      responses:
+        "200":
+          description: Created DNS record
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  result:
+                    type: object
+  /zones/{zone_id}/purge_cache:
+    post:
+      summary: Purge cache
+      parameters:
+        - name: zone_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                purge_everything:
+                  type: boolean
+                  description: Purge all cached content
+                files:
+                  type: array
+                  items:
+                    type: string
+                  description: Array of URLs to purge
+                tags:
+                  type: array
+                  items:
+                    type: string
+                  description: Cache-Tag values to purge
+                hosts:
+                  type: array
+                  items:
+                    type: string
+                  description: Hostnames to purge
+      responses:
+        "200":
+          description: Purge result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  result:
+                    type: object

@@ -1,0 +1,199 @@
+enum AlbumType { ALBUM SINGLE COMPILATION }
+enum ReleaseDatePrecision { YEAR MONTH DAY }
+enum RepeatState { OFF TRACK CONTEXT }
+enum PlayerAction { INTERRUPTING_PLAYBACK PAUSING RESUMING SEEKING SKIPPING_NEXT SKIPPING_PREV TOGGLING_REPEAT_CONTEXT TOGGLING_SHUFFLE TOGGLING_REPEAT_TRACK TRANSFERRING_PLAYBACK }
+
+union PlayableItem = Track | Episode
+
+type PageInfo { hasNextPage: Boolean! hasPreviousPage: Boolean! }
+
+type Image { url: String! height: Int width: Int }
+type ExternalUrls { spotify: String! }
+type Followers { total: Int! }
+type Copyright { text: String! type: String }
+
+type Artist {
+  id: ID!
+  name: String!
+  genres: [String!]!
+  popularity: Int!
+  followers: Followers!
+  images: [Image!]!
+  externalUrls: ExternalUrls!
+  albums(limit: Int, offset: Int, includeGroups: [AlbumType!]): AlbumPage!
+  topTracks(market: String!): [Track!]!
+  relatedArtists: [Artist!]!
+}
+
+type Album {
+  id: ID!
+  name: String!
+  albumType: AlbumType!
+  artists: [Artist!]!
+  images: [Image!]!
+  releaseDate: String!
+  releaseDatePrecision: ReleaseDatePrecision!
+  totalTracks: Int!
+  tracks(limit: Int, offset: Int): TrackPage!
+  copyrights: [Copyright!]!
+  genres: [String!]!
+  popularity: Int!
+  externalUrls: ExternalUrls!
+}
+
+type Track {
+  id: ID!
+  name: String!
+  artists: [Artist!]!
+  album: Album!
+  trackNumber: Int!
+  discNumber: Int!
+  durationMs: Int!
+  explicit: Boolean!
+  popularity: Int!
+  previewUrl: String
+  isPlayable: Boolean
+  externalUrls: ExternalUrls!
+  audioFeatures: AudioFeatures
+}
+
+type AudioFeatures {
+  acousticness: Float!
+  danceability: Float!
+  energy: Float!
+  instrumentalness: Float!
+  key: Int!
+  liveness: Float!
+  loudness: Float!
+  mode: Int!
+  speechiness: Float!
+  tempo: Float!
+  timeSignature: Int!
+  valence: Float!
+}
+
+type Playlist {
+  id: ID!
+  name: String!
+  description: String
+  owner: User!
+  public: Boolean
+  collaborative: Boolean!
+  followers: Followers!
+  images: [Image!]!
+  tracks(limit: Int, offset: Int): PlaylistTrackPage!
+  snapshotId: String!
+  externalUrls: ExternalUrls!
+}
+
+type PlaylistTrack {
+  addedAt: String
+  addedBy: User
+  track: Track!
+  isLocal: Boolean!
+}
+
+type Show {
+  id: ID!
+  name: String!
+  description: String!
+  publisher: String!
+  images: [Image!]!
+  languages: [String!]!
+  explicit: Boolean!
+  episodes(limit: Int, offset: Int): EpisodePage!
+  externalUrls: ExternalUrls!
+}
+
+type Episode {
+  id: ID!
+  name: String!
+  description: String!
+  show: Show!
+  durationMs: Int!
+  releaseDate: String!
+  explicit: Boolean!
+  images: [Image!]!
+  languages: [String!]!
+  externalUrls: ExternalUrls!
+}
+
+type User {
+  id: ID!
+  displayName: String
+  email: String
+  country: String
+  product: String
+  followers: Followers!
+  images: [Image!]!
+  externalUrls: ExternalUrls!
+}
+
+type PlayerState {
+  device: Device!
+  repeatState: RepeatState!
+  shuffleState: Boolean!
+  isPlaying: Boolean!
+  item: PlayableItem
+  progressMs: Int
+  timestamp: Int!
+  context: PlayerContext
+}
+
+type Device { id: ID name: String type: String isActive: Boolean! isRestricted: Boolean! volumePercent: Int }
+type PlayerContext { type: String! uri: String! externalUrls: ExternalUrls }
+
+type SavedTrack { addedAt: String! track: Track! }
+type SavedAlbum { addedAt: String! album: Album! }
+
+# Paged results (offset-based like Spotify API)
+type TrackPage { items: [Track!]! total: Int! limit: Int! offset: Int! next: String previous: String }
+type AlbumPage { items: [Album!]! total: Int! limit: Int! offset: Int! }
+type PlaylistPage { items: [Playlist!]! total: Int! limit: Int! offset: Int! }
+type PlaylistTrackPage { items: [PlaylistTrack!]! total: Int! limit: Int! offset: Int! }
+type EpisodePage { items: [Episode!]! total: Int! limit: Int! offset: Int! }
+type ArtistPage { items: [Artist!]! total: Int! limit: Int! offset: Int! }
+type SavedTrackPage { items: [SavedTrack!]! total: Int! limit: Int! offset: Int! }
+
+type SearchResult { tracks: TrackPage albums: AlbumPage artists: ArtistPage playlists: PlaylistPage }
+
+input CreatePlaylistInput { name: String! description: String public: Boolean collaborative: Boolean }
+input AddTracksInput { playlistId: ID! uris: [String!]! position: Int }
+input PlayInput { contextUri: String uris: [String!] offsetUri: String positionMs: Int deviceId: ID }
+
+type PlaylistPayload { playlist: Playlist }
+type SnapshotPayload { snapshotId: String! }
+type PlayerPayload { success: Boolean! }
+
+type Query {
+  me: User!
+  artist(id: ID!): Artist
+  album(id: ID!): Album
+  track(id: ID!): Track
+  playlist(id: ID!): Playlist
+  show(id: ID!): Show
+  episode(id: ID!): Episode
+  search(query: String!, types: [String!]!, limit: Int, offset: Int, market: String): SearchResult!
+  myPlaylists(limit: Int, offset: Int): PlaylistPage!
+  mySavedTracks(limit: Int, offset: Int): SavedTrackPage!
+  myTopTracks(timeRange: String, limit: Int, offset: Int): TrackPage!
+  myTopArtists(timeRange: String, limit: Int, offset: Int): ArtistPage!
+  player: PlayerState
+  recommendations(seedArtists: [ID!], seedTracks: [ID!], seedGenres: [String!], limit: Int): TrackPage!
+}
+
+type Mutation {
+  createPlaylist(userId: ID!, input: CreatePlaylistInput!): PlaylistPayload!
+  addTracksToPlaylist(input: AddTracksInput!): SnapshotPayload!
+  removeTracksFromPlaylist(playlistId: ID!, uris: [String!]!): SnapshotPayload!
+  saveTracks(ids: [ID!]!): PlayerPayload!
+  removeSavedTracks(ids: [ID!]!): PlayerPayload!
+  play(input: PlayInput): PlayerPayload!
+  pause(deviceId: ID): PlayerPayload!
+  skipToNext(deviceId: ID): PlayerPayload!
+  skipToPrevious(deviceId: ID): PlayerPayload!
+  seek(positionMs: Int!, deviceId: ID): PlayerPayload!
+  setRepeat(state: RepeatState!, deviceId: ID): PlayerPayload!
+  setShuffle(state: Boolean!, deviceId: ID): PlayerPayload!
+  setVolume(volumePercent: Int!, deviceId: ID): PlayerPayload!
+}

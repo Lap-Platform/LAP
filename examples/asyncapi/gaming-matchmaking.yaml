@@ -1,0 +1,103 @@
+asyncapi: 2.6.0
+info:
+  title: Gaming Matchmaking Events
+  version: 1.0.0
+  description: Multiplayer game matchmaking system
+
+servers:
+  production:
+    url: wss://matchmaking.game.example.com
+    protocol: ws
+
+channels:
+  matchmaking/queue:
+    publish:
+      summary: Player entered matchmaking queue
+      message:
+        name: QueueEntry
+        payload:
+          type: object
+          required: [playerId, gameMode, region]
+          properties:
+            playerId: {type: string}
+            gameMode: {type: string, enum: [ranked, casual, tournament]}
+            region: {type: string, enum: [na, eu, asia, oceania]}
+            skillRating: {type: integer}
+            partySize: {type: integer}
+            queuedAt: {type: string, format: date-time}
+
+  matchmaking/match_found:
+    subscribe:
+      summary: Match found
+      message:
+        name: MatchFound
+        payload:
+          type: object
+          required: [matchId, players, server]
+          properties:
+            matchId: {type: string}
+            players:
+              type: array
+              items:
+                type: object
+                properties:
+                  playerId: {type: string}
+                  team: {type: integer}
+                  skillRating: {type: integer}
+            server:
+              type: object
+              properties:
+                ip: {type: string}
+                port: {type: integer}
+                region: {type: string}
+            map: {type: string}
+            gameMode: {type: string}
+
+  matches/{matchId}/events:
+    parameters:
+      matchId:
+        schema: {type: string}
+    subscribe:
+      summary: In-game events
+      message:
+        name: GameEvent
+        payload:
+          type: object
+          required: [type, timestamp]
+          properties:
+            type: {type: string, enum: [kill, death, objective, round_end, match_end]}
+            playerId: {type: string}
+            targetId: {type: string}
+            weapon: {type: string}
+            score:
+              type: object
+              properties:
+                team1: {type: integer}
+                team2: {type: integer}
+            timestamp: {type: string, format: date-time}
+
+  matches/{matchId}/results:
+    parameters:
+      matchId:
+        schema: {type: string}
+    subscribe:
+      summary: Match results
+      message:
+        name: MatchResults
+        payload:
+          type: object
+          required: [matchId, winner, duration]
+          properties:
+            matchId: {type: string}
+            winner: {type: integer}
+            duration: {type: integer}
+            playerStats:
+              type: array
+              items:
+                type: object
+                properties:
+                  playerId: {type: string}
+                  kills: {type: integer}
+                  deaths: {type: integer}
+                  score: {type: integer}
+                  ratingChange: {type: integer}

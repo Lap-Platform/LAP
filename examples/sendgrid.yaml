@@ -1,0 +1,106 @@
+openapi: "3.0.0"
+info:
+  title: SendGrid API
+  version: "3"
+servers:
+  - url: https://api.sendgrid.com/v3
+security:
+  - bearerAuth: []
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+paths:
+  /mail/send:
+    post:
+      summary: Send an email
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [personalizations, from, subject, content]
+              properties:
+                personalizations:
+                  type: array
+                  items:
+                    type: object
+                  description: Array of recipients with optional substitutions
+                from:
+                  type: object
+                  description: "Sender {email, name}"
+                subject:
+                  type: string
+                content:
+                  type: array
+                  items:
+                    type: object
+                  description: "Array of {type, value} content blocks"
+                reply_to:
+                  type: object
+                attachments:
+                  type: array
+                  items:
+                    type: object
+      responses:
+        "202":
+          description: Email accepted for delivery
+        "400":
+          description: Validation error
+  /marketing/contacts:
+    get:
+      summary: List all contacts
+      parameters:
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: page_token
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Contact list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: array
+                    items:
+                      type: object
+                  contact_count:
+                    type: integer
+    put:
+      summary: Add or update contacts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [contacts]
+              properties:
+                contacts:
+                  type: array
+                  items:
+                    type: object
+                  description: "Array of contact objects with email, first_name, last_name, etc."
+                list_ids:
+                  type: array
+                  items:
+                    type: string
+                  description: List IDs to add contacts to
+      responses:
+        "202":
+          description: Contacts accepted for processing
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job_id:
+                    type: string

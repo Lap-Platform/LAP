@@ -1,0 +1,90 @@
+asyncapi: 2.6.0
+info:
+  title: Video Streaming Events
+  version: 1.0.0
+  description: Live video streaming platform events
+
+servers:
+  production:
+    url: wss://stream-events.video.example.com
+    protocol: ws
+
+channels:
+  streams/{streamId}/viewers:
+    parameters:
+      streamId:
+        schema: {type: string}
+    subscribe:
+      summary: Viewer count update
+      message:
+        name: ViewerCount
+        payload:
+          type: object
+          required: [streamId, count]
+          properties:
+            streamId: {type: string}
+            count: {type: integer}
+            peakCount: {type: integer}
+            timestamp: {type: string, format: date-time}
+
+  streams/{streamId}/chat:
+    parameters:
+      streamId:
+        schema: {type: string}
+    publish:
+      summary: Chat message in stream
+      message:
+        name: ChatMessage
+        payload:
+          type: object
+          required: [userId, message]
+          properties:
+            userId: {type: string}
+            username: {type: string}
+            message: {type: string}
+            badges:
+              type: array
+              items: {type: string}
+            emotes:
+              type: array
+              items:
+                type: object
+                properties:
+                  id: {type: string}
+                  positions: {type: string}
+
+  streams/{streamId}/events:
+    parameters:
+      streamId:
+        schema: {type: string}
+    subscribe:
+      summary: Stream lifecycle events
+      message:
+        name: StreamEvent
+        payload:
+          type: object
+          required: [type, streamId]
+          properties:
+            type: {type: string, enum: [live, offline, title_change, category_change, raid, host]}
+            streamId: {type: string}
+            title: {type: string}
+            category: {type: string}
+
+  streams/{streamId}/donations:
+    parameters:
+      streamId:
+        schema: {type: string}
+    subscribe:
+      summary: Donation/subscription event
+      message:
+        name: DonationEvent
+        payload:
+          type: object
+          required: [type, userId, amount]
+          properties:
+            type: {type: string, enum: [donation, subscription, gift_sub]}
+            userId: {type: string}
+            username: {type: string}
+            amount: {type: number}
+            message: {type: string}
+            tier: {type: string}

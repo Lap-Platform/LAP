@@ -1,0 +1,12 @@
+@toollean v0.1
+@tool github
+@desc Interact with GitHub using the `gh` CLI. Use `gh issue`, `gh pr`, `gh run`, and `gh api` for issues, PRs, CI runs, and advanced queries.
+@source /app/skills/github/SKILL.md
+@example
+  > gh pr checks 55 --repo owner/repo
+@example
+  > gh run list --repo owner/repo --limit 10
+@example
+  > gh run view <run-id> --repo owner/repo
+@example
+  > gh run view <run-id> --repo owner/repo --log-failed

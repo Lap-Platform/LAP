@@ -1,0 +1,138 @@
+"""E-Commerce API"""
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum Currency {
+  USD
+  EUR
+  GBP
+}
+
+type Money {
+  amount: Float!
+  currency: Currency!
+}
+
+type Product {
+  id: ID!
+  name: String!
+  description: String
+  price: Money!
+  category: Category!
+  variants: [ProductVariant!]!
+  inStock: Boolean!
+  rating: Float
+  reviewCount: Int!
+}
+
+type ProductVariant {
+  id: ID!
+  sku: String!
+  name: String!
+  price: Money!
+  inventory: Int!
+}
+
+type Category {
+  id: ID!
+  name: String!
+  slug: String!
+  products(first: Int, after: String): [Product!]!
+}
+
+type CartItem {
+  product: Product!
+  variant: ProductVariant
+  quantity: Int!
+  lineTotal: Money!
+}
+
+type Cart {
+  id: ID!
+  items: [CartItem!]!
+  subtotal: Money!
+  tax: Money!
+  total: Money!
+}
+
+type Order {
+  id: ID!
+  status: OrderStatus!
+  items: [CartItem!]!
+  total: Money!
+  shippingAddress: Address!
+  createdAt: String!
+}
+
+type Address {
+  street: String!
+  city: String!
+  state: String
+  zip: String!
+  country: String!
+}
+
+input AddToCartInput {
+  productId: ID!
+  variantId: ID
+  quantity: Int!
+}
+
+input CheckoutInput {
+  cartId: ID!
+  shippingAddress: AddressInput!
+  paymentMethodId: String!
+}
+
+input AddressInput {
+  street: String!
+  city: String!
+  state: String
+  zip: String!
+  country: String!
+}
+
+type Query {
+  """List products with optional filtering"""
+  products(first: Int = 20, after: String, categoryId: ID, search: String): [Product!]!
+
+  """Get a product by ID"""
+  product(id: ID!): Product
+
+  """List categories"""
+  categories: [Category!]!
+
+  """Get the current user's cart"""
+  cart: Cart
+
+  """Get an order by ID"""
+  order(id: ID!): Order
+
+  """List orders for the current user"""
+  orders(first: Int = 10, after: String, status: OrderStatus): [Order!]!
+}
+
+type Mutation {
+  """Add an item to the cart"""
+  addToCart(input: AddToCartInput!): Cart!
+
+  """Remove an item from the cart"""
+  removeFromCart(productId: ID!): Cart!
+
+  """Process checkout"""
+  checkout(input: CheckoutInput!): Order!
+
+  """Cancel an order"""
+  cancelOrder(orderId: ID!): Order!
+}
+
+type Subscription {
+  """Watch order status changes"""
+  orderStatusChanged(orderId: ID!): Order!
+}

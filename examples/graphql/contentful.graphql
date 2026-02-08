@@ -1,0 +1,145 @@
+enum Locale { en_US de_DE fr_FR es_ES ja_JP }
+enum FieldType { SYMBOL TEXT INTEGER NUMBER DATE BOOLEAN OBJECT LOCATION RICH_TEXT LINK ARRAY }
+enum LinkType { ENTRY ASSET }
+enum PublishStatus { DRAFT CHANGED PUBLISHED ARCHIVED }
+
+type Space {
+  id: ID!
+  name: String!
+  defaultLocale: String!
+  locales: [LocaleInfo!]!
+  environments: [Environment!]!
+  contentTypes(skip: Int, limit: Int): ContentTypeCollection!
+  entries(skip: Int, limit: Int, contentType: String, query: String): EntryCollection!
+  assets(skip: Int, limit: Int, query: String): AssetCollection!
+}
+
+type LocaleInfo { code: String! name: String! default: Boolean! fallbackCode: String }
+
+type Environment { id: ID! name: String! status: String! createdAt: String! }
+
+type ContentType {
+  id: ID!
+  name: String!
+  description: String
+  displayField: String
+  fields: [FieldDefinition!]!
+  sys: Sys!
+}
+
+type FieldDefinition {
+  id: String!
+  name: String!
+  type: FieldType!
+  required: Boolean!
+  localized: Boolean!
+  disabled: Boolean!
+  omitted: Boolean!
+  linkType: LinkType
+  items: FieldItems
+  validations: [Validation!]
+}
+
+type FieldItems { type: FieldType! linkType: LinkType validations: [Validation!] }
+type Validation { linkContentType: [String!] in: [String!] size: SizeValidation regexp: RegexpValidation unique: Boolean message: String }
+type SizeValidation { min: Int max: Int }
+type RegexpValidation { pattern: String! flags: String }
+
+type Sys {
+  id: ID!
+  type: String!
+  version: Int
+  createdAt: String!
+  updatedAt: String!
+  publishedAt: String
+  publishedVersion: Int
+  contentType: ContentTypeRef
+  space: SpaceRef
+  environment: EnvironmentRef
+}
+
+type ContentTypeRef { id: ID! }
+type SpaceRef { id: ID! }
+type EnvironmentRef { id: ID! }
+
+type Entry {
+  sys: Sys!
+  fields: JSON!
+  metadata: EntryMetadata
+}
+
+scalar JSON
+
+type EntryMetadata { tags: [TagRef!]! }
+type TagRef { sys: TagSys! }
+type TagSys { id: ID! type: String! }
+
+type Asset {
+  sys: Sys!
+  title(locale: String): String
+  description(locale: String): String
+  file(locale: String): AssetFile
+  metadata: EntryMetadata
+}
+
+type AssetFile { url: String! fileName: String! contentType: String! details: FileDetails }
+type FileDetails { size: Int! image: ImageDimensions }
+type ImageDimensions { width: Int! height: Int! }
+
+type Tag { name: String! sys: Sys! }
+
+type Webhook {
+  id: ID!
+  name: String!
+  url: String!
+  topics: [String!]!
+  active: Boolean!
+  headers: [WebhookHeader!]
+  filters: [WebhookFilter!]
+}
+
+type WebhookHeader { key: String! value: String! }
+type WebhookFilter { equals: JSON not: JSON }
+
+type ContentTypeCollection { items: [ContentType!]! total: Int! skip: Int! limit: Int! }
+type EntryCollection { items: [Entry!]! total: Int! skip: Int! limit: Int! includes: Includes }
+type AssetCollection { items: [Asset!]! total: Int! skip: Int! limit: Int! }
+type Includes { entries: [Entry!] assets: [Asset!] }
+
+input EntryInput { contentTypeId: String! fields: JSON! }
+input AssetInput { title: JSON description: JSON file: JSON }
+input ContentTypeInput { name: String! description: String displayField: String fields: [FieldDefinitionInput!]! }
+input FieldDefinitionInput { id: String! name: String! type: FieldType! required: Boolean localized: Boolean linkType: LinkType }
+
+type EntryPayload { entry: Entry }
+type AssetPayload { asset: Asset }
+type ContentTypePayload { contentType: ContentType }
+type PublishPayload { sys: Sys! }
+type DeletePayload { success: Boolean! }
+
+type Query {
+  space(id: ID!): Space
+  contentType(spaceId: ID!, contentTypeId: ID!): ContentType
+  contentTypes(spaceId: ID!, skip: Int, limit: Int): ContentTypeCollection!
+  entry(spaceId: ID!, entryId: ID!, locale: String): Entry
+  entries(spaceId: ID!, contentType: String, skip: Int, limit: Int, query: String, locale: String, order: String, select: [String!]): EntryCollection!
+  asset(spaceId: ID!, assetId: ID!, locale: String): Asset
+  assets(spaceId: ID!, skip: Int, limit: Int, query: String, mimeType: String): AssetCollection!
+  tags(spaceId: ID!): [Tag!]!
+  webhooks(spaceId: ID!): [Webhook!]!
+}
+
+type Mutation {
+  createEntry(spaceId: ID!, input: EntryInput!): EntryPayload!
+  updateEntry(spaceId: ID!, entryId: ID!, version: Int!, fields: JSON!): EntryPayload!
+  publishEntry(spaceId: ID!, entryId: ID!, version: Int!): PublishPayload!
+  unpublishEntry(spaceId: ID!, entryId: ID!): PublishPayload!
+  archiveEntry(spaceId: ID!, entryId: ID!): PublishPayload!
+  deleteEntry(spaceId: ID!, entryId: ID!): DeletePayload!
+  createAsset(spaceId: ID!, input: AssetInput!): AssetPayload!
+  processAsset(spaceId: ID!, assetId: ID!, locale: String!): AssetPayload!
+  publishAsset(spaceId: ID!, assetId: ID!, version: Int!): PublishPayload!
+  deleteAsset(spaceId: ID!, assetId: ID!): DeletePayload!
+  createContentType(spaceId: ID!, input: ContentTypeInput!): ContentTypePayload!
+  updateContentType(spaceId: ID!, contentTypeId: ID!, version: Int!, input: ContentTypeInput!): ContentTypePayload!
+}

@@ -1,0 +1,149 @@
+syntax = "proto3";
+
+package istio.mixer.v1;
+
+// Istio Mixer service for policy checks and telemetry reporting.
+service Mixer {
+  // Check performs a policy check before a request is dispatched.
+  rpc Check(CheckRequest) returns (CheckResponse);
+
+  // Report telemetry data after a request has been processed.
+  rpc Report(ReportRequest) returns (ReportResponse);
+}
+
+// Attribute management service.
+service AttributeService {
+  // Get attribute definitions.
+  rpc GetAttributes(GetAttributesRequest) returns (GetAttributesResponse);
+
+  // Update attribute configuration.
+  rpc UpdateAttributes(UpdateAttributesRequest) returns (UpdateAttributesResponse);
+}
+
+// Compressed attributes sent on the wire.
+message CompressedAttributes {
+  // Attribute dictionary for string lookup.
+  repeated string words = 1;
+
+  // Attribute values indexed by dictionary position.
+  map<sint32, string> strings = 2;
+  map<sint32, int64> int64s = 3;
+  map<sint32, double> doubles = 4;
+  map<sint32, bool> bools = 5;
+  map<sint32, int64> timestamps = 6;
+  map<sint32, int64> durations = 7;
+  map<sint32, bytes> bytes_values = 8;
+  map<sint32, StringMap> string_maps = 9;
+}
+
+message StringMap {
+  map<sint32, sint32> entries = 1;
+}
+
+// Referenced attributes are the attributes actually used during a check.
+message ReferencedAttributes {
+  enum Condition {
+    CONDITION_UNSPECIFIED = 0;
+    ABSENCE = 1;
+    EXACT = 2;
+    REGEX = 3;
+  }
+
+  message AttributeMatch {
+    string name = 1;
+    Condition condition = 2;
+    string regex = 3;
+    string map_key = 4;
+  }
+
+  repeated AttributeMatch attribute_matches = 1;
+}
+
+// --- Check ---
+
+message CheckRequest {
+  CompressedAttributes attributes = 1;
+  // Deduplicate ID for idempotent checks.
+  string deduplication_id = 2;
+  // Quotas to allocate.
+  repeated QuotaParams quotas = 3;
+}
+
+message QuotaParams {
+  string quota = 1;
+  int64 amount = 2;
+  bool best_effort = 3;
+}
+
+message CheckResponse {
+  // Result of the precondition check.
+  message PreconditionResult {
+    // Status code (0 = OK).
+    int32 status_code = 1;
+    string status_message = 2;
+    // Validity duration for caching.
+    int64 valid_duration_seconds = 3;
+    int32 valid_use_count = 4;
+    ReferencedAttributes referenced_attributes = 5;
+    string route_directive = 6;
+  }
+  PreconditionResult precondition = 1;
+
+  message QuotaResult {
+    int64 granted_amount = 1;
+    int64 valid_duration_seconds = 2;
+    ReferencedAttributes referenced_attributes = 3;
+  }
+  map<string, QuotaResult> quotas = 2;
+}
+
+// --- Report ---
+
+message ReportRequest {
+  // Attributes for each reported span.
+  repeated CompressedAttributes attributes = 1;
+  // Default words shared across all attribute sets.
+  repeated string default_words = 2;
+  uint32 repeated_attributes_semantics = 3;
+}
+
+message ReportResponse {}
+
+// --- Attribute Service ---
+
+message AttributeDefinition {
+  string name = 1;
+  string description = 2;
+  enum ValueType {
+    VALUE_TYPE_UNSPECIFIED = 0;
+    STRING = 1;
+    INT64 = 2;
+    DOUBLE = 3;
+    BOOL = 4;
+    TIMESTAMP = 5;
+    DURATION = 6;
+    STRING_MAP = 7;
+    IP_ADDRESS = 8;
+    EMAIL_ADDRESS = 9;
+    URI = 10;
+    DNS_NAME = 11;
+  }
+  ValueType value_type = 3;
+}
+
+message GetAttributesRequest {
+  string namespace = 1;
+}
+
+message GetAttributesResponse {
+  repeated AttributeDefinition attributes = 1;
+}
+
+message UpdateAttributesRequest {
+  string namespace = 1;
+  repeated AttributeDefinition attributes = 2;
+}
+
+message UpdateAttributesResponse {
+  bool success = 1;
+}

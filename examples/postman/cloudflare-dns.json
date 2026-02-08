@@ -1,0 +1,252 @@
+{
+  "info": {
+    "name": "Cloudflare DNS API",
+    "_postman_id": "cf-001",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://api.cloudflare.com/client/v4"
+    }
+  ],
+  "item": [
+    {
+      "name": "Zones",
+      "item": [
+        {
+          "name": "List Zones",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/zones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "zones"
+              ],
+              "query": [
+                {
+                  "key": "name",
+                  "value": "",
+                  "description": "Domain filter"
+                },
+                {
+                  "key": "status",
+                  "value": "active",
+                  "description": ""
+                },
+                {
+                  "key": "per_page",
+                  "value": "20",
+                  "description": ""
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "OK",
+              "code": 200,
+              "body": "{\"result\": [{\"id\": \"z1\", \"name\": \"example.com\", \"status\": \"active\"}], \"success\": true}"
+            }
+          ]
+        },
+        {
+          "name": "Get Zone",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/zones/:zoneId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "zones",
+                ":zoneId"
+              ],
+              "variable": [
+                {
+                  "key": "zoneId",
+                  "value": "z1"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "OK",
+              "code": 200,
+              "body": "{\"result\": {\"id\": \"z1\", \"name\": \"example.com\"}}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "DNS Records",
+      "item": [
+        {
+          "name": "List DNS Records",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/zones/:zoneId/dns_records",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "zones",
+                ":zoneId",
+                "dns_records"
+              ],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "A",
+                  "description": ""
+                },
+                {
+                  "key": "name",
+                  "value": "",
+                  "description": ""
+                }
+              ],
+              "variable": [
+                {
+                  "key": "zoneId",
+                  "value": "z1"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "OK",
+              "code": 200,
+              "body": "{\"result\": [{\"id\": \"r1\", \"type\": \"A\", \"name\": \"example.com\", \"content\": \"1.2.3.4\", \"ttl\": 300}]}"
+            }
+          ]
+        },
+        {
+          "name": "Create DNS Record",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/zones/:zoneId/dns_records",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "zones",
+                ":zoneId",
+                "dns_records"
+              ],
+              "variable": [
+                {
+                  "key": "zoneId",
+                  "value": "z1"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"type\": \"A\", \"name\": \"sub.example.com\", \"content\": \"1.2.3.4\", \"ttl\": 300, \"proxied\": true}"
+            }
+          },
+          "response": [
+            {
+              "name": "Created",
+              "code": 200,
+              "body": "{\"result\": {\"id\": \"r2\", \"type\": \"A\"}, \"success\": true}"
+            }
+          ]
+        },
+        {
+          "name": "Update DNS Record",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{baseUrl}}/zones/:zoneId/dns_records/:recordId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "zones",
+                ":zoneId",
+                "dns_records",
+                ":recordId"
+              ],
+              "variable": [
+                {
+                  "key": "zoneId",
+                  "value": "z1"
+                },
+                {
+                  "key": "recordId",
+                  "value": "r1"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"content\": \"5.6.7.8\", \"ttl\": 600}"
+            }
+          },
+          "response": [
+            {
+              "name": "OK",
+              "code": 200,
+              "body": "{\"result\": {\"id\": \"r1\", \"content\": \"5.6.7.8\"}, \"success\": true}"
+            }
+          ]
+        },
+        {
+          "name": "Delete DNS Record",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/zones/:zoneId/dns_records/:recordId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "zones",
+                ":zoneId",
+                "dns_records",
+                ":recordId"
+              ],
+              "variable": [
+                {
+                  "key": "zoneId",
+                  "value": "z1"
+                },
+                {
+                  "key": "recordId",
+                  "value": "r1"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Deleted",
+              "code": 200,
+              "body": "{\"result\": {\"id\": \"r1\"}, \"success\": true}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

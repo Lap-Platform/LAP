@@ -1,0 +1,279 @@
+openapi: "3.0.0"
+info:
+  title: OpenAI API
+  version: "2.0.0"
+servers:
+  - url: https://api.openai.com/v1
+security:
+  - bearerAuth: []
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+paths:
+  /chat/completions:
+    post:
+      summary: Create chat completion
+      description: Creates a model response for the given chat conversation.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - model
+                - messages
+              properties:
+                model:
+                  type: string
+                  description: ID of the model to use (e.g. gpt-4o, gpt-4o-mini)
+                messages:
+                  type: array
+                  items:
+                    type: object
+                  description: A list of messages comprising the conversation so far
+                temperature:
+                  type: number
+                  description: Sampling temperature between 0 and 2. Higher values make output more random.
+                  default: "1"
+                top_p:
+                  type: number
+                  description: Nucleus sampling parameter. We generally recommend altering this or temperature but not both.
+                  default: "1"
+                n:
+                  type: integer
+                  description: How many chat completion choices to generate for each input message
+                  default: "1"
+                stream:
+                  type: boolean
+                  description: If set, partial message deltas will be sent as server-sent events
+                  default: "false"
+                max_tokens:
+                  type: integer
+                  description: The maximum number of tokens that can be generated in the chat completion
+                stop:
+                  type: string
+                  description: Up to 4 sequences where the API will stop generating further tokens
+                presence_penalty:
+                  type: number
+                  description: Number between -2.0 and 2.0. Positive values penalize new tokens based on whether they appear in the text so far.
+                  default: "0"
+                frequency_penalty:
+                  type: number
+                  description: Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far.
+                  default: "0"
+                tools:
+                  type: array
+                  items:
+                    type: object
+                  description: A list of tools the model may call. Currently only functions are supported.
+                tool_choice:
+                  type: string
+                  description: Controls which (if any) tool is called by the model (auto, none, required, or object)
+                response_format:
+                  type: object
+                  description: An object specifying the format that the model must output (e.g. json_object, json_schema)
+                seed:
+                  type: integer
+                  description: If specified, system will make a best effort to sample deterministically
+                user:
+                  type: string
+                  description: A unique identifier representing your end-user for abuse monitoring
+      responses:
+        "200":
+          description: Chat completion response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  object:
+                    type: string
+                  created:
+                    type: integer
+                  model:
+                    type: string
+                  choices:
+                    type: array
+                    items:
+                      type: object
+                  usage:
+                    type: object
+                    properties:
+                      prompt_tokens:
+                        type: integer
+                      completion_tokens:
+                        type: integer
+                      total_tokens:
+                        type: integer
+        "401":
+          description: Invalid authentication
+        "429":
+          description: Rate limit reached
+        "500":
+          description: Server error
+  /embeddings:
+    post:
+      summary: Create embeddings
+      description: Creates an embedding vector representing the input text.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - model
+                - input
+              properties:
+                model:
+                  type: string
+                  description: ID of the model to use (e.g. text-embedding-3-small, text-embedding-3-large)
+                input:
+                  type: string
+                  description: Input text to embed. Can be a string or array of strings.
+                encoding_format:
+                  type: string
+                  enum: [float, base64]
+                  description: The format to return the embeddings in
+                  default: float
+                dimensions:
+                  type: integer
+                  description: The number of dimensions the resulting output embeddings should have (only for v3 models)
+                user:
+                  type: string
+                  description: A unique identifier representing your end-user
+      responses:
+        "200":
+          description: Embedding response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  object:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      type: object
+                  model:
+                    type: string
+                  usage:
+                    type: object
+                    properties:
+                      prompt_tokens:
+                        type: integer
+                      total_tokens:
+                        type: integer
+        "401":
+          description: Invalid authentication
+        "429":
+          description: Rate limit reached
+  /models:
+    get:
+      summary: List models
+      description: Lists the currently available models and provides basic information about each one.
+      responses:
+        "200":
+          description: List of models
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  object:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      type: object
+        "401":
+          description: Invalid authentication
+  /models/{model}:
+    get:
+      summary: Retrieve model
+      description: Retrieves a model instance, providing basic information about the model.
+      parameters:
+        - name: model
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The ID of the model to retrieve
+      responses:
+        "200":
+          description: Model details
+        "401":
+          description: Invalid authentication
+        "404":
+          description: Model not found
+  /images/generations:
+    post:
+      summary: Create image
+      description: Creates an image given a prompt.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - prompt
+              properties:
+                prompt:
+                  type: string
+                  description: A text description of the desired image(s). Maximum 4000 characters.
+                model:
+                  type: string
+                  description: The model to use for image generation (dall-e-2 or dall-e-3)
+                  default: dall-e-2
+                n:
+                  type: integer
+                  description: The number of images to generate (1-10 for dall-e-2, only 1 for dall-e-3)
+                  default: "1"
+                size:
+                  type: string
+                  enum: ["256x256", "512x512", "1024x1024", "1792x1024", "1024x1792"]
+                  description: The size of the generated images
+                  default: 1024x1024
+                quality:
+                  type: string
+                  enum: [standard, hd]
+                  description: The quality of the image (only for dall-e-3)
+                  default: standard
+                response_format:
+                  type: string
+                  enum: [url, b64_json]
+                  description: The format in which generated images are returned
+                  default: url
+                style:
+                  type: string
+                  enum: [vivid, natural]
+                  description: The style of the generated images (only for dall-e-3)
+                  default: vivid
+                user:
+                  type: string
+                  description: A unique identifier representing your end-user
+      responses:
+        "200":
+          description: Image generation response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  created:
+                    type: integer
+                  data:
+                    type: array
+                    items:
+                      type: object
+        "400":
+          description: Invalid request
+        "401":
+          description: Invalid authentication

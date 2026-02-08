@@ -1,0 +1,167 @@
+"""Content Management System API"""
+
+enum ContentStatus {
+  DRAFT
+  REVIEW
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ContentType {
+  ARTICLE
+  PAGE
+  BLOG_POST
+  LANDING_PAGE
+}
+
+interface Content {
+  id: ID!
+  title: String!
+  slug: String!
+  status: ContentStatus!
+  author: Author!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type Article implements Content {
+  id: ID!
+  title: String!
+  slug: String!
+  status: ContentStatus!
+  author: Author!
+  createdAt: String!
+  updatedAt: String!
+  body: String!
+  excerpt: String
+  tags: [Tag!]!
+  category: ContentCategory
+  featuredImage: Asset
+  seo: SEOMetadata
+}
+
+type Page implements Content {
+  id: ID!
+  title: String!
+  slug: String!
+  status: ContentStatus!
+  author: Author!
+  createdAt: String!
+  updatedAt: String!
+  body: String!
+  template: String
+  parentPage: Page
+}
+
+type Author {
+  id: ID!
+  name: String!
+  email: String!
+  avatar: String
+  articles: [Article!]!
+}
+
+type Tag {
+  id: ID!
+  name: String!
+  slug: String!
+}
+
+type ContentCategory {
+  id: ID!
+  name: String!
+  slug: String!
+  parent: ContentCategory
+}
+
+type Asset {
+  id: ID!
+  url: String!
+  mimeType: String!
+  width: Int
+  height: Int
+  size: Int!
+}
+
+type SEOMetadata {
+  title: String
+  description: String
+  keywords: [String!]
+  ogImage: String
+}
+
+input CreateArticleInput {
+  title: String!
+  body: String!
+  excerpt: String
+  tagIds: [ID!]
+  categoryId: ID
+  status: ContentStatus = DRAFT
+}
+
+input UpdateArticleInput {
+  id: ID!
+  title: String
+  body: String
+  excerpt: String
+  status: ContentStatus
+}
+
+input AssetUploadInput {
+  url: String!
+  mimeType: String!
+}
+
+type Query {
+  """Get an article by slug"""
+  article(slug: String!): Article
+
+  """List articles with filtering"""
+  articles(first: Int = 20, after: String, status: ContentStatus, categoryId: ID, tagId: ID): [Article!]!
+
+  """Get a page by slug"""
+  page(slug: String!): Page
+
+  """List all pages"""
+  pages(status: ContentStatus): [Page!]!
+
+  """Search content"""
+  search(query: String!, type: ContentType, first: Int = 10): [Content!]!
+
+  """Get an author"""
+  author(id: ID!): Author
+
+  """List tags"""
+  tags: [Tag!]!
+
+  """List categories"""
+  categories: [ContentCategory!]!
+}
+
+type Mutation {
+  """Create an article"""
+  createArticle(input: CreateArticleInput!): Article!
+
+  """Update an article"""
+  updateArticle(input: UpdateArticleInput!): Article!
+
+  """Delete an article"""
+  deleteArticle(id: ID!): Boolean!
+
+  """Publish an article"""
+  publishArticle(id: ID!): Article!
+
+  """Upload an asset"""
+  uploadAsset(input: AssetUploadInput!): Asset!
+
+  """Create a tag"""
+  createTag(name: String!): Tag!
+}
+
+type Subscription {
+  """Watch for content updates"""
+  contentUpdated(type: ContentType): Content!
+
+  """Watch for new publications"""
+  articlePublished: Article!
+}

@@ -1,0 +1,112 @@
+asyncapi: 2.6.0
+info:
+  title: Stripe Webhooks
+  version: 1.0.0
+  description: Stripe payment event webhooks
+
+servers:
+  production:
+    url: https://api.stripe.com/webhooks
+    protocol: https
+
+channels:
+  payment_intent/succeeded:
+    subscribe:
+      summary: Payment succeeded
+      message:
+        name: PaymentIntentSucceeded
+        payload:
+          type: object
+          required: [id, type, data]
+          properties:
+            id: {type: string, description: Event ID}
+            type: {type: string, enum: [payment_intent.succeeded]}
+            data:
+              type: object
+              properties:
+                object:
+                  type: object
+                  properties:
+                    id: {type: string}
+                    amount: {type: integer}
+                    currency: {type: string}
+                    status: {type: string}
+                    customer: {type: string}
+            created: {type: integer}
+
+  payment_intent/failed:
+    subscribe:
+      summary: Payment failed
+      message:
+        name: PaymentIntentFailed
+        payload:
+          type: object
+          required: [id, type]
+          properties:
+            id: {type: string}
+            type: {type: string, enum: [payment_intent.payment_failed]}
+            data:
+              type: object
+              properties:
+                object:
+                  type: object
+                  properties:
+                    id: {type: string}
+                    amount: {type: integer}
+                    last_payment_error:
+                      type: object
+                      properties:
+                        message: {type: string}
+                        code: {type: string}
+
+  charge/refunded:
+    subscribe:
+      summary: Charge refunded
+      message:
+        name: ChargeRefunded
+        payload:
+          type: object
+          required: [id, type]
+          properties:
+            id: {type: string}
+            type: {type: string}
+            data:
+              type: object
+              properties:
+                object:
+                  type: object
+                  properties:
+                    id: {type: string}
+                    amount_refunded: {type: integer}
+                    refunds:
+                      type: object
+                      properties:
+                        data:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              id: {type: string}
+                              amount: {type: integer}
+
+  invoice/paid:
+    subscribe:
+      summary: Invoice paid
+      message:
+        name: InvoicePaid
+        payload:
+          type: object
+          required: [id, type]
+          properties:
+            id: {type: string}
+            type: {type: string}
+            data:
+              type: object
+              properties:
+                object:
+                  type: object
+                  properties:
+                    id: {type: string}
+                    customer: {type: string}
+                    amount_paid: {type: integer}
+                    status: {type: string}
