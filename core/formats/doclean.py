@@ -8,7 +8,7 @@ optimized for LLM agent consumption.
 from dataclasses import dataclass, field
 from typing import Optional
 
-DOCLEAN_VERSION = "v0.1"
+DOCLEAN_VERSION = "v0.2"
 
 
 @dataclass
@@ -155,6 +155,8 @@ class DocLeanSpec:
 
     def to_doclean(self, lean: bool = False) -> str:
         lines = [f"@doclean {DOCLEAN_VERSION}"]
+        # Self-describing preamble so WebFetch summarizers pass content through faithfully
+        lines.append("# Machine-readable API spec. Each @endpoint block is one API call.")
         lines.append(f"@api {self.api_name}")
         if self.base_url:
             lines.append(f"@base {self.base_url}")
@@ -162,6 +164,16 @@ class DocLeanSpec:
             lines.append(f"@version {self.version}")
         if self.auth_scheme:
             lines.append(f"@auth {self.auth_scheme}")
+
+        # Completeness header: endpoint count
+        lines.append(f"@endpoints {len(self.endpoints)}")
+
+        # Table of contents
+        if self.endpoints:
+            toc_entries = []
+            for ep in self.endpoints:
+                toc_entries.append(ep.summary if ep.summary else f"{ep.method.upper()} {ep.path}")
+            lines.append(f"@toc {', '.join(toc_entries)}")
 
         # Emit @type blocks for reused types (set by protobuf compiler)
         type_defs = getattr(self, '_type_defs', {})
@@ -175,6 +187,10 @@ class DocLeanSpec:
         for endpoint in self.endpoints:
             lines.append(endpoint.to_doclean(lean=lean))
             lines.append("")
+
+        # Explicit end marker
+        lines.append("@end")
+        lines.append("")
 
         return "\n".join(lines)
 
