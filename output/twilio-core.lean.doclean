@@ -1,0 +1,56 @@
+@doclean v0.2
+# Machine-readable API spec. Each @endpoint block is one API call.
+@api Twilio REST API
+@base https://api.twilio.com/2010-04-01
+@version 2010-04-01
+@auth Bearer basic
+@endpoints 8
+@toc Send an SMS or MMS message, List messages, Fetch a message, Delete a message, Make a phone call, List calls, Fetch a call, Update a call
+
+@endpoint POST /Accounts/{AccountSid}/Messages.json
+@required {AccountSid: str, To: str, Body: str}
+@optional {From: str, MessagingServiceSid: str, MediaUrl: [str], StatusCallback: str, MaxPrice: num, ValidityPeriod: int, SendAt: str(date-time), ContentSid: str}
+@returns(201) {sid: str, account_sid: str, to: str, from: str, body: str, status: str, direction: str, price: str?, date_created: str, date_sent: str?, error_code: int?, error_message: str?, num_segments: str, num_media: str}
+@errors {400, 401}
+
+@endpoint GET /Accounts/{AccountSid}/Messages.json
+@required {AccountSid: str}
+@optional {To: str, From: str, DateSent: str(date), PageSize: int=50}
+@returns(200) {messages: [map], page: int, page_size: int, num_pages: int}
+@errors {401}
+
+@endpoint GET /Accounts/{AccountSid}/Messages/{MessageSid}.json
+@required {AccountSid: str, MessageSid: str}
+@returns(200)
+@errors {404}
+
+@endpoint DELETE /Accounts/{AccountSid}/Messages/{MessageSid}.json
+@required {AccountSid: str, MessageSid: str}
+@returns(204)
+@errors {404}
+
+@endpoint POST /Accounts/{AccountSid}/Calls.json
+@required {AccountSid: str, To: str, From: str}
+@optional {Url: str, Twiml: str, ApplicationSid: str, Method: str(GET/POST)=POST, StatusCallback: str, StatusCallbackMethod: str(GET/POST)=POST, Timeout: int=60, Record: bool=false, MachineDetection: str(Enable/DetectMessageEnd), CallerId: str}
+@returns(201) {sid: str, account_sid: str, to: str, from: str, status: str, direction: str, price: str?, duration: str?, date_created: str, start_time: str?, end_time: str?}
+@errors {400, 401}
+
+@endpoint GET /Accounts/{AccountSid}/Calls.json
+@required {AccountSid: str}
+@optional {To: str, From: str, Status: str(queued/ringing/in-progress/canceled/completed/failed/busy/no-answer), StartTime: str(date), PageSize: int=50}
+@returns(200)
+@errors {401}
+
+@endpoint GET /Accounts/{AccountSid}/Calls/{CallSid}.json
+@required {AccountSid: str, CallSid: str}
+@returns(200)
+@errors {404}
+
+@endpoint POST /Accounts/{AccountSid}/Calls/{CallSid}.json
+@required {AccountSid: str, CallSid: str}
+@optional {Url: str, Method: str(GET/POST), Status: str(canceled/completed), Twiml: str, StatusCallback: str}
+@returns(200)
+@errors {404}
+
+@end
+

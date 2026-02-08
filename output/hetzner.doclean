@@ -1,0 +1,789 @@
+@doclean v0.2
+# Machine-readable API spec. Each @endpoint block is one API call.
+@api Hetzner Cloud API
+@base https://api.hetzner.cloud/v1
+@version 1.0.0
+@endpoints 144
+@toc Get all Actions, Get an Action, Get all Certificates, Create a Certificate, Delete a Certificate, Get a Certificate, Update a Certificate, Get all Actions for a Certificate, Retry Issuance or Renewal, Get an Action for a Certificate, Get all Datacenters, Get a Datacenter, Get all Firewalls, Create a Firewall, Delete a Firewall, Get a Firewall, Update a Firewall, Get all Actions for a Firewall, Apply to Resources, Remove from Resources, Set Rules, Get an Action for a Firewall, Get all Floating IPs, Create a Floating IP, Delete a Floating IP, Get a Floating IP, Update a Floating IP, Get all Actions for a Floating IP, Assign a Floating IP to a Server, Change reverse DNS entry for a Floating IP, Change Floating IP Protection, Unassign a Floating IP, Get an Action for a Floating IP, Get all Images, Delete an Image, Get an Image, Update an Image, Get all Actions for an Image, Change Image Protection, Get an Action for an Image, Get all ISOs, Get an ISO, Get all Load Balancer Types, Get a Load Balancer Type, Get all Load Balancers, Create a Load Balancer, Delete a Load Balancer, Get a Load Balancer, Update a Load Balancer, Get all Actions for a Load Balancer, Add Service, Add Target, Attach a Load Balancer to a Network, Change Algorithm, Change reverse DNS entry for this Load Balancer, Change Load Balancer Protection, Change the Type of a Load Balancer, Delete Service, Detach a Load Balancer from a Network, Disable the public interface of a Load Balancer, Enable the public interface of a Load Balancer, Remove Target, Update Service, Get an Action for a Load Balancer, Get Metrics for a LoadBalancer, Get all Locations, Get a Location, Get all Networks, Create a Network, Delete a Network, Get a Network, Update a Network, Get all Actions for a Network, Add a route to a Network, Add a subnet to a Network, Change IP range of a Network, Change Network Protection, Delete a route from a Network, Delete a subnet from a Network, Get an Action for a Network, Get all PlacementGroups, Create a PlacementGroup, Delete a PlacementGroup, Get a PlacementGroup, Update a PlacementGroup, Get all prices, Get all Primary IPs, Create a Primary IP, Delete a Primary IP, Get a Primary IP, Update a Primary IP, Assign a Primary IP to a resource, Change reverse DNS entry for a Primary IP, Change Primary IP Protection, Unassign a Primary IP from a resource, Get all Server Types, Get a Server Type, Get all Servers, Create a Server, Delete a Server, Get a Server, Update a Server, Get all Actions for a Server, Add a Server to a Placement Group, Attach an ISO to a Server, Attach a Server to a Network, Change alias IPs of a Network, Change reverse DNS entry for this Server, Change Server Protection, Change the Type of a Server, Create Image from a Server, Detach a Server from a Network, Detach an ISO from a Server, Disable Backups for a Server, Disable Rescue Mode for a Server, Enable and Configure Backups for a Server, Enable Rescue Mode for a Server, Power off a Server, Power on a Server, Soft-reboot a Server, Rebuild a Server from an Image, Remove from Placement Group, Request Console for a Server, Reset a Server, Reset root Password of a Server, Shutdown a Server, Get an Action for a Server, Get Metrics for a Server, Get all SSH keys, Create an SSH key, Delete an SSH key, Get a SSH key, Update an SSH key, Get all Volumes, Create a Volume, Delete a Volume, Get a Volume, Update a Volume, Get all Actions for a Volume, Attach Volume to a Server, Change Volume Protection, Detach Volume, Resize Volume, Get an Action for a Volume
+
+@endpoint GET /actions
+@desc Get all Actions
+@optional {id: int # Can be used multiple times, the response will contain only Actions with specified IDs, sort: str(id/id:asc/id:desc/command/command:asc/command:desc/status/status:asc/status:desc/progress/progress:asc/progress:desc/started/started:asc/started:desc/finished/finished:asc/finished:desc) # Can be used multiple times., status: str(running/success/error) # Can be used multiple times, the response will contain only Actions with specified statuses}
+@returns(200) {actions: [map], meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}} # The `actions` key contains a list of Actions
+
+@endpoint GET /actions/{id}
+@desc Get an Action
+@required {id: int # ID of the Resource}
+@returns(200) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key in the reply has this structure
+
+@endpoint GET /certificates
+@desc Get all Certificates
+@optional {sort: str(id/id:asc/id:desc/name/name:asc/name:desc/created/created:asc/created:desc) # Can be used multiple times., name: str # Can be used to filter resources by their name. The response will only contain the resources matching the specified name, label_selector: str # Can be used to filter resources by labels. The response will only contain resources matching the label selector., type: str(uploaded/managed) # Can be used multiple times. The response will only contain Certificates matching the type.}
+@returns(200) {certificates: [map], meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}} # The `certificates` key contains an array of Certificate objects
+
+@endpoint POST /certificates
+@desc Create a Certificate
+@required {name: str # Name of the Certificate}
+@optional {certificate: str # Certificate and chain in PEM format, in order so that each record directly certifies the one preceding. Required for type `uploaded` Certificates., domain_names: [str] # Domains and subdomains that should be contained in the Certificate issued by *Let's Encrypt*. Required for type `managed` Certificates., labels: map # User-defined labels (key-value pairs), private_key: str # Certificate key in PEM format. Required for type `uploaded` Certificates., type: str(uploaded/managed) # Choose between uploading a Certificate in PEM format or requesting a managed *Let's Encrypt* Certificate. If omitted defaults to `uploaded`.}
+@returns(201) {action: map?{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}, certificate: map{certificate: str?, created: str, domain_names: [str], fingerprint: str?, id: int, labels: map, name: str, not_valid_after: str?, not_valid_before: str?, status: map?{error: map?, issuance: str, renewal: str}, type: str, used_by: [map]}} # The `certificate` key contains the Certificate that was just created. For type `managed` Certificates the `action` key contains the Action that allows for tracking the issuance process. For type `uploaded` Certificates the `action` is always null.
+
+@endpoint DELETE /certificates/{id}
+@desc Delete a Certificate
+@required {id: int # ID of the resource}
+@returns(204) Certificate deleted
+
+@endpoint GET /certificates/{id}
+@desc Get a Certificate
+@required {id: int # ID of the resource}
+@returns(200) {certificate: map{certificate: str?, created: str, domain_names: [str], fingerprint: str?, id: int, labels: map, name: str, not_valid_after: str?, not_valid_before: str?, status: map?{error: map?, issuance: str, renewal: str}, type: str, used_by: [map]}} # The `certificate` key contains a Certificate object
+
+@endpoint PUT /certificates/{id}
+@desc Update a Certificate
+@required {id: int # ID of the resource}
+@optional {labels: map # User-defined labels (key-value pairs), name: str # New Certificate name}
+@returns(200) {certificate: map{certificate: str?, created: str, domain_names: [str], fingerprint: str?, id: int, labels: map, name: str, not_valid_after: str?, not_valid_before: str?, status: map?{error: map?, issuance: str, renewal: str}, type: str, used_by: [map]}} # The `certificate` key contains the Certificate that was just updated
+
+@endpoint GET /certificates/{id}/actions
+@desc Get all Actions for a Certificate
+@required {id: int # ID of the Resource}
+@optional {sort: str(id/id:asc/id:desc/command/command:asc/command:desc/status/status:asc/status:desc/progress/progress:asc/progress:desc/started/started:asc/started:desc/finished/finished:asc/finished:desc) # Can be used multiple times., status: str(running/success/error) # Can be used multiple times, the response will contain only Actions with specified statuses}
+@returns(200) {actions: [map], meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}} # The `actions` key contains a list of Actions
+
+@endpoint POST /certificates/{id}/actions/retry
+@desc Retry Issuance or Renewal
+@required {id: int # ID of the Certificate}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key contains the resulting Action
+
+@endpoint GET /certificates/{id}/actions/{action_id}
+@desc Get an Action for a Certificate
+@required {id: int # ID of the Certificate, action_id: int # ID of the Action}
+@returns(200) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key contains the Certificate Action
+
+@endpoint GET /datacenters
+@desc Get all Datacenters
+@optional {name: str # Can be used to filter Datacenters by their name. The response will only contain the Datacenter matching the specified name. When the name does not match the Datacenter name format, an `invalid_input` error is returned.}
+@returns(200) {datacenters: [map], recommendation: num} # The reply contains the `datacenters` and `recommendation` keys
+
+@endpoint GET /datacenters/{id}
+@desc Get a Datacenter
+@required {id: int # ID of Datacenter}
+@returns(200) {datacenter: map{description: str, id: int, location: map{city: str, country: str, description: str, id: num, latitude: num, longitude: num, name: str, network_zone: str}, name: str, server_types: map{available: [num], available_for_migration: [num], supported: [num]}}} # The `datacenter` key in the reply contains a Datacenter object with this structure
+
+@endpoint GET /firewalls
+@desc Get all Firewalls
+@optional {sort: str(id/id:asc/id:desc/name/name:asc/name:desc/created/created:asc/created:desc) # Can be used multiple times., name: str # Can be used to filter resources by their name. The response will only contain the resources matching the specified name, label_selector: str # Can be used to filter resources by labels. The response will only contain resources matching the label selector.}
+@returns(200) {firewalls: [map], meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}} # The `firewalls` key contains an array of Firewall objects
+
+@endpoint POST /firewalls
+@desc Create a Firewall
+@required {name: str # Name of the Firewall}
+@optional {apply_to: [map] # Resources the Firewall should be applied to after creation, labels: map # User-defined labels (key-value pairs), rules: [map] # Array of rules}
+@returns(201) {actions: [map], firewall: map{applied_to: [map], created: str, id: int, labels: map, name: str, rules: [map]}} # The `firewall` key contains the Firewall that was just created
+
+@endpoint DELETE /firewalls/{id}
+@desc Delete a Firewall
+@required {id: int # ID of the resource}
+@returns(204) Firewall deleted
+
+@endpoint GET /firewalls/{id}
+@desc Get a Firewall
+@required {id: int # ID of the resource}
+@returns(200) {firewall: map{applied_to: [map], created: str, id: int, labels: map, name: str, rules: [map]}} # The `firewall` key contains a Firewall object
+
+@endpoint PUT /firewalls/{id}
+@desc Update a Firewall
+@required {id: int # ID of the resource}
+@optional {labels: map # User-defined labels (key-value pairs), name: str # New Firewall name}
+@returns(200) {firewall: map{applied_to: [map], created: str, id: int, labels: map, name: str, rules: [map]}} # The `firewall` key contains the Firewall that was just updated
+
+@endpoint GET /firewalls/{id}/actions
+@desc Get all Actions for a Firewall
+@required {id: int # ID of the Resource}
+@optional {sort: str(id/id:asc/id:desc/command/command:asc/command:desc/status/status:asc/status:desc/progress/progress:asc/progress:desc/started/started:asc/started:desc/finished/finished:asc/finished:desc) # Can be used multiple times., status: str(running/success/error) # Can be used multiple times, the response will contain only Actions with specified statuses}
+@returns(200) {actions: [map], meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}} # The `actions` key contains a list of Actions
+
+@endpoint POST /firewalls/{id}/actions/apply_to_resources
+@desc Apply to Resources
+@required {id: int # ID of the Firewall, apply_to: [map] # Resources the Firewall should be applied to}
+@returns(201) {actions: [map], meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}} # The `actions` key contains multiple `apply_firewall` Actions
+
+@endpoint POST /firewalls/{id}/actions/remove_from_resources
+@desc Remove from Resources
+@required {id: int # ID of the Firewall, remove_from: [map] # Resources the Firewall should be removed from}
+@returns(201) {actions: [map], meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}} # The `actions` key contains multiple `remove_firewall` Actions
+
+@endpoint POST /firewalls/{id}/actions/set_rules
+@desc Set Rules
+@required {id: int # ID of the Firewall, rules: [map] # Array of rules}
+@returns(201) {actions: [map], meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}} # The `action` key contains one `set_firewall_rules` Action plus one `apply_firewall` Action per resource where the Firewall is active
+
+@endpoint GET /firewalls/{id}/actions/{action_id}
+@desc Get an Action for a Firewall
+@required {id: int # ID of the Firewall, action_id: int # ID of the Action}
+@returns(200) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key contains the Firewall Action
+
+@endpoint GET /floating_ips
+@desc Get all Floating IPs
+@optional {name: str # Can be used to filter Floating IPs by their name. The response will only contain the Floating IP matching the specified name., label_selector: str # Can be used to filter Floating IPs by labels. The response will only contain Floating IPs matching the label selector., sort: str(id/id:asc/id:desc/created/created:asc/created:desc) # Can be used multiple times. Choices id id:asc id:desc created created:asc created:desc}
+@returns(200) {floating_ips: [map], meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}} # The `floating_ips` key in the reply contains an array of Floating IP objects with this structure
+
+@endpoint POST /floating_ips
+@desc Create a Floating IP
+@required {type: str(ipv4/ipv6) # Floating IP type}
+@optional {description: str, home_location: str # Home Location (routing is optimized for that Location). Only optional if Server argument is passed., labels: map # User-defined labels (key-value pairs), name: str, server: int # Server to assign the Floating IP to}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}, floating_ip: map{blocked: bool, created: str, description: str?, dns_ptr: [map], home_location: map{city: str, country: str, description: str, id: num, latitude: num, longitude: num, name: str, network_zone: str}, id: int, ip: str, labels: map, name: str, protection: map{delete: bool}, server: int?, type: str}} # The `floating_ip` key in the reply contains the object that was just created
+
+@endpoint DELETE /floating_ips/{id}
+@desc Delete a Floating IP
+@required {id: int # ID of the Floating IP}
+@returns(204) Floating IP deleted
+
+@endpoint GET /floating_ips/{id}
+@desc Get a Floating IP
+@required {id: int # ID of the Floating IP}
+@returns(200) {floating_ip: map{blocked: bool, created: str, description: str?, dns_ptr: [map], home_location: map{city: str, country: str, description: str, id: num, latitude: num, longitude: num, name: str, network_zone: str}, id: int, ip: str, labels: map, name: str, protection: map{delete: bool}, server: int?, type: str}} # The `floating_ip` key in the reply contains a Floating IP object with this structure
+
+@endpoint PUT /floating_ips/{id}
+@desc Update a Floating IP
+@required {id: int # ID of the Floating IP}
+@optional {description: str # New Description to set, labels: map # User-defined labels (key-value pairs), name: str # New unique name to set}
+@returns(200) {floating_ip: map{blocked: bool, created: str, description: str?, dns_ptr: [map], home_location: map{city: str, country: str, description: str, id: num, latitude: num, longitude: num, name: str, network_zone: str}, id: int, ip: str, labels: map, name: str, protection: map{delete: bool}, server: int?, type: str}} # The `floating_ip` key in the reply contains the modified Floating IP object with the new description
+
+@endpoint GET /floating_ips/{id}/actions
+@desc Get all Actions for a Floating IP
+@required {id: int # ID of the Floating IP}
+@optional {sort: str(id/id:asc/id:desc/command/command:asc/command:desc/status/status:asc/status:desc/progress/progress:asc/progress:desc/started/started:asc/started:desc/finished/finished:asc/finished:desc) # Can be used multiple times., status: str(running/success/error) # Can be used multiple times, the response will contain only Actions with specified statuses}
+@returns(200) {actions: [map]} # The `actions` key contains a list of Actions
+
+@endpoint POST /floating_ips/{id}/actions/assign
+@desc Assign a Floating IP to a Server
+@required {id: int # ID of the Floating IP, server: int # ID of the Server the Floating IP shall be assigned to}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key contains the `assign` Action
+
+@endpoint POST /floating_ips/{id}/actions/change_dns_ptr
+@desc Change reverse DNS entry for a Floating IP
+@required {id: int # ID of the Floating IP, dns_ptr: str # Hostname to set as a reverse DNS PTR entry, will reset to original default value if `null`, ip: str # IP address for which to set the reverse DNS entry}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key contains the `change_dns_ptr` Action
+
+@endpoint POST /floating_ips/{id}/actions/change_protection
+@desc Change Floating IP Protection
+@required {id: int # ID of the Floating IP}
+@optional {delete: bool # If true, prevents the Floating IP from being deleted}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key contains the `change_protection` Action
+
+@endpoint POST /floating_ips/{id}/actions/unassign
+@desc Unassign a Floating IP
+@required {id: int # ID of the Floating IP}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key contains the `unassign` Action
+
+@endpoint GET /floating_ips/{id}/actions/{action_id}
+@desc Get an Action for a Floating IP
+@required {id: int # ID of the Floating IP, action_id: int # ID of the Action}
+@returns(200) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key in the reply has this structure
+
+@endpoint GET /images
+@desc Get all Images
+@optional {sort: str(id/id:asc/id:desc/name/name:asc/name:desc/created/created:asc/created:desc) # Can be used multiple times., type: str(system/snapshot/backup/app) # Can be used multiple times., status: str(available/creating) # Can be used multiple times. The response will only contain Images matching the status., bound_to: str # Can be used multiple times. Server ID linked to the Image. Only available for Images of type `backup`, include_deprecated: bool # Can be used multiple times., name: str # Can be used to filter resources by their name. The response will only contain the resources matching the specified name, label_selector: str # Can be used to filter resources by labels. The response will only contain resources matching the label selector.}
+@returns(200) {images: [map], meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}} # The `images` key in the reply contains an array of Image objects with this structure
+
+@endpoint DELETE /images/{id}
+@desc Delete an Image
+@required {id: int # ID of the Image}
+@returns(204) Image deleted
+
+@endpoint GET /images/{id}
+@desc Get an Image
+@required {id: int # ID of the Image}
+@returns(200) {image: map{bound_to: int?, created: str, created_from: map?{id: int, name: str}, deleted: str?, deprecated: str?, description: str, disk_size: num, id: int, image_size: num?, labels: map, name: str?, os_flavor: str, os_version: str?, protection: map{delete: bool}, rapid_deploy: bool, status: str, type: str}} # The `image` key in the reply contains an Image object with this structure
+
+@endpoint PUT /images/{id}
+@desc Update an Image
+@required {id: int # ID of the Image}
+@optional {description: str # New description of Image, labels: map # User-defined labels (key-value pairs), type: str # Destination Image type to convert to}
+@returns(200) {image: map{bound_to: int?, created: str, created_from: map?{id: int, name: str}, deleted: str?, deprecated: str?, description: str, disk_size: num, id: int, image_size: num?, labels: map, name: str?, os_flavor: str, os_version: str?, protection: map{delete: bool}, rapid_deploy: bool, status: str, type: str}} # The image key in the reply contains the modified Image object
+
+@endpoint GET /images/{id}/actions
+@desc Get all Actions for an Image
+@required {id: int # ID of the Image}
+@optional {sort: str(id/id:asc/id:desc/command/command:asc/command:desc/status/status:asc/status:desc/progress/progress:asc/progress:desc/started/started:asc/started:desc/finished/finished:asc/finished:desc) # Can be used multiple times., status: str(running/success/error) # Can be used multiple times, the response will contain only Actions with specified statuses}
+@returns(200) {actions: [map], meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}} # The `actions` key contains a list of Actions
+
+@endpoint POST /images/{id}/actions/change_protection
+@desc Change Image Protection
+@required {id: int # ID of the Image}
+@optional {delete: bool # If true, prevents the snapshot from being deleted}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key contains the `change_protection` Action
+
+@endpoint GET /images/{id}/actions/{action_id}
+@desc Get an Action for an Image
+@required {id: int # ID of the Image, action_id: int # ID of the Action}
+@returns(200) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key contains the Image Action
+
+@endpoint GET /isos
+@desc Get all ISOs
+@optional {name: str # Can be used to filter ISOs by their name. The response will only contain the ISO matching the specified name.}
+@returns(200) {isos: [map], meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}} # The `isos` key in the reply contains an array of iso objects with this structure
+
+@endpoint GET /isos/{id}
+@desc Get an ISO
+@required {id: int # ID of the ISO}
+@returns(200) {iso: map{deprecated: str?, description: str, id: int, name: str?, type: str}} # The `iso` key in the reply contains an array of ISO objects with this structure
+
+@endpoint GET /load_balancer_types
+@desc Get all Load Balancer Types
+@optional {name: str # Can be used to filter Load Balancer types by their name. The response will only contain the Load Balancer type matching the specified name.}
+@returns(200) {load_balancer_types: [map]} # The `load_balancer_types` key in the reply contains an array of Load Balancer type objects with this structure
+
+@endpoint GET /load_balancer_types/{id}
+@desc Get a Load Balancer Type
+@required {id: int # ID of Load Balancer type}
+@returns(200) {load_balancer_type: map{deprecated: str?, description: str, id: num, max_assigned_certificates: num, max_connections: num, max_services: num, max_targets: num, name: str, prices: [map]}} # The `load_balancer_type` key in the reply contains a Load Balancer type object with this structure
+
+@endpoint GET /load_balancers
+@desc Get all Load Balancers
+@optional {sort: str(id/id:asc/id:desc/name/name:asc/name:desc/created/created:asc/created:desc) # Can be used multiple times., name: str # Can be used to filter resources by their name. The response will only contain the resources matching the specified name, label_selector: str # Can be used to filter resources by labels. The response will only contain resources matching the label selector.}
+@returns(200) {load_balancers: [map], meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}} # The `load_balancers` key contains a list of Load Balancers
+
+@endpoint POST /load_balancers
+@desc Create a Load Balancer
+@required {algorithm: map # Algorithm of the Load Balancer, load_balancer_type: str # ID or name of the Load Balancer type this Load Balancer should be created with, name: str # Name of the Load Balancer}
+@optional {labels: map # User-defined labels (key-value pairs), location: str # ID or name of Location to create Load Balancer in, network: int # ID of the network the Load Balancer should be attached to on creation, network_zone: str # Name of network zone, public_interface: bool # Enable or disable the public interface of the Load Balancer, services: [map] # Array of services, targets: [map] # Array of targets}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}, load_balancer: map{algorithm: map{type: str}, created: str, id: int, included_traffic: int, ingoing_traffic: int?, labels: map, load_balancer_type: map{deprecated: str?, description: str, id: num, max_assigned_certificates: num, max_connections: num, max_services: num, max_targets: num, name: str, prices: [map]}, location: map{city: str, country: str, description: str, id: num, latitude: num, longitude: num, name: str, network_zone: str}, name: str, outgoing_traffic: int?, private_net: [map], protection: map{delete: bool}, public_net: map{enabled: bool, ipv4: map, ipv6: map}, services: [map], targets: [map]}} # The `load_balancer` key contains the Load Balancer that was just created
+
+@endpoint DELETE /load_balancers/{id}
+@desc Delete a Load Balancer
+@required {id: int # ID of the Load Balancer}
+@returns(204) Load Balancer deleted
+
+@endpoint GET /load_balancers/{id}
+@desc Get a Load Balancer
+@required {id: int # ID of the Load Balancer}
+@returns(200) {load_balancer: map{algorithm: map{type: str}, created: str, id: int, included_traffic: int, ingoing_traffic: int?, labels: map, load_balancer_type: map{deprecated: str?, description: str, id: num, max_assigned_certificates: num, max_connections: num, max_services: num, max_targets: num, name: str, prices: [map]}, location: map{city: str, country: str, description: str, id: num, latitude: num, longitude: num, name: str, network_zone: str}, name: str, outgoing_traffic: int?, private_net: [map], protection: map{delete: bool}, public_net: map{enabled: bool, ipv4: map, ipv6: map}, services: [map], targets: [map]}} # The `load_balancer` key contains the Load Balancer
+
+@endpoint PUT /load_balancers/{id}
+@desc Update a Load Balancer
+@required {id: int # ID of the Load Balancer}
+@optional {labels: map # User-defined labels (key-value pairs), name: str # New Load Balancer name}
+@returns(200) {load_balancer: map{algorithm: map{type: str}, created: str, id: int, included_traffic: int, ingoing_traffic: int?, labels: map, load_balancer_type: map{deprecated: str?, description: str, id: num, max_assigned_certificates: num, max_connections: num, max_services: num, max_targets: num, name: str, prices: [map]}, location: map{city: str, country: str, description: str, id: num, latitude: num, longitude: num, name: str, network_zone: str}, name: str, outgoing_traffic: int?, private_net: [map], protection: map{delete: bool}, public_net: map{enabled: bool, ipv4: map, ipv6: map}, services: [map], targets: [map]}} # The `load_balancer` key contains the updated Load Balancer
+
+@endpoint GET /load_balancers/{id}/actions
+@desc Get all Actions for a Load Balancer
+@required {id: int # ID of the Load Balancer}
+@optional {sort: str(id/id:asc/id:desc/command/command:asc/command:desc/status/status:asc/status:desc/progress/progress:asc/progress:desc/started/started:asc/started:desc/finished/finished:asc/finished:desc) # Can be used multiple times., status: str(running/success/error) # Can be used multiple times, the response will contain only Actions with specified statuses}
+@returns(200) {actions: [map], meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}} # The `actions` key contains a list of Actions
+
+@endpoint POST /load_balancers/{id}/actions/add_service
+@desc Add Service
+@required {id: int # ID of the Load Balancer, destination_port: int # Port the Load Balancer will balance to, health_check: map # Service health check, listen_port: int # Port the Load Balancer listens on, protocol: str(tcp/http/https) # Protocol of the Load Balancer, proxyprotocol: bool # Is Proxyprotocol enabled or not}
+@optional {http: map # Configuration option for protocols http and https}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key contains the `add_service` Action
+
+@endpoint POST /load_balancers/{id}/actions/add_target
+@desc Add Target
+@required {id: int # ID of the Load Balancer, type: str(server/label_selector/ip) # Type of the resource}
+@optional {ip: map # IP targets where the traffic should be routed through. It is only possible to use the (Public or vSwitch) IPs of Hetzner Online Root Servers belonging to the project owner. IPs belonging to other users are blocked. Additionally IPs belonging to services provided by Hetzner Cloud (Servers, Load Balancers, ...) are blocked as well., label_selector: map # Configuration for label selector targets, required if type is `label_selector`, server: map # Configuration for type Server, required if type is `server`, use_private_ip: bool # Use the private network IP instead of the public IP of the Server, requires the Server and Load Balancer to be in the same network. Default value is false.}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key contains the `add_target` Action
+
+@endpoint POST /load_balancers/{id}/actions/attach_to_network
+@desc Attach a Load Balancer to a Network
+@required {id: int # ID of the Load Balancer, network: num # ID of an existing network to attach the Load Balancer to}
+@optional {ip: str # IP to request to be assigned to this Load Balancer; if you do not provide this then you will be auto assigned an IP address}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key contains the `attach_to_network` Action
+
+@endpoint POST /load_balancers/{id}/actions/change_algorithm
+@desc Change Algorithm
+@required {id: int # ID of the Load Balancer, type: str(round_robin/least_connections) # Algorithm of the Load Balancer}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key contains the `change_algorithm` Action
+
+@endpoint POST /load_balancers/{id}/actions/change_dns_ptr
+@desc Change reverse DNS entry for this Load Balancer
+@required {id: int # ID of the Load Balancer, dns_ptr: str # Hostname to set as a reverse DNS PTR entry, ip: str # Public IP address for which the reverse DNS entry should be set}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key in the reply contains an Action object with this structure
+
+@endpoint POST /load_balancers/{id}/actions/change_protection
+@desc Change Load Balancer Protection
+@required {id: int # ID of the Load Balancer}
+@optional {delete: bool # If true, prevents the Load Balancer from being deleted}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key contains the `change_protection` Action
+
+@endpoint POST /load_balancers/{id}/actions/change_type
+@desc Change the Type of a Load Balancer
+@required {id: int # ID of the Load Balancer, load_balancer_type: str # ID or name of Load Balancer type the Load Balancer should migrate to}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key contains the `change_load_balancer_type` Action
+
+@endpoint POST /load_balancers/{id}/actions/delete_service
+@desc Delete Service
+@required {id: int # ID of the Load Balancer, listen_port: num # The listen port of the service you want to delete}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key contains the `delete_service` Action
+
+@endpoint POST /load_balancers/{id}/actions/detach_from_network
+@desc Detach a Load Balancer from a Network
+@required {id: int # ID of the Load Balancer, network: num # ID of an existing network to detach the Load Balancer from}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key contains the `detach_from_network` Action
+
+@endpoint POST /load_balancers/{id}/actions/disable_public_interface
+@desc Disable the public interface of a Load Balancer
+@required {id: int # ID of the Load Balancer}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key contains the `disable_public_interface` Action
+
+@endpoint POST /load_balancers/{id}/actions/enable_public_interface
+@desc Enable the public interface of a Load Balancer
+@required {id: int # ID of the Load Balancer}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key contains the `enable_public_interface` Action
+
+@endpoint POST /load_balancers/{id}/actions/remove_target
+@desc Remove Target
+@required {id: int # ID of the Load Balancer, type: str(server/label_selector/ip) # Type of the resource}
+@optional {ip: map # IP targets where the traffic should be routed through. It is only possible to use the (Public or vSwitch) IPs of Hetzner Online Root Servers belonging to the project owner. IPs belonging to other users are blocked. Additionally IPs belonging to services provided by Hetzner Cloud (Servers, Load Balancers, ...) are blocked as well., label_selector: map # Configuration for label selector targets, required if type is `label_selector`, server: map # Configuration for type Server, required if type is `server`}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key contains the `remove_target` Action
+
+@endpoint POST /load_balancers/{id}/actions/update_service
+@desc Update Service
+@required {id: int # ID of the Load Balancer, destination_port: int # Port the Load Balancer will balance to, health_check: map # Service health check, listen_port: int # Port the Load Balancer listens on, protocol: str(tcp/http/https) # Protocol of the Load Balancer, proxyprotocol: bool # Is Proxyprotocol enabled or not}
+@optional {http: map # Configuration option for protocols http and https}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key contains the `update_service` Action
+
+@endpoint GET /load_balancers/{id}/actions/{action_id}
+@desc Get an Action for a Load Balancer
+@required {id: int # ID of the Load Balancer, action_id: int # ID of the Action}
+@returns(200) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key contains the Load Balancer Action
+
+@endpoint GET /load_balancers/{id}/metrics
+@desc Get Metrics for a LoadBalancer
+@required {id: int # ID of the Load Balancer, type: str(open_connections/connections_per_second/requests_per_second/bandwidth) # Type of metrics to get, start: str # Start of period to get Metrics for (in ISO-8601 format), end: str # End of period to get Metrics for (in ISO-8601 format)}
+@optional {step: str # Resolution of results in seconds}
+@returns(200) {metrics: map{end: str, start: str, step: num, time_series: map}} # The `metrics` key in the reply contains a metrics object with this structure
+
+@endpoint GET /locations
+@desc Get all Locations
+@optional {name: str # Can be used to filter Locations by their name. The response will only contain the Location matching the specified name.}
+@returns(200) {locations: [map]} # The `locations` key in the reply contains an array of Location objects with this structure
+
+@endpoint GET /locations/{id}
+@desc Get a Location
+@required {id: int # ID of Location}
+@returns(200) {location: map{city: str, country: str, description: str, id: num, latitude: num, longitude: num, name: str, network_zone: str}} # The `location` key in the reply contains a Location object with this structure
+
+@endpoint GET /networks
+@desc Get all Networks
+@optional {name: str # Can be used to filter networks by their name. The response will only contain the networks matching the specified name., label_selector: str # Can be used to filter networks by labels. The response will only contain networks with a matching label selector pattern.}
+@returns(200) {meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}, networks: [map]} # The `networks` key contains a list of networks
+
+@endpoint POST /networks
+@desc Create a Network
+@required {ip_range: str # IP range of the whole network which must span all included subnets. Must be one of the private IPv4 ranges of RFC1918. Minimum network size is /24. We highly recommend that you pick a larger network with a /16 netmask., name: str # Name of the network}
+@optional {labels: map # User-defined labels (key-value pairs), routes: [map] # Array of routes set in this network. The destination of the route must be one of the private IPv4 ranges of RFC1918. The gateway must be a subnet/IP of the ip_range of the network object. The destination must not overlap with an existing ip_range in any subnets or with any destinations in other routes or with the first IP of the networks ip_range or with 172.31.1.1. The gateway cannot be the first IP of the networks ip_range and also cannot be 172.31.1.1., subnets: [map] # Array of subnets allocated.}
+@returns(201) {network: map{created: str, id: int, ip_range: str, labels: map, load_balancers: [int], name: str, protection: map{delete: bool}, routes: [map], servers: [int], subnets: [map]}} # The `network` key contains the network that was just created
+
+@endpoint DELETE /networks/{id}
+@desc Delete a Network
+@required {id: int # ID of the network}
+@returns(204) Network deleted
+
+@endpoint GET /networks/{id}
+@desc Get a Network
+@required {id: int # ID of the network}
+@returns(200) {network: map{created: str, id: int, ip_range: str, labels: map, load_balancers: [int], name: str, protection: map{delete: bool}, routes: [map], servers: [int], subnets: [map]}} # The `network` key contains the network
+
+@endpoint PUT /networks/{id}
+@desc Update a Network
+@required {id: int # ID of the network}
+@optional {labels: map # User-defined labels (key-value pairs), name: str # New network name}
+@returns(200) {network: map{created: str, id: int, ip_range: str, labels: map, load_balancers: [int], name: str, protection: map{delete: bool}, routes: [map], servers: [int], subnets: [map]}} # The `network` key contains the updated network
+
+@endpoint GET /networks/{id}/actions
+@desc Get all Actions for a Network
+@required {id: int # ID of the Network}
+@optional {sort: str(id/id:asc/id:desc/command/command:asc/command:desc/status/status:asc/status:desc/progress/progress:asc/progress:desc/started/started:asc/started:desc/finished/finished:asc/finished:desc) # Can be used multiple times., status: str(running/success/error) # Can be used multiple times, the response will contain only Actions with specified statuses}
+@returns(200) {actions: [map], meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}} # The `actions` key contains a list of Actions
+
+@endpoint POST /networks/{id}/actions/add_route
+@desc Add a route to a Network
+@required {id: int # ID of the Network, destination: str # Destination network or host of this route. Must not overlap with an existing ip_range in any subnets or with any destinations in other routes or with the first IP of the networks ip_range or with 172.31.1.1. Must be one of the private IPv4 ranges of RFC1918., gateway: str # Gateway for the route. Cannot be the first IP of the networks ip_range, an IP behind a vSwitch or 172.31.1.1, as this IP is being used as a gateway for the public network interface of Servers.}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key contains the `add_route` Action
+
+@endpoint POST /networks/{id}/actions/add_subnet
+@desc Add a subnet to a Network
+@required {id: int # ID of the Network, network_zone: str # Name of Network zone. The Location object contains the `network_zone` property each Location belongs to., type: str(cloud/server/vswitch) # Type of Subnetwork}
+@optional {ip_range: str # Range to allocate IPs from. Must be a Subnet of the ip_range of the parent network object and must not overlap with any other subnets or with any destinations in routes. If the Subnet is of type vSwitch, it also can not overlap with any gateway in routes. Minimum Network size is /30. We suggest that you pick a bigger Network with a /24 netmask., vswitch_id: int # ID of the robot vSwitch. Must be supplied if the subnet is of type vswitch.}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key contains the `add_subnet` Action
+
+@endpoint POST /networks/{id}/actions/change_ip_range
+@desc Change IP range of a Network
+@required {id: int # ID of the Network, ip_range: str # The new prefix for the whole Network}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key contains the `change_ip_range` Action
+
+@endpoint POST /networks/{id}/actions/change_protection
+@desc Change Network Protection
+@required {id: int # ID of the Network}
+@optional {delete: bool # If true, prevents the Network from being deleted}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key contains the `change_protection` Action
+
+@endpoint POST /networks/{id}/actions/delete_route
+@desc Delete a route from a Network
+@required {id: int # ID of the Network, destination: str # Destination network or host of this route. Must not overlap with an existing ip_range in any subnets or with any destinations in other routes or with the first IP of the networks ip_range or with 172.31.1.1. Must be one of the private IPv4 ranges of RFC1918., gateway: str # Gateway for the route. Cannot be the first IP of the networks ip_range, an IP behind a vSwitch or 172.31.1.1, as this IP is being used as a gateway for the public network interface of Servers.}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key contains the `delete_route` Action
+
+@endpoint POST /networks/{id}/actions/delete_subnet
+@desc Delete a subnet from a Network
+@required {id: int # ID of the Network, ip_range: str # IP range of subnet to delete}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key contains the `delete_subnet` Action
+
+@endpoint GET /networks/{id}/actions/{action_id}
+@desc Get an Action for a Network
+@required {id: int # ID of the Network, action_id: int # ID of the Action}
+@returns(200) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key contains the Network Action
+
+@endpoint GET /placement_groups
+@desc Get all PlacementGroups
+@optional {sort: str(id/id:asc/id:desc/name/name:asc/name:desc/created/created:asc/created:desc) # Can be used multiple times., name: str # Can be used to filter resources by their name. The response will only contain the resources matching the specified name, label_selector: str # Can be used to filter resources by labels. The response will only contain resources matching the label selector., type: str # Can be used multiple times. The response will only contain PlacementGroups matching the type.}
+@returns(200) {meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}, placement_groups: [map]} # The `placement_groups` key contains an array of PlacementGroup objects
+
+@endpoint POST /placement_groups
+@desc Create a PlacementGroup
+@required {name: str # Name of the PlacementGroup, type: str # Define the Placement Group Type.}
+@optional {labels: map # User-defined labels (key-value pairs)}
+@returns(201) {action: map?{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}, placement_group: map{created: str, id: int, labels: map, name: str, servers: [int], type: str}} # The `PlacementGroup` key contains the PlacementGroup that was just created.
+
+@endpoint DELETE /placement_groups/{id}
+@desc Delete a PlacementGroup
+@required {id: int # ID of the resource}
+@returns(204) PlacementGroup deleted
+
+@endpoint GET /placement_groups/{id}
+@desc Get a PlacementGroup
+@required {id: int # ID of the resource}
+@returns(200) {placement_group: map{created: str, id: int, labels: map, name: str, servers: [int], type: str}} # The `placement_group` key contains a PlacementGroup object
+
+@endpoint PUT /placement_groups/{id}
+@desc Update a PlacementGroup
+@required {id: int # ID of the resource}
+@optional {labels: map # User-defined labels (key-value pairs), name: str # New PlacementGroup name}
+@returns(200) {placement_group: map{created: str, id: int, labels: map, name: str, servers: [int], type: str}} # The `certificate` key contains the PlacementGroup that was just updated
+
+@endpoint GET /pricing
+@desc Get all prices
+@returns(200) {pricing: map{currency: str, floating_ip: map{price_monthly: map}, floating_ips: [map], image: map{price_per_gb_month: map}, load_balancer_types: [map], primary_ips: [map], server_backup: map{percentage: str}, server_types: [map], traffic: map{price_per_tb: map}, vat_rate: str, volume: map{price_per_gb_month: map}}} # The `pricing` key in the reply contains an pricing object with this structure
+
+@endpoint GET /primary_ips
+@desc Get all Primary IPs
+@optional {name: str # Can be used to filter resources by their name. The response will only contain the resources matching the specified name, label_selector: str # Can be used to filter resources by labels. The response will only contain resources matching the label selector., ip: str # Can be used to filter resources by their ip. The response will only contain the resources matching the specified ip., sort: str(id/id:asc/id:desc/created/created:asc/created:desc) # Can be used multiple times. Choices id id:asc id:desc created created:asc created:desc}
+@returns(200) {meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}, primary_ips: [map]} # The `primary_ips` key contains an array of Primary IP objects
+
+@endpoint POST /primary_ips
+@desc Create a Primary IP
+@required {assignee_type: str # Resource type the Primary IP can be assigned to, name: str, type: str(ipv4/ipv6) # Primary IP type}
+@optional {assignee_id: int # ID of the resource the Primary IP should be assigned to. Omitted if it should not be assigned., auto_delete: bool # Delete the Primary IP when the Server it is assigned to is deleted. If omitted defaults to `false`., datacenter: str # ID or name of Datacenter the Primary IP will be bound to. Needs to be omitted if `assignee_id` is passed., labels: map # User-defined labels (key-value pairs)}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}, primary_ip: map{assignee_id: int?, assignee_type: str, auto_delete: bool, blocked: bool, created: str, datacenter: map{description: str, id: int, location: map, name: str, server_types: map}, dns_ptr: [map], id: int, ip: str, labels: map, name: str, protection: map{delete: bool}, type: str}} # The `primary_ip` key contains the Primary IP that was just created
+
+@endpoint DELETE /primary_ips/{id}
+@desc Delete a Primary IP
+@required {id: int # ID of the resource}
+@returns(204) Primary IP deleted
+
+@endpoint GET /primary_ips/{id}
+@desc Get a Primary IP
+@required {id: int # ID of the resource}
+@returns(200) {primary_ip: map{assignee_id: int?, assignee_type: str, auto_delete: bool, blocked: bool, created: str, datacenter: map{description: str, id: int, location: map, name: str, server_types: map}, dns_ptr: [map], id: int, ip: str, labels: map, name: str, protection: map{delete: bool}, type: str}} # The `primary_ip` key contains a Primary IP object
+
+@endpoint PUT /primary_ips/{id}
+@desc Update a Primary IP
+@required {id: int # ID of the resource}
+@optional {auto_delete: bool # Delete this Primary IP when the resource it is assigned to is deleted, labels: map # User-defined labels (key-value pairs), name: str # New unique name to set}
+@returns(200) {primary_ip: map{assignee_id: int?, assignee_type: str, auto_delete: bool, blocked: bool, created: str, datacenter: map{description: str, id: int, location: map, name: str, server_types: map}, dns_ptr: [map], id: int, ip: str, labels: map, name: str, protection: map{delete: bool}, type: str}} # The `primary_ip` key contains the Primary IP that was just updated
+
+@endpoint POST /primary_ips/{id}/actions/assign
+@desc Assign a Primary IP to a resource
+@required {id: int # ID of the Primary IP, assignee_id: int # ID of a resource of type `assignee_type`, assignee_type: str # Type of resource assigning the Primary IP to}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key in the reply contains an Action object with this structure
+
+@endpoint POST /primary_ips/{id}/actions/change_dns_ptr
+@desc Change reverse DNS entry for a Primary IP
+@required {id: int # ID of the Primary IP, dns_ptr: str # Hostname to set as a reverse DNS PTR entry, will reset to original default value if `null`, ip: str # IP address for which to set the reverse DNS entry}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key contains the `change_dns_ptr` Action
+
+@endpoint POST /primary_ips/{id}/actions/change_protection
+@desc Change Primary IP Protection
+@required {id: int # ID of the Primary IP}
+@optional {delete: bool # If true, prevents the Primary IP from being deleted}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key contains the `change_protection` Action
+
+@endpoint POST /primary_ips/{id}/actions/unassign
+@desc Unassign a Primary IP from a resource
+@required {id: int # ID of the Primary IP}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key in the reply contains an Action object with this structure
+
+@endpoint GET /server_types
+@desc Get all Server Types
+@optional {name: str # Can be used to filter Server types by their name. The response will only contain the Server type matching the specified name.}
+@returns(200) {server_types: [map]} # The `server_types` key in the reply contains an array of Server type objects with this structure
+
+@endpoint GET /server_types/{id}
+@desc Get a Server Type
+@required {id: int # ID of Server Type}
+@returns(200) {server_type: map{cores: num, cpu_type: str, deprecated: bool, description: str, disk: num, id: num, memory: num, name: str, prices: [map], storage_type: str}} # The `server_type` key in the reply contains a Server type object with this structure
+
+@endpoint GET /servers
+@desc Get all Servers
+@optional {name: str # Can be used to filter resources by their name. The response will only contain the resources matching the specified name, label_selector: str # Can be used to filter resources by labels. The response will only contain resources matching the label selector., sort: str(id/id:asc/id:desc/name/name:asc/name:desc/created/created:asc/created:desc) # Can be used multiple times., status: str(initializing/starting/running/stopping/False/deleting/rebuilding/migrating/unknown) # Can be used multiple times. The response will only contain Server matching the status}
+@returns(200) {meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}, servers: [map]} # A paged array of servers
+
+@endpoint POST /servers
+@desc Create a Server
+@required {image: str # ID or name of the Image the Server is created from, name: str # Name of the Server to create (must be unique per Project and a valid hostname as per RFC 1123), server_type: str # ID or name of the Server type this Server should be created with}
+@optional {automount: bool # Auto-mount Volumes after attach, datacenter: str # ID or name of Datacenter to create Server in (must not be used together with location), firewalls: [map] # Firewalls which should be applied on the Server's public network interface at creation time, labels: map # User-defined labels (key-value pairs), location: str # ID or name of Location to create Server in (must not be used together with datacenter), networks: [int] # Network IDs which should be attached to the Server private network interface at the creation time, placement_group: int # ID of the Placement Group the server should be in, public_net: map # Public Network options, ssh_keys: [str] # SSH key IDs (`integer`) or names (`string`) which should be injected into the Server at creation time, start_after_create: bool # Start Server right after creation. Defaults to true., user_data: str # Cloud-Init user data to use during Server creation. This field is limited to 32KiB., volumes: [int] # Volume IDs which should be attached to the Server at the creation time. Volumes must be in the same Location.}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}, next_actions: [map], root_password: str?, server: map{backup_window: str?, created: str, datacenter: map{description: str, id: int, location: map, name: str, server_types: map}, id: int, image: map?{bound_to: int?, created: str, created_from: map?, deleted: str?, deprecated: str?, description: str, disk_size: num, id: int, image_size: num?, labels: map, name: str?, os_flavor: str, os_version: str?, protection: map, rapid_deploy: bool, status: str, type: str}, included_traffic: num?, ingoing_traffic: num?, iso: map?{deprecated: str?, description: str, id: int, name: str?, type: str}, labels: map, load_balancers: [int], locked: bool, name: str, outgoing_traffic: num?, placement_group: map?{created: str, id: int, labels: map, name: str, servers: [int], type: str}, primary_disk_size: num, private_net: [map], protection: map{delete: bool, rebuild: bool}, public_net: map{firewalls: [map], floating_ips: [int], ipv4: map?, ipv6: map?}, rescue_enabled: bool, server_type: map{cores: num, cpu_type: str, deprecated: bool, description: str, disk: num, id: int, memory: num, name: str, prices: [map], storage_type: str}, status: str, volumes: [int]}} # The `server` key in the reply contains a Server object with this structure
+
+@endpoint DELETE /servers/{id}
+@desc Delete a Server
+@required {id: int # ID of the Server}
+@returns(200) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key in the reply contains an Action object with this structure
+
+@endpoint GET /servers/{id}
+@desc Get a Server
+@required {id: int # ID of the Server}
+@returns(200) {server: map{backup_window: str?, created: str, datacenter: map{description: str, id: int, location: map, name: str, server_types: map}, id: int, image: map?{bound_to: int?, created: str, created_from: map?, deleted: str?, deprecated: str?, description: str, disk_size: num, id: int, image_size: num?, labels: map, name: str?, os_flavor: str, os_version: str?, protection: map, rapid_deploy: bool, status: str, type: str}, included_traffic: num?, ingoing_traffic: num?, iso: map?{deprecated: str?, description: str, id: int, name: str?, type: str}, labels: map, load_balancers: [int], locked: bool, name: str, outgoing_traffic: num?, placement_group: map?{created: str, id: int, labels: map, name: str, servers: [int], type: str}, primary_disk_size: num, private_net: [map], protection: map{delete: bool, rebuild: bool}, public_net: map{firewalls: [map], floating_ips: [int], ipv4: map?, ipv6: map?}, rescue_enabled: bool, server_type: map{cores: num, cpu_type: str, deprecated: bool, description: str, disk: num, id: int, memory: num, name: str, prices: [map], storage_type: str}, status: str, volumes: [int]}} # The `server` key in the reply contains a Server object with this structure
+
+@endpoint PUT /servers/{id}
+@desc Update a Server
+@required {id: int # ID of the Server}
+@optional {labels: map # User-defined labels (key-value pairs), name: str # New name to set}
+@returns(200) {server: map{backup_window: str?, created: str, datacenter: map{description: str, id: int, location: map, name: str, server_types: map}, id: int, image: map?{bound_to: int?, created: str, created_from: map?, deleted: str?, deprecated: str?, description: str, disk_size: num, id: int, image_size: num?, labels: map, name: str?, os_flavor: str, os_version: str?, protection: map, rapid_deploy: bool, status: str, type: str}, included_traffic: num?, ingoing_traffic: num?, iso: map?{deprecated: str?, description: str, id: int, name: str?, type: str}, labels: map, load_balancers: [int], locked: bool, name: str, outgoing_traffic: num?, placement_group: map?{created: str, id: int, labels: map, name: str, servers: [int], type: str}, primary_disk_size: num, private_net: [map], protection: map{delete: bool, rebuild: bool}, public_net: map{firewalls: [map], floating_ips: [int], ipv4: map?, ipv6: map?}, rescue_enabled: bool, server_type: map{cores: num, cpu_type: str, deprecated: bool, description: str, disk: num, id: int, memory: num, name: str, prices: [map], storage_type: str}, status: str, volumes: [int]}} # The `server` key in the reply contains the updated Server
+
+@endpoint GET /servers/{id}/actions
+@desc Get all Actions for a Server
+@required {id: int # ID of the Resource}
+@optional {sort: str(id/id:asc/id:desc/command/command:asc/command:desc/status/status:asc/status:desc/progress/progress:asc/progress:desc/started/started:asc/started:desc/finished/finished:asc/finished:desc) # Can be used multiple times., status: str(running/success/error) # Can be used multiple times, the response will contain only Actions with specified statuses}
+@returns(200) {actions: [map], meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}} # The `actions` key contains a list of Actions
+
+@endpoint POST /servers/{id}/actions/add_to_placement_group
+@desc Add a Server to a Placement Group
+@required {id: int # ID of the Server, placement_group: int # ID of Placement Group the Server should be added to}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key in the reply contains an Action object with this structure
+
+@endpoint POST /servers/{id}/actions/attach_iso
+@desc Attach an ISO to a Server
+@required {id: int # ID of the Server, iso: str # ID or name of ISO to attach to the Server as listed in GET `/isos`}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key in the reply contains an Action object with this structure
+
+@endpoint POST /servers/{id}/actions/attach_to_network
+@desc Attach a Server to a Network
+@required {id: int # ID of the Server, network: int # ID of an existing network to attach the Server to}
+@optional {alias_ips: [str] # Additional IPs to be assigned to this Server, ip: str # IP to request to be assigned to this Server; if you do not provide this then you will be auto assigned an IP address}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key in the reply contains an Action object with this structure
+
+@endpoint POST /servers/{id}/actions/change_alias_ips
+@desc Change alias IPs of a Network
+@required {id: int # ID of the Server, alias_ips: [str] # New alias IPs to set for this Server, network: int # ID of an existing Network already attached to the Server}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key in the reply contains an Action object with this structure
+
+@endpoint POST /servers/{id}/actions/change_dns_ptr
+@desc Change reverse DNS entry for this Server
+@required {id: int # ID of the Server, dns_ptr: str # Hostname to set as a reverse DNS PTR entry, reset to original value if `null`, ip: str # Primary IP address for which the reverse DNS entry should be set}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key in the reply contains an Action object with this structure
+
+@endpoint POST /servers/{id}/actions/change_protection
+@desc Change Server Protection
+@required {id: int # ID of the Server}
+@optional {delete: bool # If true, prevents the Server from being deleted (currently delete and rebuild attribute needs to have the same value), rebuild: bool # If true, prevents the Server from being rebuilt (currently delete and rebuild attribute needs to have the same value)}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key in the reply contains an Action object with this structure
+
+@endpoint POST /servers/{id}/actions/change_type
+@desc Change the Type of a Server
+@required {id: int # ID of the Server, server_type: str # ID or name of Server type the Server should migrate to, upgrade_disk: bool # If false, do not upgrade the disk (this allows downgrading the Server type later)}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key in the reply contains an Action object with this structure
+
+@endpoint POST /servers/{id}/actions/create_image
+@desc Create Image from a Server
+@required {id: int # ID of the Server}
+@optional {description: str # Description of the Image, will be auto-generated if not set, labels: map # User-defined labels (key-value pairs), type: str(snapshot/backup) # Type of Image to create (default: `snapshot`)}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}, image: map{bound_to: int?, created: str, created_from: map?{id: int, name: str}, deleted: str?, deprecated: str?, description: str, disk_size: num, id: int, image_size: num?, labels: map, name: str?, os_flavor: str, os_version: str?, protection: map{delete: bool}, rapid_deploy: bool, status: str, type: str}} # The `image` key in the reply contains an the created Image, which is an object with this structure
+
+The `action` key in the reply contains an Action object with this structure
+
+
+@endpoint POST /servers/{id}/actions/detach_from_network
+@desc Detach a Server from a Network
+@required {id: int # ID of the Server, network: int # ID of an existing network to detach the Server from}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key in the reply contains an Action object with this structure
+
+@endpoint POST /servers/{id}/actions/detach_iso
+@desc Detach an ISO from a Server
+@required {id: int # ID of the Server}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key in the reply contains an Action object with this structure
+
+@endpoint POST /servers/{id}/actions/disable_backup
+@desc Disable Backups for a Server
+@required {id: int # ID of the Server}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key in the reply contains an Action object with this structure
+
+@endpoint POST /servers/{id}/actions/disable_rescue
+@desc Disable Rescue Mode for a Server
+@required {id: int # ID of the Server}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key in the reply contains an Action object with this structure
+
+@endpoint POST /servers/{id}/actions/enable_backup
+@desc Enable and Configure Backups for a Server
+@required {id: int # ID of the Server}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key in the reply contains an Action object with this structure
+
+@endpoint POST /servers/{id}/actions/enable_rescue
+@desc Enable Rescue Mode for a Server
+@required {id: int # ID of the Server}
+@optional {ssh_keys: [int] # Array of SSH key IDs which should be injected into the rescue system., type: str(linux64/linux32) # Type of rescue system to boot (default: `linux64`)}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}, root_password: str} # The `root_password` key in the reply contains the root password that can be used to access the booted rescue system.
+
+The `action` key in the reply contains an Action object with this structure
+
+
+@endpoint POST /servers/{id}/actions/poweroff
+@desc Power off a Server
+@required {id: int # ID of the Server}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key in the reply contains an Action object with this structure
+
+@endpoint POST /servers/{id}/actions/poweron
+@desc Power on a Server
+@required {id: int # ID of the Server}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key in the reply contains an Action object with this structure
+
+@endpoint POST /servers/{id}/actions/reboot
+@desc Soft-reboot a Server
+@required {id: int # ID of the Server}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key in the reply contains an Action object with this structure
+
+@endpoint POST /servers/{id}/actions/rebuild
+@desc Rebuild a Server from an Image
+@required {id: int # ID of the Server, image: str # ID or name of Image to rebuilt from.}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}, root_password: str?} # The `action` key in the reply contains an Action object with this structure
+
+@endpoint POST /servers/{id}/actions/remove_from_placement_group
+@desc Remove from Placement Group
+@required {id: int # ID of the Server}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key in the reply contains an Action object with this structure
+
+@endpoint POST /servers/{id}/actions/request_console
+@desc Request Console for a Server
+@required {id: int # ID of the Server}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}, password: str, wss_url: str} # The `action` key in the reply contains an Action object with this structure
+
+@endpoint POST /servers/{id}/actions/reset
+@desc Reset a Server
+@required {id: int # ID of the Server}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key in the reply contains an Action object with this structure
+
+@endpoint POST /servers/{id}/actions/reset_password
+@desc Reset root Password of a Server
+@required {id: int # ID of the Server}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}, root_password: str} # The `root_password` key in the reply contains the new root password that will be active if the Action succeeds.
+
+The `action` key in the reply contains an Action object with this structure:
+
+
+@endpoint POST /servers/{id}/actions/shutdown
+@desc Shutdown a Server
+@required {id: int # ID of the Server}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key in the reply contains an Action object with this structure
+
+@endpoint GET /servers/{id}/actions/{action_id}
+@desc Get an Action for a Server
+@required {id: int # ID of the Server, action_id: int # ID of the Action}
+@returns(200) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key in the reply has this structure
+
+@endpoint GET /servers/{id}/metrics
+@desc Get Metrics for a Server
+@required {id: int # ID of the Server, type: str(cpu/disk/network) # Type of metrics to get, start: str # Start of period to get Metrics for (in ISO-8601 format), end: str # End of period to get Metrics for (in ISO-8601 format)}
+@optional {step: str # Resolution of results in seconds}
+@returns(200) {metrics: map{end: str, start: str, step: num, time_series: map}} # The `metrics` key in the reply contains a metrics object with this structure
+
+@endpoint GET /ssh_keys
+@desc Get all SSH keys
+@optional {sort: str(id/id:asc/id:desc/name/name:asc/name:desc) # Can be used multiple times., name: str # Can be used to filter resources by their name. The response will only contain the resources matching the specified name, fingerprint: str # Can be used to filter SSH keys by their fingerprint. The response will only contain the SSH key matching the specified fingerprint., label_selector: str # Can be used to filter resources by labels. The response will only contain resources matching the label selector.}
+@returns(200) {meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}, ssh_keys: [map]} # The `ssh_keys` key in the reply contains an array of SSH key objects with this structure
+
+@endpoint POST /ssh_keys
+@desc Create an SSH key
+@required {name: str # Name of the SSH key, public_key: str # Public key}
+@optional {labels: map # User-defined labels (key-value pairs)}
+@returns(201) {ssh_key: map{created: str, fingerprint: str, id: int, labels: map, name: str, public_key: str}} # The `ssh_key` key in the reply contains the object that was just created
+
+@endpoint DELETE /ssh_keys/{id}
+@desc Delete an SSH key
+@required {id: str # ID of the SSH key}
+@returns(204) SSH key deleted
+
+@endpoint GET /ssh_keys/{id}
+@desc Get a SSH key
+@required {id: int # ID of the SSH key}
+@returns(200) {ssh_key: map{created: str, fingerprint: str, id: int, labels: map, name: str, public_key: str}} # The `ssh_key` key in the reply contains an SSH key object with this structure
+
+@endpoint PUT /ssh_keys/{id}
+@desc Update an SSH key
+@required {id: str # ID of the SSH key}
+@optional {labels: map # User-defined labels (key-value pairs), name: str # New name Name to set}
+@returns(200) {ssh_key: map{created: str, fingerprint: str, id: int, labels: map, name: str, public_key: str}} # The `ssh_key` key in the reply contains the modified SSH key object with the new description
+
+@endpoint GET /volumes
+@desc Get all Volumes
+@optional {status: str(available/creating) # Can be used multiple times. The response will only contain Volumes matching the status., sort: str(id/id:asc/id:desc/name/name:asc/name:desc/created/created:asc/created:desc) # Can be used multiple times., name: str # Can be used to filter resources by their name. The response will only contain the resources matching the specified name, label_selector: str # Can be used to filter resources by labels. The response will only contain resources matching the label selector.}
+@returns(200) {meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}, volumes: [map]} # The `volumes` key contains a list of volumes
+
+@endpoint POST /volumes
+@desc Create a Volume
+@required {name: str # Name of the volume, size: int # Size of the Volume in GB}
+@optional {automount: bool # Auto-mount Volume after attach. `server` must be provided., format: str # Format Volume after creation. One of: `xfs`, `ext4`, labels: map # User-defined labels (key-value pairs), location: str # Location to create the Volume in (can be omitted if Server is specified), server: int # Server to which to attach the Volume once it's created (Volume will be created in the same Location as the server)}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}, next_actions: [map], volume: map{created: str, format: str?, id: int, labels: map, linux_device: str, location: map{city: str, country: str, description: str, id: num, latitude: num, longitude: num, name: str, network_zone: str}, name: str, protection: map{delete: bool}, server: int?, size: num, status: str}} # The `volume` key contains the Volume that was just created
+
+The `action` key contains the Action tracking Volume creation
+
+
+@endpoint DELETE /volumes/{id}
+@desc Delete a Volume
+@required {id: str # ID of the Volume}
+@returns(204) Volume deleted
+
+@endpoint GET /volumes/{id}
+@desc Get a Volume
+@required {id: int # ID of the Volume}
+@returns(200) {volume: map{created: str, format: str?, id: int, labels: map, linux_device: str, location: map{city: str, country: str, description: str, id: num, latitude: num, longitude: num, name: str, network_zone: str}, name: str, protection: map{delete: bool}, server: int?, size: num, status: str}} # The `volume` key contains the volume
+
+@endpoint PUT /volumes/{id}
+@desc Update a Volume
+@required {id: str # ID of the Volume to update, name: str # New Volume name}
+@optional {labels: map # User-defined labels (key-value pairs)}
+@returns(200) {volume: map{created: str, format: str?, id: int, labels: map, linux_device: str, location: map{city: str, country: str, description: str, id: num, latitude: num, longitude: num, name: str, network_zone: str}, name: str, protection: map{delete: bool}, server: int?, size: num, status: str}} # The `volume` key contains the updated volume
+
+@endpoint GET /volumes/{id}/actions
+@desc Get all Actions for a Volume
+@required {id: int # ID of the Volume}
+@optional {sort: str(id/id:asc/id:desc/command/command:asc/command:desc/status/status:asc/status:desc/progress/progress:asc/progress:desc/started/started:asc/started:desc/finished/finished:asc/finished:desc) # Can be used multiple times., status: str(running/success/error) # Can be used multiple times, the response will contain only Actions with specified statuses}
+@returns(200) {actions: [map], meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}} # The `actions` key contains a list of Actions
+
+@endpoint POST /volumes/{id}/actions/attach
+@desc Attach Volume to a Server
+@required {id: int # ID of the Volume, server: int # ID of the Server the Volume will be attached to}
+@optional {automount: bool # Auto-mount the Volume after attaching it}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key contains the `attach_volume` Action
+
+@endpoint POST /volumes/{id}/actions/change_protection
+@desc Change Volume Protection
+@required {id: int # ID of the Volume}
+@optional {delete: bool # If true, prevents the Volume from being deleted}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key contains the `change_protection` Action
+
+@endpoint POST /volumes/{id}/actions/detach
+@desc Detach Volume
+@required {id: int # ID of the Volume}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key contains the `detach_volume` Action
+
+@endpoint POST /volumes/{id}/actions/resize
+@desc Resize Volume
+@required {id: int # ID of the Volume, size: num # New Volume size in GB (must be greater than current size)}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key contains the `resize_volume` Action
+
+@endpoint GET /volumes/{id}/actions/{action_id}
+@desc Get an Action for a Volume
+@required {id: int # ID of the Volume, action_id: int # ID of the Action}
+@returns(200) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}} # The `action` key contains the Volume Action
+
+@end
+

@@ -1,0 +1,733 @@
+@doclean v0.2
+# Machine-readable API spec. Each @endpoint block is one API call.
+@api Slack Web API
+@base https://slack.com/api
+@version 1.7.0
+@auth OAuth2
+@endpoints 174
+@toc Approve an app for installation on a workspace., List approved apps for an org or workspace., List app requests for a team/workspace., Restrict an app for installation on a workspace., List restricted apps for an org or workspace., Archive a public or private channel., Convert a public channel to a private channel., Create a public or private channel-based conversation., Delete a public or private channel., Disconnect a connected channel from one or more workspaces., List all disconnected channels—i.e., channels that were once connected to other workspaces and then disconnected—and the corresponding original channel IDs for key revocation with EKM., Get conversation preferences for a public or private channel., Get all the workspaces a given public or private channel is connected to within this Enterprise org., Invite a user to a public or private channel., Rename a public or private channel., Add an allowlist of IDP groups for accessing a channel, List all IDP Groups linked to a channel, Remove a linked IDP group linked from a private channel, Search for public or private channels in an Enterprise organization., Set the posting permissions for a public or private channel., Set the workspaces in an Enterprise grid org that connect to a public or private channel., Unarchive a public or private channel., Add an emoji., Add an emoji alias., List emoji for an Enterprise Grid organization., Remove an emoji across an Enterprise Grid organization, Rename an emoji., Approve a workspace invite request., List all approved workspace invite requests., List all denied workspace invite requests., Deny a workspace invite request., List all pending workspace invite requests., List all of the admins on a given workspace., Create an Enterprise team., List all teams on an Enterprise organization, List all of the owners on a given workspace., Fetch information about settings in a workspace, Set the default channels of a workspace., Set the description of a given workspace., An API method that allows admins to set the discoverability of a given workspace, Sets the icon of a workspace., Set the name of a given workspace., Add one or more default channels to an IDP group., Associate one or more default workspaces with an organization-wide IDP group., List the channels linked to an org-level IDP group (user group)., Remove one or more default channels from an org-level IDP group (user group)., Add an Enterprise user to a workspace., Invite a user to a workspace., List users on a workspace, Remove a user from a workspace., Invalidate a single session for a user by session_id, Wipes all valid sessions on all devices for a given user, Set an existing guest, regular user, or owner to be an admin user., Set an expiration for a guest user, Set an existing guest, regular user, or admin user to be a workspace owner., Set an existing guest user, admin user, or owner to be a regular user., Checks API calling code., Get a list of authorizations for the given event context. Each authorization represents an app installation that the event is visible to., Returns list of permissions this app has on a team., Allows an app to request additional scopes, Returns list of resource grants this app has on a team., Returns list of scopes this app has on a team., Returns list of user grants and corresponding scopes this app has on a team., Enables an app to trigger a permissions modal to grant an app access to a user access scope., Uninstalls your app from a workspace., Revokes a token., Checks authentication & identity., Gets information about a bot user., Registers a new Call., Ends a Call., Returns information about a Call., Registers new participants added to a Call., Registers participants removed from a Call., Updates information about a Call., Deletes a message., Deletes a pending scheduled message from the queue., Retrieve a permalink URL for a specific extant message, Share a me message into a channel., Sends an ephemeral message to a user in a channel., Sends a message to a channel., Schedules a message to be sent to a channel., Returns a list of scheduled messages., Provide custom unfurl behavior for user-posted URLs, Updates a message., Archives a conversation., Closes a direct message or multi-person direct message., Initiates a public or private channel-based conversation, Fetches a conversation's history of messages and events., Retrieve information about a conversation., Invites users to a channel., Joins an existing conversation., Removes a user from a conversation., Leaves a conversation., Lists all channels in a Slack team., Sets the read cursor in a channel., Retrieve members of a conversation., Opens or resumes a direct message or multi-person direct message., Renames a conversation., Retrieve a thread of messages posted to a conversation, Sets the purpose for a conversation., Sets the topic for a conversation., Reverses conversation archival., Open a dialog with a user, Ends the current user's Do Not Disturb session immediately., Ends the current user's snooze mode immediately., Retrieves a user's current Do Not Disturb status., Turns on Do Not Disturb mode for the current user, or changes its duration., Retrieves the Do Not Disturb status for up to 50 users on a team., Lists custom emoji for a team., Deletes an existing comment on a file., Deletes a file., Gets information about a file., List for a team, in a channel, or from a user with applied filters., Adds a file from a remote service, Retrieve information about a remote file added to Slack, Retrieve information about a remote file added to Slack, Remove a remote file., Share a remote file into a channel., Updates an existing remote file., Revokes public/external sharing access for a file, Enables a file for public/external sharing., Uploads or creates a file., For Enterprise Grid workspaces, map local user IDs to global user IDs, Exchanges a temporary OAuth verifier code for an access token., Exchanges a temporary OAuth verifier code for a workspace token., Exchanges a temporary OAuth verifier code for an access token., Pins an item to a channel., Lists items pinned to a channel., Un-pins an item from a channel., Adds a reaction to an item., Gets reactions for an item., Lists reactions made by a user., Removes a reaction from an item., Creates a reminder., Marks a reminder as complete., Deletes a reminder., Gets information about a reminder., Lists all reminders created by or for a given user., Starts a Real Time Messaging session., Searches for messages matching a query., Adds a star to an item., Lists stars for a user., Removes a star from an item., Gets the access logs for the current team., Gets billable users information for the current team., Gets information about the current team., Gets the integration logs for the current team., Retrieve a team's profile., Create a User Group, Disable an existing User Group, Enable a User Group, List all User Groups for a team, Update an existing User Group, List all users in a User Group, Update the list of users for a User Group, List conversations the calling user may access., Delete the user profile photo, Gets user presence information., Get a user's identity., Gets information about a user., Lists all users in a Slack team., Find a user with an email address., Retrieves a user's profile information., Set the profile information for a user., Marked a user as active. Deprecated and non-functional., Set the user profile photo, Manually sets user presence., Open a view for a user., Publish a static view for a User., Push a view onto the stack of a root view., Update an existing view., Indicate that an app's step in a workflow completed execution., Indicate that an app's step in a workflow failed to execute., Update the configuration for a workflow extension step.
+
+@endpoint POST /admin.apps.approve
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint GET /admin.apps.approved.list
+@required {token: str}
+@optional {limit: int, cursor: str, team_id: str, enterprise_id: str}
+@returns(200) {ok: bool}
+
+@endpoint GET /admin.apps.requests.list
+@required {token: str}
+@optional {limit: int, cursor: str, team_id: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /admin.apps.restrict
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint GET /admin.apps.restricted.list
+@required {token: str}
+@optional {limit: int, cursor: str, team_id: str, enterprise_id: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /admin.conversations.archive
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /admin.conversations.convertToPrivate
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /admin.conversations.create
+@required {token: str}
+@returns(200) {channel_id: str, ok: bool}
+
+@endpoint POST /admin.conversations.delete
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /admin.conversations.disconnectShared
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint GET /admin.conversations.ekm.listOriginalConnectedChannelInfo
+@required {token: str}
+@optional {channel_ids: str, team_ids: str, limit: int, cursor: str}
+@returns(200) {ok: bool}
+
+@endpoint GET /admin.conversations.getConversationPrefs
+@required {token: str, channel_id: str}
+@returns(200) {ok: bool, prefs: map{can_thread: map{type: [str], user: [str]}, who_can_post: map{type: [str], user: [str]}}}
+
+@endpoint GET /admin.conversations.getTeams
+@required {token: str, channel_id: str}
+@optional {cursor: str, limit: int}
+@returns(200) {ok: bool, response_metadata: map{next_cursor: str}, team_ids: [str]}
+
+@endpoint POST /admin.conversations.invite
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /admin.conversations.rename
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /admin.conversations.restrictAccess.addGroup
+@returns(200) {ok: bool}
+
+@endpoint GET /admin.conversations.restrictAccess.listGroups
+@required {token: str, channel_id: str}
+@optional {team_id: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /admin.conversations.restrictAccess.removeGroup
+@returns(200) {ok: bool}
+
+@endpoint GET /admin.conversations.search
+@required {token: str}
+@optional {team_ids: str, query: str, limit: int, cursor: str, search_channel_types: str, sort: str, sort_dir: str}
+@returns(200) {channels: [map], next_cursor: str}
+
+@endpoint POST /admin.conversations.setConversationPrefs
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /admin.conversations.setTeams
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /admin.conversations.unarchive
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /admin.emoji.add
+@returns(200) {ok: bool}
+
+@endpoint POST /admin.emoji.addAlias
+@returns(200) {ok: bool}
+
+@endpoint GET /admin.emoji.list
+@required {token: str}
+@optional {cursor: str, limit: int}
+@returns(200) {ok: bool}
+
+@endpoint POST /admin.emoji.remove
+@returns(200) {ok: bool}
+
+@endpoint POST /admin.emoji.rename
+@returns(200) {ok: bool}
+
+@endpoint POST /admin.inviteRequests.approve
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint GET /admin.inviteRequests.approved.list
+@required {token: str}
+@optional {team_id: str, cursor: str, limit: int}
+@returns(200) {ok: bool}
+
+@endpoint GET /admin.inviteRequests.denied.list
+@required {token: str}
+@optional {team_id: str, cursor: str, limit: int}
+@returns(200) {ok: bool}
+
+@endpoint POST /admin.inviteRequests.deny
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint GET /admin.inviteRequests.list
+@required {token: str}
+@optional {team_id: str, cursor: str, limit: int}
+@returns(200) {ok: bool}
+
+@endpoint GET /admin.teams.admins.list
+@required {token: str, team_id: str}
+@optional {limit: int, cursor: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /admin.teams.create
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint GET /admin.teams.list
+@required {token: str}
+@optional {limit: int, cursor: str}
+@returns(200) {ok: bool}
+
+@endpoint GET /admin.teams.owners.list
+@required {token: str, team_id: str}
+@optional {limit: int, cursor: str}
+@returns(200) {ok: bool}
+
+@endpoint GET /admin.teams.settings.info
+@required {token: str, team_id: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /admin.teams.settings.setDefaultChannels
+@returns(200) {ok: bool}
+
+@endpoint POST /admin.teams.settings.setDescription
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /admin.teams.settings.setDiscoverability
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /admin.teams.settings.setIcon
+@returns(200) {ok: bool}
+
+@endpoint POST /admin.teams.settings.setName
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /admin.usergroups.addChannels
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /admin.usergroups.addTeams
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint GET /admin.usergroups.listChannels
+@required {token: str, usergroup_id: str}
+@optional {team_id: str, include_num_members: bool}
+@returns(200) {ok: bool}
+
+@endpoint POST /admin.usergroups.removeChannels
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /admin.users.assign
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /admin.users.invite
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint GET /admin.users.list
+@required {token: str, team_id: str}
+@optional {cursor: str, limit: int}
+@returns(200) {ok: bool}
+
+@endpoint POST /admin.users.remove
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /admin.users.session.invalidate
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /admin.users.session.reset
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /admin.users.setAdmin
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /admin.users.setExpiration
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /admin.users.setOwner
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /admin.users.setRegular
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint GET /api.test
+@optional {error: str, foo: str}
+@returns(200) {ok: bool}
+
+@endpoint GET /apps.event.authorizations.list
+@required {token: str, event_context: str}
+@optional {cursor: str, limit: int}
+@returns(200) {ok: bool}
+
+@endpoint GET /apps.permissions.info
+@optional {token: str}
+@returns(200) {info: map{app_home: map{resources: map, scopes: [str]}, channel: map{resources: map, scopes: [str]}, group: map{resources: map, scopes: [str]}, im: map{resources: map, scopes: [str]}, mpim: map{resources: map, scopes: [str]}, team: map{resources: map, scopes: [str]}}, ok: bool}
+
+@endpoint GET /apps.permissions.request
+@required {token: str, scopes: str, trigger_id: str}
+@returns(200) {ok: bool}
+
+@endpoint GET /apps.permissions.resources.list
+@required {token: str}
+@optional {cursor: str, limit: int}
+@returns(200) {ok: bool, resources: [map], response_metadata: map{next_cursor: str}}
+
+@endpoint GET /apps.permissions.scopes.list
+@required {token: str}
+@returns(200) {ok: bool, scopes: map{app_home: [str], channel: [str], group: [str], im: [str], mpim: [str], team: [str], user: [str]}}
+
+@endpoint GET /apps.permissions.users.list
+@required {token: str}
+@optional {cursor: str, limit: int}
+@returns(200) {ok: bool}
+
+@endpoint GET /apps.permissions.users.request
+@required {token: str, scopes: str, trigger_id: str, user: str}
+@returns(200) {ok: bool}
+
+@endpoint GET /apps.uninstall
+@optional {token: str, client_id: str, client_secret: str}
+@returns(200) {ok: bool}
+
+@endpoint GET /auth.revoke
+@required {token: str}
+@optional {test: bool}
+@returns(200) {ok: bool, revoked: bool}
+
+@endpoint GET /auth.test
+@required {token: str}
+@returns(200) {bot_id: str, is_enterprise_install: bool, ok: bool, team: str, team_id: str, url: str, user: str, user_id: str}
+
+@endpoint GET /bots.info
+@required {token: str}
+@optional {bot: str}
+@returns(200) {bot: map{app_id: str, deleted: bool, icons: map{image_36: str(uri), image_48: str(uri), image_72: str(uri)}, id: str, name: str, updated: int, user_id: str}, ok: bool}
+
+@endpoint POST /calls.add
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /calls.end
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint GET /calls.info
+@required {token: str, id: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /calls.participants.add
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /calls.participants.remove
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /calls.update
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /chat.delete
+@optional {token: str}
+@returns(200) {channel: str, ok: bool, ts: str}
+
+@endpoint POST /chat.deleteScheduledMessage
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint GET /chat.getPermalink
+@required {token: str, channel: str, message_ts: str}
+@returns(200) {channel: str, ok: bool, permalink: str(uri)}
+
+@endpoint POST /chat.meMessage
+@optional {token: str}
+@returns(200) {channel: str, ok: bool, ts: str}
+
+@endpoint POST /chat.postEphemeral
+@required {token: str}
+@returns(200) {message_ts: str, ok: bool}
+
+@endpoint POST /chat.postMessage
+@required {token: str}
+@returns(200) {channel: str, message: map{attachments: [map], blocks: [map], bot_id: any, bot_profile: map{app_id: str, deleted: bool, icons: map, id: str, name: str, team_id: str, updated: int}, client_msg_id: str, comment: map{comment: str, created: int, id: str, is_intro: bool, is_starred: bool, num_stars: int, pinned_info: map, pinned_to: [str], reactions: [map], timestamp: int, user: str}, display_as_bot: bool, file: map{channels: [str], comments_count: int, created: int, date_delete: int, display_as_bot: bool, editable: bool, editor: str, external_id: str, external_type: str, external_url: str(uri), filetype: str, groups: [str], has_rich_preview: bool, id: str, image_exif_rotation: int, ims: [str], is_external: bool, is_public: bool, is_starred: bool, is_tombstoned: bool, last_editor: str, mimetype: str, mode: str, name: str, non_owner_editable: bool, num_stars: int, original_h: int, original_w: int, permalink: str(uri), permalink_public: str(uri), pinned_info: map, pinned_to: [str], pretty_type: str, preview: str, public_url_shared: bool, reactions: [map], shares: map, size: int, source_team: str, state: str, thumb_1024: str(uri), thumb_1024_h: int, thumb_1024_w: int, thumb_160: str(uri), thumb_360: str(uri), thumb_360_h: int, thumb_360_w: int, thumb_480: str(uri), thumb_480_h: int, thumb_480_w: int, thumb_64: str(uri), thumb_720: str(uri), thumb_720_h: int, thumb_720_w: int, thumb_80: str(uri), thumb_800: str(uri), thumb_800_h: int, thumb_800_w: int, thumb_960: str(uri), thumb_960_h: int, thumb_960_w: int, thumb_tiny: str, timestamp: int, title: str, updated: int, url_private: str(uri), url_private_download: str(uri), user: str, user_team: str, username: str}, files: [map], icons: map{emoji: str, image_64: str(uri)}, inviter: str, is_delayed_message: bool, is_intro: bool, is_starred: bool, last_read: str, latest_reply: str, name: str, old_name: str, parent_user_id: str, permalink: str(uri), pinned_to: [str], purpose: str, reactions: [map], reply_count: int, reply_users: [str], reply_users_count: int, source_team: str, subscribed: bool, subtype: str, team: str, text: str, thread_ts: str, topic: str, ts: str, type: str, unread_count: int, upload: bool, user: str, user_profile: map{avatar_hash: str, display_name: str, display_name_normalized: str, first_name: str?, image_72: str(uri), is_restricted: bool, is_ultra_restricted: bool, name: str, real_name: str, real_name_normalized: str, team: str}, user_team: str, username: str}, ok: bool, ts: str}
+
+@endpoint POST /chat.scheduleMessage
+@optional {token: str}
+@returns(200) {channel: str, message: map{bot_id: str, bot_profile: map{app_id: str, deleted: bool, icons: map, id: str, name: str, team_id: str, updated: int}, team: str, text: str, type: str, user: str, username: str}, ok: bool, post_at: int, scheduled_message_id: str}
+
+@endpoint GET /chat.scheduledMessages.list
+@optional {token: str, channel: str, latest: num, oldest: num, limit: int, cursor: str}
+@returns(200) {ok: bool, response_metadata: map{next_cursor: str}, scheduled_messages: [map]}
+
+@endpoint POST /chat.unfurl
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /chat.update
+@required {token: str}
+@returns(200) {channel: str, message: map{attachments: [map], blocks: map, text: str}, ok: bool, text: str, ts: str}
+
+@endpoint POST /conversations.archive
+@optional {token: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /conversations.close
+@optional {token: str}
+@returns(200) {already_closed: bool, no_op: bool, ok: bool}
+
+@endpoint POST /conversations.create
+@optional {token: str}
+@returns(200) {channel: any, ok: bool}
+
+@endpoint GET /conversations.history
+@optional {token: str, channel: str, latest: num, oldest: num, inclusive: bool, limit: int, cursor: str}
+@returns(200) {channel_actions_count: int, channel_actions_ts: any, has_more: bool, messages: [map], ok: bool, pin_count: int}
+
+@endpoint GET /conversations.info
+@optional {token: str, channel: str, include_locale: bool, include_num_members: bool}
+@returns(200) {channel: any, ok: bool}
+
+@endpoint POST /conversations.invite
+@optional {token: str}
+@returns(200) {channel: any, ok: bool}
+
+@endpoint POST /conversations.join
+@optional {token: str}
+@returns(200) {channel: any, ok: bool, response_metadata: map{warnings: [str]}, warning: str}
+
+@endpoint POST /conversations.kick
+@optional {token: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /conversations.leave
+@optional {token: str}
+@returns(200) {not_in_channel: bool, ok: bool}
+
+@endpoint GET /conversations.list
+@optional {token: str, exclude_archived: bool, types: str, limit: int, cursor: str}
+@returns(200) {channels: [any], ok: bool, response_metadata: map{next_cursor: str}}
+
+@endpoint POST /conversations.mark
+@optional {token: str}
+@returns(200) {ok: bool}
+
+@endpoint GET /conversations.members
+@optional {token: str, channel: str, limit: int, cursor: str}
+@returns(200) {members: [str], ok: bool, response_metadata: map{next_cursor: str}}
+
+@endpoint POST /conversations.open
+@optional {token: str}
+@returns(200) {already_open: bool, channel: any, no_op: bool, ok: bool}
+
+@endpoint POST /conversations.rename
+@optional {token: str}
+@returns(200) {channel: any, ok: bool}
+
+@endpoint GET /conversations.replies
+@optional {token: str, channel: str, ts: num, latest: num, oldest: num, inclusive: bool, limit: int, cursor: str}
+@returns(200) {has_more: bool, messages: [any], ok: bool}
+
+@endpoint POST /conversations.setPurpose
+@optional {token: str}
+@returns(200) {channel: any, ok: bool}
+
+@endpoint POST /conversations.setTopic
+@optional {token: str}
+@returns(200) {channel: any, ok: bool}
+
+@endpoint POST /conversations.unarchive
+@optional {token: str}
+@returns(200) {ok: bool}
+
+@endpoint GET /dialog.open
+@required {token: str, dialog: str, trigger_id: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /dnd.endDnd
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /dnd.endSnooze
+@required {token: str}
+@returns(200) {dnd_enabled: bool, next_dnd_end_ts: int, next_dnd_start_ts: int, ok: bool, snooze_enabled: bool}
+
+@endpoint GET /dnd.info
+@optional {token: str, user: str}
+@returns(200) {dnd_enabled: bool, next_dnd_end_ts: int, next_dnd_start_ts: int, ok: bool, snooze_enabled: bool, snooze_endtime: int, snooze_remaining: int}
+
+@endpoint POST /dnd.setSnooze
+@returns(200) {ok: bool, snooze_enabled: bool, snooze_endtime: int, snooze_remaining: int}
+
+@endpoint GET /dnd.teamInfo
+@optional {token: str, users: str}
+@returns(200) {ok: bool}
+
+@endpoint GET /emoji.list
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /files.comments.delete
+@optional {token: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /files.delete
+@optional {token: str}
+@returns(200) {ok: bool}
+
+@endpoint GET /files.info
+@optional {token: str, file: str, count: str, page: str, limit: int, cursor: str}
+@returns(200) {comments: [any], content_html: any?, editor: str, file: map{channels: [str], comments_count: int, created: int, date_delete: int, display_as_bot: bool, editable: bool, editor: str, external_id: str, external_type: str, external_url: str(uri), filetype: str, groups: [str], has_rich_preview: bool, id: str, image_exif_rotation: int, ims: [str], is_external: bool, is_public: bool, is_starred: bool, is_tombstoned: bool, last_editor: str, mimetype: str, mode: str, name: str, non_owner_editable: bool, num_stars: int, original_h: int, original_w: int, permalink: str(uri), permalink_public: str(uri), pinned_info: map, pinned_to: [str], pretty_type: str, preview: str, public_url_shared: bool, reactions: [map], shares: map{private: any, public: any}, size: int, source_team: str, state: str, thumb_1024: str(uri), thumb_1024_h: int, thumb_1024_w: int, thumb_160: str(uri), thumb_360: str(uri), thumb_360_h: int, thumb_360_w: int, thumb_480: str(uri), thumb_480_h: int, thumb_480_w: int, thumb_64: str(uri), thumb_720: str(uri), thumb_720_h: int, thumb_720_w: int, thumb_80: str(uri), thumb_800: str(uri), thumb_800_h: int, thumb_800_w: int, thumb_960: str(uri), thumb_960_h: int, thumb_960_w: int, thumb_tiny: str, timestamp: int, title: str, updated: int, url_private: str(uri), url_private_download: str(uri), user: str, user_team: str, username: str}, ok: bool, paging: map{count: int, page: int, pages: int, per_page: int, spill: int, total: int}, response_metadata: any}
+
+@endpoint GET /files.list
+@optional {token: str, user: str, channel: str, ts_from: num, ts_to: num, types: str, count: str, page: str, show_files_hidden_by_limit: bool}
+@returns(200) {files: [map], ok: bool, paging: map{count: int, page: int, pages: int, per_page: int, spill: int, total: int}}
+
+@endpoint POST /files.remote.add
+@returns(200) {ok: bool}
+
+@endpoint GET /files.remote.info
+@optional {token: str, file: str, external_id: str}
+@returns(200) {ok: bool}
+
+@endpoint GET /files.remote.list
+@optional {token: str, channel: str, ts_from: num, ts_to: num, limit: int, cursor: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /files.remote.remove
+@returns(200) {ok: bool}
+
+@endpoint GET /files.remote.share
+@optional {token: str, file: str, external_id: str, channels: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /files.remote.update
+@returns(200) {ok: bool}
+
+@endpoint POST /files.revokePublicURL
+@optional {token: str}
+@returns(200) {file: map{channels: [str], comments_count: int, created: int, date_delete: int, display_as_bot: bool, editable: bool, editor: str, external_id: str, external_type: str, external_url: str(uri), filetype: str, groups: [str], has_rich_preview: bool, id: str, image_exif_rotation: int, ims: [str], is_external: bool, is_public: bool, is_starred: bool, is_tombstoned: bool, last_editor: str, mimetype: str, mode: str, name: str, non_owner_editable: bool, num_stars: int, original_h: int, original_w: int, permalink: str(uri), permalink_public: str(uri), pinned_info: map, pinned_to: [str], pretty_type: str, preview: str, public_url_shared: bool, reactions: [map], shares: map{private: any, public: any}, size: int, source_team: str, state: str, thumb_1024: str(uri), thumb_1024_h: int, thumb_1024_w: int, thumb_160: str(uri), thumb_360: str(uri), thumb_360_h: int, thumb_360_w: int, thumb_480: str(uri), thumb_480_h: int, thumb_480_w: int, thumb_64: str(uri), thumb_720: str(uri), thumb_720_h: int, thumb_720_w: int, thumb_80: str(uri), thumb_800: str(uri), thumb_800_h: int, thumb_800_w: int, thumb_960: str(uri), thumb_960_h: int, thumb_960_w: int, thumb_tiny: str, timestamp: int, title: str, updated: int, url_private: str(uri), url_private_download: str(uri), user: str, user_team: str, username: str}, ok: bool}
+
+@endpoint POST /files.sharedPublicURL
+@optional {token: str}
+@returns(200) {file: map{channels: [str], comments_count: int, created: int, date_delete: int, display_as_bot: bool, editable: bool, editor: str, external_id: str, external_type: str, external_url: str(uri), filetype: str, groups: [str], has_rich_preview: bool, id: str, image_exif_rotation: int, ims: [str], is_external: bool, is_public: bool, is_starred: bool, is_tombstoned: bool, last_editor: str, mimetype: str, mode: str, name: str, non_owner_editable: bool, num_stars: int, original_h: int, original_w: int, permalink: str(uri), permalink_public: str(uri), pinned_info: map, pinned_to: [str], pretty_type: str, preview: str, public_url_shared: bool, reactions: [map], shares: map{private: any, public: any}, size: int, source_team: str, state: str, thumb_1024: str(uri), thumb_1024_h: int, thumb_1024_w: int, thumb_160: str(uri), thumb_360: str(uri), thumb_360_h: int, thumb_360_w: int, thumb_480: str(uri), thumb_480_h: int, thumb_480_w: int, thumb_64: str(uri), thumb_720: str(uri), thumb_720_h: int, thumb_720_w: int, thumb_80: str(uri), thumb_800: str(uri), thumb_800_h: int, thumb_800_w: int, thumb_960: str(uri), thumb_960_h: int, thumb_960_w: int, thumb_tiny: str, timestamp: int, title: str, updated: int, url_private: str(uri), url_private_download: str(uri), user: str, user_team: str, username: str}, ok: bool}
+
+@endpoint POST /files.upload
+@returns(200) {file: map{channels: [str], comments_count: int, created: int, date_delete: int, display_as_bot: bool, editable: bool, editor: str, external_id: str, external_type: str, external_url: str(uri), filetype: str, groups: [str], has_rich_preview: bool, id: str, image_exif_rotation: int, ims: [str], is_external: bool, is_public: bool, is_starred: bool, is_tombstoned: bool, last_editor: str, mimetype: str, mode: str, name: str, non_owner_editable: bool, num_stars: int, original_h: int, original_w: int, permalink: str(uri), permalink_public: str(uri), pinned_info: map, pinned_to: [str], pretty_type: str, preview: str, public_url_shared: bool, reactions: [map], shares: map{private: any, public: any}, size: int, source_team: str, state: str, thumb_1024: str(uri), thumb_1024_h: int, thumb_1024_w: int, thumb_160: str(uri), thumb_360: str(uri), thumb_360_h: int, thumb_360_w: int, thumb_480: str(uri), thumb_480_h: int, thumb_480_w: int, thumb_64: str(uri), thumb_720: str(uri), thumb_720_h: int, thumb_720_w: int, thumb_80: str(uri), thumb_800: str(uri), thumb_800_h: int, thumb_800_w: int, thumb_960: str(uri), thumb_960_h: int, thumb_960_w: int, thumb_tiny: str, timestamp: int, title: str, updated: int, url_private: str(uri), url_private_download: str(uri), user: str, user_team: str, username: str}, ok: bool}
+
+@endpoint GET /migration.exchange
+@required {token: str, users: str}
+@optional {team_id: str, to_old: bool}
+@returns(200) {enterprise_id: str, invalid_user_ids: [str], ok: bool, team_id: str, user_id_map: map}
+
+@endpoint GET /oauth.access
+@optional {client_id: str, client_secret: str, code: str, redirect_uri: str, single_channel: bool}
+@returns(200) {ok: bool}
+
+@endpoint GET /oauth.token
+@optional {client_id: str, client_secret: str, code: str, redirect_uri: str, single_channel: bool}
+@returns(200) {ok: bool}
+
+@endpoint GET /oauth.v2.access
+@required {code: str}
+@optional {client_id: str, client_secret: str, redirect_uri: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /pins.add
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint GET /pins.list
+@required {token: str, channel: str}
+@returns(200)
+
+@endpoint POST /pins.remove
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /reactions.add
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint GET /reactions.get
+@required {token: str}
+@optional {channel: str, file: str, file_comment: str, full: bool, timestamp: str}
+@returns(200)
+
+@endpoint GET /reactions.list
+@required {token: str}
+@optional {user: str, full: bool, count: int, page: int, cursor: str, limit: int}
+@returns(200) {items: [any], ok: bool, paging: map{count: int, page: int, pages: int, per_page: int, spill: int, total: int}, response_metadata: any}
+
+@endpoint POST /reactions.remove
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /reminders.add
+@required {token: str}
+@returns(200) {ok: bool, reminder: map{complete_ts: int, creator: str, id: str, recurring: bool, text: str, time: int, user: str}}
+
+@endpoint POST /reminders.complete
+@optional {token: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /reminders.delete
+@optional {token: str}
+@returns(200) {ok: bool}
+
+@endpoint GET /reminders.info
+@optional {token: str, reminder: str}
+@returns(200) {ok: bool, reminder: map{complete_ts: int, creator: str, id: str, recurring: bool, text: str, time: int, user: str}}
+
+@endpoint GET /reminders.list
+@optional {token: str}
+@returns(200) {ok: bool, reminders: [map]}
+
+@endpoint GET /rtm.connect
+@required {token: str}
+@optional {batch_presence_aware: bool, presence_sub: bool}
+@returns(200) {ok: bool, self: map{id: str, name: str}, team: map{domain: str, id: str, name: str}, url: str(uri)}
+
+@endpoint GET /search.messages
+@required {token: str, query: str}
+@optional {count: int, highlight: bool, page: int, sort: str, sort_dir: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /stars.add
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint GET /stars.list
+@optional {token: str, count: str, page: str, cursor: str, limit: int}
+@returns(200) {items: [any], ok: bool, paging: map{count: int, page: int, pages: int, per_page: int, spill: int, total: int}}
+
+@endpoint POST /stars.remove
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint GET /team.accessLogs
+@required {token: str}
+@optional {before: str, count: str, page: str}
+@returns(200) {logins: [map], ok: bool, paging: map{count: int, page: int, pages: int, per_page: int, spill: int, total: int}}
+
+@endpoint GET /team.billableInfo
+@required {token: str}
+@optional {user: str}
+@returns(200) {ok: bool}
+
+@endpoint GET /team.info
+@required {token: str}
+@optional {team: str}
+@returns(200) {ok: bool, team: map{archived: bool, avatar_base_url: str(uri), created: int, date_create: int, deleted: bool, description: str?, discoverable: any, domain: str, email_domain: str, enterprise_id: str, enterprise_name: str, external_org_migrations: map{current: [map], date_updated: int}, has_compliance_export: bool, icon: map{image_102: str, image_132: str, image_230: str, image_34: str, image_44: str, image_68: str, image_88: str, image_default: bool}, id: str, is_assigned: bool, is_enterprise: int, is_over_storage_limit: bool, limit_ts: int, locale: str, messages_count: int, msg_edit_window_mins: int, name: str, over_integrations_limit: bool, over_storage_limit: bool, pay_prod_cur: str, plan: str, primary_owner: map{email: str, id: str}, sso_provider: map{label: str, name: str, type: str}}}
+
+@endpoint GET /team.integrationLogs
+@required {token: str}
+@optional {app_id: str, change_type: str, count: str, page: str, service_id: str, user: str}
+@returns(200) {logs: [map], ok: bool, paging: map{count: int, page: int, pages: int, per_page: int, spill: int, total: int}}
+
+@endpoint GET /team.profile.get
+@required {token: str}
+@optional {visibility: str}
+@returns(200) {ok: bool, profile: map{fields: [map]}}
+
+@endpoint POST /usergroups.create
+@required {token: str}
+@returns(200) {ok: bool, usergroup: map{auto_provision: bool, auto_type: any, channel_count: int, created_by: str, date_create: int, date_delete: int, date_update: int, deleted_by: any, description: str, enterprise_subteam_id: str, handle: str, id: str, is_external: bool, is_subteam: bool, is_usergroup: bool, name: str, prefs: map{channels: [str], groups: [str]}, team_id: str, updated_by: str, user_count: int, users: [str]}}
+
+@endpoint POST /usergroups.disable
+@required {token: str}
+@returns(200) {ok: bool, usergroup: map{auto_provision: bool, auto_type: any, channel_count: int, created_by: str, date_create: int, date_delete: int, date_update: int, deleted_by: any, description: str, enterprise_subteam_id: str, handle: str, id: str, is_external: bool, is_subteam: bool, is_usergroup: bool, name: str, prefs: map{channels: [str], groups: [str]}, team_id: str, updated_by: str, user_count: int, users: [str]}}
+
+@endpoint POST /usergroups.enable
+@required {token: str}
+@returns(200) {ok: bool, usergroup: map{auto_provision: bool, auto_type: any, channel_count: int, created_by: str, date_create: int, date_delete: int, date_update: int, deleted_by: any, description: str, enterprise_subteam_id: str, handle: str, id: str, is_external: bool, is_subteam: bool, is_usergroup: bool, name: str, prefs: map{channels: [str], groups: [str]}, team_id: str, updated_by: str, user_count: int, users: [str]}}
+
+@endpoint GET /usergroups.list
+@required {token: str}
+@optional {include_users: bool, include_count: bool, include_disabled: bool}
+@returns(200) {ok: bool, usergroups: [map]}
+
+@endpoint POST /usergroups.update
+@required {token: str}
+@returns(200) {ok: bool, usergroup: map{auto_provision: bool, auto_type: any, channel_count: int, created_by: str, date_create: int, date_delete: int, date_update: int, deleted_by: any, description: str, enterprise_subteam_id: str, handle: str, id: str, is_external: bool, is_subteam: bool, is_usergroup: bool, name: str, prefs: map{channels: [str], groups: [str]}, team_id: str, updated_by: str, user_count: int, users: [str]}}
+
+@endpoint GET /usergroups.users.list
+@required {token: str, usergroup: str}
+@optional {include_disabled: bool}
+@returns(200) {ok: bool, users: [str]}
+
+@endpoint POST /usergroups.users.update
+@required {token: str}
+@returns(200) {ok: bool, usergroup: map{auto_provision: bool, auto_type: any, channel_count: int, created_by: str, date_create: int, date_delete: int, date_update: int, deleted_by: any, description: str, enterprise_subteam_id: str, handle: str, id: str, is_external: bool, is_subteam: bool, is_usergroup: bool, name: str, prefs: map{channels: [str], groups: [str]}, team_id: str, updated_by: str, user_count: int, users: [str]}}
+
+@endpoint GET /users.conversations
+@optional {token: str, user: str, types: str, exclude_archived: bool, limit: int, cursor: str}
+@returns(200) {channels: [any], ok: bool, response_metadata: map{next_cursor: str}}
+
+@endpoint POST /users.deletePhoto
+@returns(200) {ok: bool}
+
+@endpoint GET /users.getPresence
+@required {token: str}
+@optional {user: str}
+@returns(200) {auto_away: bool, connection_count: int, last_activity: int, manual_away: bool, ok: bool, online: bool, presence: str}
+
+@endpoint GET /users.identity
+@optional {token: str}
+@returns(200)
+
+@endpoint GET /users.info
+@required {token: str}
+@optional {include_locale: bool, user: str}
+@returns(200) {ok: bool, user: any}
+
+@endpoint GET /users.list
+@optional {token: str, limit: int, cursor: str, include_locale: bool}
+@returns(200) {cache_ts: int, members: [any], ok: bool, response_metadata: any}
+
+@endpoint GET /users.lookupByEmail
+@required {token: str, email: str}
+@returns(200) {ok: bool, user: any}
+
+@endpoint GET /users.profile.get
+@required {token: str}
+@optional {include_labels: bool, user: str}
+@returns(200) {ok: bool, profile: map{always_active: bool, api_app_id: str, avatar_hash: str, bot_id: str, display_name: str, display_name_normalized: str, email: str(email)?, fields: any?, first_name: str?, guest_expiration_ts: int?, guest_invited_by: str?, image_1024: str(uri)?, image_192: str(uri)?, image_24: str(uri)?, image_32: str(uri)?, image_48: str(uri)?, image_512: str(uri)?, image_72: str(uri)?, image_original: str(uri)?, is_app_user: bool, is_custom_image: bool, is_restricted: bool?, is_ultra_restricted: bool?, last_avatar_image_hash: str, last_name: str?, memberships_count: int, name: str?, phone: str, pronouns: str, real_name: str, real_name_normalized: str, skype: str, status_default_emoji: str, status_default_text: str, status_default_text_canonical: str?, status_emoji: str, status_expiration: int, status_text: str, status_text_canonical: str?, team: str, title: str, updated: int, user_id: str, username: str?}}
+
+@endpoint POST /users.profile.set
+@required {token: str}
+@returns(200) {email_pending: str(email), ok: bool, profile: map{always_active: bool, api_app_id: str, avatar_hash: str, bot_id: str, display_name: str, display_name_normalized: str, email: str(email)?, fields: any?, first_name: str?, guest_expiration_ts: int?, guest_invited_by: str?, image_1024: str(uri)?, image_192: str(uri)?, image_24: str(uri)?, image_32: str(uri)?, image_48: str(uri)?, image_512: str(uri)?, image_72: str(uri)?, image_original: str(uri)?, is_app_user: bool, is_custom_image: bool, is_restricted: bool?, is_ultra_restricted: bool?, last_avatar_image_hash: str, last_name: str?, memberships_count: int, name: str?, phone: str, pronouns: str, real_name: str, real_name_normalized: str, skype: str, status_default_emoji: str, status_default_text: str, status_default_text_canonical: str?, status_emoji: str, status_expiration: int, status_text: str, status_text_canonical: str?, team: str, title: str, updated: int, user_id: str, username: str?}, username: str}
+
+@endpoint POST /users.setActive
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint POST /users.setPhoto
+@returns(200) {ok: bool, profile: map{avatar_hash: str, image_1024: str(uri), image_192: str(uri), image_24: str(uri), image_32: str(uri), image_48: str(uri), image_512: str(uri), image_72: str(uri), image_original: str(uri)}}
+
+@endpoint POST /users.setPresence
+@required {token: str}
+@returns(200) {ok: bool}
+
+@endpoint GET /views.open
+@required {token: str, trigger_id: str, view: str}
+@returns(200) {ok: bool}
+
+@endpoint GET /views.publish
+@required {token: str, user_id: str, view: str}
+@optional {hash: str}
+@returns(200) {ok: bool}
+
+@endpoint GET /views.push
+@required {token: str, trigger_id: str, view: str}
+@returns(200) {ok: bool}
+
+@endpoint GET /views.update
+@required {token: str}
+@optional {view_id: str, external_id: str, view: str, hash: str}
+@returns(200) {ok: bool}
+
+@endpoint GET /workflows.stepCompleted
+@required {token: str, workflow_step_execute_id: str}
+@optional {outputs: str}
+@returns(200) {ok: bool}
+
+@endpoint GET /workflows.stepFailed
+@required {token: str, workflow_step_execute_id: str, error: str}
+@returns(200) {ok: bool}
+
+@endpoint GET /workflows.updateStep
+@required {token: str, workflow_step_edit_id: str}
+@optional {inputs: str, outputs: str, step_name: str, step_image_url: str}
+@returns(200) {ok: bool}
+
+@end
+

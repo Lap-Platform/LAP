@@ -1,0 +1,457 @@
+@doclean v0.2
+# Machine-readable API spec. Each @endpoint block is one API call.
+@api Twitter API v2
+@base https://api.twitter.com
+@version 2.61
+@auth Bearer bearer | OAuth2 | Bearer OAuth
+@endpoints 80
+@toc List Compliance Jobs, Create compliance job, Get Compliance Job, Create a new DM Conversation, Get DM Events for a DM Conversation, Send a new message to a user, Send a new message to a DM Conversation, Get DM Events for a DM Conversation, Get recent DM Events, Create List, Delete List, List lookup by List ID., Update List., Returns User objects that follow a List by the provided List ID, Returns User objects that are members of a List by the provided List ID., Add a List member, Remove a List member, List Tweets timeline by List ID., Returns the OpenAPI Specification document., Space lookup up Space IDs, Space lookup by their creators, Search for Spaces, Space lookup by Space ID, Retrieve the list of Users who purchased a ticket to the given space, Retrieve Tweets from a Space., Tweet lookup by Tweet IDs, Creation of a Tweet, Tweets Compliance stream, Full archive search counts, Recent search counts, Firehose stream, Tweets Label stream, Sample stream, Sample 10% stream, Full-archive search, Recent search, Filtered stream, Rules lookup, Add/Delete rules, Tweet delete by Tweet ID, Tweet lookup by Tweet ID, Returns User objects that have liked the provided Tweet ID, Retrieve Tweets that quote a Tweet., Returns User objects that have retweeted the provided Tweet ID, Hide replies, User lookup by IDs, User lookup by usernames, User lookup by username, Users Compliance stream, User lookup me, User lookup by ID, Returns User objects that are blocked by provided User ID, Block User by User ID, Bookmarks by User, Add Tweet to Bookmarks, Remove a bookmarked Tweet, Get User's Followed Lists, Follow a List, Unfollow a List, Followers by User ID, Following by User ID, Follow User, Returns Tweet objects liked by the provided User ID, Causes the User (in the path) to like the specified Tweet, Causes the User (in the path) to unlike the specified Tweet, Get a User's List Memberships, User mention timeline by User ID, Returns User objects that are muted by the provided User ID, Mute User by User ID., Get a User's Owned Lists., Get a User's Pinned Lists, Pin a List, Unpin a List, Causes the User (in the path) to retweet the specified Tweet., Causes the User (in the path) to unretweet the specified Tweet, User home timeline by User ID, User Tweets timeline by User ID, Unblock User by User ID, Unfollow User, Unmute User by User ID
+
+@endpoint GET /2/compliance/jobs
+@desc List Compliance Jobs
+@required {type: str(tweets/users) # Type of Compliance Job to list.}
+@optional {status: str(created/in_progress/failed/complete) # Status of Compliance Job to list., compliance_job.fields: [str] # A comma separated list of ComplianceJob fields to display.}
+@returns(200) {data: [map], errors: [map], meta: map{result_count: int(int32)}} # The request has succeeded.
+
+@endpoint POST /2/compliance/jobs
+@desc Create compliance job
+@required {type: str(tweets/users) # Type of compliance job to list.}
+@optional {name: str # User-provided name for a compliance job., resumable: bool # If true, this endpoint will return a pre-signed URL with resumable uploads enabled.}
+@returns(200) {data: map{created_at: str(date-time), download_expires_at: str(date-time), download_url: str(uri), id: str, name: str, status: str, type: str, upload_expires_at: str(date-time), upload_url: str(uri)}, errors: [map]} # The request has succeeded.
+
+@endpoint GET /2/compliance/jobs/{id}
+@desc Get Compliance Job
+@required {id: str # The ID of the Compliance Job to retrieve.}
+@optional {compliance_job.fields: [str] # A comma separated list of ComplianceJob fields to display.}
+@returns(200) {data: map{created_at: str(date-time), download_expires_at: str(date-time), download_url: str(uri), id: str, name: str, status: str, type: str, upload_expires_at: str(date-time), upload_url: str(uri)}, errors: [map]} # The request has succeeded.
+
+@endpoint POST /2/dm_conversations
+@desc Create a new DM Conversation
+@required {conversation_type: str # The conversation type that is being created., message: any, participant_ids: [str] # Participants for the DM Conversation.}
+@returns(201) {data: map{dm_conversation_id: str, dm_event_id: str}, errors: [map]} # The request has succeeded.
+
+@endpoint GET /2/dm_conversations/with/{participant_id}/dm_events
+@desc Get DM Events for a DM Conversation
+@required {participant_id: str # The ID of the participant user for the One to One DM conversation.}
+@optional {max_results: int(int32)=100 # The maximum number of results., pagination_token: str # This parameter is used to get a specified 'page' of results., event_types: [str]=['MessageCreate', 'ParticipantsLeave', 'ParticipantsJoin'] # The set of event_types to include in the results., dm_event.fields: [str] # A comma separated list of DmEvent fields to display., expansions: [str] # A comma separated list of fields to expand., media.fields: [str] # A comma separated list of Media fields to display., user.fields: [str] # A comma separated list of User fields to display., tweet.fields: [str] # A comma separated list of Tweet fields to display.}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{next_token: str, previous_token: str, result_count: int(int32)}} # The request has succeeded.
+
+@endpoint POST /2/dm_conversations/with/{participant_id}/messages
+@desc Send a new message to a user
+@required {participant_id: str # The ID of the recipient user that will receive the DM.}
+@returns(201) {data: map{dm_conversation_id: str, dm_event_id: str}, errors: [map]} # The request has succeeded.
+
+@endpoint POST /2/dm_conversations/{dm_conversation_id}/messages
+@desc Send a new message to a DM Conversation
+@required {dm_conversation_id: str # The DM Conversation ID.}
+@returns(201) {data: map{dm_conversation_id: str, dm_event_id: str}, errors: [map]} # The request has succeeded.
+
+@endpoint GET /2/dm_conversations/{id}/dm_events
+@desc Get DM Events for a DM Conversation
+@required {id: str # The DM Conversation ID.}
+@optional {max_results: int(int32)=100 # The maximum number of results., pagination_token: str # This parameter is used to get a specified 'page' of results., event_types: [str]=['MessageCreate', 'ParticipantsLeave', 'ParticipantsJoin'] # The set of event_types to include in the results., dm_event.fields: [str] # A comma separated list of DmEvent fields to display., expansions: [str] # A comma separated list of fields to expand., media.fields: [str] # A comma separated list of Media fields to display., user.fields: [str] # A comma separated list of User fields to display., tweet.fields: [str] # A comma separated list of Tweet fields to display.}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{next_token: str, previous_token: str, result_count: int(int32)}} # The request has succeeded.
+
+@endpoint GET /2/dm_events
+@desc Get recent DM Events
+@optional {max_results: int(int32)=100 # The maximum number of results., pagination_token: str # This parameter is used to get a specified 'page' of results., event_types: [str]=['MessageCreate', 'ParticipantsLeave', 'ParticipantsJoin'] # The set of event_types to include in the results., dm_event.fields: [str] # A comma separated list of DmEvent fields to display., expansions: [str] # A comma separated list of fields to expand., media.fields: [str] # A comma separated list of Media fields to display., user.fields: [str] # A comma separated list of User fields to display., tweet.fields: [str] # A comma separated list of Tweet fields to display.}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{next_token: str, previous_token: str, result_count: int(int32)}} # The request has succeeded.
+
+@endpoint POST /2/lists
+@desc Create List
+@required {name: str}
+@optional {description: str, private: bool=False}
+@returns(200) {data: map{id: str, name: str}, errors: [map]} # The request has succeeded.
+
+@endpoint DELETE /2/lists/{id}
+@desc Delete List
+@required {id: str # The ID of the List to delete.}
+@returns(200) {data: map{deleted: bool}, errors: [map]} # The request has succeeded.
+
+@endpoint GET /2/lists/{id}
+@desc List lookup by List ID.
+@required {id: str # The ID of the List.}
+@optional {list.fields: [str] # A comma separated list of List fields to display., expansions: [str] # A comma separated list of fields to expand., user.fields: [str] # A comma separated list of User fields to display.}
+@returns(200) {data: map{created_at: str(date-time), description: str, follower_count: int, id: str, member_count: int, name: str, owner_id: str, private: bool}, errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}} # The request has succeeded.
+
+@endpoint PUT /2/lists/{id}
+@desc Update List.
+@required {id: str # The ID of the List to modify.}
+@optional {description: str, name: str, private: bool}
+@returns(200) {data: map{updated: bool}, errors: [map]} # The request has succeeded.
+
+@endpoint GET /2/lists/{id}/followers
+@desc Returns User objects that follow a List by the provided List ID
+@required {id: str # The ID of the List.}
+@optional {max_results: int(int32)=100 # The maximum number of results., pagination_token: str # This parameter is used to get a specified 'page' of results., user.fields: [str] # A comma separated list of User fields to display., expansions: [str] # A comma separated list of fields to expand., tweet.fields: [str] # A comma separated list of Tweet fields to display.}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{next_token: str, previous_token: str, result_count: int(int32)}} # The request has succeeded.
+
+@endpoint GET /2/lists/{id}/members
+@desc Returns User objects that are members of a List by the provided List ID.
+@required {id: str # The ID of the List.}
+@optional {max_results: int(int32)=100 # The maximum number of results., pagination_token: str # This parameter is used to get a specified 'page' of results., user.fields: [str] # A comma separated list of User fields to display., expansions: [str] # A comma separated list of fields to expand., tweet.fields: [str] # A comma separated list of Tweet fields to display.}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{next_token: str, previous_token: str, result_count: int(int32)}} # The request has succeeded.
+
+@endpoint POST /2/lists/{id}/members
+@desc Add a List member
+@required {id: str # The ID of the List for which to add a member., user_id: str # Unique identifier of this User. This is returned as a string in order to avoid complications with languages and tools that cannot handle large integers.}
+@returns(200) {data: map{is_member: bool}, errors: [map]} # The request has succeeded.
+
+@endpoint DELETE /2/lists/{id}/members/{user_id}
+@desc Remove a List member
+@required {id: str # The ID of the List to remove a member., user_id: str # The ID of User that will be removed from the List.}
+@returns(200) {data: map{is_member: bool}, errors: [map]} # The request has succeeded.
+
+@endpoint GET /2/lists/{id}/tweets
+@desc List Tweets timeline by List ID.
+@required {id: str # The ID of the List.}
+@optional {max_results: int(int32)=100 # The maximum number of results., pagination_token: str # This parameter is used to get the next 'page' of results., tweet.fields: [str] # A comma separated list of Tweet fields to display., expansions: [str] # A comma separated list of fields to expand., media.fields: [str] # A comma separated list of Media fields to display., poll.fields: [str] # A comma separated list of Poll fields to display., user.fields: [str] # A comma separated list of User fields to display., place.fields: [str] # A comma separated list of Place fields to display.}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{next_token: str, previous_token: str, result_count: int(int32)}} # The request has succeeded.
+
+@endpoint GET /2/openapi.json
+@desc Returns the OpenAPI Specification document.
+@returns(200) The request was successful
+
+@endpoint GET /2/spaces
+@desc Space lookup up Space IDs
+@required {ids: [str] # The list of Space IDs to return.}
+@optional {space.fields: [str] # A comma separated list of Space fields to display., expansions: [str] # A comma separated list of fields to expand., user.fields: [str] # A comma separated list of User fields to display., topic.fields: [str] # A comma separated list of Topic fields to display.}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}} # The request has succeeded.
+
+@endpoint GET /2/spaces/by/creator_ids
+@desc Space lookup by their creators
+@required {user_ids: [str] # The IDs of Users to search through.}
+@optional {space.fields: [str] # A comma separated list of Space fields to display., expansions: [str] # A comma separated list of fields to expand., user.fields: [str] # A comma separated list of User fields to display., topic.fields: [str] # A comma separated list of Topic fields to display.}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{result_count: int(int32)}} # The request has succeeded.
+
+@endpoint GET /2/spaces/search
+@desc Search for Spaces
+@required {query: str # The search query.}
+@optional {state: str(live/scheduled/all)=all # The state of Spaces to search for., max_results: int(int32)=100 # The number of results to return., space.fields: [str] # A comma separated list of Space fields to display., expansions: [str] # A comma separated list of fields to expand., user.fields: [str] # A comma separated list of User fields to display., topic.fields: [str] # A comma separated list of Topic fields to display.}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{result_count: int(int32)}} # The request has succeeded.
+
+@endpoint GET /2/spaces/{id}
+@desc Space lookup by Space ID
+@required {id: str # The ID of the Space to be retrieved.}
+@optional {space.fields: [str] # A comma separated list of Space fields to display., expansions: [str] # A comma separated list of fields to expand., user.fields: [str] # A comma separated list of User fields to display., topic.fields: [str] # A comma separated list of Topic fields to display.}
+@returns(200) {data: map{created_at: str(date-time), creator_id: str, ended_at: str(date-time), host_ids: [str], id: str, invited_user_ids: [str], is_ticketed: bool, lang: str, participant_count: int(int32), scheduled_start: str(date-time), speaker_ids: [str], started_at: str(date-time), state: str, subscriber_count: int(int32), title: str, topics: [map], updated_at: str(date-time)}, errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}} # The request has succeeded.
+
+@endpoint GET /2/spaces/{id}/buyers
+@desc Retrieve the list of Users who purchased a ticket to the given space
+@required {id: str # The ID of the Space to be retrieved.}
+@optional {pagination_token: str # This parameter is used to get a specified 'page' of results., max_results: int(int32)=100 # The maximum number of results., user.fields: [str] # A comma separated list of User fields to display., expansions: [str] # A comma separated list of fields to expand., tweet.fields: [str] # A comma separated list of Tweet fields to display.}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{next_token: str, previous_token: str, result_count: int(int32)}} # The request has succeeded.
+
+@endpoint GET /2/spaces/{id}/tweets
+@desc Retrieve Tweets from a Space.
+@required {id: str # The ID of the Space to be retrieved.}
+@optional {max_results: int(int32)=100 # The number of Tweets to fetch from the provided space. If not provided, the value will default to the maximum of 100., tweet.fields: [str] # A comma separated list of Tweet fields to display., expansions: [str] # A comma separated list of fields to expand., media.fields: [str] # A comma separated list of Media fields to display., poll.fields: [str] # A comma separated list of Poll fields to display., user.fields: [str] # A comma separated list of User fields to display., place.fields: [str] # A comma separated list of Place fields to display.}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{next_token: str, previous_token: str, result_count: int(int32)}} # The request has succeeded.
+
+@endpoint GET /2/tweets
+@desc Tweet lookup by Tweet IDs
+@required {ids: [str] # A comma separated list of Tweet IDs. Up to 100 are allowed in a single request.}
+@optional {tweet.fields: [str] # A comma separated list of Tweet fields to display., expansions: [str] # A comma separated list of fields to expand., media.fields: [str] # A comma separated list of Media fields to display., poll.fields: [str] # A comma separated list of Poll fields to display., user.fields: [str] # A comma separated list of User fields to display., place.fields: [str] # A comma separated list of Place fields to display.}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}} # The request has succeeded.
+
+@endpoint POST /2/tweets
+@desc Creation of a Tweet
+@optional {card_uri: str # Card Uri Parameter. This is mutually exclusive from Quote Tweet Id, Poll, Media, and Direct Message Deep Link., direct_message_deep_link: str # Link to take the conversation from the public timeline to a private Direct Message., for_super_followers_only: bool=False # Exclusive Tweet for super followers., geo: map # Place ID being attached to the Tweet for geo location., media: map # Media information being attached to created Tweet. This is mutually exclusive from Quote Tweet Id, Poll, and Card URI., nullcast: bool=False # Nullcasted (promoted-only) Tweets do not appear in the public timeline and are not served to followers., poll: map # Poll options for a Tweet with a poll. This is mutually exclusive from Media, Quote Tweet Id, and Card URI., quote_tweet_id: str # Unique identifier of this Tweet. This is returned as a string in order to avoid complications with languages and tools that cannot handle large integers., reply: map # Tweet information of the Tweet being replied to., reply_settings: str(following/mentionedUsers) # Settings to indicate who can reply to the Tweet., text: str # The content of the Tweet.}
+@returns(201) {data: map{id: str, text: str}, errors: [map]} # The request has succeeded.
+
+@endpoint GET /2/tweets/compliance/stream
+@desc Tweets Compliance stream
+@required {partition: int(int32) # The partition number.}
+@optional {backfill_minutes: int(int32) # The number of minutes of backfill requested., start_time: str(date-time) # YYYY-MM-DDTHH:mm:ssZ. The earliest UTC timestamp from which the Tweet Compliance events will be provided., end_time: str(date-time) # YYYY-MM-DDTHH:mm:ssZ. The latest UTC timestamp to which the Tweet Compliance events will be provided.}
+@returns(200) The request has succeeded.
+
+@endpoint GET /2/tweets/counts/all
+@desc Full archive search counts
+@required {query: str # One query/rule/filter for matching Tweets. Refer to https://t.co/rulelength to identify the max query length.}
+@optional {start_time: str(date-time) # YYYY-MM-DDTHH:mm:ssZ. The oldest UTC timestamp (from most recent 7 days) from which the Tweets will be provided. Timestamp is in second granularity and is inclusive (i.e. 12:00:01 includes the first second of the minute)., end_time: str(date-time) # YYYY-MM-DDTHH:mm:ssZ. The newest, most recent UTC timestamp to which the Tweets will be provided. Timestamp is in second granularity and is exclusive (i.e. 12:00:01 excludes the first second of the minute)., since_id: str # Returns results with a Tweet ID greater than (that is, more recent than) the specified ID., until_id: str # Returns results with a Tweet ID less than (that is, older than) the specified ID., next_token: str # This parameter is used to get the next 'page' of results. The value used with the parameter is pulled directly from the response provided by the API, and should not be modified., pagination_token: str # This parameter is used to get the next 'page' of results. The value used with the parameter is pulled directly from the response provided by the API, and should not be modified., granularity: str(minute/hour/day)=hour # The granularity for the search counts results., search_count.fields: [str] # A comma separated list of SearchCount fields to display.}
+@returns(200) {data: [map], errors: [map], meta: map{newest_id: str, next_token: str, oldest_id: str, total_tweet_count: int(int32)}} # The request has succeeded.
+
+@endpoint GET /2/tweets/counts/recent
+@desc Recent search counts
+@required {query: str # One query/rule/filter for matching Tweets. Refer to https://t.co/rulelength to identify the max query length.}
+@optional {start_time: str(date-time) # YYYY-MM-DDTHH:mm:ssZ. The oldest UTC timestamp (from most recent 7 days) from which the Tweets will be provided. Timestamp is in second granularity and is inclusive (i.e. 12:00:01 includes the first second of the minute)., end_time: str(date-time) # YYYY-MM-DDTHH:mm:ssZ. The newest, most recent UTC timestamp to which the Tweets will be provided. Timestamp is in second granularity and is exclusive (i.e. 12:00:01 excludes the first second of the minute)., since_id: str # Returns results with a Tweet ID greater than (that is, more recent than) the specified ID., until_id: str # Returns results with a Tweet ID less than (that is, older than) the specified ID., next_token: str # This parameter is used to get the next 'page' of results. The value used with the parameter is pulled directly from the response provided by the API, and should not be modified., pagination_token: str # This parameter is used to get the next 'page' of results. The value used with the parameter is pulled directly from the response provided by the API, and should not be modified., granularity: str(minute/hour/day)=hour # The granularity for the search counts results., search_count.fields: [str] # A comma separated list of SearchCount fields to display.}
+@returns(200) {data: [map], errors: [map], meta: map{newest_id: str, next_token: str, oldest_id: str, total_tweet_count: int(int32)}} # The request has succeeded.
+
+@endpoint GET /2/tweets/firehose/stream
+@desc Firehose stream
+@required {partition: int(int32) # The partition number.}
+@optional {backfill_minutes: int(int32) # The number of minutes of backfill requested., start_time: str(date-time) # YYYY-MM-DDTHH:mm:ssZ. The earliest UTC timestamp to which the Tweets will be provided., end_time: str(date-time) # YYYY-MM-DDTHH:mm:ssZ. The latest UTC timestamp to which the Tweets will be provided., tweet.fields: [str] # A comma separated list of Tweet fields to display., expansions: [str] # A comma separated list of fields to expand., media.fields: [str] # A comma separated list of Media fields to display., poll.fields: [str] # A comma separated list of Poll fields to display., user.fields: [str] # A comma separated list of User fields to display., place.fields: [str] # A comma separated list of Place fields to display.}
+@returns(200) {data: map{attachments: map{media_keys: [str], poll_ids: [str]}, author_id: str, context_annotations: [map], conversation_id: str, created_at: str(date-time), edit_controls: map{editable_until: str(date-time), edits_remaining: int, is_edit_eligible: bool}, edit_history_tweet_ids: [str], entities: map{annotations: [any], cashtags: [any], hashtags: [any], mentions: [any], urls: [any]}, geo: map{coordinates: map, place_id: str}, id: str, in_reply_to_user_id: str, lang: str, non_public_metrics: map{impression_count: int(int32)}, organic_metrics: map{impression_count: int, like_count: int, reply_count: int, retweet_count: int}, possibly_sensitive: bool, promoted_metrics: map{impression_count: int(int32), like_count: int(int32), reply_count: int(int32), retweet_count: int(int32)}, public_metrics: map{impression_count: int(int32), like_count: int, quote_count: int, reply_count: int, retweet_count: int}, referenced_tweets: [map], reply_settings: str, source: str, text: str, withheld: map{copyright: bool, country_codes: [str], scope: str}}, errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}} # The request has succeeded.
+
+@endpoint GET /2/tweets/label/stream
+@desc Tweets Label stream
+@optional {backfill_minutes: int(int32) # The number of minutes of backfill requested., start_time: str(date-time) # YYYY-MM-DDTHH:mm:ssZ. The earliest UTC timestamp from which the Tweet labels will be provided., end_time: str(date-time) # YYYY-MM-DDTHH:mm:ssZ. The latest UTC timestamp from which the Tweet labels will be provided.}
+@returns(200) The request has succeeded.
+
+@endpoint GET /2/tweets/sample/stream
+@desc Sample stream
+@optional {backfill_minutes: int(int32) # The number of minutes of backfill requested., tweet.fields: [str] # A comma separated list of Tweet fields to display., expansions: [str] # A comma separated list of fields to expand., media.fields: [str] # A comma separated list of Media fields to display., poll.fields: [str] # A comma separated list of Poll fields to display., user.fields: [str] # A comma separated list of User fields to display., place.fields: [str] # A comma separated list of Place fields to display.}
+@returns(200) {data: map{attachments: map{media_keys: [str], poll_ids: [str]}, author_id: str, context_annotations: [map], conversation_id: str, created_at: str(date-time), edit_controls: map{editable_until: str(date-time), edits_remaining: int, is_edit_eligible: bool}, edit_history_tweet_ids: [str], entities: map{annotations: [any], cashtags: [any], hashtags: [any], mentions: [any], urls: [any]}, geo: map{coordinates: map, place_id: str}, id: str, in_reply_to_user_id: str, lang: str, non_public_metrics: map{impression_count: int(int32)}, organic_metrics: map{impression_count: int, like_count: int, reply_count: int, retweet_count: int}, possibly_sensitive: bool, promoted_metrics: map{impression_count: int(int32), like_count: int(int32), reply_count: int(int32), retweet_count: int(int32)}, public_metrics: map{impression_count: int(int32), like_count: int, quote_count: int, reply_count: int, retweet_count: int}, referenced_tweets: [map], reply_settings: str, source: str, text: str, withheld: map{copyright: bool, country_codes: [str], scope: str}}, errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}} # The request has succeeded.
+
+@endpoint GET /2/tweets/sample10/stream
+@desc Sample 10% stream
+@required {partition: int(int32) # The partition number.}
+@optional {backfill_minutes: int(int32) # The number of minutes of backfill requested., start_time: str(date-time) # YYYY-MM-DDTHH:mm:ssZ. The earliest UTC timestamp to which the Tweets will be provided., end_time: str(date-time) # YYYY-MM-DDTHH:mm:ssZ. The latest UTC timestamp to which the Tweets will be provided., tweet.fields: [str] # A comma separated list of Tweet fields to display., expansions: [str] # A comma separated list of fields to expand., media.fields: [str] # A comma separated list of Media fields to display., poll.fields: [str] # A comma separated list of Poll fields to display., user.fields: [str] # A comma separated list of User fields to display., place.fields: [str] # A comma separated list of Place fields to display.}
+@returns(200) {data: map{attachments: map{media_keys: [str], poll_ids: [str]}, author_id: str, context_annotations: [map], conversation_id: str, created_at: str(date-time), edit_controls: map{editable_until: str(date-time), edits_remaining: int, is_edit_eligible: bool}, edit_history_tweet_ids: [str], entities: map{annotations: [any], cashtags: [any], hashtags: [any], mentions: [any], urls: [any]}, geo: map{coordinates: map, place_id: str}, id: str, in_reply_to_user_id: str, lang: str, non_public_metrics: map{impression_count: int(int32)}, organic_metrics: map{impression_count: int, like_count: int, reply_count: int, retweet_count: int}, possibly_sensitive: bool, promoted_metrics: map{impression_count: int(int32), like_count: int(int32), reply_count: int(int32), retweet_count: int(int32)}, public_metrics: map{impression_count: int(int32), like_count: int, quote_count: int, reply_count: int, retweet_count: int}, referenced_tweets: [map], reply_settings: str, source: str, text: str, withheld: map{copyright: bool, country_codes: [str], scope: str}}, errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}} # The request has succeeded.
+
+@endpoint GET /2/tweets/search/all
+@desc Full-archive search
+@required {query: str # One query/rule/filter for matching Tweets. Refer to https://t.co/rulelength to identify the max query length.}
+@optional {start_time: str(date-time) # YYYY-MM-DDTHH:mm:ssZ. The oldest UTC timestamp from which the Tweets will be provided. Timestamp is in second granularity and is inclusive (i.e. 12:00:01 includes the first second of the minute)., end_time: str(date-time) # YYYY-MM-DDTHH:mm:ssZ. The newest, most recent UTC timestamp to which the Tweets will be provided. Timestamp is in second granularity and is exclusive (i.e. 12:00:01 excludes the first second of the minute)., since_id: str # Returns results with a Tweet ID greater than (that is, more recent than) the specified ID., until_id: str # Returns results with a Tweet ID less than (that is, older than) the specified ID., max_results: int(int32)=10 # The maximum number of search results to be returned by a request., next_token: str # This parameter is used to get the next 'page' of results. The value used with the parameter is pulled directly from the response provided by the API, and should not be modified., pagination_token: str # This parameter is used to get the next 'page' of results. The value used with the parameter is pulled directly from the response provided by the API, and should not be modified., sort_order: str(recency/relevancy) # This order in which to return results., tweet.fields: [str] # A comma separated list of Tweet fields to display., expansions: [str] # A comma separated list of fields to expand., media.fields: [str] # A comma separated list of Media fields to display., poll.fields: [str] # A comma separated list of Poll fields to display., user.fields: [str] # A comma separated list of User fields to display., place.fields: [str] # A comma separated list of Place fields to display.}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{newest_id: str, next_token: str, oldest_id: str, result_count: int(int32)}} # The request has succeeded.
+
+@endpoint GET /2/tweets/search/recent
+@desc Recent search
+@required {query: str # One query/rule/filter for matching Tweets. Refer to https://t.co/rulelength to identify the max query length.}
+@optional {start_time: str(date-time) # YYYY-MM-DDTHH:mm:ssZ. The oldest UTC timestamp from which the Tweets will be provided. Timestamp is in second granularity and is inclusive (i.e. 12:00:01 includes the first second of the minute)., end_time: str(date-time) # YYYY-MM-DDTHH:mm:ssZ. The newest, most recent UTC timestamp to which the Tweets will be provided. Timestamp is in second granularity and is exclusive (i.e. 12:00:01 excludes the first second of the minute)., since_id: str # Returns results with a Tweet ID greater than (that is, more recent than) the specified ID., until_id: str # Returns results with a Tweet ID less than (that is, older than) the specified ID., max_results: int(int32)=10 # The maximum number of search results to be returned by a request., next_token: str # This parameter is used to get the next 'page' of results. The value used with the parameter is pulled directly from the response provided by the API, and should not be modified., pagination_token: str # This parameter is used to get the next 'page' of results. The value used with the parameter is pulled directly from the response provided by the API, and should not be modified., sort_order: str(recency/relevancy) # This order in which to return results., tweet.fields: [str] # A comma separated list of Tweet fields to display., expansions: [str] # A comma separated list of fields to expand., media.fields: [str] # A comma separated list of Media fields to display., poll.fields: [str] # A comma separated list of Poll fields to display., user.fields: [str] # A comma separated list of User fields to display., place.fields: [str] # A comma separated list of Place fields to display.}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{newest_id: str, next_token: str, oldest_id: str, result_count: int(int32)}} # The request has succeeded.
+
+@endpoint GET /2/tweets/search/stream
+@desc Filtered stream
+@optional {backfill_minutes: int(int32) # The number of minutes of backfill requested., start_time: str(date-time) # YYYY-MM-DDTHH:mm:ssZ. The earliest UTC timestamp from which the Tweets will be provided., end_time: str(date-time) # YYYY-MM-DDTHH:mm:ssZ. The latest UTC timestamp to which the Tweets will be provided., tweet.fields: [str] # A comma separated list of Tweet fields to display., expansions: [str] # A comma separated list of fields to expand., media.fields: [str] # A comma separated list of Media fields to display., poll.fields: [str] # A comma separated list of Poll fields to display., user.fields: [str] # A comma separated list of User fields to display., place.fields: [str] # A comma separated list of Place fields to display.}
+@returns(200) {data: map{attachments: map{media_keys: [str], poll_ids: [str]}, author_id: str, context_annotations: [map], conversation_id: str, created_at: str(date-time), edit_controls: map{editable_until: str(date-time), edits_remaining: int, is_edit_eligible: bool}, edit_history_tweet_ids: [str], entities: map{annotations: [any], cashtags: [any], hashtags: [any], mentions: [any], urls: [any]}, geo: map{coordinates: map, place_id: str}, id: str, in_reply_to_user_id: str, lang: str, non_public_metrics: map{impression_count: int(int32)}, organic_metrics: map{impression_count: int, like_count: int, reply_count: int, retweet_count: int}, possibly_sensitive: bool, promoted_metrics: map{impression_count: int(int32), like_count: int(int32), reply_count: int(int32), retweet_count: int(int32)}, public_metrics: map{impression_count: int(int32), like_count: int, quote_count: int, reply_count: int, retweet_count: int}, referenced_tweets: [map], reply_settings: str, source: str, text: str, withheld: map{copyright: bool, country_codes: [str], scope: str}}, errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, matching_rules: [map]} # The request has succeeded.
+
+@endpoint GET /2/tweets/search/stream/rules
+@desc Rules lookup
+@optional {ids: [str] # A comma-separated list of Rule IDs., max_results: int(int32)=1000 # The maximum number of results., pagination_token: str # This value is populated by passing the 'next_token' returned in a request to paginate through results.}
+@returns(200) {data: [map], meta: map{next_token: str, result_count: int(int32), sent: str, summary: any}} # The request has succeeded.
+
+@endpoint POST /2/tweets/search/stream/rules
+@desc Add/Delete rules
+@optional {dry_run: bool # Dry Run can be used with both the add and delete action, with the expected result given, but without actually taking any action in the system (meaning the end state will always be as it was when the request was submitted). This is particularly useful to validate rule changes.}
+@returns(200) {data: [map], errors: [map], meta: map{next_token: str, result_count: int(int32), sent: str, summary: any}} # The request has succeeded.
+
+@endpoint DELETE /2/tweets/{id}
+@desc Tweet delete by Tweet ID
+@required {id: str # The ID of the Tweet to be deleted.}
+@returns(200) {data: map{deleted: bool}, errors: [map]} # The request has succeeded.
+
+@endpoint GET /2/tweets/{id}
+@desc Tweet lookup by Tweet ID
+@required {id: str # A single Tweet ID.}
+@optional {tweet.fields: [str] # A comma separated list of Tweet fields to display., expansions: [str] # A comma separated list of fields to expand., media.fields: [str] # A comma separated list of Media fields to display., poll.fields: [str] # A comma separated list of Poll fields to display., user.fields: [str] # A comma separated list of User fields to display., place.fields: [str] # A comma separated list of Place fields to display.}
+@returns(200) {data: map{attachments: map{media_keys: [str], poll_ids: [str]}, author_id: str, context_annotations: [map], conversation_id: str, created_at: str(date-time), edit_controls: map{editable_until: str(date-time), edits_remaining: int, is_edit_eligible: bool}, edit_history_tweet_ids: [str], entities: map{annotations: [any], cashtags: [any], hashtags: [any], mentions: [any], urls: [any]}, geo: map{coordinates: map, place_id: str}, id: str, in_reply_to_user_id: str, lang: str, non_public_metrics: map{impression_count: int(int32)}, organic_metrics: map{impression_count: int, like_count: int, reply_count: int, retweet_count: int}, possibly_sensitive: bool, promoted_metrics: map{impression_count: int(int32), like_count: int(int32), reply_count: int(int32), retweet_count: int(int32)}, public_metrics: map{impression_count: int(int32), like_count: int, quote_count: int, reply_count: int, retweet_count: int}, referenced_tweets: [map], reply_settings: str, source: str, text: str, withheld: map{copyright: bool, country_codes: [str], scope: str}}, errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}} # The request has succeeded.
+
+@endpoint GET /2/tweets/{id}/liking_users
+@desc Returns User objects that have liked the provided Tweet ID
+@required {id: str # A single Tweet ID.}
+@optional {max_results: int(int32)=100 # The maximum number of results., pagination_token: str # This parameter is used to get the next 'page' of results., user.fields: [str] # A comma separated list of User fields to display., expansions: [str] # A comma separated list of fields to expand., tweet.fields: [str] # A comma separated list of Tweet fields to display.}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{next_token: str, previous_token: str, result_count: int(int32)}} # The request has succeeded.
+
+@endpoint GET /2/tweets/{id}/quote_tweets
+@desc Retrieve Tweets that quote a Tweet.
+@required {id: str # A single Tweet ID.}
+@optional {max_results: int(int32)=10 # The maximum number of results to be returned., pagination_token: str # This parameter is used to get a specified 'page' of results., exclude: [str] # The set of entities to exclude (e.g. 'replies' or 'retweets')., tweet.fields: [str] # A comma separated list of Tweet fields to display., expansions: [str] # A comma separated list of fields to expand., media.fields: [str] # A comma separated list of Media fields to display., poll.fields: [str] # A comma separated list of Poll fields to display., user.fields: [str] # A comma separated list of User fields to display., place.fields: [str] # A comma separated list of Place fields to display.}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{next_token: str, result_count: int(int32)}} # The request has succeeded.
+
+@endpoint GET /2/tweets/{id}/retweeted_by
+@desc Returns User objects that have retweeted the provided Tweet ID
+@required {id: str # A single Tweet ID.}
+@optional {max_results: int(int32)=100 # The maximum number of results., pagination_token: str # This parameter is used to get the next 'page' of results., user.fields: [str] # A comma separated list of User fields to display., expansions: [str] # A comma separated list of fields to expand., tweet.fields: [str] # A comma separated list of Tweet fields to display.}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{next_token: str, previous_token: str, result_count: int(int32)}} # The request has succeeded.
+
+@endpoint PUT /2/tweets/{tweet_id}/hidden
+@desc Hide replies
+@required {tweet_id: str # The ID of the reply that you want to hide or unhide., hidden: bool}
+@returns(200) {data: map{hidden: bool}} # The request has succeeded.
+
+@endpoint GET /2/users
+@desc User lookup by IDs
+@required {ids: [str] # A list of User IDs, comma-separated. You can specify up to 100 IDs.}
+@optional {user.fields: [str] # A comma separated list of User fields to display., expansions: [str] # A comma separated list of fields to expand., tweet.fields: [str] # A comma separated list of Tweet fields to display.}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}} # The request has succeeded.
+
+@endpoint GET /2/users/by
+@desc User lookup by usernames
+@required {usernames: [str] # A list of usernames, comma-separated.}
+@optional {user.fields: [str] # A comma separated list of User fields to display., expansions: [str] # A comma separated list of fields to expand., tweet.fields: [str] # A comma separated list of Tweet fields to display.}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}} # The request has succeeded.
+
+@endpoint GET /2/users/by/username/{username}
+@desc User lookup by username
+@required {username: str # A username.}
+@optional {user.fields: [str] # A comma separated list of User fields to display., expansions: [str] # A comma separated list of fields to expand., tweet.fields: [str] # A comma separated list of Tweet fields to display.}
+@returns(200) {data: map{created_at: str(date-time), description: str, entities: map{description: map, url: map}, id: str, location: str, name: str, pinned_tweet_id: str, profile_image_url: str(uri), protected: bool, public_metrics: map{followers_count: int, following_count: int, listed_count: int, tweet_count: int}, url: str, username: str, verified: bool, verified_type: str, withheld: map{country_codes: [str], scope: str}}, errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}} # The request has succeeded.
+
+@endpoint GET /2/users/compliance/stream
+@desc Users Compliance stream
+@required {partition: int(int32) # The partition number.}
+@optional {backfill_minutes: int(int32) # The number of minutes of backfill requested., start_time: str(date-time) # YYYY-MM-DDTHH:mm:ssZ. The earliest UTC timestamp from which the User Compliance events will be provided., end_time: str(date-time) # YYYY-MM-DDTHH:mm:ssZ. The latest UTC timestamp from which the User Compliance events will be provided.}
+@returns(200) The request has succeeded.
+
+@endpoint GET /2/users/me
+@desc User lookup me
+@optional {user.fields: [str] # A comma separated list of User fields to display., expansions: [str] # A comma separated list of fields to expand., tweet.fields: [str] # A comma separated list of Tweet fields to display.}
+@returns(200) {data: map{created_at: str(date-time), description: str, entities: map{description: map, url: map}, id: str, location: str, name: str, pinned_tweet_id: str, profile_image_url: str(uri), protected: bool, public_metrics: map{followers_count: int, following_count: int, listed_count: int, tweet_count: int}, url: str, username: str, verified: bool, verified_type: str, withheld: map{country_codes: [str], scope: str}}, errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}} # The request has succeeded.
+
+@endpoint GET /2/users/{id}
+@desc User lookup by ID
+@required {id: str # The ID of the User to lookup.}
+@optional {user.fields: [str] # A comma separated list of User fields to display., expansions: [str] # A comma separated list of fields to expand., tweet.fields: [str] # A comma separated list of Tweet fields to display.}
+@returns(200) {data: map{created_at: str(date-time), description: str, entities: map{description: map, url: map}, id: str, location: str, name: str, pinned_tweet_id: str, profile_image_url: str(uri), protected: bool, public_metrics: map{followers_count: int, following_count: int, listed_count: int, tweet_count: int}, url: str, username: str, verified: bool, verified_type: str, withheld: map{country_codes: [str], scope: str}}, errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}} # The request has succeeded.
+
+@endpoint GET /2/users/{id}/blocking
+@desc Returns User objects that are blocked by provided User ID
+@required {id: str # The ID of the authenticated source User for whom to return results.}
+@optional {max_results: int(int32) # The maximum number of results., pagination_token: str # This parameter is used to get a specified 'page' of results., user.fields: [str] # A comma separated list of User fields to display., expansions: [str] # A comma separated list of fields to expand., tweet.fields: [str] # A comma separated list of Tweet fields to display.}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{next_token: str, previous_token: str, result_count: int(int32)}} # The request has succeeded.
+
+@endpoint POST /2/users/{id}/blocking
+@desc Block User by User ID
+@required {id: str # The ID of the authenticated source User that is requesting to block the target User., target_user_id: str # Unique identifier of this User. This is returned as a string in order to avoid complications with languages and tools that cannot handle large integers.}
+@returns(200) {data: map{blocking: bool}, errors: [map]} # The request has succeeded.
+
+@endpoint GET /2/users/{id}/bookmarks
+@desc Bookmarks by User
+@required {id: str # The ID of the authenticated source User for whom to return results.}
+@optional {max_results: int(int32) # The maximum number of results., pagination_token: str # This parameter is used to get the next 'page' of results., tweet.fields: [str] # A comma separated list of Tweet fields to display., expansions: [str] # A comma separated list of fields to expand., media.fields: [str] # A comma separated list of Media fields to display., poll.fields: [str] # A comma separated list of Poll fields to display., user.fields: [str] # A comma separated list of User fields to display., place.fields: [str] # A comma separated list of Place fields to display.}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{next_token: str, previous_token: str, result_count: int(int32)}} # The request has succeeded.
+
+@endpoint POST /2/users/{id}/bookmarks
+@desc Add Tweet to Bookmarks
+@required {id: str # The ID of the authenticated source User for whom to add bookmarks., tweet_id: str # Unique identifier of this Tweet. This is returned as a string in order to avoid complications with languages and tools that cannot handle large integers.}
+@returns(200) {data: map{bookmarked: bool}, errors: [map]} # The request has succeeded.
+
+@endpoint DELETE /2/users/{id}/bookmarks/{tweet_id}
+@desc Remove a bookmarked Tweet
+@required {id: str # The ID of the authenticated source User whose bookmark is to be removed., tweet_id: str # The ID of the Tweet that the source User is removing from bookmarks.}
+@returns(200) {data: map{bookmarked: bool}, errors: [map]} # The request has succeeded.
+
+@endpoint GET /2/users/{id}/followed_lists
+@desc Get User's Followed Lists
+@required {id: str # The ID of the User to lookup.}
+@optional {max_results: int(int32)=100 # The maximum number of results., pagination_token: str # This parameter is used to get a specified 'page' of results., list.fields: [str] # A comma separated list of List fields to display., expansions: [str] # A comma separated list of fields to expand., user.fields: [str] # A comma separated list of User fields to display.}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{next_token: str, previous_token: str, result_count: int(int32)}} # The request has succeeded.
+
+@endpoint POST /2/users/{id}/followed_lists
+@desc Follow a List
+@required {id: str # The ID of the authenticated source User that will follow the List., list_id: str # The unique identifier of this List.}
+@returns(200) {data: map{following: bool}, errors: [map]} # The request has succeeded.
+
+@endpoint DELETE /2/users/{id}/followed_lists/{list_id}
+@desc Unfollow a List
+@required {id: str # The ID of the authenticated source User that will unfollow the List., list_id: str # The ID of the List to unfollow.}
+@returns(200) {data: map{following: bool}, errors: [map]} # The request has succeeded.
+
+@endpoint GET /2/users/{id}/followers
+@desc Followers by User ID
+@required {id: str # The ID of the User to lookup.}
+@optional {max_results: int(int32) # The maximum number of results., pagination_token: str # This parameter is used to get a specified 'page' of results., user.fields: [str] # A comma separated list of User fields to display., expansions: [str] # A comma separated list of fields to expand., tweet.fields: [str] # A comma separated list of Tweet fields to display.}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{next_token: str, previous_token: str, result_count: int(int32)}} # The request has succeeded.
+
+@endpoint GET /2/users/{id}/following
+@desc Following by User ID
+@required {id: str # The ID of the User to lookup.}
+@optional {max_results: int(int32) # The maximum number of results., pagination_token: str # This parameter is used to get a specified 'page' of results., user.fields: [str] # A comma separated list of User fields to display., expansions: [str] # A comma separated list of fields to expand., tweet.fields: [str] # A comma separated list of Tweet fields to display.}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{next_token: str, previous_token: str, result_count: int(int32)}} # The request has succeeded.
+
+@endpoint POST /2/users/{id}/following
+@desc Follow User
+@required {id: str # The ID of the authenticated source User that is requesting to follow the target User., target_user_id: str # Unique identifier of this User. This is returned as a string in order to avoid complications with languages and tools that cannot handle large integers.}
+@returns(200) {data: map{following: bool, pending_follow: bool}, errors: [map]} # The request has succeeded.
+
+@endpoint GET /2/users/{id}/liked_tweets
+@desc Returns Tweet objects liked by the provided User ID
+@required {id: str # The ID of the User to lookup.}
+@optional {max_results: int(int32) # The maximum number of results., pagination_token: str # This parameter is used to get the next 'page' of results., tweet.fields: [str] # A comma separated list of Tweet fields to display., expansions: [str] # A comma separated list of fields to expand., media.fields: [str] # A comma separated list of Media fields to display., poll.fields: [str] # A comma separated list of Poll fields to display., user.fields: [str] # A comma separated list of User fields to display., place.fields: [str] # A comma separated list of Place fields to display.}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{next_token: str, previous_token: str, result_count: int(int32)}} # The request has succeeded.
+
+@endpoint POST /2/users/{id}/likes
+@desc Causes the User (in the path) to like the specified Tweet
+@required {id: str # The ID of the authenticated source User that is requesting to like the Tweet., tweet_id: str # Unique identifier of this Tweet. This is returned as a string in order to avoid complications with languages and tools that cannot handle large integers.}
+@returns(200) {data: map{liked: bool}, errors: [map]} # The request has succeeded.
+
+@endpoint DELETE /2/users/{id}/likes/{tweet_id}
+@desc Causes the User (in the path) to unlike the specified Tweet
+@required {id: str # The ID of the authenticated source User that is requesting to unlike the Tweet., tweet_id: str # The ID of the Tweet that the User is requesting to unlike.}
+@returns(200) {data: map{liked: bool}, errors: [map]} # The request has succeeded.
+
+@endpoint GET /2/users/{id}/list_memberships
+@desc Get a User's List Memberships
+@required {id: str # The ID of the User to lookup.}
+@optional {max_results: int(int32)=100 # The maximum number of results., pagination_token: str # This parameter is used to get a specified 'page' of results., list.fields: [str] # A comma separated list of List fields to display., expansions: [str] # A comma separated list of fields to expand., user.fields: [str] # A comma separated list of User fields to display.}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{next_token: str, previous_token: str, result_count: int(int32)}} # The request has succeeded.
+
+@endpoint GET /2/users/{id}/mentions
+@desc User mention timeline by User ID
+@required {id: str # The ID of the User to lookup.}
+@optional {since_id: str # The minimum Tweet ID to be included in the result set. This parameter takes precedence over start_time if both are specified., until_id: str # The maximum Tweet ID to be included in the result set. This parameter takes precedence over end_time if both are specified., max_results: int(int32) # The maximum number of results., pagination_token: str # This parameter is used to get the next 'page' of results., start_time: str(date-time) # YYYY-MM-DDTHH:mm:ssZ. The earliest UTC timestamp from which the Tweets will be provided. The since_id parameter takes precedence if it is also specified., end_time: str(date-time) # YYYY-MM-DDTHH:mm:ssZ. The latest UTC timestamp to which the Tweets will be provided. The until_id parameter takes precedence if it is also specified., tweet.fields: [str] # A comma separated list of Tweet fields to display., expansions: [str] # A comma separated list of fields to expand., media.fields: [str] # A comma separated list of Media fields to display., poll.fields: [str] # A comma separated list of Poll fields to display., user.fields: [str] # A comma separated list of User fields to display., place.fields: [str] # A comma separated list of Place fields to display.}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{newest_id: str, next_token: str, oldest_id: str, previous_token: str, result_count: int(int32)}} # The request has succeeded.
+
+@endpoint GET /2/users/{id}/muting
+@desc Returns User objects that are muted by the provided User ID
+@required {id: str # The ID of the authenticated source User for whom to return results.}
+@optional {max_results: int(int32)=100 # The maximum number of results., pagination_token: str # This parameter is used to get the next 'page' of results., user.fields: [str] # A comma separated list of User fields to display., expansions: [str] # A comma separated list of fields to expand., tweet.fields: [str] # A comma separated list of Tweet fields to display.}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{next_token: str, previous_token: str, result_count: int(int32)}} # The request has succeeded.
+
+@endpoint POST /2/users/{id}/muting
+@desc Mute User by User ID.
+@required {id: str # The ID of the authenticated source User that is requesting to mute the target User., target_user_id: str # Unique identifier of this User. This is returned as a string in order to avoid complications with languages and tools that cannot handle large integers.}
+@returns(200) {data: map{muting: bool}, errors: [map]} # The request has succeeded.
+
+@endpoint GET /2/users/{id}/owned_lists
+@desc Get a User's Owned Lists.
+@required {id: str # The ID of the User to lookup.}
+@optional {max_results: int(int32)=100 # The maximum number of results., pagination_token: str # This parameter is used to get a specified 'page' of results., list.fields: [str] # A comma separated list of List fields to display., expansions: [str] # A comma separated list of fields to expand., user.fields: [str] # A comma separated list of User fields to display.}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{next_token: str, previous_token: str, result_count: int(int32)}} # The request has succeeded.
+
+@endpoint GET /2/users/{id}/pinned_lists
+@desc Get a User's Pinned Lists
+@required {id: str # The ID of the authenticated source User for whom to return results.}
+@optional {list.fields: [str] # A comma separated list of List fields to display., expansions: [str] # A comma separated list of fields to expand., user.fields: [str] # A comma separated list of User fields to display.}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{result_count: int(int32)}} # The request has succeeded.
+
+@endpoint POST /2/users/{id}/pinned_lists
+@desc Pin a List
+@required {id: str # The ID of the authenticated source User that will pin the List., list_id: str # The unique identifier of this List.}
+@returns(200) {data: map{pinned: bool}, errors: [map]} # The request has succeeded.
+
+@endpoint DELETE /2/users/{id}/pinned_lists/{list_id}
+@desc Unpin a List
+@required {id: str # The ID of the authenticated source User for whom to return results., list_id: str # The ID of the List to unpin.}
+@returns(200) {data: map{pinned: bool}, errors: [map]} # The request has succeeded.
+
+@endpoint POST /2/users/{id}/retweets
+@desc Causes the User (in the path) to retweet the specified Tweet.
+@required {id: str # The ID of the authenticated source User that is requesting to retweet the Tweet., tweet_id: str # Unique identifier of this Tweet. This is returned as a string in order to avoid complications with languages and tools that cannot handle large integers.}
+@returns(200) {data: map{retweeted: bool}, errors: [map]} # The request has succeeded.
+
+@endpoint DELETE /2/users/{id}/retweets/{source_tweet_id}
+@desc Causes the User (in the path) to unretweet the specified Tweet
+@required {id: str # The ID of the authenticated source User that is requesting to retweet the Tweet., source_tweet_id: str # The ID of the Tweet that the User is requesting to unretweet.}
+@returns(200) {data: map{retweeted: bool}, errors: [map]} # The request has succeeded.
+
+@endpoint GET /2/users/{id}/timelines/reverse_chronological
+@desc User home timeline by User ID
+@required {id: str # The ID of the authenticated source User to list Reverse Chronological Timeline Tweets of.}
+@optional {since_id: str # The minimum Tweet ID to be included in the result set. This parameter takes precedence over start_time if both are specified., until_id: str # The maximum Tweet ID to be included in the result set. This parameter takes precedence over end_time if both are specified., max_results: int(int32) # The maximum number of results., pagination_token: str # This parameter is used to get the next 'page' of results., exclude: [str] # The set of entities to exclude (e.g. 'replies' or 'retweets')., start_time: str(date-time) # YYYY-MM-DDTHH:mm:ssZ. The earliest UTC timestamp from which the Tweets will be provided. The since_id parameter takes precedence if it is also specified., end_time: str(date-time) # YYYY-MM-DDTHH:mm:ssZ. The latest UTC timestamp to which the Tweets will be provided. The until_id parameter takes precedence if it is also specified., tweet.fields: [str] # A comma separated list of Tweet fields to display., expansions: [str] # A comma separated list of fields to expand., media.fields: [str] # A comma separated list of Media fields to display., poll.fields: [str] # A comma separated list of Poll fields to display., user.fields: [str] # A comma separated list of User fields to display., place.fields: [str] # A comma separated list of Place fields to display.}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{newest_id: str, next_token: str, oldest_id: str, previous_token: str, result_count: int(int32)}} # The request has succeeded.
+
+@endpoint GET /2/users/{id}/tweets
+@desc User Tweets timeline by User ID
+@required {id: str # The ID of the User to lookup.}
+@optional {since_id: str # The minimum Tweet ID to be included in the result set. This parameter takes precedence over start_time if both are specified., until_id: str # The maximum Tweet ID to be included in the result set. This parameter takes precedence over end_time if both are specified., max_results: int(int32) # The maximum number of results., pagination_token: str # This parameter is used to get the next 'page' of results., exclude: [str] # The set of entities to exclude (e.g. 'replies' or 'retweets')., start_time: str(date-time) # YYYY-MM-DDTHH:mm:ssZ. The earliest UTC timestamp from which the Tweets will be provided. The since_id parameter takes precedence if it is also specified., end_time: str(date-time) # YYYY-MM-DDTHH:mm:ssZ. The latest UTC timestamp to which the Tweets will be provided. The until_id parameter takes precedence if it is also specified., tweet.fields: [str] # A comma separated list of Tweet fields to display., expansions: [str] # A comma separated list of fields to expand., media.fields: [str] # A comma separated list of Media fields to display., poll.fields: [str] # A comma separated list of Poll fields to display., user.fields: [str] # A comma separated list of User fields to display., place.fields: [str] # A comma separated list of Place fields to display.}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{newest_id: str, next_token: str, oldest_id: str, previous_token: str, result_count: int(int32)}} # The request has succeeded.
+
+@endpoint DELETE /2/users/{source_user_id}/blocking/{target_user_id}
+@desc Unblock User by User ID
+@required {source_user_id: str # The ID of the authenticated source User that is requesting to unblock the target User., target_user_id: str # The ID of the User that the source User is requesting to unblock.}
+@returns(200) {data: map{blocking: bool}, errors: [map]} # The request has succeeded.
+
+@endpoint DELETE /2/users/{source_user_id}/following/{target_user_id}
+@desc Unfollow User
+@required {source_user_id: str # The ID of the authenticated source User that is requesting to unfollow the target User., target_user_id: str # The ID of the User that the source User is requesting to unfollow.}
+@returns(200) {data: map{following: bool}, errors: [map]} # The request has succeeded.
+
+@endpoint DELETE /2/users/{source_user_id}/muting/{target_user_id}
+@desc Unmute User by User ID
+@required {source_user_id: str # The ID of the authenticated source User that is requesting to unmute the target User., target_user_id: str # The ID of the User that the source User is requesting to unmute.}
+@returns(200) {data: map{muting: bool}, errors: [map]} # The request has succeeded.
+
+@end
+

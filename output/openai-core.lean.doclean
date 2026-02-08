@@ -1,0 +1,38 @@
+@doclean v0.2
+# Machine-readable API spec. Each @endpoint block is one API call.
+@api OpenAI API
+@base https://api.openai.com/v1
+@version 2.0.0
+@auth Bearer bearer
+@endpoints 5
+@toc Create chat completion, Create embeddings, List models, Retrieve model, Create image
+
+@endpoint POST /chat/completions
+@required {model: str, messages: [map]}
+@optional {temperature: num=1, top_p: num=1, n: int=1, stream: bool=false, max_tokens: int, stop: str, presence_penalty: num=0, frequency_penalty: num=0, tools: [map], tool_choice: str, response_format: map, seed: int, user: str}
+@returns(200) {id: str, object: str, created: int, model: str, choices: [map], usage: map{prompt_tokens: int, completion_tokens: int, total_tokens: int}}
+@errors {401, 429, 500}
+
+@endpoint POST /embeddings
+@required {model: str, input: str}
+@optional {encoding_format: str(float/base64)=float, dimensions: int, user: str}
+@returns(200) {object: str, data: [map], model: str, usage: map{prompt_tokens: int, total_tokens: int}}
+@errors {401, 429}
+
+@endpoint GET /models
+@returns(200) {object: str, data: [map]}
+@errors {401}
+
+@endpoint GET /models/{model}
+@required {model: str}
+@returns(200)
+@errors {401, 404}
+
+@endpoint POST /images/generations
+@required {prompt: str}
+@optional {model: str=dall-e-2, n: int=1, size: str(256x256/512x512/1024x1024/1792x1024/1024x1792)=1024x1024, quality: str(standard/hd)=standard, response_format: str(url/b64_json)=url, style: str(vivid/natural)=vivid, user: str}
+@returns(200) {created: int, data: [map]}
+@errors {400, 401}
+
+@end
+

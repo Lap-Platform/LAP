@@ -1,0 +1,34 @@
+@doclean v0.2
+# Machine-readable API spec. Each @endpoint block is one API call.
+@api Google Maps Platform API
+@base https://maps.googleapis.com/maps/api
+@version 1.0
+@auth ApiKey key in query
+@endpoints 4
+@toc Geocode an address to coordinates, Get directions between locations, Search for places by text query, Get details for a specific place
+
+@endpoint GET /geocode/json
+@desc Geocode an address to coordinates
+@optional {address: str # Street address to geocode, latlng: str # Lat,lng for reverse geocoding, components: str # Component filter (e.g. country:US), language: str}
+@returns(200) {status: str, results: [map]} # Geocode results
+
+@endpoint GET /directions/json
+@desc Get directions between locations
+@required {origin: str # Starting point (address or lat,lng), destination: str # Ending point}
+@optional {mode: str(driving/walking/bicycling/transit)=driving, waypoints: str # Pipe-separated intermediate points, alternatives: bool, departure_time: str # Unix timestamp or "now", language: str}
+@returns(200) {status: str, routes: [map], geocoded_waypoints: [map]} # Directions result
+
+@endpoint GET /place/textsearch/json
+@desc Search for places by text query
+@required {query: str # Search string (e.g. "pizza in New York")}
+@optional {location: str # Lat,lng bias point, radius: int # Search radius in meters, type: str # Place type filter (e.g. restaurant), language: str}
+@returns(200) {status: str, results: [map]} # Places results
+
+@endpoint GET /place/details/json
+@desc Get details for a specific place
+@required {place_id: str # Google Place ID}
+@optional {fields: str # Comma-separated fields (name,rating,formatted_address), language: str}
+@returns(200) {status: str, result: map} # Place details
+
+@end
+

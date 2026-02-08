@@ -1,0 +1,30 @@
+@doclean v0.2
+# Machine-readable API spec. Each @endpoint block is one API call.
+@api Discord API
+@base https://discord.com/api/v10
+@version 10
+@auth Bearer bearer
+@endpoints 4
+@toc Create Message, Create Guild Channel, List Guild Members, Create Reaction
+
+@endpoint POST /channels/{channel_id}/messages
+@required {channel_id: str, content: str}
+@optional {tts: bool, embeds: [map], message_reference: map}
+@returns(200) {id: str, channel_id: str, content: str, author: map, timestamp: str(date-time)}
+
+@endpoint POST /guilds/{guild_id}/channels
+@required {guild_id: str, name: str}
+@optional {type: int, topic: str, parent_id: str, nsfw: bool}
+@returns(201) {id: str, name: str, type: int, guild_id: str}
+
+@endpoint GET /guilds/{guild_id}/members
+@required {guild_id: str}
+@optional {limit: int=1, after: str}
+@returns(200)
+
+@endpoint PUT /channels/{channel_id}/messages/{message_id}/reactions/{emoji}/@me
+@required {channel_id: str, message_id: str, emoji: str}
+@returns(204)
+
+@end
+

@@ -1,0 +1,471 @@
+@doclean v0.2
+# Machine-readable API spec. Each @endpoint block is one API call.
+@api Netlify's API documentation
+@version 2.15.0
+@endpoints 120
+@toc GET /accounts, POST /accounts, GET /accounts/types, DELETE /accounts/{account_id}, GET /accounts/{account_id}, PUT /accounts/{account_id}, GET /accounts/{account_id}/audit, Returns all environment variables for an account or site. An account corresponds to a team in the Netlify UI. To use this endpoint, your site must no longer be using the <a href="https://docs.netlify.com/environment-variables/classic-experience/">classic environment variables experience</a>.  Migrate now with the Netlify UI., Creates new environment variables. Granular scopes are available on Pro plans and above.  To use this endpoint, your site must no longer be using the <a href="https://docs.netlify.com/environment-variables/classic-experience/">classic environment variables experience</a>.  Migrate now with the Netlify UI., Deletes an environment variable. To use this endpoint, your site must no longer be using the <a href="https://docs.netlify.com/environment-variables/classic-experience/">classic environment variables experience</a>.  Migrate now with the Netlify UI., Returns an individual environment variable. To use this endpoint, your site must no longer be using the <a href="https://docs.netlify.com/environment-variables/classic-experience/">classic environment variables experience</a>.  Migrate now with the Netlify UI., Updates or creates a new value for an existing environment variable. To use this endpoint, your site must no longer be using the <a href="https://docs.netlify.com/environment-variables/classic-experience/">classic environment variables experience</a>.  Migrate now with the Netlify UI., Updates an existing environment variable and all of its values. Existing values will be replaced by values provided. To use this endpoint, your site must no longer be using the <a href="https://docs.netlify.com/environment-variables/classic-experience/">classic environment variables experience</a>.  Migrate now with the Netlify UI., Deletes a specific environment variable value. To use this endpoint, your site must no longer be using the <a href="https://docs.netlify.com/environment-variables/classic-experience/">classic environment variables experience</a>.  Migrate now with the Netlify UI., GET /billing/payment_methods, GET /builds/{build_id}, POST /builds/{build_id}/log, POST /builds/{build_id}/start, GET /deploy_keys, POST /deploy_keys, DELETE /deploy_keys/{key_id}, GET /deploy_keys/{key_id}, DELETE /deploys/{deploy_id}, GET /deploys/{deploy_id}, POST /deploys/{deploy_id}/cancel, PUT /deploys/{deploy_id}/files/{path}, PUT /deploys/{deploy_id}/functions/{name}, POST /deploys/{deploy_id}/lock, This is an internal-only endpoint., POST /deploys/{deploy_id}/unlock, GET /dns_zones, POST /dns_zones, DELETE /dns_zones/{zone_id}, GET /dns_zones/{zone_id}, GET /dns_zones/{zone_id}/dns_records, POST /dns_zones/{zone_id}/dns_records, DELETE /dns_zones/{zone_id}/dns_records/{dns_record_id}, GET /dns_zones/{zone_id}/dns_records/{dns_record_id}, PUT /dns_zones/{zone_id}/transfer, GET /forms/{form_id}/submissions, GET /hooks, POST /hooks, GET /hooks/types, DELETE /hooks/{hook_id}, GET /hooks/{hook_id}, PUT /hooks/{hook_id}, POST /hooks/{hook_id}/enable, POST /oauth/tickets, GET /oauth/tickets/{ticket_id}, POST /oauth/tickets/{ticket_id}/exchange, GET /services/, GET /services/{addonName}, GET /services/{addonName}/manifest, **Note:** Environment variable keys and values will soon be moved from `build_settings.env` and `repo.env` to a new endpoint. Please use [getEnvVars](#tag/environmentVariables/operation/getEnvVars) to retrieve site environment variables., **Note:** Environment variable keys and values will soon be moved from `build_settings.env` and `repo.env` to a new endpoint. Please use [createEnvVars](#tag/environmentVariables/operation/createEnvVars) to create environment variables for a site., DELETE /sites/{site_id}, **Note:** Environment variable keys and values will soon be moved from `build_settings.env` and `repo.env` to a new endpoint. Please use [getEnvVars](#tag/environmentVariables/operation/getEnvVars) to retrieve site environment variables., **Note:** Environment variable keys and values will soon be moved from `build_settings.env` and `repo.env` to a new endpoint. Please use [updateEnvVar](#tag/environmentVariables/operation/updateEnvVar) to update a site's environment variables., GET /sites/{site_id}/assets, POST /sites/{site_id}/assets, DELETE /sites/{site_id}/assets/{asset_id}, GET /sites/{site_id}/assets/{asset_id}, PUT /sites/{site_id}/assets/{asset_id}, GET /sites/{site_id}/assets/{asset_id}/public_signature, GET /sites/{site_id}/build_hooks, POST /sites/{site_id}/build_hooks, DELETE /sites/{site_id}/build_hooks/{id}, GET /sites/{site_id}/build_hooks/{id}, PUT /sites/{site_id}/build_hooks/{id}, GET /sites/{site_id}/builds, POST /sites/{site_id}/builds, GET /sites/{site_id}/deployed-branches, GET /sites/{site_id}/deploys, POST /sites/{site_id}/deploys, DELETE /sites/{site_id}/deploys/{deploy_id}, GET /sites/{site_id}/deploys/{deploy_id}, PUT /sites/{site_id}/deploys/{deploy_id}, POST /sites/{site_id}/deploys/{deploy_id}/restore, GET /sites/{site_id}/dns, PUT /sites/{site_id}/dns, GET /sites/{site_id}/files, GET /sites/{site_id}/files/{file_path}, GET /sites/{site_id}/forms, DELETE /sites/{site_id}/forms/{form_id}, GET /sites/{site_id}/metadata, PUT /sites/{site_id}/metadata, This is an internal-only endpoint., This is an internal-only endpoint., PUT /sites/{site_id}/rollback, GET /sites/{site_id}/service-instances, POST /sites/{site_id}/services/{addon}/instances, DELETE /sites/{site_id}/services/{addon}/instances/{instance_id}, GET /sites/{site_id}/services/{addon}/instances/{instance_id}, PUT /sites/{site_id}/services/{addon}/instances/{instance_id}, GET /sites/{site_id}/snippets, POST /sites/{site_id}/snippets, DELETE /sites/{site_id}/snippets/{snippet_id}, GET /sites/{site_id}/snippets/{snippet_id}, PUT /sites/{site_id}/snippets/{snippet_id}, GET /sites/{site_id}/ssl, POST /sites/{site_id}/ssl, GET /sites/{site_id}/submissions, GET /sites/{site_id}/traffic_splits, POST /sites/{site_id}/traffic_splits, GET /sites/{site_id}/traffic_splits/{split_test_id}, PUT /sites/{site_id}/traffic_splits/{split_test_id}, POST /sites/{site_id}/traffic_splits/{split_test_id}/publish, POST /sites/{site_id}/traffic_splits/{split_test_id}/unpublish, [Beta] Unlinks the repo from the site., DELETE /submissions/{submission_id}, GET /submissions/{submission_id}, GET /user, GET /{account_id}/builds/status, GET /{account_slug}/members, POST /{account_slug}/members, DELETE /{account_slug}/members/{member_id}, GET /{account_slug}/members/{member_id}, PUT /{account_slug}/members/{member_id}, **Note:** Environment variable keys and values will soon be moved from `build_settings.env` and `repo.env` to a new endpoint. Please use [getEnvVars](#tag/environmentVariables/operation/getEnvVars) to retrieve site environment variables., **Note:** Environment variable keys and values will soon be moved from `build_settings.env` and `repo.env` to a new endpoint. Please use [createEnvVars](#tag/environmentVariables/operation/createEnvVars) to create environment variables for a site.
+
+@endpoint GET /accounts
+@returns(200) OK
+
+@endpoint POST /accounts
+@required {accountSetup: map}
+@returns(201) Created
+
+@endpoint GET /accounts/types
+@returns(200) OK
+
+@endpoint DELETE /accounts/{account_id}
+@returns(204) Not Content
+
+@endpoint GET /accounts/{account_id}
+@returns(200) OK
+
+@endpoint PUT /accounts/{account_id}
+@optional {accountUpdateSetup: map}
+@returns(200) OK
+
+@endpoint GET /accounts/{account_id}/audit
+@optional {query: any, log_type: any, page: any, per_page: any}
+@returns(200) OK
+
+@endpoint GET /accounts/{account_id}/env
+@desc Returns all environment variables for an account or site. An account corresponds to a team in the Netlify UI. To use this endpoint, your site must no longer be using the <a href="https://docs.netlify.com/environment-variables/classic-experience/">classic environment variables experience</a>.  Migrate now with the Netlify UI.
+@required {account_id: any # Scope response to account_id}
+@optional {context_name: any # Filter by deploy context, scope: any # Filter by scope, site_id: any # If specified, only return environment variables set on this site}
+@returns(200) OK
+
+@endpoint POST /accounts/{account_id}/env
+@desc Creates new environment variables. Granular scopes are available on Pro plans and above.  To use this endpoint, your site must no longer be using the <a href="https://docs.netlify.com/environment-variables/classic-experience/">classic environment variables experience</a>.  Migrate now with the Netlify UI.
+@required {account_id: any # Scope response to account_id}
+@optional {env_vars: [map], site_id: any # If provided, create an environment variable on the site level, not the account level}
+@returns(201) OK
+
+@endpoint DELETE /accounts/{account_id}/env/{key}
+@desc Deletes an environment variable. To use this endpoint, your site must no longer be using the <a href="https://docs.netlify.com/environment-variables/classic-experience/">classic environment variables experience</a>.  Migrate now with the Netlify UI.
+@required {account_id: any # Scope response to account_id, key: any # The environment variable key (case-sensitive)}
+@optional {site_id: any # If provided, delete the environment variable from this site}
+@returns(204) No Content (success)
+
+@endpoint GET /accounts/{account_id}/env/{key}
+@desc Returns an individual environment variable. To use this endpoint, your site must no longer be using the <a href="https://docs.netlify.com/environment-variables/classic-experience/">classic environment variables experience</a>.  Migrate now with the Netlify UI.
+@required {account_id: any # Scope response to account_id, key: any # The environment variable key (case-sensitive)}
+@optional {site_id: any # If provided, return the environment variable for a specific site (no merging is performed)}
+@returns(200) OK
+
+@endpoint PATCH /accounts/{account_id}/env/{key}
+@desc Updates or creates a new value for an existing environment variable. To use this endpoint, your site must no longer be using the <a href="https://docs.netlify.com/environment-variables/classic-experience/">classic environment variables experience</a>.  Migrate now with the Netlify UI.
+@required {account_id: any # Scope response to account_id, key: any # The existing environment variable key name (case-sensitive)}
+@optional {site_id: any # If provided, update an environment variable set on this site, env_var: map}
+@returns(201) Created (success)
+
+@endpoint PUT /accounts/{account_id}/env/{key}
+@desc Updates an existing environment variable and all of its values. Existing values will be replaced by values provided. To use this endpoint, your site must no longer be using the <a href="https://docs.netlify.com/environment-variables/classic-experience/">classic environment variables experience</a>.  Migrate now with the Netlify UI.
+@required {account_id: any # Scope response to account_id, key: any # The existing environment variable key name (case-sensitive)}
+@optional {env_var: map, site_id: any # If provided, update an environment variable set on this site}
+@returns(200) OK
+
+@endpoint DELETE /accounts/{account_id}/env/{key}/value/{id}
+@desc Deletes a specific environment variable value. To use this endpoint, your site must no longer be using the <a href="https://docs.netlify.com/environment-variables/classic-experience/">classic environment variables experience</a>.  Migrate now with the Netlify UI.
+@required {account_id: any # Scope response to account_id, id: any # The environment variable value's ID, key: any # The environment variable key name (case-sensitive)}
+@optional {site_id: any # If provided, delete the value from an environment variable on this site}
+@returns(204) No Content (success)
+
+@endpoint GET /billing/payment_methods
+@returns(200) OK
+
+@endpoint GET /builds/{build_id}
+@returns(200) OK
+
+@endpoint POST /builds/{build_id}/log
+@returns(204) No content
+
+@endpoint POST /builds/{build_id}/start
+@returns(204) No content
+
+@endpoint GET /deploy_keys
+@returns(200) OK
+
+@endpoint POST /deploy_keys
+@returns(201) Created
+
+@endpoint DELETE /deploy_keys/{key_id}
+@returns(204) Not Content
+
+@endpoint GET /deploy_keys/{key_id}
+@returns(200) OK
+
+@endpoint DELETE /deploys/{deploy_id}
+@required {deploy_id: any}
+@returns(204) No content
+
+@endpoint GET /deploys/{deploy_id}
+@required {deploy_id: any}
+@returns(200) OK
+
+@endpoint POST /deploys/{deploy_id}/cancel
+@required {deploy_id: any}
+@returns(201) Cancelled
+
+@endpoint PUT /deploys/{deploy_id}/files/{path}
+@required {deploy_id: any, path: any, file_body: str(binary)}
+@optional {size: any}
+@returns(200) OK
+
+@endpoint PUT /deploys/{deploy_id}/functions/{name}
+@required {deploy_id: any, name: any, file_body: str(binary)}
+@optional {runtime: any, size: any, X-Nf-Retry-Count: any}
+@returns(200) OK
+
+@endpoint POST /deploys/{deploy_id}/lock
+@required {deploy_id: any}
+@returns(200) OK
+
+@endpoint POST /deploys/{deploy_id}/plugin_runs
+@desc This is an internal-only endpoint.
+@required {deploy_id: any}
+@optional {plugin_run: map}
+@returns(201) CREATED
+
+@endpoint POST /deploys/{deploy_id}/unlock
+@required {deploy_id: any}
+@returns(200) OK
+
+@endpoint GET /dns_zones
+@optional {account_slug: any}
+@returns(200) get all DNS zones the user has access to
+
+@endpoint POST /dns_zones
+@required {DnsZoneParams: map}
+@returns(201) Created
+
+@endpoint DELETE /dns_zones/{zone_id}
+@returns(204) delete a single DNS zone
+
+@endpoint GET /dns_zones/{zone_id}
+@returns(200) get a single DNS zone
+
+@endpoint GET /dns_zones/{zone_id}/dns_records
+@returns(200) get all DNS records for a single DNS zone
+
+@endpoint POST /dns_zones/{zone_id}/dns_records
+@required {dns_record: map}
+@returns(201) Created
+
+@endpoint DELETE /dns_zones/{zone_id}/dns_records/{dns_record_id}
+@returns(204) record deleted
+
+@endpoint GET /dns_zones/{zone_id}/dns_records/{dns_record_id}
+@returns(200) get a single DNS record
+
+@endpoint PUT /dns_zones/{zone_id}/transfer
+@returns(200) transfer a DNS zone to another account
+
+@endpoint GET /forms/{form_id}/submissions
+@required {form_id: any}
+@optional {page: any, per_page: any}
+@returns(200) OK
+
+@endpoint GET /hooks
+@required {site_id: any}
+@returns(200) OK
+
+@endpoint POST /hooks
+@required {site_id: any, hook: map}
+@returns(201) OK
+
+@endpoint GET /hooks/types
+@returns(200) OK
+
+@endpoint DELETE /hooks/{hook_id}
+@returns(204) No content
+
+@endpoint GET /hooks/{hook_id}
+@returns(200) OK
+
+@endpoint PUT /hooks/{hook_id}
+@required {hook: map}
+@returns(200) OK
+
+@endpoint POST /hooks/{hook_id}/enable
+@returns(200) OK
+
+@endpoint POST /oauth/tickets
+@required {client_id: any}
+@returns(201) ok
+
+@endpoint GET /oauth/tickets/{ticket_id}
+@required {ticket_id: any}
+@returns(200) ok
+
+@endpoint POST /oauth/tickets/{ticket_id}/exchange
+@required {ticket_id: any}
+@returns(201) ok
+
+@endpoint GET /services/
+@returns(200) services
+
+@endpoint GET /services/{addonName}
+@returns(200) services
+
+@endpoint GET /services/{addonName}/manifest
+@returns(201) retrieving from provider
+
+@endpoint GET /sites
+@desc **Note:** Environment variable keys and values will soon be moved from `build_settings.env` and `repo.env` to a new endpoint. Please use [getEnvVars](#tag/environmentVariables/operation/getEnvVars) to retrieve site environment variables.
+@optional {name: any, filter: any, page: any, per_page: any}
+@returns(200) OK
+
+@endpoint POST /sites
+@desc **Note:** Environment variable keys and values will soon be moved from `build_settings.env` and `repo.env` to a new endpoint. Please use [createEnvVars](#tag/environmentVariables/operation/createEnvVars) to create environment variables for a site.
+@required {site: any}
+@optional {configure_dns: any}
+@returns(201) Created
+
+@endpoint DELETE /sites/{site_id}
+@returns(204) Deleted
+
+@endpoint GET /sites/{site_id}
+@desc **Note:** Environment variable keys and values will soon be moved from `build_settings.env` and `repo.env` to a new endpoint. Please use [getEnvVars](#tag/environmentVariables/operation/getEnvVars) to retrieve site environment variables.
+@returns(200) OK
+
+@endpoint PATCH /sites/{site_id}
+@desc **Note:** Environment variable keys and values will soon be moved from `build_settings.env` and `repo.env` to a new endpoint. Please use [updateEnvVar](#tag/environmentVariables/operation/updateEnvVar) to update a site's environment variables.
+@required {site: any}
+@returns(200) OK
+
+@endpoint GET /sites/{site_id}/assets
+@returns(200) OK
+
+@endpoint POST /sites/{site_id}/assets
+@required {name: any, size: any, content_type: any}
+@optional {visibility: any}
+@returns(201) Created
+
+@endpoint DELETE /sites/{site_id}/assets/{asset_id}
+@returns(204) Deleted
+
+@endpoint GET /sites/{site_id}/assets/{asset_id}
+@returns(200) OK
+
+@endpoint PUT /sites/{site_id}/assets/{asset_id}
+@required {state: any}
+@returns(200) Updated
+
+@endpoint GET /sites/{site_id}/assets/{asset_id}/public_signature
+@returns(200) OK
+
+@endpoint GET /sites/{site_id}/build_hooks
+@returns(200) OK
+
+@endpoint POST /sites/{site_id}/build_hooks
+@required {buildHook: map}
+@returns(201) Created
+
+@endpoint DELETE /sites/{site_id}/build_hooks/{id}
+@returns(204) No content
+
+@endpoint GET /sites/{site_id}/build_hooks/{id}
+@returns(200) OK
+
+@endpoint PUT /sites/{site_id}/build_hooks/{id}
+@required {buildHook: map}
+@returns(204) No content
+
+@endpoint GET /sites/{site_id}/builds
+@optional {page: any, per_page: any}
+@returns(200) OK
+
+@endpoint POST /sites/{site_id}/builds
+@optional {build: map}
+@returns(200) OK
+
+@endpoint GET /sites/{site_id}/deployed-branches
+@returns(200) OK
+
+@endpoint GET /sites/{site_id}/deploys
+@optional {page: any, per_page: any}
+@returns(200) OK
+
+@endpoint POST /sites/{site_id}/deploys
+@required {deploy: map}
+@optional {title: any}
+@returns(200) OK
+
+@endpoint DELETE /sites/{site_id}/deploys/{deploy_id}
+@required {deploy_id: any, site_id: any}
+@returns(204) No content
+
+@endpoint GET /sites/{site_id}/deploys/{deploy_id}
+@required {site_id: any, deploy_id: any}
+@returns(200) OK
+
+@endpoint PUT /sites/{site_id}/deploys/{deploy_id}
+@required {site_id: any, deploy_id: any, deploy: map}
+@returns(200) OK
+
+@endpoint POST /sites/{site_id}/deploys/{deploy_id}/restore
+@required {site_id: any, deploy_id: any}
+@returns(201) Created
+
+@endpoint GET /sites/{site_id}/dns
+@returns(200) OK
+
+@endpoint PUT /sites/{site_id}/dns
+@returns(200) OK
+
+@endpoint GET /sites/{site_id}/files
+@required {site_id: any}
+@returns(200) OK
+
+@endpoint GET /sites/{site_id}/files/{file_path}
+@required {site_id: any, file_path: any}
+@returns(200) OK
+
+@endpoint GET /sites/{site_id}/forms
+@required {site_id: any}
+@returns(200) OK
+
+@endpoint DELETE /sites/{site_id}/forms/{form_id}
+@required {site_id: any, form_id: any}
+@returns(204) Deleted
+
+@endpoint GET /sites/{site_id}/metadata
+@returns(200) OK
+
+@endpoint PUT /sites/{site_id}/metadata
+@required {metadata: map}
+@returns(204) No content
+
+@endpoint GET /sites/{site_id}/plugin_runs/latest
+@desc This is an internal-only endpoint.
+@required {site_id: any, packages: any}
+@optional {state: any}
+@returns(200) OK
+
+@endpoint PUT /sites/{site_id}/plugins/{package}
+@desc This is an internal-only endpoint.
+@required {site_id: any, package: any}
+@optional {plugin_params: map}
+@returns(200) OK
+
+@endpoint PUT /sites/{site_id}/rollback
+@returns(204) No content
+
+@endpoint GET /sites/{site_id}/service-instances
+@returns(200) OK
+
+@endpoint POST /sites/{site_id}/services/{addon}/instances
+@required {config: map}
+@returns(201) Created
+
+@endpoint DELETE /sites/{site_id}/services/{addon}/instances/{instance_id}
+@returns(204) Deleted
+
+@endpoint GET /sites/{site_id}/services/{addon}/instances/{instance_id}
+@returns(200) OK
+
+@endpoint PUT /sites/{site_id}/services/{addon}/instances/{instance_id}
+@required {config: map}
+@returns(204) No Content
+
+@endpoint GET /sites/{site_id}/snippets
+@returns(200) OK
+
+@endpoint POST /sites/{site_id}/snippets
+@required {snippet: map}
+@returns(201) OK
+
+@endpoint DELETE /sites/{site_id}/snippets/{snippet_id}
+@returns(204) No content
+
+@endpoint GET /sites/{site_id}/snippets/{snippet_id}
+@returns(200) OK
+
+@endpoint PUT /sites/{site_id}/snippets/{snippet_id}
+@required {snippet: map}
+@returns(204) No content
+
+@endpoint GET /sites/{site_id}/ssl
+@required {site_id: any}
+@returns(200) OK
+
+@endpoint POST /sites/{site_id}/ssl
+@required {site_id: any}
+@optional {certificate: any, key: any, ca_certificates: any}
+@returns(200) OK
+
+@endpoint GET /sites/{site_id}/submissions
+@required {site_id: any}
+@optional {page: any, per_page: any}
+@returns(200) OK
+
+@endpoint GET /sites/{site_id}/traffic_splits
+@returns(200) split_tests
+
+@endpoint POST /sites/{site_id}/traffic_splits
+@required {branch_tests: map}
+@returns(201) Created
+
+@endpoint GET /sites/{site_id}/traffic_splits/{split_test_id}
+@returns(200) split_test
+
+@endpoint PUT /sites/{site_id}/traffic_splits/{split_test_id}
+@required {branch_tests: map}
+@returns(201) Created
+
+@endpoint POST /sites/{site_id}/traffic_splits/{split_test_id}/publish
+@returns(204) enable
+
+@endpoint POST /sites/{site_id}/traffic_splits/{split_test_id}/unpublish
+@returns(204) disabled
+
+@endpoint PUT /sites/{site_id}/unlink_repo
+@desc [Beta] Unlinks the repo from the site.
+@returns(200) OK
+@errors {404: Site not found}
+
+@endpoint DELETE /submissions/{submission_id}
+@returns(204) Deleted
+
+@endpoint GET /submissions/{submission_id}
+@optional {query: any, page: any, per_page: any}
+@returns(200) OK
+
+@endpoint GET /user
+@returns(200) OK
+
+@endpoint GET /{account_id}/builds/status
+@returns(200) OK
+
+@endpoint GET /{account_slug}/members
+@returns(200) OK
+
+@endpoint POST /{account_slug}/members
+@required {accountAddMemberSetup: map}
+@returns(200) OK
+
+@endpoint DELETE /{account_slug}/members/{member_id}
+@returns(204) Not Content
+
+@endpoint GET /{account_slug}/members/{member_id}
+@returns(200) OK
+
+@endpoint PUT /{account_slug}/members/{member_id}
+@required {accountUpdateMemberSetup: map}
+@returns(200) OK
+
+@endpoint GET /{account_slug}/sites
+@desc **Note:** Environment variable keys and values will soon be moved from `build_settings.env` and `repo.env` to a new endpoint. Please use [getEnvVars](#tag/environmentVariables/operation/getEnvVars) to retrieve site environment variables.
+@required {account_slug: any}
+@optional {name: any, page: any, per_page: any}
+@returns(200) OK
+
+@endpoint POST /{account_slug}/sites
+@desc **Note:** Environment variable keys and values will soon be moved from `build_settings.env` and `repo.env` to a new endpoint. Please use [createEnvVars](#tag/environmentVariables/operation/createEnvVars) to create environment variables for a site.
+@required {account_slug: any}
+@optional {site: any, configure_dns: any}
+@returns(201) Created
+
+@end
+

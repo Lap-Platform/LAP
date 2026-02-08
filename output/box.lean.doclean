@@ -1,0 +1,1323 @@
+@doclean v0.2
+# Machine-readable API spec. Each @endpoint block is one API call.
+@api Box Platform API
+@base https://api.box.com/2.0
+@version 2.0.0
+@auth OAuth2
+@endpoints 260
+@toc Authorize user, List allowed collaboration domains, Add domain to list of allowed collaboration domains, Remove domain from list of allowed collaboration domains, Get allowed collaboration domain, List users exempt from collaboration domain restrictions, Create user exemption from collaboration domain restrictions, Remove user from list of users exempt from domain restrictions, Get user exempt from collaboration domain restrictions, List pending collaborations, Create collaboration, Remove collaboration, Get collaboration, Update collaboration, List all collections, List collection items, Create comment, Remove comment, Get comment, Update comment, Remove device pin, Get device pin, List enterprise device pins, List user and enterprise events, Get events long poll endpoint, Delete file request, Get file request, Update file request, Copy file request, List file version legal holds, Get file version legal hold, List file version retentions, Get retention on file, Preflight check before upload, Upload file, Create upload session, Remove upload session, Get upload session, Upload part of file, Commit upload session, List parts, Delete file, Get file information, Restore file, Update file, Add shared link to file, Get shared link for file, Remove shared link from file, Update shared link on file, List file collaborations, List file comments, Download file, Upload file version, Copy file, List metadata instances on file, Remove classification from file, Get classification on file, Add classification to file, Update classification on file, Remove Box Skill cards from file, List Box Skill cards on file, Create Box Skill cards on file, Update Box Skill cards on file, Remove metadata instance from file, Get metadata instance on file, Create metadata instance on file, Update metadata instance on file, List tasks on file, Get file thumbnail, Permanently remove file, Get trashed file, Create upload session for existing file, List all file versions, Promote file version, Remove file version, Get file version, Restore file version, Remove watermark from file, Get watermark on file, Apply watermark to file, List folder locks, Create folder lock, Delete folder lock, Create folder, List trashed items, Delete folder, Get folder information, Restore folder, Update folder, Add shared link to folder, Get shared link for folder, Remove shared link from folder, Update shared link on folder, List folder collaborations, Copy folder, List items in folder, List metadata instances on folder, Remove classification from folder, Get classification on folder, Add classification to folder, Update classification on folder, Remove metadata instance from folder, Get metadata instance on folder, Create metadata instance on folder, Update metadata instance on folder, Permanently remove folder, Get trashed folder, Remove watermark from folder, Get watermark for folder, Apply watermark to folder, Add user to group, Remove user from group, Get group membership, Update group membership, List groups for enterprise, Create group, Create jobs to terminate user group session, Remove group, Get group, Update group, List group collaborations, List members of group, Create user invite, Get user invite status, List all legal hold policies, Create legal hold policy, Remove legal hold policy, Get legal hold policy, Update legal hold policy, List legal hold policy assignments, Assign legal hold policy, Unassign legal hold policy, Get legal hold policy assignment, List previous file versions for legal hold policy assignment, List current file versions for legal hold policy assignment, List metadata cascade policies, Create metadata cascade policy, Remove metadata cascade policy, Get metadata cascade policy, Force-apply metadata cascade policy to folder, Query files/folders by metadata, List metadata query indices, Find metadata template by instance ID, List all metadata templates for enterprise, Delete all classifications, List all classifications, Add classification, Delete classification, Update classification, List all global metadata templates, Create metadata template, Add initial classifications, Remove metadata template, Get metadata template by name, Update metadata template, Get metadata template by ID, Revoke access token, Request access token, Refresh access token, List recently accessed items, List retention policies, Create retention policy, Delete retention policy, Get retention policy, Update retention policy, List retention policy assignments, Assign retention policy, Remove retention policy assignment, Get retention policy assignment, Get file versions under retention, Get files under retention, Search for content, Find file for shared link, Find folder for shared link, Find web link for shared link, List shield information barrier reports, Create shield information barrier report, Get shield information barrier report by ID, List shield information barrier segment members, Create shield information barrier segment member, Delete shield information barrier segment member by ID, Get shield information barrier segment member by ID, List shield information barrier segment restrictions, Create shield information barrier segment restriction, Delete shield information barrier segment restriction by ID, Get shield information barrier segment restriction by ID, List shield information barrier segments, Create shield information barrier segment, Delete shield information barrier segment, Get shield information barrier segment with specified ID, Update shield information barrier segment with specified ID, List shield information barriers, Create shield information barrier, Add changed status of shield information barrier with specified ID, Get shield information barrier with specified ID, List sign requests, Create sign request, Get sign request by ID, Cancel sign request, Resend sign request, Update all Box Skill cards on file, List storage policies, Get storage policy, List storage policy assignments, Assign storage policy, Unassign storage policy, Get storage policy assignment, Update storage policy assignment, Assign task, Unassign task, Get task assignment, Update task assignment, Create task, Remove task, Get task, Update task, List task assignments, List terms of service user statuses, Create terms of service status for new user, Update terms of service status for existing user, List terms of services, Create terms of service, Get terms of service, Update terms of service, List enterprise users, Create user, Get current user, Create jobs to terminate users session, Delete user, Get user, Update user, Delete user avatar, Get user avatar, Add or update user avatar, List user's email aliases, Create email alias, Remove email alias, Transfer owned folders, List user's groups, Create web link, Remove web link, Get web link, Restore web link, Update web link, Add shared link to web link, Get shared link for web link, Remove shared link from web link, Update shared link on web link, Permanently remove web link, Get trashed web link, List all webhooks, Create webhook, Remove webhook, Get webhook, Update webhook, List workflows, Starts workflow based on request body, Create zip download, Download zip archive, Get zip download status
+
+@endpoint GET /authorize
+@required {response_type: str(token), client_id: str}
+@optional {redirect_uri: str(url), state: str, scope: str}
+@returns(200)
+
+@endpoint GET /collaboration_whitelist_entries
+@optional {marker: str, limit: int(int64)}
+@returns(200)
+
+@endpoint POST /collaboration_whitelist_entries
+@required {direction: str(inbound/outbound/both), domain: str}
+@returns(200) {created_at: str(date-time), direction: str, domain: str, enterprise: any, id: str, type: str}
+
+@endpoint DELETE /collaboration_whitelist_entries/{collaboration_whitelist_entry_id}
+@required {collaboration_whitelist_entry_id: str}
+@returns(204)
+
+@endpoint GET /collaboration_whitelist_entries/{collaboration_whitelist_entry_id}
+@required {collaboration_whitelist_entry_id: str}
+@returns(200) {created_at: str(date-time), direction: str, domain: str, enterprise: any, id: str, type: str}
+
+@endpoint GET /collaboration_whitelist_exempt_targets
+@optional {marker: str, limit: int(int64)}
+@returns(200)
+
+@endpoint POST /collaboration_whitelist_exempt_targets
+@required {user: map}
+@returns(200) {created_at: str(date-time), enterprise: any, id: str, modified_at: str(date-time), type: str, user: any}
+
+@endpoint DELETE /collaboration_whitelist_exempt_targets/{collaboration_whitelist_exempt_target_id}
+@required {collaboration_whitelist_exempt_target_id: str}
+@returns(204)
+
+@endpoint GET /collaboration_whitelist_exempt_targets/{collaboration_whitelist_exempt_target_id}
+@required {collaboration_whitelist_exempt_target_id: str}
+@returns(200) {created_at: str(date-time), enterprise: any, id: str, modified_at: str(date-time), type: str, user: any}
+
+@endpoint GET /collaborations
+@required {status: str}
+@optional {fields: [str], offset: int(int64)=0, limit: int(int64)}
+@returns(200)
+
+@endpoint POST /collaborations
+@required {accessible_by: map, item: map, role: str(editor/viewer/previewer/uploader/previewer uploader/viewer uploader/co-owner)}
+@optional {fields: [str], notify: bool, can_view_path: bool, expires_at: str(date-time)}
+@returns(201) {acceptance_requirements_status: map{strong_password_requirement: map{enterprise_has_strong_password_required_for_external_users: bool, user_has_strong_password: bool?}, terms_of_service_requirement: map{is_accepted: bool?, terms_of_service: any}, two_factor_authentication_requirement: map{enterprise_has_two_factor_auth_enabled: bool, user_has_two_factor_authentication_enabled: bool?}}, accessible_by: any, acknowledged_at: str(date-time), created_at: str(date-time), created_by: any, expires_at: str(date-time)?, id: str, invite_email: str?, item: any?, modified_at: str(date-time), role: str, status: str, type: str}
+@errors {403}
+
+@endpoint DELETE /collaborations/{collaboration_id}
+@required {collaboration_id: str}
+@returns(204)
+
+@endpoint GET /collaborations/{collaboration_id}
+@required {collaboration_id: str}
+@optional {fields: [str]}
+@returns(200) {acceptance_requirements_status: map{strong_password_requirement: map{enterprise_has_strong_password_required_for_external_users: bool, user_has_strong_password: bool?}, terms_of_service_requirement: map{is_accepted: bool?, terms_of_service: any}, two_factor_authentication_requirement: map{enterprise_has_two_factor_auth_enabled: bool, user_has_two_factor_authentication_enabled: bool?}}, accessible_by: any, acknowledged_at: str(date-time), created_at: str(date-time), created_by: any, expires_at: str(date-time)?, id: str, invite_email: str?, item: any?, modified_at: str(date-time), role: str, status: str, type: str}
+
+@endpoint PUT /collaborations/{collaboration_id}
+@required {collaboration_id: str, role: str(editor/viewer/previewer/uploader/previewer uploader/viewer uploader/co-owner/owner)}
+@optional {can_view_path: bool, expires_at: str(date-time), status: str(pending/accepted/rejected)}
+@returns(200) {acceptance_requirements_status: map{strong_password_requirement: map{enterprise_has_strong_password_required_for_external_users: bool, user_has_strong_password: bool?}, terms_of_service_requirement: map{is_accepted: bool?, terms_of_service: any}, two_factor_authentication_requirement: map{enterprise_has_two_factor_auth_enabled: bool, user_has_two_factor_authentication_enabled: bool?}}, accessible_by: any, acknowledged_at: str(date-time), created_at: str(date-time), created_by: any, expires_at: str(date-time)?, id: str, invite_email: str?, item: any?, modified_at: str(date-time), role: str, status: str, type: str}
+@returns(204) {acceptance_requirements_status: map{strong_password_requirement: map{enterprise_has_strong_password_required_for_external_users: bool, user_has_strong_password: bool?}, terms_of_service_requirement: map{is_accepted: bool?, terms_of_service: any}, two_factor_authentication_requirement: map{enterprise_has_two_factor_auth_enabled: bool, user_has_two_factor_authentication_enabled: bool?}}, accessible_by: any, acknowledged_at: str(date-time), created_at: str(date-time), created_by: any, expires_at: str(date-time)?, id: str, invite_email: str?, item: any?, modified_at: str(date-time), role: str, status: str, type: str}
+@errors {403}
+
+@endpoint GET /collections
+@optional {fields: [str], offset: int(int64)=0, limit: int(int64)}
+@returns(200)
+
+@endpoint GET /collections/{collection_id}/items
+@required {collection_id: str}
+@optional {fields: [str], offset: int(int64)=0, limit: int(int64)}
+@returns(200)
+
+@endpoint POST /comments
+@required {message: str}
+@optional {fields: [str], item: map, tagged_message: str}
+@returns(201)
+
+@endpoint DELETE /comments/{comment_id}
+@required {comment_id: str}
+@returns(204)
+
+@endpoint GET /comments/{comment_id}
+@required {comment_id: str}
+@optional {fields: [str]}
+@returns(200)
+
+@endpoint PUT /comments/{comment_id}
+@required {comment_id: str}
+@optional {fields: [str], message: str}
+@returns(200)
+
+@endpoint DELETE /device_pinners/{device_pinner_id}
+@required {device_pinner_id: str}
+@returns(204)
+
+@endpoint GET /device_pinners/{device_pinner_id}
+@required {device_pinner_id: str}
+@returns(200) {id: str, owned_by: any, product_name: str, type: str}
+
+@endpoint GET /enterprises/{enterprise_id}/device_pinners
+@required {enterprise_id: str}
+@optional {marker: str, limit: int(int64), direction: str(ASC/DESC)}
+@returns(200) {entries: [map], limit: int(int64), next_marker: int(int64), order: [map]}
+
+@endpoint GET /events
+@optional {stream_type: str(all/changes/sync/admin_logs/admin_logs_streaming)=all, stream_position: str, limit: int(int64)=100, event_type: [str], created_after: str(date-time), created_before: str(date-time)}
+@returns(200) {chunk_size: int(int64), entries: [map], next_stream_position: str}
+
+@endpoint OPTIONS /events
+@returns(200) {chunk_size: int(int64), entries: [map]}
+
+@endpoint DELETE /file_requests/{file_request_id}
+@required {file_request_id: str}
+@returns(204)
+@errors {401, 404, 405}
+
+@endpoint GET /file_requests/{file_request_id}
+@required {file_request_id: str}
+@returns(200) {created_at: str(date-time), created_by: any, description: str?, etag: str?, expires_at: str(date-time), folder: any, id: str, is_description_required: bool, is_email_required: bool, status: str, title: str, type: str, updated_at: str(date-time), updated_by: any, url: str}
+@errors {401, 404, 405}
+
+@endpoint PUT /file_requests/{file_request_id}
+@required {file_request_id: str}
+@optional {if-match: str, description: str, expires_at: str(date-time), is_description_required: bool, is_email_required: bool, status: str(active/inactive), title: str}
+@returns(200) {created_at: str(date-time), created_by: any, description: str?, etag: str?, expires_at: str(date-time), folder: any, id: str, is_description_required: bool, is_email_required: bool, status: str, title: str, type: str, updated_at: str(date-time), updated_by: any, url: str}
+@errors {401, 403, 404, 405, 412}
+
+@endpoint POST /file_requests/{file_request_id}/copy
+@required {file_request_id: str}
+@returns(200) {created_at: str(date-time), created_by: any, description: str?, etag: str?, expires_at: str(date-time), folder: any, id: str, is_description_required: bool, is_email_required: bool, status: str, title: str, type: str, updated_at: str(date-time), updated_by: any, url: str}
+@errors {401, 403, 404, 405}
+
+@endpoint GET /file_version_legal_holds
+@required {policy_id: str}
+@optional {marker: str, limit: int(int64)}
+@returns(200)
+
+@endpoint GET /file_version_legal_holds/{file_version_legal_hold_id}
+@required {file_version_legal_hold_id: str}
+@returns(200) {deleted_at: str(date-time), file: any, file_version: any, id: str, legal_hold_policy_assignments: [map], type: str}
+
+@endpoint GET /file_version_retentions
+@optional {file_id: str, file_version_id: str, policy_id: str, disposition_action: str(permanently_delete/remove_retention), disposition_before: str, disposition_after: str, limit: int(int64), marker: str}
+@returns(200)
+
+@endpoint GET /file_version_retentions/{file_version_retention_id}
+@required {file_version_retention_id: str}
+@returns(200) {applied_at: str(date-time), disposition_at: str(date-time), file: any, file_version: any, id: str, type: str, winning_retention_policy: any}
+
+@endpoint OPTIONS /files/content
+@optional {name: str, parent: any, size: int(int32)}
+@returns(200) {upload_token: str, upload_url: str}
+@errors {409}
+
+@endpoint POST /files/content
+@optional {fields: [str], content-md5: str}
+@returns(201) {entries: [map], total_count: int(int64)}
+@errors {400, 409}
+
+@endpoint POST /files/upload_sessions
+@required {file_name: str, file_size: int(int64), folder_id: str}
+@returns(201) {id: str, num_parts_processed: int(int32), part_size: int(int64), session_endpoints: any, session_expires_at: str(date-time), total_parts: int(int32), type: str}
+@errors {400, 403, 404, 409}
+
+@endpoint DELETE /files/upload_sessions/{upload_session_id}
+@required {upload_session_id: str}
+@returns(204)
+
+@endpoint GET /files/upload_sessions/{upload_session_id}
+@required {upload_session_id: str}
+@returns(200) {id: str, num_parts_processed: int(int32), part_size: int(int64), session_endpoints: any, session_expires_at: str(date-time), total_parts: int(int32), type: str}
+
+@endpoint PUT /files/upload_sessions/{upload_session_id}
+@required {upload_session_id: str, digest: str, content-range: str}
+@returns(200) {part: map}
+@errors {409, 412, 416}
+
+@endpoint POST /files/upload_sessions/{upload_session_id}/commit
+@required {upload_session_id: str, digest: str, parts: [map]}
+@optional {if-match: str, if-none-match: str}
+@returns(201) {entries: [map], total_count: int(int64)}
+@returns(202)
+@errors {409, 412}
+
+@endpoint GET /files/upload_sessions/{upload_session_id}/parts
+@required {upload_session_id: str}
+@optional {offset: int(int64)=0, limit: int(int64)}
+@returns(200)
+
+@endpoint DELETE /files/{file_id}
+@required {file_id: str}
+@optional {if-match: str}
+@returns(204)
+@errors {401, 404, 405, 412}
+
+@endpoint GET /files/{file_id}
+@required {file_id: str, x-rep-hints: str}
+@optional {fields: [str], if-none-match: str, boxapi: str}
+@returns(200)
+@errors {304, 401, 404, 405, 415}
+
+@endpoint POST /files/{file_id}
+@required {file_id: str}
+@optional {fields: [str], name: str, parent: any}
+@returns(201) {content_created_at: str(date-time)?, content_modified_at: str(date-time)?, created_at: str(date-time), created_by: any, description: str, etag: str?, file_version: any, id: str, item_status: str, modified_at: str(date-time), modified_by: any, name: str, owned_by: any, parent: any, path_collection: any, purged_at: str?, sequence_id: any, sha1: str(digest), shared_link: str?, size: int, trashed_at: str?, type: str}
+@errors {403, 404, 409}
+
+@endpoint PUT /files/{file_id}
+@required {file_id: str}
+@optional {fields: [str], if-match: str, description: str, disposition_at: str(date-time), lock: map, name: str, parent: any, permissions: map, shared_link: any, tags: [str]}
+@returns(200)
+@errors {400, 401, 403, 404, 405, 412}
+
+@endpoint PUT /files/{file_id}#add_shared_link
+@required {file_id: str, fields: str}
+@optional {shared_link: map}
+@returns(200)
+@errors {400, 401, 403, 404, 405, 412}
+
+@endpoint GET /files/{file_id}#get_shared_link
+@required {file_id: str, fields: str}
+@returns(200)
+@errors {401, 404, 405}
+
+@endpoint PUT /files/{file_id}#remove_shared_link
+@required {file_id: str, fields: str}
+@optional {shared_link: map}
+@returns(200)
+@errors {401, 403, 404, 405, 412}
+
+@endpoint PUT /files/{file_id}#update_shared_link
+@required {file_id: str, fields: str}
+@optional {shared_link: map}
+@returns(200)
+@errors {400, 401, 403, 404, 405, 412}
+
+@endpoint GET /files/{file_id}/collaborations
+@required {file_id: str}
+@optional {fields: [str], limit: int(int64), marker: str}
+@returns(200)
+
+@endpoint GET /files/{file_id}/comments
+@required {file_id: str}
+@optional {fields: [str], limit: int(int64), offset: int(int64)=0}
+@returns(200)
+
+@endpoint GET /files/{file_id}/content
+@required {file_id: str}
+@optional {range: str, boxapi: str, version: str, access_token: str}
+@returns(202)
+@errors {302}
+
+@endpoint POST /files/{file_id}/content
+@required {file_id: str}
+@optional {if-match: str, fields: [str], content-md5: str}
+@returns(200) {entries: [map], total_count: int(int64)}
+@errors {412}
+
+@endpoint POST /files/{file_id}/copy
+@required {file_id: str, parent: map}
+@optional {fields: [str], name: str, version: str}
+@returns(201)
+@errors {304, 400, 403, 404, 409}
+
+@endpoint GET /files/{file_id}/metadata
+@required {file_id: str}
+@returns(200) {entries: [map], limit: int}
+@errors {403, 404}
+
+@endpoint DELETE /files/{file_id}/metadata/enterprise/securityClassification-6VMVochwUWo
+@required {file_id: str}
+@returns(204)
+@errors {400, 404, 405}
+
+@endpoint GET /files/{file_id}/metadata/enterprise/securityClassification-6VMVochwUWo
+@required {file_id: str}
+@returns(201) {$canEdit: bool, $parent: str, $scope: str, $template: str, $type: str, $typeVersion: num, $version: int, Box__Security__Classification__Key: str}
+@errors {403, 404, 405}
+
+@endpoint POST /files/{file_id}/metadata/enterprise/securityClassification-6VMVochwUWo
+@required {file_id: str}
+@optional {Box__Security__Classification__Key: str}
+@returns(201) {$canEdit: bool, $parent: str, $scope: str, $template: str, $type: str, $typeVersion: num, $version: int, Box__Security__Classification__Key: str}
+@errors {400, 404, 409}
+
+@endpoint PUT /files/{file_id}/metadata/enterprise/securityClassification-6VMVochwUWo
+@required {file_id: str}
+@returns(200) {$canEdit: bool, $parent: str, $scope: str, $template: str, $type: str, $typeVersion: num, $version: int, Box__Security__Classification__Key: str}
+@errors {400, 500}
+
+@endpoint DELETE /files/{file_id}/metadata/global/boxSkillsCards
+@required {file_id: str}
+@returns(204)
+@errors {404, 405}
+
+@endpoint GET /files/{file_id}/metadata/global/boxSkillsCards
+@required {file_id: str}
+@returns(200) {$canEdit: bool, $id: str(uuid), $parent: str, $scope: str, $template: str, $type: str, $typeVersion: int, $version: int, cards: [any]}
+
+@endpoint POST /files/{file_id}/metadata/global/boxSkillsCards
+@required {file_id: str, cards: [any]}
+@returns(201) {$canEdit: bool, $id: str(uuid), $parent: str, $scope: str, $template: str, $type: str, $typeVersion: int, $version: int, cards: [any]}
+@errors {400, 404, 409}
+
+@endpoint PUT /files/{file_id}/metadata/global/boxSkillsCards
+@required {file_id: str}
+@returns(200) {$canEdit: bool, $id: str(uuid), $parent: str, $scope: str, $template: str, $type: str, $typeVersion: int, $version: int, cards: [any]}
+@errors {404}
+
+@endpoint DELETE /files/{file_id}/metadata/{scope}/{template_key}
+@required {file_id: str, scope: str(global/enterprise), template_key: str}
+@returns(204)
+@errors {400, 404, 405}
+
+@endpoint GET /files/{file_id}/metadata/{scope}/{template_key}
+@required {file_id: str, scope: str(global/enterprise), template_key: str}
+@returns(201)
+@errors {403, 404, 405}
+
+@endpoint POST /files/{file_id}/metadata/{scope}/{template_key}
+@required {file_id: str, scope: str(global/enterprise), template_key: str}
+@returns(201)
+@errors {400, 404, 409}
+
+@endpoint PUT /files/{file_id}/metadata/{scope}/{template_key}
+@required {file_id: str, scope: str(global/enterprise), template_key: str}
+@returns(200)
+@errors {400, 500}
+
+@endpoint GET /files/{file_id}/tasks
+@required {file_id: str}
+@returns(200) {entries: [map], total_count: int(int64)}
+@errors {404, 405, 500}
+
+@endpoint GET /files/{file_id}/thumbnail.{extension}
+@required {file_id: str, extension: str(png/jpg)}
+@optional {min_height: int, min_width: int, max_height: int, max_width: int}
+@returns(200)
+@returns(202)
+@errors {302, 400, 403, 404}
+
+@endpoint DELETE /files/{file_id}/trash
+@required {file_id: str}
+@returns(204)
+@errors {404}
+
+@endpoint GET /files/{file_id}/trash
+@required {file_id: str}
+@optional {fields: [str]}
+@returns(200) {content_created_at: str(date-time)?, content_modified_at: str(date-time)?, created_at: str(date-time), created_by: any, description: str, etag: str?, file_version: any, id: str, item_status: str, modified_at: str(date-time), modified_by: any, name: str, owned_by: any, parent: any, path_collection: any, purged_at: str(date-time)?, sequence_id: any, sha1: str(digest), shared_link: str?, size: int, trashed_at: str(date-time)?, type: str}
+@errors {404}
+
+@endpoint POST /files/{file_id}/upload_sessions
+@required {file_id: str, file_size: int(int64)}
+@optional {file_name: str}
+@returns(201) {id: str, num_parts_processed: int(int32), part_size: int(int64), session_endpoints: any, session_expires_at: str(date-time), total_parts: int(int32), type: str}
+@errors {409}
+
+@endpoint GET /files/{file_id}/versions
+@required {file_id: str}
+@optional {fields: [str], limit: int(int64), offset: int(int64)=0}
+@returns(200)
+
+@endpoint POST /files/{file_id}/versions/current
+@required {file_id: str}
+@optional {fields: [str], id: str, type: str}
+@returns(201)
+
+@endpoint DELETE /files/{file_id}/versions/{file_version_id}
+@required {file_id: str, file_version_id: str}
+@optional {if-match: str}
+@returns(204)
+
+@endpoint GET /files/{file_id}/versions/{file_version_id}
+@required {file_id: str, file_version_id: str}
+@optional {fields: [str]}
+@returns(200)
+
+@endpoint PUT /files/{file_id}/versions/{file_version_id}
+@required {file_id: str, file_version_id: str}
+@optional {trashed_at: str}
+@returns(200)
+
+@endpoint DELETE /files/{file_id}/watermark
+@required {file_id: str}
+@returns(204)
+@errors {404}
+
+@endpoint GET /files/{file_id}/watermark
+@required {file_id: str}
+@returns(200) {watermark: map{created_at: str(date-time), modified_at: str(date-time)}}
+@errors {404}
+
+@endpoint PUT /files/{file_id}/watermark
+@required {file_id: str, watermark: map}
+@returns(200) {watermark: map{created_at: str(date-time), modified_at: str(date-time)}}
+@returns(201) {watermark: map{created_at: str(date-time), modified_at: str(date-time)}}
+
+@endpoint GET /folder_locks
+@required {folder_id: str}
+@returns(200)
+@errors {403, 404, 405}
+
+@endpoint POST /folder_locks
+@required {folder: map}
+@optional {locked_operations: map}
+@returns(200) {created_at: str(date-time), created_by: any, folder: any, id: str, lock_type: str, locked_operations: map{delete: bool, move: bool}, type: str}
+@errors {400, 404}
+
+@endpoint DELETE /folder_locks/{folder_lock_id}
+@required {folder_lock_id: str}
+@returns(204)
+@errors {403, 404}
+
+@endpoint POST /folders
+@required {name: str, parent: map}
+@optional {fields: [str], folder_upload_email: any, sync_state: str(synced/not_synced/partially_synced)}
+@returns(201)
+@errors {400, 403, 404, 409}
+
+@endpoint GET /folders/trash/items
+@optional {fields: [str], limit: int(int64), offset: int(int64)=0, usemarker: bool, marker: str, direction: str(ASC/DESC), sort: str(id/name/date/size)}
+@returns(200)
+@errors {400}
+
+@endpoint DELETE /folders/{folder_id}
+@required {folder_id: str}
+@optional {if-match: str, recursive: bool}
+@returns(204)
+@errors {400, 403, 404, 409, 412, 503}
+
+@endpoint GET /folders/{folder_id}
+@required {folder_id: str}
+@optional {fields: [str], if-none-match: str, boxapi: str}
+@returns(200)
+@errors {304, 403, 404, 405}
+
+@endpoint POST /folders/{folder_id}
+@required {folder_id: str}
+@optional {fields: [str], name: str, parent: any}
+@returns(201) {content_created_at: str(date-time)?, content_modified_at: str(date-time)?, created_at: str(date-time)?, created_by: any, description: any, etag: str?, folder_upload_email: str?, id: str, item_status: str, modified_at: str(date-time)?, modified_by: any, name: str, owned_by: any, parent: any, path_collection: any, purged_at: str?, sequence_id: any, shared_link: str?, size: int(int64), trashed_at: str?, type: str}
+@errors {403, 404, 409}
+
+@endpoint PUT /folders/{folder_id}
+@required {folder_id: str}
+@optional {fields: [str], if-match: str, can_non_owners_invite: bool, can_non_owners_view_collaborators: bool, collections: [map], description: str, folder_upload_email: any, is_collaboration_restricted_to_enterprise: bool, name: str, parent: map, shared_link: any, sync_state: str(synced/not_synced/partially_synced), tags: [str]}
+@returns(200)
+@errors {400, 403, 404, 409, 412, 503}
+
+@endpoint PUT /folders/{folder_id}#add_shared_link
+@required {folder_id: str, fields: str}
+@optional {shared_link: map}
+@returns(200)
+@errors {400, 401, 403, 404, 405, 412}
+
+@endpoint GET /folders/{folder_id}#get_shared_link
+@required {folder_id: str, fields: str}
+@returns(200)
+@errors {401, 404, 405}
+
+@endpoint PUT /folders/{folder_id}#remove_shared_link
+@required {folder_id: str, fields: str}
+@optional {shared_link: map}
+@returns(200)
+@errors {401, 403, 404, 405, 412}
+
+@endpoint PUT /folders/{folder_id}#update_shared_link
+@required {folder_id: str, fields: str}
+@optional {shared_link: map}
+@returns(200)
+@errors {400, 401, 403, 404, 405, 412}
+
+@endpoint GET /folders/{folder_id}/collaborations
+@required {folder_id: str}
+@optional {fields: [str]}
+@returns(200)
+
+@endpoint POST /folders/{folder_id}/copy
+@required {folder_id: str, parent: map}
+@optional {fields: [str], name: str}
+@returns(201)
+@errors {304, 400, 403, 404, 409, 500}
+
+@endpoint GET /folders/{folder_id}/items
+@required {folder_id: str}
+@optional {fields: [str], usemarker: bool, marker: str, offset: int(int64)=0, limit: int(int64), boxapi: str, sort: str(id/name/date/size), direction: str(ASC/DESC)}
+@returns(200)
+@errors {403, 404, 405}
+
+@endpoint GET /folders/{folder_id}/metadata
+@required {folder_id: str}
+@returns(200) {entries: [map], limit: int}
+@errors {403, 404}
+
+@endpoint DELETE /folders/{folder_id}/metadata/enterprise/securityClassification-6VMVochwUWo
+@required {folder_id: str}
+@returns(204)
+@errors {400, 404, 405}
+
+@endpoint GET /folders/{folder_id}/metadata/enterprise/securityClassification-6VMVochwUWo
+@required {folder_id: str}
+@returns(201) {$canEdit: bool, $parent: str, $scope: str, $template: str, $type: str, $typeVersion: num, $version: int, Box__Security__Classification__Key: str}
+@errors {403, 404, 405}
+
+@endpoint POST /folders/{folder_id}/metadata/enterprise/securityClassification-6VMVochwUWo
+@required {folder_id: str}
+@optional {Box__Security__Classification__Key: str}
+@returns(201) {$canEdit: bool, $parent: str, $scope: str, $template: str, $type: str, $typeVersion: num, $version: int, Box__Security__Classification__Key: str}
+@errors {400, 404, 409}
+
+@endpoint PUT /folders/{folder_id}/metadata/enterprise/securityClassification-6VMVochwUWo
+@required {folder_id: str}
+@returns(200) {$canEdit: bool, $parent: str, $scope: str, $template: str, $type: str, $typeVersion: num, $version: int, Box__Security__Classification__Key: str}
+@errors {400, 500}
+
+@endpoint DELETE /folders/{folder_id}/metadata/{scope}/{template_key}
+@required {folder_id: str, scope: str(global/enterprise), template_key: str}
+@returns(204)
+@errors {400, 404, 405}
+
+@endpoint GET /folders/{folder_id}/metadata/{scope}/{template_key}
+@required {folder_id: str, scope: str(global/enterprise), template_key: str}
+@returns(201)
+@errors {403, 404, 405}
+
+@endpoint POST /folders/{folder_id}/metadata/{scope}/{template_key}
+@required {folder_id: str, scope: str(global/enterprise), template_key: str}
+@returns(201)
+@errors {400, 404, 409}
+
+@endpoint PUT /folders/{folder_id}/metadata/{scope}/{template_key}
+@required {folder_id: str, scope: str(global/enterprise), template_key: str}
+@returns(200)
+@errors {400, 500}
+
+@endpoint DELETE /folders/{folder_id}/trash
+@required {folder_id: str}
+@returns(204)
+@errors {404}
+
+@endpoint GET /folders/{folder_id}/trash
+@required {folder_id: str}
+@optional {fields: [str]}
+@returns(200) {content_created_at: str(date-time)?, content_modified_at: str(date-time)?, created_at: str(date-time)?, created_by: any, description: any, etag: str?, folder_upload_email: str?, id: str, item_status: str, modified_at: str(date-time)?, modified_by: any, name: str, owned_by: any, parent: any, path_collection: any, purged_at: str(date-time)?, sequence_id: any, shared_link: str?, size: int(int64), trashed_at: str(date-time)?, type: str}
+@errors {404}
+
+@endpoint DELETE /folders/{folder_id}/watermark
+@required {folder_id: str}
+@returns(204)
+@errors {404}
+
+@endpoint GET /folders/{folder_id}/watermark
+@required {folder_id: str}
+@returns(200) {watermark: map{created_at: str(date-time), modified_at: str(date-time)}}
+@errors {404}
+
+@endpoint PUT /folders/{folder_id}/watermark
+@required {folder_id: str, watermark: map}
+@returns(200) {watermark: map{created_at: str(date-time), modified_at: str(date-time)}}
+@returns(201) {watermark: map{created_at: str(date-time), modified_at: str(date-time)}}
+
+@endpoint POST /group_memberships
+@required {group: map, user: map}
+@optional {fields: [str], configurable_permissions: map, role: str(member/admin)}
+@returns(201) {created_at: str(date-time), group: any, id: str, modified_at: str(date-time), role: str, type: str, user: any}
+@errors {403}
+
+@endpoint DELETE /group_memberships/{group_membership_id}
+@required {group_membership_id: str}
+@returns(204)
+
+@endpoint GET /group_memberships/{group_membership_id}
+@required {group_membership_id: str}
+@optional {fields: [str]}
+@returns(200) {created_at: str(date-time), group: any, id: str, modified_at: str(date-time), role: str, type: str, user: any}
+
+@endpoint PUT /group_memberships/{group_membership_id}
+@required {group_membership_id: str}
+@optional {fields: [str], configurable_permissions: map, role: str(member/admin)}
+@returns(200) {created_at: str(date-time), group: any, id: str, modified_at: str(date-time), role: str, type: str, user: any}
+
+@endpoint GET /groups
+@optional {filter_term: str, fields: [str], limit: int(int64), offset: int(int64)=0}
+@returns(200)
+
+@endpoint POST /groups
+@required {name: str}
+@optional {fields: [str], description: str, external_sync_identifier: str, invitability_level: str(admins_only/admins_and_members/all_managed_users), member_viewability_level: str(admins_only/admins_and_members/all_managed_users), provenance: str}
+@returns(201)
+@errors {409}
+
+@endpoint POST /groups/terminate_sessions
+@required {group_ids: [str]}
+@returns(202) {message: str}
+@errors {400, 403, 404, 429, 500, 503}
+
+@endpoint DELETE /groups/{group_id}
+@required {group_id: str}
+@returns(204)
+
+@endpoint GET /groups/{group_id}
+@required {group_id: str}
+@optional {fields: [str]}
+@returns(200)
+
+@endpoint PUT /groups/{group_id}
+@required {group_id: str}
+@optional {fields: [str], description: str, external_sync_identifier: str, invitability_level: str(admins_only/admins_and_members/all_managed_users), member_viewability_level: str(admins_only/admins_and_members/all_managed_users), name: str, provenance: str}
+@returns(200)
+@errors {409}
+
+@endpoint GET /groups/{group_id}/collaborations
+@required {group_id: str}
+@optional {limit: int(int64), offset: int(int64)=0}
+@returns(200)
+
+@endpoint GET /groups/{group_id}/memberships
+@required {group_id: str}
+@optional {limit: int(int64), offset: int(int64)=0}
+@returns(200)
+
+@endpoint POST /invites
+@required {actionable_by: map, enterprise: map}
+@optional {fields: [str]}
+@returns(200) {actionable_by: map, created_at: str(date-time), id: str, invited_by: map, invited_to: map{id: str, name: str, type: str}, modified_at: str(date-time), status: str, type: str}
+
+@endpoint GET /invites/{invite_id}
+@required {invite_id: str}
+@optional {fields: [str]}
+@returns(200) {actionable_by: map, created_at: str(date-time), id: str, invited_by: map, invited_to: map{id: str, name: str, type: str}, modified_at: str(date-time), status: str, type: str}
+
+@endpoint GET /legal_hold_policies
+@optional {policy_name: str, fields: [str], marker: str, limit: int(int64)}
+@returns(200)
+
+@endpoint POST /legal_hold_policies
+@required {policy_name: str}
+@optional {description: str, filter_ended_at: str(date-time), filter_started_at: str(date-time), is_ongoing: bool}
+@returns(201)
+@errors {400, 409}
+
+@endpoint DELETE /legal_hold_policies/{legal_hold_policy_id}
+@required {legal_hold_policy_id: str}
+@returns(202)
+
+@endpoint GET /legal_hold_policies/{legal_hold_policy_id}
+@required {legal_hold_policy_id: str}
+@returns(200)
+
+@endpoint PUT /legal_hold_policies/{legal_hold_policy_id}
+@required {legal_hold_policy_id: str}
+@optional {description: str, policy_name: str, release_notes: str}
+@returns(200)
+@errors {409}
+
+@endpoint GET /legal_hold_policy_assignments
+@required {policy_id: str}
+@optional {assign_to_type: str(file/file_version/folder/user), assign_to_id: str, marker: str, limit: int(int64), fields: [str]}
+@returns(200)
+
+@endpoint POST /legal_hold_policy_assignments
+@required {assign_to: map, policy_id: str}
+@returns(201)
+
+@endpoint DELETE /legal_hold_policy_assignments/{legal_hold_policy_assignment_id}
+@required {legal_hold_policy_assignment_id: str}
+@returns(202)
+
+@endpoint GET /legal_hold_policy_assignments/{legal_hold_policy_assignment_id}
+@required {legal_hold_policy_assignment_id: str}
+@returns(200)
+
+@endpoint GET /legal_hold_policy_assignments/{legal_hold_policy_assignment_id}/file_versions_on_hold
+@required {legal_hold_policy_assignment_id: str}
+@optional {marker: str, limit: int(int64), fields: [str]}
+@returns(200)
+
+@endpoint GET /legal_hold_policy_assignments/{legal_hold_policy_assignment_id}/files_on_hold
+@required {legal_hold_policy_assignment_id: str}
+@optional {marker: str, limit: int(int64), fields: [str]}
+@returns(200)
+
+@endpoint GET /metadata_cascade_policies
+@required {folder_id: str}
+@optional {owner_enterprise_id: str, marker: str, offset: int(int64)=0}
+@returns(200)
+@errors {400, 403, 404}
+
+@endpoint POST /metadata_cascade_policies
+@required {folder_id: str, scope: str(global/enterprise), templateKey: str}
+@returns(201) {id: str, owner_enterprise: map{id: str, type: str}, parent: map{id: str, type: str}, scope: str, templateKey: str, type: str}
+@errors {400, 403, 404, 409}
+
+@endpoint DELETE /metadata_cascade_policies/{metadata_cascade_policy_id}
+@required {metadata_cascade_policy_id: str}
+@returns(204)
+@errors {404}
+
+@endpoint GET /metadata_cascade_policies/{metadata_cascade_policy_id}
+@required {metadata_cascade_policy_id: str}
+@returns(200) {id: str, owner_enterprise: map{id: str, type: str}, parent: map{id: str, type: str}, scope: str, templateKey: str, type: str}
+@errors {404}
+
+@endpoint POST /metadata_cascade_policies/{metadata_cascade_policy_id}/apply
+@required {metadata_cascade_policy_id: str, conflict_resolution: str(none/overwrite)}
+@returns(202)
+@errors {404}
+
+@endpoint POST /metadata_queries/execute_read
+@required {ancestor_folder_id: str, from: str}
+@optional {fields: [str], limit: int=100, marker: str, order_by: [map], query: str, query_params: map}
+@returns(200) {entries: [any], limit: int(int64), next_marker: str}
+@errors {400, 404}
+
+@endpoint GET /metadata_query_indices
+@required {scope: str(global/enterprise), template_key: str}
+@returns(200) {entries: [map], limit: int(int64), next_marker: str}
+@errors {400, 404}
+
+@endpoint GET /metadata_templates
+@required {metadata_instance_id: str(uuid)}
+@returns(200)
+@errors {400}
+
+@endpoint GET /metadata_templates/enterprise
+@optional {marker: str, limit: int(int64)}
+@returns(200)
+@errors {400}
+
+@endpoint DELETE /metadata_templates/enterprise/securityClassification-6VMVochwUWo/schema
+@returns(204)
+
+@endpoint GET /metadata_templates/enterprise/securityClassification-6VMVochwUWo/schema
+@returns(200) {copyInstanceOnItemCopy: bool, displayName: str, fields: [map], hidden: bool, id: str, scope: str, templateKey: str, type: str}
+@errors {400, 404}
+
+@endpoint PUT /metadata_templates/enterprise/securityClassification-6VMVochwUWo/schema#add
+@returns(200) {copyInstanceOnItemCopy: bool, displayName: str, fields: [map], hidden: bool, id: str, scope: str, templateKey: str, type: str}
+@errors {400, 404}
+
+@endpoint PUT /metadata_templates/enterprise/securityClassification-6VMVochwUWo/schema#delete
+@returns(200) {copyInstanceOnItemCopy: bool, displayName: str, fields: [map], hidden: bool, id: str, scope: str, templateKey: str, type: str}
+@errors {400, 404}
+
+@endpoint PUT /metadata_templates/enterprise/securityClassification-6VMVochwUWo/schema#update
+@returns(200) {copyInstanceOnItemCopy: bool, displayName: str, fields: [map], hidden: bool, id: str, scope: str, templateKey: str, type: str}
+@errors {400, 404}
+
+@endpoint GET /metadata_templates/global
+@optional {marker: str, limit: int(int64)}
+@returns(200)
+@errors {400}
+
+@endpoint POST /metadata_templates/schema
+@required {displayName: str, scope: str}
+@optional {copyInstanceOnItemCopy: bool=False, fields: [map], hidden: bool=False, templateKey: str}
+@returns(201) {copyInstanceOnItemCopy: bool, displayName: str, fields: [map], hidden: bool, id: str, scope: str, templateKey: str, type: str}
+@errors {400, 403}
+
+@endpoint POST /metadata_templates/schema#classifications
+@required {displayName: str, scope: str}
+@optional {copyInstanceOnItemCopy: bool, fields: [map], hidden: bool, templateKey: str}
+@returns(200) {copyInstanceOnItemCopy: bool, displayName: str, fields: [map], hidden: bool, id: str, scope: str, templateKey: str, type: str}
+@errors {400, 404}
+
+@endpoint DELETE /metadata_templates/{scope}/{template_key}/schema
+@required {scope: str(global/enterprise), template_key: str}
+@returns(204)
+@errors {400, 403}
+
+@endpoint GET /metadata_templates/{scope}/{template_key}/schema
+@required {scope: str(global/enterprise), template_key: str}
+@returns(200) {copyInstanceOnItemCopy: bool, displayName: str, fields: [map], hidden: bool, id: str, scope: str, templateKey: str, type: str}
+@errors {400, 404}
+
+@endpoint PUT /metadata_templates/{scope}/{template_key}/schema
+@required {scope: str(global/enterprise), template_key: str}
+@returns(200) {copyInstanceOnItemCopy: bool, displayName: str, fields: [map], hidden: bool, id: str, scope: str, templateKey: str, type: str}
+@errors {400, 403, 404}
+
+@endpoint GET /metadata_templates/{template_id}
+@required {template_id: str}
+@returns(200) {copyInstanceOnItemCopy: bool, displayName: str, fields: [map], hidden: bool, id: str, scope: str, templateKey: str, type: str}
+@errors {400}
+
+@endpoint POST /oauth2/revoke
+@returns(200)
+@errors {400}
+
+@endpoint POST /oauth2/token
+@returns(200) {access_token: str(token), expires_in: int(int64), issued_token_type: str(urn), refresh_token: str(token), restricted_to: [map], token_type: str}
+@errors {400}
+
+@endpoint POST /oauth2/token#refresh
+@returns(200) {access_token: str(token), expires_in: int(int64), issued_token_type: str(urn), refresh_token: str(token), restricted_to: [map], token_type: str}
+@errors {400}
+
+@endpoint GET /recent_items
+@optional {fields: [str], limit: int(int64), marker: str}
+@returns(200)
+
+@endpoint GET /retention_policies
+@optional {policy_name: str, policy_type: str(finite/indefinite), created_by_user_id: str, fields: [str], limit: int(int64), marker: str}
+@returns(200)
+@errors {400, 404}
+
+@endpoint POST /retention_policies
+@required {disposition_action: str(permanently_delete/remove_retention), policy_name: str, policy_type: str(finite/indefinite)}
+@optional {are_owners_notified: bool(True/False), can_owner_extend_retention: bool(True/False), custom_notification_recipients: [map], description: str, retention_length: str(int32), retention_type: str(modifiable/non-modifiable)}
+@returns(201)
+@errors {400, 409}
+
+@endpoint DELETE /retention_policies/{retention_policy_id}
+@required {retention_policy_id: str}
+@returns(204)
+@errors {403, 404}
+
+@endpoint GET /retention_policies/{retention_policy_id}
+@required {retention_policy_id: str}
+@optional {fields: [str]}
+@returns(200)
+
+@endpoint PUT /retention_policies/{retention_policy_id}
+@required {retention_policy_id: str}
+@optional {are_owners_notified: bool(True/False), can_owner_extend_retention: bool, custom_notification_recipients: [map], description: str, disposition_action: str(permanently_delete/remove_retention), policy_name: str, retention_length: str(int32), retention_type: str, status: str}
+@returns(200)
+@errors {400, 403, 409}
+
+@endpoint GET /retention_policies/{retention_policy_id}/assignments
+@required {retention_policy_id: str}
+@optional {type: str(folder/enterprise/metadata_template), fields: [str], marker: str, limit: int(int64)}
+@returns(200)
+@errors {400}
+
+@endpoint POST /retention_policy_assignments
+@required {assign_to: map, policy_id: str}
+@optional {filter_fields: [map], start_date_field: str}
+@returns(201) {assigned_at: str(date-time), assigned_by: any, assigned_to: map{id: str, type: str}, filter_fields: [map]?, id: str, retention_policy: any, start_date_field: str, type: str}
+@errors {400, 404, 409}
+
+@endpoint DELETE /retention_policy_assignments/{retention_policy_assignment_id}
+@required {retention_policy_assignment_id: str}
+@returns(204)
+@errors {403, 404}
+
+@endpoint GET /retention_policy_assignments/{retention_policy_assignment_id}
+@required {retention_policy_assignment_id: str}
+@optional {fields: [str]}
+@returns(200) {assigned_at: str(date-time), assigned_by: any, assigned_to: map{id: str, type: str}, filter_fields: [map]?, id: str, retention_policy: any, start_date_field: str, type: str}
+
+@endpoint GET /retention_policy_assignments/{retention_policy_assignment_id}/file_versions_under_retention
+@required {retention_policy_assignment_id: str}
+@optional {marker: str, limit: int(int64)}
+@returns(200)
+@errors {400}
+
+@endpoint GET /retention_policy_assignments/{retention_policy_assignment_id}/files_under_retention
+@required {retention_policy_assignment_id: str}
+@optional {marker: str, limit: int(int64)}
+@returns(200)
+@errors {400}
+
+@endpoint GET /search
+@optional {query: str, scope: str(user_content/enterprise_content)=user_content, file_extensions: [str], created_at_range: [str], updated_at_range: [str], size_range: [int], owner_user_ids: [str], recent_updater_user_ids: [str], ancestor_folder_ids: [str], content_types: [str], type: str(file/folder/web_link), trash_content: str(non_trashed_only/trashed_only)=non_trashed_only, mdfilters: [map], sort: str(modified_at/relevance)=relevance, direction: str(DESC/ASC)=DESC, limit: int(int64)=30, include_recent_shared_links: bool=False, fields: [str], offset: int(int64)=0}
+@returns(200)
+@errors {400, 403, 404}
+
+@endpoint GET /shared_items
+@required {boxapi: str}
+@optional {if-none-match: str, fields: [str]}
+@returns(200)
+@errors {304}
+
+@endpoint GET /shared_items#folders
+@required {boxapi: str}
+@optional {if-none-match: str, fields: [str]}
+@returns(200)
+@errors {304}
+
+@endpoint GET /shared_items#web_links
+@required {boxapi: str}
+@optional {if-none-match: str, fields: [str]}
+@returns(200)
+@errors {304}
+
+@endpoint GET /shield_information_barrier_reports
+@required {shield_information_barrier_id: str}
+@optional {marker: str, limit: int(int64)}
+@returns(200) {entries: [map], limit: int(int64), next_marker: str}
+@errors {404}
+
+@endpoint POST /shield_information_barrier_reports
+@optional {shield_information_barrier: map}
+@returns(201)
+@errors {404, 409}
+
+@endpoint GET /shield_information_barrier_reports/{shield_information_barrier_report_id}
+@required {shield_information_barrier_report_id: str}
+@returns(200)
+@errors {404}
+
+@endpoint GET /shield_information_barrier_segment_members
+@required {shield_information_barrier_segment_id: str}
+@optional {marker: str, limit: int(int64)}
+@returns(200) {entries: [map], limit: int(int64), next_marker: str}
+
+@endpoint POST /shield_information_barrier_segment_members
+@required {shield_information_barrier_segment: map, user: any}
+@optional {shield_information_barrier: map, type: str}
+@returns(201)
+@errors {404}
+
+@endpoint DELETE /shield_information_barrier_segment_members/{shield_information_barrier_segment_member_id}
+@required {shield_information_barrier_segment_member_id: str}
+@returns(204)
+@errors {404}
+
+@endpoint GET /shield_information_barrier_segment_members/{shield_information_barrier_segment_member_id}
+@required {shield_information_barrier_segment_member_id: str}
+@returns(200)
+@errors {404}
+
+@endpoint GET /shield_information_barrier_segment_restrictions
+@required {shield_information_barrier_segment_id: str}
+@optional {marker: str, limit: int(int64)}
+@returns(200) {entries: [map], limit: int(int64), next_marker: str}
+
+@endpoint POST /shield_information_barrier_segment_restrictions
+@required {restricted_segment: map, shield_information_barrier_segment: map, type: str}
+@optional {shield_information_barrier: map}
+@returns(201)
+@errors {404}
+
+@endpoint DELETE /shield_information_barrier_segment_restrictions/{shield_information_barrier_segment_restriction_id}
+@required {shield_information_barrier_segment_restriction_id: str}
+@returns(204)
+@errors {404}
+
+@endpoint GET /shield_information_barrier_segment_restrictions/{shield_information_barrier_segment_restriction_id}
+@required {shield_information_barrier_segment_restriction_id: str}
+@returns(200)
+@errors {404}
+
+@endpoint GET /shield_information_barrier_segments
+@required {shield_information_barrier_id: str}
+@optional {marker: str, limit: int(int64)}
+@returns(200) {entries: [map], limit: int(int64), next_marker: str}
+@errors {404}
+
+@endpoint POST /shield_information_barrier_segments
+@required {name: str, shield_information_barrier: map}
+@optional {description: str}
+@returns(201) {created_at: str(date-time), created_by: any, description: str, id: str, name: str, shield_information_barrier: map{id: str, type: str}, type: str, updated_at: str(date-time), updated_by: any}
+@errors {404, 409}
+
+@endpoint DELETE /shield_information_barrier_segments/{shield_information_barrier_segment_id}
+@required {shield_information_barrier_segment_id: str}
+@returns(204)
+@errors {404}
+
+@endpoint GET /shield_information_barrier_segments/{shield_information_barrier_segment_id}
+@required {shield_information_barrier_segment_id: str}
+@returns(200) {created_at: str(date-time), created_by: any, description: str, id: str, name: str, shield_information_barrier: map{id: str, type: str}, type: str, updated_at: str(date-time), updated_by: any}
+@errors {404}
+
+@endpoint PUT /shield_information_barrier_segments/{shield_information_barrier_segment_id}
+@required {shield_information_barrier_segment_id: str}
+@optional {description: str, name: str}
+@returns(200) {created_at: str(date-time), created_by: any, description: str, id: str, name: str, shield_information_barrier: map{id: str, type: str}, type: str, updated_at: str(date-time), updated_by: any}
+@errors {404, 409}
+
+@endpoint GET /shield_information_barriers
+@optional {marker: str, limit: int(int64)}
+@returns(200) {entries: [map], limit: int(int64), next_marker: str}
+@errors {404}
+
+@endpoint POST /shield_information_barriers
+@optional {created_at: str(date-time), created_by: any, enabled_at: str(date-time), enabled_by: any, enterprise: any, id: str, status: str(draft/pending/disabled/enabled/invalid), type: str, updated_at: str(date-time), updated_by: any}
+@returns(201) {created_at: str(date-time), created_by: any, enabled_at: str(date-time), enabled_by: any, enterprise: any, id: str, status: str, type: str, updated_at: str(date-time), updated_by: any}
+@errors {404}
+
+@endpoint POST /shield_information_barriers/change_status
+@required {id: str, status: str(pending/disabled)}
+@returns(200) {created_at: str(date-time), created_by: any, enabled_at: str(date-time), enabled_by: any, enterprise: any, id: str, status: str, type: str, updated_at: str(date-time), updated_by: any}
+@errors {404, 409}
+
+@endpoint GET /shield_information_barriers/{shield_information_barrier_id}
+@required {shield_information_barrier_id: str}
+@returns(200) {created_at: str(date-time), created_by: any, enabled_at: str(date-time), enabled_by: any, enterprise: any, id: str, status: str, type: str, updated_at: str(date-time), updated_by: any}
+@errors {404}
+
+@endpoint GET /sign_requests
+@optional {marker: str, limit: int(int64)}
+@returns(200)
+
+@endpoint POST /sign_requests
+@returns(201)
+
+@endpoint GET /sign_requests/{sign_request_id}
+@required {sign_request_id: str}
+@returns(200)
+@errors {404}
+
+@endpoint POST /sign_requests/{sign_request_id}/cancel
+@required {sign_request_id: str}
+@returns(200)
+@errors {404}
+
+@endpoint POST /sign_requests/{sign_request_id}/resend
+@required {sign_request_id: str}
+@returns(202)
+@errors {404}
+
+@endpoint PUT /skill_invocations/{skill_id}
+@required {skill_id: str, file: map, metadata: map, status: str(invoked/processing/success/transient_failure/permanent_failure)}
+@optional {file_version: map, usage: map}
+@returns(200)
+@errors {400, 404}
+
+@endpoint GET /storage_policies
+@optional {fields: [str], marker: str, limit: int(int64)}
+@returns(200)
+
+@endpoint GET /storage_policies/{storage_policy_id}
+@required {storage_policy_id: str}
+@returns(200)
+
+@endpoint GET /storage_policy_assignments
+@required {resolved_for_type: str(user/enterprise), resolved_for_id: str}
+@optional {marker: str}
+@returns(200)
+
+@endpoint POST /storage_policy_assignments
+@required {assigned_to: map, storage_policy: map}
+@returns(200) {assigned_to: any, storage_policy: any}
+
+@endpoint DELETE /storage_policy_assignments/{storage_policy_assignment_id}
+@required {storage_policy_assignment_id: str}
+@returns(204)
+
+@endpoint GET /storage_policy_assignments/{storage_policy_assignment_id}
+@required {storage_policy_assignment_id: str}
+@returns(200) {assigned_to: any, storage_policy: any}
+
+@endpoint PUT /storage_policy_assignments/{storage_policy_assignment_id}
+@required {storage_policy_assignment_id: str, storage_policy: map}
+@returns(200) {assigned_to: any, storage_policy: any}
+
+@endpoint POST /task_assignments
+@required {assign_to: map, task: map}
+@returns(201) {assigned_at: str(date-time), assigned_by: any, assigned_to: any, completed_at: str(date-time), id: str, item: any, message: str, reminded_at: str(date-time), resolution_state: str, type: str}
+@errors {403, 404, 500}
+
+@endpoint DELETE /task_assignments/{task_assignment_id}
+@required {task_assignment_id: str}
+@returns(204)
+@errors {404}
+
+@endpoint GET /task_assignments/{task_assignment_id}
+@required {task_assignment_id: str}
+@returns(200) {assigned_at: str(date-time), assigned_by: any, assigned_to: any, completed_at: str(date-time), id: str, item: any, message: str, reminded_at: str(date-time), resolution_state: str, type: str}
+@errors {404}
+
+@endpoint PUT /task_assignments/{task_assignment_id}
+@required {task_assignment_id: str}
+@optional {message: str, resolution_state: str(completed/incomplete/approved/rejected)}
+@returns(200) {assigned_at: str(date-time), assigned_by: any, assigned_to: any, completed_at: str(date-time), id: str, item: any, message: str, reminded_at: str(date-time), resolution_state: str, type: str}
+@errors {400, 404}
+
+@endpoint POST /tasks
+@required {item: map}
+@optional {action: str(review/complete)=review, completion_rule: str(all_assignees/any_assignee)=all_assignees, due_at: str(date-time), message: str=}
+@returns(201) {action: str, completion_rule: str, created_at: str(date-time), created_by: any, due_at: str(date-time), id: str, is_completed: bool, item: any, message: str, task_assignment_collection: any, type: str}
+@errors {400, 403, 404}
+
+@endpoint DELETE /tasks/{task_id}
+@required {task_id: str}
+@returns(204)
+@errors {404}
+
+@endpoint GET /tasks/{task_id}
+@required {task_id: str}
+@returns(200) {action: str, completion_rule: str, created_at: str(date-time), created_by: any, due_at: str(date-time), id: str, is_completed: bool, item: any, message: str, task_assignment_collection: any, type: str}
+@errors {404}
+
+@endpoint PUT /tasks/{task_id}
+@required {task_id: str}
+@optional {action: str(review/complete), completion_rule: str(all_assignees/any_assignee), due_at: str(date-time), message: str}
+@returns(200) {action: str, completion_rule: str, created_at: str(date-time), created_by: any, due_at: str(date-time), id: str, is_completed: bool, item: any, message: str, task_assignment_collection: any, type: str}
+@errors {400, 403, 404}
+
+@endpoint GET /tasks/{task_id}/assignments
+@required {task_id: str}
+@returns(200) {entries: [map], total_count: int(int64)}
+@errors {404, 500}
+
+@endpoint GET /terms_of_service_user_statuses
+@required {tos_id: str}
+@optional {user_id: str}
+@returns(200) {entries: [map], total_count: int(int64)}
+
+@endpoint POST /terms_of_service_user_statuses
+@required {is_accepted: bool, tos: map, user: map}
+@returns(201) {created_at: str(date-time), id: str, is_accepted: bool, modified_at: str(date-time), tos: any, type: str, user: any}
+
+@endpoint PUT /terms_of_service_user_statuses/{terms_of_service_user_status_id}
+@required {terms_of_service_user_status_id: str, is_accepted: bool}
+@returns(200) {created_at: str(date-time), id: str, is_accepted: bool, modified_at: str(date-time), tos: any, type: str, user: any}
+
+@endpoint GET /terms_of_services
+@optional {tos_type: str(external/managed)}
+@returns(200) {entries: [map], total_count: int(int64)}
+
+@endpoint POST /terms_of_services
+@required {status: str(enabled/disabled), text: str}
+@optional {tos_type: str(external/managed)}
+@returns(200) {action: str, completion_rule: str, created_at: str(date-time), created_by: any, due_at: str(date-time), id: str, is_completed: bool, item: any, message: str, task_assignment_collection: any, type: str}
+
+@endpoint GET /terms_of_services/{terms_of_service_id}
+@required {terms_of_service_id: str}
+@returns(200)
+
+@endpoint PUT /terms_of_services/{terms_of_service_id}
+@required {terms_of_service_id: str, status: str(enabled/disabled), text: str}
+@returns(200)
+
+@endpoint GET /users
+@optional {filter_term: str, user_type: str(all/managed/external), external_app_user_id: str, fields: [str], offset: int(int64)=0, limit: int(int64), usemarker: bool, marker: str}
+@returns(200)
+
+@endpoint POST /users
+@required {name: str}
+@optional {fields: [str], address: str, can_see_managed_users: bool, external_app_user_id: str, is_exempt_from_device_limits: bool, is_exempt_from_login_verification: bool, is_external_collab_restricted: bool, is_platform_access_only: bool, is_sync_enabled: bool, job_title: str, language: str, login: str, phone: str, role: str(coadmin/user), space_amount: int(int64), status: str(active/inactive/cannot_delete_edit/cannot_delete_edit_upload), timezone: str(timezone), tracking_codes: [map]}
+@returns(201)
+
+@endpoint GET /users/me
+@optional {fields: [str]}
+@returns(200)
+
+@endpoint POST /users/terminate_sessions
+@required {user_ids: [str], user_logins: [str]}
+@returns(202) {message: str}
+@errors {400, 403, 404, 429, 500, 503}
+
+@endpoint DELETE /users/{user_id}
+@required {user_id: str}
+@optional {notify: bool, force: bool}
+@returns(204)
+
+@endpoint GET /users/{user_id}
+@required {user_id: str}
+@optional {fields: [str]}
+@returns(200)
+
+@endpoint PUT /users/{user_id}
+@required {user_id: str}
+@optional {fields: [str], address: str, can_see_managed_users: bool, enterprise: str, external_app_user_id: str, is_exempt_from_device_limits: bool, is_exempt_from_login_verification: bool, is_external_collab_restricted: bool, is_password_reset_required: bool, is_sync_enabled: bool, job_title: str, language: str, login: str, name: str, notification_email: map, notify: bool, phone: str, role: str(coadmin/user), space_amount: int(int64), status: str(active/inactive/cannot_delete_edit/cannot_delete_edit_upload), timezone: str(timezone), tracking_codes: [map]}
+@returns(200)
+@errors {400, 403}
+
+@endpoint DELETE /users/{user_id}/avatar
+@required {user_id: str}
+@returns(204)
+@errors {403, 404}
+
+@endpoint GET /users/{user_id}/avatar
+@required {user_id: str}
+@returns(200)
+
+@endpoint POST /users/{user_id}/avatar
+@required {user_id: str}
+@returns(200) {pic_urls: map{large: str, preview: str, small: str}}
+@returns(201) {pic_urls: map{large: str, preview: str, small: str}}
+@errors {400, 403, 404}
+
+@endpoint GET /users/{user_id}/email_aliases
+@required {user_id: str}
+@returns(200) {entries: [map], total_count: int(int64)}
+
+@endpoint POST /users/{user_id}/email_aliases
+@required {user_id: str, email: str}
+@returns(201) {email: str, id: str, is_confirmed: bool, type: str}
+
+@endpoint DELETE /users/{user_id}/email_aliases/{email_alias_id}
+@required {user_id: str, email_alias_id: str}
+@returns(204)
+
+@endpoint PUT /users/{user_id}/folders/0
+@required {user_id: str, owned_by: map}
+@optional {fields: [str], notify: bool}
+@returns(200)
+@errors {403}
+
+@endpoint GET /users/{user_id}/memberships
+@required {user_id: str}
+@optional {limit: int(int64), offset: int(int64)=0}
+@returns(200)
+
+@endpoint POST /web_links
+@required {parent: map, url: str}
+@optional {description: str, name: str, shared_link: map}
+@returns(200)
+
+@endpoint DELETE /web_links/{web_link_id}
+@required {web_link_id: str}
+@returns(204)
+
+@endpoint GET /web_links/{web_link_id}
+@required {web_link_id: str}
+@optional {boxapi: str}
+@returns(200)
+
+@endpoint POST /web_links/{web_link_id}
+@required {web_link_id: str}
+@optional {fields: [str], name: str, parent: any}
+@returns(201) {created_at: str(date-time), created_by: any, description: str, etag: str, id: str, item_status: str, modified_at: str(date-time), modified_by: any, name: str, owned_by: any, parent: any, path_collection: any, purged_at: str?, sequence_id: any, shared_link: str?, trashed_at: str?, type: str, url: str}
+@errors {403, 404, 409}
+
+@endpoint PUT /web_links/{web_link_id}
+@required {web_link_id: str}
+@optional {description: str, name: str, parent: any, shared_link: map, url: str}
+@returns(200)
+
+@endpoint PUT /web_links/{web_link_id}#add_shared_link
+@required {web_link_id: str, fields: str}
+@optional {shared_link: map}
+@returns(200)
+@errors {400, 401, 403, 404, 405, 412}
+
+@endpoint GET /web_links/{web_link_id}#get_shared_link
+@required {web_link_id: str, fields: str}
+@returns(200)
+@errors {401, 404, 405}
+
+@endpoint PUT /web_links/{web_link_id}#remove_shared_link
+@required {web_link_id: str, fields: str}
+@optional {shared_link: map}
+@returns(200)
+@errors {401, 403, 404, 405, 412}
+
+@endpoint PUT /web_links/{web_link_id}#update_shared_link
+@required {web_link_id: str, fields: str}
+@optional {shared_link: map}
+@returns(200)
+@errors {400, 401, 403, 404, 405, 412}
+
+@endpoint DELETE /web_links/{web_link_id}/trash
+@required {web_link_id: str}
+@returns(204)
+@errors {404}
+
+@endpoint GET /web_links/{web_link_id}/trash
+@required {web_link_id: str}
+@optional {fields: [str]}
+@returns(200) {created_at: str(date-time), created_by: any, description: str, etag: str, id: str, item_status: str, modified_at: str(date-time), modified_by: any, name: str, owned_by: any, parent: any, path_collection: any, purged_at: str(date-time)?, sequence_id: any, shared_link: str?, trashed_at: str(date-time)?, type: str, url: str}
+@errors {404}
+
+@endpoint GET /webhooks
+@optional {marker: str, limit: int(int64)}
+@returns(200)
+@errors {403}
+
+@endpoint POST /webhooks
+@required {address: str, target: map, triggers: [str]}
+@returns(201)
+@errors {400, 403, 404, 409}
+
+@endpoint DELETE /webhooks/{webhook_id}
+@required {webhook_id: str}
+@returns(204)
+@errors {403, 404}
+
+@endpoint GET /webhooks/{webhook_id}
+@required {webhook_id: str}
+@returns(200)
+@errors {403, 404}
+
+@endpoint PUT /webhooks/{webhook_id}
+@required {webhook_id: str}
+@optional {address: str, target: map, triggers: [str]}
+@returns(200)
+@errors {400, 403, 404, 409}
+
+@endpoint GET /workflows
+@required {folder_id: str}
+@optional {trigger_type: str, limit: int(int64), marker: str}
+@returns(200)
+@errors {400, 404}
+
+@endpoint POST /workflows/{workflow_id}/start
+@required {workflow_id: str, files: [map], flow: map, folder: map}
+@optional {outcomes: [map], type: str}
+@returns(204)
+@errors {400, 403, 404}
+
+@endpoint POST /zip_downloads
+@required {items: [map]}
+@optional {download_file_name: str}
+@returns(202) {download_url: str, expires_at: str(date-time), name_conflicts: [[map]], status_url: str}
+@errors {400, 401, 403}
+
+@endpoint GET /zip_downloads/{zip_download_id}/content
+@required {zip_download_id: str}
+@returns(200)
+@errors {404, 429}
+
+@endpoint GET /zip_downloads/{zip_download_id}/status
+@required {zip_download_id: str}
+@returns(200) {downloaded_file_count: int, skipped_file_count: int, skipped_folder_count: int, state: str, total_file_count: int}
+@errors {401, 403, 404}
+
+@end
+

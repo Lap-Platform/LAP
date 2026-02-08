@@ -1,0 +1,1638 @@
+@doclean v0.2
+# Machine-readable API spec. Each @endpoint block is one API call.
+@api DigitalOcean API
+@base https://api.digitalocean.com
+@version 2.0
+@auth Bearer bearer
+@endpoints 290
+@toc List 1-Click Applications, Install Kubernetes 1-Click Applications, Get User Information, List All SSH Keys, Create a New SSH Key, Delete an SSH Key, Retrieve an Existing SSH Key, Update an SSH Key's Name, List All Actions, Retrieve an Existing Action, List All Apps, Create a New App, Retrieve Multiple Apps' Daily Bandwidth Metrics, Propose an App Spec, List App Regions, List App Tiers, List Instance Sizes, Retrieve an Instance Size, Retrieve an App Tier, List all app alerts, Update destinations for alerts, Retrieve Active Deployment Logs, List App Deployments, Create an App Deployment, Retrieve an App Deployment, Cancel a Deployment, Retrieve Deployment Logs, Retrieve Aggregate Deployment Logs, Retrieve Active Deployment Aggregate Logs, Retrieve App Daily Bandwidth Metrics, Rollback App, Commit App Rollback, Revert App Rollback, Validate App Rollback, Delete an App, Retrieve an Existing App, Update an App, List All CDN Endpoints, Create a New CDN Endpoint, Delete a CDN Endpoint, Retrieve an Existing CDN Endpoint, Update a CDN Endpoint, Purge the Cache for an Existing CDN Endpoint, List All Certificates, Create a New Certificate, Delete a Certificate, Retrieve an Existing Certificate, Get Customer Balance, List Billing History, List All Invoices, Retrieve an Invoice by UUID, Retrieve an Invoice CSV by UUID, Retrieve an Invoice PDF by UUID, Retrieve an Invoice Summary by UUID, List All Database Clusters, Create a New Database Cluster, List Database Options, Destroy a Database Cluster, Retrieve an Existing Database Cluster, List Backups for a Database Cluster, Retrieve the Public Certificate, Retrieve an Existing Database Cluster Configuration, Update the Database Configuration for an Existing Database, List All Databases, Add a New Database, Delete a Database, Retrieve an Existing Database, Retrieve the Eviction Policy for a Redis Cluster, Configure the Eviction Policy for a Redis Cluster, List Firewall Rules (Trusted Sources) for a Database Cluster, Update Firewall Rules (Trusted Sources) for a Database, Configure a Database Cluster's Maintenance Window, Migrate a Database Cluster to a New Region, Retrieve the Status of an Online Migration, Start an Online Migration, Stop an Online Migration, List Connection Pools (PostgreSQL), Add a New Connection Pool (PostgreSQL), Delete a Connection Pool (PostgreSQL), Retrieve Existing Connection Pool (PostgreSQL), Update Connection Pools (PostgreSQL), List All Read-only Replicas, Create a Read-only Replica, Destroy a Read-only Replica, Retrieve an Existing Read-only Replica, Promote a Read-only Replica to become a Primary Cluster, Resize a Database Cluster, Retrieve the SQL Modes for a MySQL Cluster, Update SQL Mode for a Cluster, Upgrade Major Version for a Database, List all Database Users, Add a Database User, Remove a Database User, Retrieve an Existing Database User, Reset a Database User's Password or Authentication Method, List All Domains, Create a New Domain, Delete a Domain, Retrieve an Existing Domain, List All Domain Records, Create a New Domain Record, Delete a Domain Record, Retrieve an Existing Domain Record, Update a Domain Record, Update a Domain Record, Deleting Droplets by Tag, List All Droplets, Create a New Droplet, Acting on Tagged Droplets, Delete an Existing Droplet, Retrieve an Existing Droplet, List Actions for a Droplet, Initiate a Droplet Action, Retrieve a Droplet Action, List Backups for a Droplet, List Associated Resources for a Droplet, Destroy a Droplet and All of its Associated Resources (Dangerous), Retry a Droplet Destroy with Associated Resources Request, Selectively Destroy a Droplet and its Associated Resources, Check Status of a Droplet Destroy with Associated Resources Request, List all Firewalls Applied to a Droplet, List All Available Kernels for a Droplet, List Neighbors for a Droplet, List Snapshots for a Droplet, List All Firewalls, Create a New Firewall, Delete a Firewall, Retrieve an Existing Firewall, Update a Firewall, Remove Droplets from a Firewall, Add Droplets to a Firewall, Remove Rules from a Firewall, Add Rules to a Firewall, Remove Tags from a Firewall, Add Tags to a Firewall, List All Floating IPs, Create a New Floating IP, Delete a Floating IP, Retrieve an Existing Floating IP, List All Actions for a Floating IP, Initiate a Floating IP Action, Retrieve an Existing Floating IP Action, List Namespaces, Create Namespace, Delete Namespace, Get Namespace, List Triggers, Create Trigger, Delete Trigger, Get Trigger, Update Trigger, List All Images, Create a Custom Image, Delete an Image, Retrieve an Existing Image, Update an Image, List All Actions for an Image, Initiate an Image Action, Retrieve an Existing Action, List All Kubernetes Clusters, Create a New Kubernetes Cluster, Delete a Kubernetes Cluster, Retrieve an Existing Kubernetes Cluster, Update a Kubernetes Cluster, Fetch Clusterlint Diagnostics for a Kubernetes Cluster, Run Clusterlint Checks on a Kubernetes Cluster, Retrieve Credentials for a Kubernetes Cluster, List Associated Resources for Cluster Deletion, Delete a Cluster and All of its Associated Resources (Dangerous), Selectively Delete a Cluster and its Associated Resources, Retrieve the kubeconfig for a Kubernetes Cluster, List All Node Pools in a Kubernetes Clusters, Add a Node Pool to a Kubernetes Cluster, Delete a Node Pool in a Kubernetes Cluster, Retrieve a Node Pool for a Kubernetes Cluster, Update a Node Pool in a Kubernetes Cluster, Delete a Node in a Kubernetes Cluster, Recycle a Kubernetes Node Pool, Upgrade a Kubernetes Cluster, Retrieve Available Upgrades for an Existing Kubernetes Cluster, Retrieve User Information for a Kubernetes Cluster, List Available Regions, Node Sizes, and Versions of Kubernetes, Remove Container Registry from Kubernetes Clusters, Add Container Registry to Kubernetes Clusters, List All Load Balancers, Create a New Load Balancer, Delete a Load Balancer, Retrieve an Existing Load Balancer, Update a Load Balancer, Remove Droplets from a Load Balancer, Add Droplets to a Load Balancer, Remove Forwarding Rules from a Load Balancer, Add Forwarding Rules to a Load Balancer, List Alert Policies, Create Alert Policy, Delete an Alert Policy, Retrieve an Existing Alert Policy, Update an Alert Policy, Get Droplet Bandwidth Metrics, Get Droplet CPU Metrics, Get Droplet Filesystem Free Metrics, Get Droplet Filesystem Size Metrics, Get Droplet Load1 Metrics, Get Droplet Load15 Metrics, Get Droplet Load5 Metrics, Get Droplet Available Memory Metrics, Get Droplet Cached Memory Metrics, Get Droplet Free Memory Metrics, Get Droplet Total Memory Metrics, List All Projects, Create a Project, Retrieve the Default Project, Patch the Default Project, Update the Default Project, List Default Project Resources, Assign Resources to Default Project, Delete an Existing Project, Retrieve an Existing Project, Patch a Project, Update a Project, List Project Resources, Assign Resources to a Project, List All Data Center Regions, Delete Container Registry, Get Container Registry Information, Create Container Registry, Get Docker Credentials for Container Registry, List Registry Options (Subscription Tiers and Available Regions), Get Subscription Information, Update Subscription Tier, Validate a Container Registry Name, Get Active Garbage Collection, Start Garbage Collection, Update Garbage Collection, List Garbage Collections, List All Container Registry Repositories, List All Container Registry Repositories (V2), List All Container Registry Repository Manifests, Delete Container Registry Repository Manifest, List All Container Registry Repository Tags, Delete Container Registry Repository Tag, List All Droplet Neighbors, List All Reserved IPs, Create a New Reserved IP, Delete a Reserved IP, Retrieve an Existing Reserved IP, List All Actions for a Reserved IP, Initiate a Reserved IP Action, Retrieve an Existing Reserved IP Action, List All Droplet Sizes, List All Snapshots, Delete a Snapshot, Retrieve an Existing Snapshot, List All Tags, Create a New Tag, Delete a Tag, Retrieve a Tag, Untag a Resource, Tag a Resource, List All Checks, Create a New Check, Delete a Check, Retrieve an Existing Check, Update a Check, List All Alerts, Create a New Alert, Delete an Alert, Retrieve an Existing Alert, Update an Alert, Retrieve Check State, Delete a Block Storage Volume by Name, List All Block Storage Volumes, Create a New Block Storage Volume, Initiate A Block Storage Action By Volume Name, Delete a Volume Snapshot, Retrieve an Existing Volume Snapshot, Delete a Block Storage Volume, Retrieve an Existing Block Storage Volume, List All Actions for a Volume, Initiate A Block Storage Action By Volume Id, Retrieve an Existing Volume Action, List Snapshots for a Volume, Create Snapshot from a Volume, List All VPCs, Create a New VPC, Delete a VPC, Retrieve an Existing VPC, Partially Update a VPC, Update a VPC, List the Member Resources of a VPC
+
+@endpoint GET /v2/1-clicks
+@desc List 1-Click Applications
+@optional {type: str(droplet/kubernetes) # Restrict results to a certain type of 1-Click.}
+@returns(200) {1_clicks: [map]} # A JSON object with a key of `1_clicks`.
+@errors {401: Unauthorized, 429: API Rate limit exceeded, 500: Server error.}
+
+@endpoint POST /v2/1-clicks/kubernetes
+@desc Install Kubernetes 1-Click Applications
+@required {addon_slugs: [str]=[] # An array of 1-Click Application slugs to be installed to the Kubernetes cluster., cluster_uuid: str # A unique ID for the Kubernetes cluster to which the 1-Click Applications will be installed.}
+@returns(200) {message: str} # The response will verify that a job has been successfully created to install a 1-Click. The
+post-installation lifecycle of a 1-Click application can not be managed via the DigitalOcean
+API. For additional details specific to the 1-Click, find and view its
+[DigitalOcean Marketplace](https://marketplace.digitalocean.com) page.
+
+@errors {401, 429, 500}
+
+@endpoint GET /v2/account
+@desc Get User Information
+@returns(200) {account: map{droplet_limit: int, email: str, email_verified: bool, floating_ip_limit: int, status: str, status_message: str, team: map{name: str, uuid: str}, uuid: str}} # A JSON object keyed on account with an excerpt of the current user account data.
+@errors {401, 429, 500}
+
+@endpoint GET /v2/account/keys
+@desc List All SSH Keys
+@optional {per_page: int=20 # Number of items returned per page, page: int=1 # Which 'page' of paginated results to return.}
+@returns(200) A JSON object with the key set to `ssh_keys`. The value is an array of `ssh_key` objects, each of which contains the standard `ssh_key` attributes.
+@errors {401, 429, 500}
+
+@endpoint POST /v2/account/keys
+@desc Create a New SSH Key
+@returns(201) {ssh_key: any} # The response body will be a JSON object with a key set to `ssh_key`.
+@errors {401, 429, 500}
+
+@endpoint DELETE /v2/account/keys/{ssh_key_identifier}
+@desc Delete an SSH Key
+@returns(204) The action was successful and the response body is empty.
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/account/keys/{ssh_key_identifier}
+@desc Retrieve an Existing SSH Key
+@required {ssh_key_identifier: any # Either the ID or the fingerprint of an existing SSH key.}
+@returns(200) {ssh_key: any} # A JSON object with the key set to `ssh_key`. The value is an `ssh_key` object containing the standard `ssh_key` attributes.
+@errors {401, 404: The resource was not found., 429, 500}
+
+@endpoint PUT /v2/account/keys/{ssh_key_identifier}
+@desc Update an SSH Key's Name
+@optional {name: any}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/actions
+@desc List All Actions
+@returns(200) The results will be returned as a JSON object with an actions key.  This will be set to an array filled with action objects containing the standard action attributes
+@errors {401, 429, 500}
+
+@endpoint GET /v2/actions/{action_id}
+@desc Retrieve an Existing Action
+@required {action_id: int # A unique numeric ID that can be used to identify and reference an action.}
+@returns(200) {action: any} # The result will be a JSON object with an action key.  This will be set to an action object containing the standard action attributes.
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/apps
+@desc List All Apps
+@optional {with_projects: bool # Whether the project_id of listed apps should be fetched and included.}
+@returns(200) A JSON object with a `apps` key. This is list of object `apps`.
+@errors {401, 429, 500}
+
+@endpoint POST /v2/apps
+@desc Create a New App
+@required {spec: any}
+@optional {Accept: str(application/json/application/yaml) # The content-type that should be used by the response. By default, the response will be `application/json`. `application/yaml` is also supported., Content-Type: str(application/json/application/yaml) # The content-type used for the request. By default, the requests are assumed to use `application/json`. `application/yaml` is also supported., project_id: str # The ID of the project the app should be assigned to. If omitted, it will be assigned to your default project.}
+@returns(200) {app: any} # A JSON or YAML of a `spec` object.
+@errors {401, 429, 500}
+
+@endpoint POST /v2/apps/metrics/bandwidth_daily
+@desc Retrieve Multiple Apps' Daily Bandwidth Metrics
+@required {app_ids: [str] # A list of app IDs to query bandwidth metrics for.}
+@optional {date: str(date-time) # Optional day to query. Only the date component of the timestamp will be considered. Default: yesterday.}
+@returns(200) A JSON object with a `app_bandwidth_usage` key
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/apps/propose
+@desc Propose an App Spec
+@required {spec: any}
+@optional {app_id: str # An optional ID of an existing app. If set, the spec will be treated as a proposed update to the specified app. The existing app is not modified using this method.}
+@returns(200) {app_cost: int(int32), app_is_static: bool, app_name_available: bool, app_name_suggestion: str, app_tier_downgrade_cost: int(int32), existing_static_apps: str, spec: any} # A JSON object.
+@errors {401, 429, 500}
+
+@endpoint GET /v2/apps/regions
+@desc List App Regions
+@returns(200) {regions: [any]} # A JSON object with key `regions`
+@errors {401, 429, 500}
+
+@endpoint GET /v2/apps/tiers
+@desc List App Tiers
+@returns(200) {tiers: [map]} # A JSON object with a `tiers` key. This will be a list of all app tiers
+@errors {401, 429, 500}
+
+@endpoint GET /v2/apps/tiers/instance_sizes
+@desc List Instance Sizes
+@returns(200) {discount_percent: num(float), instance_sizes: [map]} # A JSON with key `instance_sizes`
+@errors {401, 429, 500}
+
+@endpoint GET /v2/apps/tiers/instance_sizes/{slug}
+@desc Retrieve an Instance Size
+@required {slug: str # The slug of the instance size}
+@returns(200) {instance_size: any} # A JSON with key `instance_size`
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/apps/tiers/{slug}
+@desc Retrieve an App Tier
+@required {slug: str # The slug of the tier}
+@returns(200) {tier: any} # A JSON with the key `tier`
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/apps/{app_id}/alerts
+@desc List all app alerts
+@returns(200) {alerts: [map]} # A JSON object with a `alerts` key. This is list of object `alerts`.
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/apps/{app_id}/alerts/{alert_id}/destinations
+@desc Update destinations for alerts
+@required {alert_id: str # The alert ID}
+@optional {emails: [any], slack_webhooks: [any]}
+@returns(200) {alert: any} # A JSON object with an `alert` key. This is an object of type `alert`.
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/apps/{app_id}/components/{component_name}/logs
+@desc Retrieve Active Deployment Logs
+@required {app_id: str # The app ID, component_name: str # An optional component name. If set, logs will be limited to this component only., type: str(UNSPECIFIED/BUILD/DEPLOY/RUN)=UNSPECIFIED # The type of logs to retrieve - BUILD: Build-time logs - DEPLOY: Deploy-time logs - RUN: Live run-time logs}
+@optional {follow: bool # Whether the logs should follow live updates., pod_connection_timeout: str # An optional time duration to wait if the underlying component instance is not immediately available. Default: `3m`.}
+@returns(200) {historic_urls: [str], live_url: str} # A JSON object with urls that point to archived logs
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/apps/{app_id}/deployments
+@desc List App Deployments
+@returns(200) A JSON object with a `deployments` key. This will be a list of all app deployments
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/apps/{app_id}/deployments
+@desc Create an App Deployment
+@optional {force_build: bool}
+@returns(200) {deployment: any} # A JSON object with a `deployment` key.
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/apps/{app_id}/deployments/{deployment_id}
+@desc Retrieve an App Deployment
+@required {deployment_id: str # The deployment ID}
+@returns(200) A JSON of the requested deployment
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/apps/{app_id}/deployments/{deployment_id}/cancel
+@desc Cancel a Deployment
+@returns(200) A JSON the `deployment` that was just cancelled.
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/apps/{app_id}/deployments/{deployment_id}/components/{component_name}/logs
+@desc Retrieve Deployment Logs
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/apps/{app_id}/deployments/{deployment_id}/logs
+@desc Retrieve Aggregate Deployment Logs
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/apps/{app_id}/logs
+@desc Retrieve Active Deployment Aggregate Logs
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/apps/{app_id}/metrics/bandwidth_daily
+@desc Retrieve App Daily Bandwidth Metrics
+@optional {date: str(date-time) # Optional day to query. Only the date component of the timestamp will be considered. Default: yesterday.}
+@returns(200) {app_bandwidth_usage: [map], date: str(date-time)} # A JSON object with a `app_bandwidth_usage` key
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/apps/{app_id}/rollback
+@desc Rollback App
+@optional {deployment_id: str # The ID of the deployment to rollback to., skip_pin: bool # Whether to skip pinning the rollback deployment. If false, the rollback deployment will be pinned and any new deployments including Auto Deploy on Push hooks will be disabled until the rollback is either manually committed or reverted via the CommitAppRollback or RevertAppRollback endpoints respectively. If true, the rollback will be immediately committed and the app will remain unpinned.}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/apps/{app_id}/rollback/commit
+@desc Commit App Rollback
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/apps/{app_id}/rollback/revert
+@desc Revert App Rollback
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/apps/{app_id}/rollback/validate
+@desc Validate App Rollback
+@returns(200) {error: any, valid: bool, warnings: [any]} # A JSON object with the validation results.
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/apps/{id}
+@desc Delete an App
+@required {id: str # The ID of the app}
+@returns(200) {id: str} # the ID of the app deleted.
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/apps/{id}
+@desc Retrieve an Existing App
+@optional {name: str # The name of the app to retrieve.}
+@returns(200) A JSON with key `app`
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/apps/{id}
+@desc Update an App
+@required {spec: any}
+@returns(200) A JSON object of the updated `app`
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/cdn/endpoints
+@desc List All CDN Endpoints
+@returns(200) The result will be a JSON object with an `endpoints` key. This will be set to an array of endpoint objects, each of which will contain the standard CDN endpoint attributes.
+@errors {401, 429, 500}
+
+@endpoint POST /v2/cdn/endpoints
+@desc Create a New CDN Endpoint
+@returns(201) {endpoint: any} # The response will be a JSON object with an `endpoint` key. This will be set to an object containing the standard CDN endpoint attributes.
+@errors {401, 429, 500}
+
+@endpoint DELETE /v2/cdn/endpoints/{cdn_id}
+@desc Delete a CDN Endpoint
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/cdn/endpoints/{cdn_id}
+@desc Retrieve an Existing CDN Endpoint
+@required {cdn_id: str(uuid) # A unique identifier for a CDN endpoint.}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/cdn/endpoints/{cdn_id}
+@desc Update a CDN Endpoint
+@optional {certificate_id: str(uuid) # The ID of a DigitalOcean managed TLS certificate used for SSL when a custom subdomain is provided., custom_domain: str(hostname) # The fully qualified domain name (FQDN) of the custom subdomain used with the CDN endpoint., ttl: int(60/600/3600/86400/604800)=3600 # The amount of time the content is cached by the CDN's edge servers in seconds. TTL must be one of 60, 600, 3600, 86400, or 604800. Defaults to 3600 (one hour) when excluded.}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/cdn/endpoints/{cdn_id}/cache
+@desc Purge the Cache for an Existing CDN Endpoint
+@required {files: [str] # An array of strings containing the path to the content to be purged from the CDN cache.}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/certificates
+@desc List All Certificates
+@returns(200) The result will be a JSON object with a `certificates` key. This will be set to an array of certificate objects, each of which will contain the standard certificate attributes.
+@errors {401, 429, 500}
+
+@endpoint POST /v2/certificates
+@desc Create a New Certificate
+@returns(201) {certificate: any} # The response will be a JSON object with a key called `certificate`. The value of this will be an object that contains the standard attributes associated with a certificate.
+When using Let's Encrypt, the initial value of the certificate's `state` attribute will be `pending`. When the certificate has been successfully issued by Let's Encrypt, this will transition to `verified` and be ready for use.
+@errors {401, 429, 500}
+
+@endpoint DELETE /v2/certificates/{certificate_id}
+@desc Delete a Certificate
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/certificates/{certificate_id}
+@desc Retrieve an Existing Certificate
+@required {certificate_id: str(uuid) # A unique identifier for a certificate.}
+@returns(200) {certificate: any} # The response will be a JSON object with a `certificate` key. This will be set to an object containing the standard certificate attributes.
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/customers/my/balance
+@desc Get Customer Balance
+@returns(200) {account_balance: str, generated_at: str(date-time), month_to_date_balance: str, month_to_date_usage: str} # The response will be a JSON object that contains the following attributes
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/customers/my/billing_history
+@desc List Billing History
+@returns(200) The response will be a JSON object that contains the following attributes
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/customers/my/invoices
+@desc List All Invoices
+@returns(200) The response will be a JSON object contains that contains a list of invoices under the `invoices` key, and the invoice preview under the `invoice_preview` key.
+Each element contains the invoice summary attributes.
+@errors {401, 429, 500}
+
+@endpoint GET /v2/customers/my/invoices/{invoice_uuid}
+@desc Retrieve an Invoice by UUID
+@required {invoice_uuid: str # UUID of the invoice}
+@returns(200) The response will be a JSON object with a key called `invoice_items`. This will be set to an array of invoice item objects.
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/customers/my/invoices/{invoice_uuid}/csv
+@desc Retrieve an Invoice CSV by UUID
+@returns(200) The response will be a CSV file.
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/customers/my/invoices/{invoice_uuid}/pdf
+@desc Retrieve an Invoice PDF by UUID
+@returns(200) The response will be a PDF file.
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/customers/my/invoices/{invoice_uuid}/summary
+@desc Retrieve an Invoice Summary by UUID
+@returns(200) {amount: str, billing_period: str, credits_and_adjustments: any, invoice_uuid: str, overages: any, product_charges: any, taxes: any, user_billing_address: any, user_company: str, user_email: str, user_name: str} # To retrieve a summary for an invoice, send a GET request to  `/v2/customers/my/invoices/$INVOICE_UUID/summary`.
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/databases
+@desc List All Database Clusters
+@optional {tag_name: str # Limits the results to database clusters with a specific tag.}
+@returns(200) {databases: [map]} # A JSON object with a key of `databases`.
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/databases
+@desc Create a New Database Cluster
+@returns(201) {database: any} # A JSON object with a key of `database`.
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/databases/options
+@desc List Database Options
+@returns(200) {options: map{mongodb: any, mysql: any, pg: any, redis: any}, version_availability: map{mongodb: any, mysql: any, pg: [map], redis: any}} # A JSON string with a key of `options`.
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/databases/{database_cluster_uuid}
+@desc Destroy a Database Cluster
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/databases/{database_cluster_uuid}
+@desc Retrieve an Existing Database Cluster
+@required {database_cluster_uuid: str(uuid) # A unique identifier for a database cluster.}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/databases/{database_cluster_uuid}/backups
+@desc List Backups for a Database Cluster
+@returns(200) {backups: [map]} # A JSON object with a key of `database_backups`.
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/databases/{database_cluster_uuid}/ca
+@desc Retrieve the Public Certificate
+@returns(200) {ca: map{certificate: str}} # A JSON object with a key of `ca`.
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/databases/{database_cluster_uuid}/config
+@desc Retrieve an Existing Database Cluster Configuration
+@returns(200) {config: any} # A JSON object with a key of `config`.
+@errors {401, 404, 429, 500}
+
+@endpoint PATCH /v2/databases/{database_cluster_uuid}/config
+@desc Update the Database Configuration for an Existing Database
+@optional {config: any}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/databases/{database_cluster_uuid}/dbs
+@desc List All Databases
+@returns(200) {dbs: [map]} # A JSON object with a key of `databases`.
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/databases/{database_cluster_uuid}/dbs
+@desc Add a New Database
+@returns(201) {db: any} # A JSON object with a key of `db`.
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/databases/{database_cluster_uuid}/dbs/{database_name}
+@desc Delete a Database
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/databases/{database_cluster_uuid}/dbs/{database_name}
+@desc Retrieve an Existing Database
+@required {database_name: str # The name of the database.}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/databases/{database_cluster_uuid}/eviction_policy
+@desc Retrieve the Eviction Policy for a Redis Cluster
+@returns(200) {eviction_policy: any} # A JSON string with a key of `eviction_policy`.
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/databases/{database_cluster_uuid}/eviction_policy
+@desc Configure the Eviction Policy for a Redis Cluster
+@required {eviction_policy: any}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/databases/{database_cluster_uuid}/firewall
+@desc List Firewall Rules (Trusted Sources) for a Database Cluster
+@returns(200) {rules: [any]} # A JSON object with a key of `rules`.
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/databases/{database_cluster_uuid}/firewall
+@desc Update Firewall Rules (Trusted Sources) for a Database
+@optional {rules: [any]}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/databases/{database_cluster_uuid}/maintenance
+@desc Configure a Database Cluster's Maintenance Window
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/databases/{database_cluster_uuid}/migrate
+@desc Migrate a Database Cluster to a New Region
+@required {region: str # A slug identifier for the region to which the database cluster will be migrated.}
+@returns(202) The does not indicate the success or failure of any operation, just that the request has been accepted for processing.
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/databases/{database_cluster_uuid}/online-migration
+@desc Retrieve the Status of an Online Migration
+@returns(200) {created_at: str, id: str, status: str} # A JSON object.
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/databases/{database_cluster_uuid}/online-migration
+@desc Start an Online Migration
+@optional {disable_ssl: bool # Enables SSL encryption when connecting to the source database., source: any}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/databases/{database_cluster_uuid}/online-migration/{migration_id}
+@desc Stop an Online Migration
+@required {migration_id: str # A unique identifier assigned to the online migration.}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/databases/{database_cluster_uuid}/pools
+@desc List Connection Pools (PostgreSQL)
+@returns(200) {pools: [map]} # A JSON object with a key of `pools`.
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/databases/{database_cluster_uuid}/pools
+@desc Add a New Connection Pool (PostgreSQL)
+@returns(201) {pool: any} # A JSON object with a key of `pool`.
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/databases/{database_cluster_uuid}/pools/{pool_name}
+@desc Delete a Connection Pool (PostgreSQL)
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/databases/{database_cluster_uuid}/pools/{pool_name}
+@desc Retrieve Existing Connection Pool (PostgreSQL)
+@required {pool_name: str # The name used to identify the connection pool.}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/databases/{database_cluster_uuid}/pools/{pool_name}
+@desc Update Connection Pools (PostgreSQL)
+@required {db: str # The database for use with the connection pool., mode: str # The PGBouncer transaction mode for the connection pool. The allowed values are session, transaction, and statement., size: int(int32) # The desired size of the PGBouncer connection pool. The maximum allowed size is determined by the size of the cluster's primary node. 25 backend server connections are allowed for every 1GB of RAM. Three are reserved for maintenance. For example, a primary node with 1 GB of RAM allows for a maximum of 22 backend server connections while one with 4 GB would allow for 97. Note that these are shared across all connection pools in a cluster.}
+@optional {user: str # The name of the user for use with the connection pool. When excluded, all sessions connect to the database as the inbound user.}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/databases/{database_cluster_uuid}/replicas
+@desc List All Read-only Replicas
+@returns(200) {replicas: [map]} # A JSON object with a key of `replicas`.
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/databases/{database_cluster_uuid}/replicas
+@desc Create a Read-only Replica
+@returns(201) {replica: any} # A JSON object with a key of `replica`.
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/databases/{database_cluster_uuid}/replicas/{replica_name}
+@desc Destroy a Read-only Replica
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/databases/{database_cluster_uuid}/replicas/{replica_name}
+@desc Retrieve an Existing Read-only Replica
+@required {replica_name: str # The name of the database replica.}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/databases/{database_cluster_uuid}/replicas/{replica_name}/promote
+@desc Promote a Read-only Replica to become a Primary Cluster
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/databases/{database_cluster_uuid}/resize
+@desc Resize a Database Cluster
+@required {num_nodes: int(int32) # The number of nodes in the database cluster. Valid values are are 1-3. In addition to the primary node, up to two standby nodes may be added for highly available configurations., size: str # A slug identifier representing desired the size of the nodes in the database cluster.}
+@returns(202)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/databases/{database_cluster_uuid}/sql_mode
+@desc Retrieve the SQL Modes for a MySQL Cluster
+@returns(200) {sql_mode: str} # A JSON string with a key of `sql_mode`.
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/databases/{database_cluster_uuid}/sql_mode
+@desc Update SQL Mode for a Cluster
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/databases/{database_cluster_uuid}/upgrade
+@desc Upgrade Major Version for a Database
+@optional {version: any}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/databases/{database_cluster_uuid}/users
+@desc List all Database Users
+@returns(200) {users: [any]} # A JSON object with a key of `users`.
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/databases/{database_cluster_uuid}/users
+@desc Add a Database User
+@returns(201) {user: any} # A JSON object with a key of `user`.
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/databases/{database_cluster_uuid}/users/{username}
+@desc Remove a Database User
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/databases/{database_cluster_uuid}/users/{username}
+@desc Retrieve an Existing Database User
+@required {username: str # The name of the database user.}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/databases/{database_cluster_uuid}/users/{username}/reset_auth
+@desc Reset a Database User's Password or Authentication Method
+@optional {mysql_settings: any}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/domains
+@desc List All Domains
+@returns(200) The response will be a JSON object with a key called `domains`. The value of this will be an array of Domain objects, each of which contain the standard domain attributes.
+@errors {401, 429, 500}
+
+@endpoint POST /v2/domains
+@desc Create a New Domain
+@returns(201) {domain: any} # The response will be a JSON object with a key called `domain`. The value of this will be an object that contains the standard attributes associated with a domain.
+@errors {401, 429, 500}
+
+@endpoint DELETE /v2/domains/{domain_name}
+@desc Delete a Domain
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/domains/{domain_name}
+@desc Retrieve an Existing Domain
+@required {domain_name: str # The name of the domain itself.}
+@returns(200) {domain: any} # The response will be a JSON object with a key called `domain`. The value of this will be an object that contains the standard attributes defined for a domain.
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/domains/{domain_name}/records
+@desc List All Domain Records
+@optional {name: str # A fully qualified record name. For example, to only include records matching sub.example.com, send a GET request to `/v2/domains/$DOMAIN_NAME/records?name=sub.example.com`., type: str(A/AAAA/CAA/CNAME/MX/NS/SOA/SRV/TXT) # The type of the DNS record. For example: A, CNAME, TXT, ...}
+@returns(200) The response will be a JSON object with a key called `domain_records`. The value of this will be an array of domain record objects, each of which contains the standard domain record attributes. For attributes that are not used by a specific record type, a value of `null` will be returned. For instance, all records other than SRV will have `null` for the `weight` and `port` attributes.
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/domains/{domain_name}/records
+@desc Create a New Domain Record
+@returns(201) {domain_record: any} # The response body will be a JSON object with a key called `domain_record`. The value of this will be an object representing the new record. Attributes that are not applicable for the record type will be set to `null`. An `id` attribute is generated for each record as part of the object.
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/domains/{domain_name}/records/{domain_record_id}
+@desc Delete a Domain Record
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/domains/{domain_name}/records/{domain_record_id}
+@desc Retrieve an Existing Domain Record
+@required {domain_record_id: int # The unique identifier of the domain record.}
+@returns(200) {domain_record: any} # The response will be a JSON object with a key called `domain_record`. The value of this will be a domain record object which contains the standard domain record attributes.
+@errors {401, 404, 429, 500}
+
+@endpoint PATCH /v2/domains/{domain_name}/records/{domain_record_id}
+@desc Update a Domain Record
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/domains/{domain_name}/records/{domain_record_id}
+@desc Update a Domain Record
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/droplets
+@desc Deleting Droplets by Tag
+@required {tag_name: str # Specifies Droplets to be deleted by tag.}
+@returns(204) The action was successful and the response body is empty. This response has content-type set.
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/droplets
+@desc List All Droplets
+@optional {tag_name: str # Used to filter Droplets by a specific tag. Can not be combined with `name`., name: str # Used to filter list response by Droplet name returning only exact matches. It is case-insensitive and can not be combined with `tag_name`.}
+@returns(200) A JSON object with a key of `droplets`.
+@errors {401, 429, 500}
+
+@endpoint POST /v2/droplets
+@desc Create a New Droplet
+@returns(202) Accepted
+@errors {401, 429, 500}
+
+@endpoint POST /v2/droplets/actions
+@desc Acting on Tagged Droplets
+@returns(201) {actions: [any]} # The response will be a JSON object with a key called `actions`.
+@errors {401, 429, 500}
+
+@endpoint DELETE /v2/droplets/{droplet_id}
+@desc Delete an Existing Droplet
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/droplets/{droplet_id}
+@desc Retrieve an Existing Droplet
+@required {droplet_id: int # A unique identifier for a Droplet instance.}
+@returns(200) {droplet: any} # The response will be a JSON object with a key called `droplet`. This will be
+set to a JSON object that contains the standard Droplet attributes.
+
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/droplets/{droplet_id}/actions
+@desc List Actions for a Droplet
+@returns(200) A JSON object with an `actions` key.
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/droplets/{droplet_id}/actions
+@desc Initiate a Droplet Action
+@returns(201) {action: any} # The response will be a JSON object with a key called `action`.
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/droplets/{droplet_id}/actions/{action_id}
+@desc Retrieve a Droplet Action
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/droplets/{droplet_id}/backups
+@desc List Backups for a Droplet
+@returns(200) A JSON object with an `backups` key.
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/droplets/{droplet_id}/destroy_with_associated_resources
+@desc List Associated Resources for a Droplet
+@returns(200) A JSON object containing `snapshots`, `volumes`, and `volume_snapshots` keys.
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/droplets/{droplet_id}/destroy_with_associated_resources/dangerous
+@desc Destroy a Droplet and All of its Associated Resources (Dangerous)
+@required {X-Dangerous: bool # Acknowledge this action will destroy the Droplet and all associated resources and _can not_ be reversed.}
+@returns(202)
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/droplets/{droplet_id}/destroy_with_associated_resources/retry
+@desc Retry a Droplet Destroy with Associated Resources Request
+@returns(202)
+@errors {401, 404, 409: Conflict, 429, 500}
+
+@endpoint DELETE /v2/droplets/{droplet_id}/destroy_with_associated_resources/selective
+@desc Selectively Destroy a Droplet and its Associated Resources
+@optional {floating_ips: [str] # An array of unique identifiers for the floating IPs to be scheduled for deletion., reserved_ips: [str] # An array of unique identifiers for the reserved IPs to be scheduled for deletion., snapshots: [str] # An array of unique identifiers for the snapshots to be scheduled for deletion., volume_snapshots: [str] # An array of unique identifiers for the volume snapshots to be scheduled for deletion., volumes: [str] # An array of unique identifiers for the volumes to be scheduled for deletion.}
+@returns(202)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/droplets/{droplet_id}/destroy_with_associated_resources/status
+@desc Check Status of a Droplet Destroy with Associated Resources Request
+@returns(200) {completed_at: str(date-time), droplet: map{destroyed_at: str(date-time), error_message: str, id: str, name: str}, failures: int, resources: map{floating_ips: [any], reserved_ips: [any], snapshots: [any], volume_snapshots: [any], volumes: [any]}} # A JSON object containing containing the status of a request to destroy a Droplet and its associated resources.
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/droplets/{droplet_id}/firewalls
+@desc List all Firewalls Applied to a Droplet
+@returns(200) A JSON object that has a key called `firewalls`.
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/droplets/{droplet_id}/kernels
+@desc List All Available Kernels for a Droplet
+@returns(200) A JSON object that has a key called `kernels`.
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/droplets/{droplet_id}/neighbors
+@desc List Neighbors for a Droplet
+@returns(200) A JSON object with an `droplets` key.
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/droplets/{droplet_id}/snapshots
+@desc List Snapshots for a Droplet
+@returns(200) A JSON object with an `snapshots` key.
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/firewalls
+@desc List All Firewalls
+@returns(200) To list all of the firewalls available on your account, send a GET request to `/v2/firewalls`.
+@errors {401, 429, 500}
+
+@endpoint POST /v2/firewalls
+@desc Create a New Firewall
+@returns(202) {firewall: any} # The response will be a JSON object with a firewall key. This will be set to an object containing the standard firewall attributes
+@errors {400: Bad Request, 401, 429, 500}
+
+@endpoint DELETE /v2/firewalls/{firewall_id}
+@desc Delete a Firewall
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/firewalls/{firewall_id}
+@desc Retrieve an Existing Firewall
+@required {firewall_id: str(uuid) # A unique ID that can be used to identify and reference a firewall.}
+@returns(200) {firewall: any} # The response will be a JSON object with a firewall key. This will be set to an object containing the standard firewall attributes.
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/firewalls/{firewall_id}
+@desc Update a Firewall
+@returns(200) {firewall: any} # The response will be a JSON object with a `firewall` key. This will be set to an object containing the standard firewall attributes.
+@errors {400, 401, 404, 429, 500}
+
+@endpoint DELETE /v2/firewalls/{firewall_id}/droplets
+@desc Remove Droplets from a Firewall
+@required {droplet_ids: [int] # An array containing the IDs of the Droplets to be removed from the firewall.}
+@returns(204)
+@errors {400, 401, 404, 429, 500}
+
+@endpoint POST /v2/firewalls/{firewall_id}/droplets
+@desc Add Droplets to a Firewall
+@required {droplet_ids: [int] # An array containing the IDs of the Droplets to be assigned to the firewall.}
+@returns(204)
+@errors {400, 401, 404, 429, 500}
+
+@endpoint DELETE /v2/firewalls/{firewall_id}/rules
+@desc Remove Rules from a Firewall
+@returns(204)
+@errors {400, 401, 404, 429, 500}
+
+@endpoint POST /v2/firewalls/{firewall_id}/rules
+@desc Add Rules to a Firewall
+@returns(204)
+@errors {400, 401, 404, 429, 500}
+
+@endpoint DELETE /v2/firewalls/{firewall_id}/tags
+@desc Remove Tags from a Firewall
+@required {tags: any}
+@returns(204)
+@errors {400, 401, 404, 429, 500}
+
+@endpoint POST /v2/firewalls/{firewall_id}/tags
+@desc Add Tags to a Firewall
+@required {tags: any}
+@returns(204)
+@errors {400, 401, 404, 429, 500}
+
+@endpoint GET /v2/floating_ips
+@desc List All Floating IPs
+@returns(200) The response will be a JSON object with a key called `floating_ips`. This will be set to an array of floating IP objects, each of which will contain the standard floating IP attributes
+@errors {401, 429, 500}
+
+@endpoint POST /v2/floating_ips
+@desc Create a New Floating IP
+@returns(202) {floating_ip: any, links: map{actions: [any], droplets: [any]}} # The response will be a JSON object with a key called `floating_ip`. The value of this will be an object that contains the standard attributes associated with a floating IP.
+When assigning a floating IP to a Droplet at same time as it created, the response's `links` object will contain links to both the Droplet and the assignment action. The latter can be used to check the status of the action.
+@errors {401, 429, 500}
+
+@endpoint DELETE /v2/floating_ips/{floating_ip}
+@desc Delete a Floating IP
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/floating_ips/{floating_ip}
+@desc Retrieve an Existing Floating IP
+@required {floating_ip: str(ipv4) # A floating IP address.}
+@returns(200) {floating_ip: any} # The response will be a JSON object with a key called `floating_ip`. The value of this will be an object that contains the standard attributes associated with a floating IP.
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/floating_ips/{floating_ip}/actions
+@desc List All Actions for a Floating IP
+@returns(200) The results will be returned as a JSON object with an `actions` key. This will be set to an array filled with action objects containing the standard floating IP action attributes.
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/floating_ips/{floating_ip}/actions
+@desc Initiate a Floating IP Action
+@returns(201) {action: any} # The response will be an object with a key called `action`. The value of this will be an object that contains the standard floating IP action attributes.
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/floating_ips/{floating_ip}/actions/{action_id}
+@desc Retrieve an Existing Floating IP Action
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/functions/namespaces
+@desc List Namespaces
+@returns(200) An array of JSON objects with a key called `namespaces`.  Each object represents a namespace and contains
+the properties associated with it. 
+@errors {401, 429, 500}
+
+@endpoint POST /v2/functions/namespaces
+@desc Create Namespace
+@required {label: str # The namespace's unique name., region: str # The [datacenter region](https://docs.digitalocean.com/products/platform/availability-matrix/#available-datacenters) in which to create the namespace.}
+@returns(200) {namespace: any} # A JSON response object with a key called `namespace`. The object contains the properties associated
+with the namespace.
+@errors {401, 404: Bad Request., 422: Limit Reached, 429, 500}
+
+@endpoint DELETE /v2/functions/namespaces/{namespace_id}
+@desc Delete Namespace
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/functions/namespaces/{namespace_id}
+@desc Get Namespace
+@required {namespace_id: str # The ID of the namespace to be managed.}
+@returns(200)
+@errors {401, 403: Not Allowed., 404: Bad Request., 429, 500}
+
+@endpoint GET /v2/functions/namespaces/{namespace_id}/triggers
+@desc List Triggers
+@returns(200) An array of JSON objects with a key called `namespaces`.  Each object represents a namespace and contains
+the properties associated with it. 
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/functions/namespaces/{namespace_id}/triggers
+@desc Create Trigger
+@required {function: str # Name of function(action) that exists in the given namespace., is_enabled: bool # Indicates weather the trigger is paused or unpaused., name: str # The trigger's unique name within the namespace., scheduled_details: any, type: str # One of different type of triggers. Currently only SCHEDULED is supported.}
+@returns(200) {trigger: any} # A JSON response object with a key called `trigger`. The object contains the properties associated
+with the trigger.
+@errors {400: Bad Request., 401, 404, 422: Limit Reached, 429, 500}
+
+@endpoint DELETE /v2/functions/namespaces/{namespace_id}/triggers/{trigger_name}
+@desc Delete Trigger
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/functions/namespaces/{namespace_id}/triggers/{trigger_name}
+@desc Get Trigger
+@required {trigger_name: str # The name of the trigger to be managed.}
+@returns(200)
+@errors {401, 404: Bad Request., 429, 500}
+
+@endpoint PUT /v2/functions/namespaces/{namespace_id}/triggers/{trigger_name}
+@desc Update Trigger
+@optional {is_enabled: bool # Indicates weather the trigger is paused or unpaused., scheduled_details: any}
+@returns(200)
+@errors {400, 401, 404, 429, 500}
+
+@endpoint GET /v2/images
+@desc List All Images
+@optional {type: str(application/distribution) # Filters results based on image type which can be either `application` or `distribution`., private: bool # Used to filter only user images., tag_name: str # Used to filter images by a specific tag.}
+@returns(200) The response will be a JSON object with a key called `images`.  This will be set to an array of image objects, each of which will contain the standard image attributes.
+@errors {401, 429, 500}
+
+@endpoint POST /v2/images
+@desc Create a Custom Image
+@returns(202) {image: any} # The response will be a JSON object with a key set to `image`.  The value of this will be an image object containing a subset of the standard  image attributes as listed below, including the image's `id` and `status`.  After initial creation, the `status` will be `NEW`. Using the image's id, you  may query the image's status by sending a `GET` request to the  `/v2/images/$IMAGE_ID` endpoint.  When the `status` changes to `available`, the image will be ready for use.
+@errors {401, 429, 500}
+
+@endpoint DELETE /v2/images/{image_id}
+@desc Delete an Image
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/images/{image_id}
+@desc Retrieve an Existing Image
+@required {image_id: any # A unique number (id) or string (slug) used to identify and reference a specific image.  **Public** images can be identified by image `id` or `slug`.  **Private** images *must* be identified by image `id`.}
+@returns(200) {image: any} # The response will be a JSON object with a key called `image`.  The value of this will be an image object containing the standard image attributes.
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/images/{image_id}
+@desc Update an Image
+@required {image_id: int # A unique number that can be used to identify and reference a specific image.}
+@returns(200) {image: any} # The response will be a JSON object with a key set to `image`.  The value of this will be an image object containing the standard image attributes.
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/images/{image_id}/actions
+@desc List All Actions for an Image
+@returns(200) The results will be returned as a JSON object with an `actions` key. This will be set to an array filled with action objects containing the standard action attributes.
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/images/{image_id}/actions
+@desc Initiate an Image Action
+@returns(201) The response will be a JSON object with a key called `action`. The value of this will be an object containing the standard image action attributes.
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/images/{image_id}/actions/{action_id}
+@desc Retrieve an Existing Action
+@returns(200) The response will be an object with a key called `action`. The value of this will be an object that contains the standard image action attributes.
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/kubernetes/clusters
+@desc List All Kubernetes Clusters
+@returns(200) The response will be a JSON object with a key called `kubernetes_clusters`.
+This will be set to an array of objects, each of which will contain the
+standard Kubernetes cluster attributes.
+
+@errors {401, 429, 500}
+
+@endpoint POST /v2/kubernetes/clusters
+@desc Create a New Kubernetes Cluster
+@returns(201) {kubernetes_cluster: any} # The response will be a JSON object with a key called `kubernetes_cluster`. The
+value of this will be an object containing the standard attributes of a
+Kubernetes cluster.
+
+The IP address and cluster API server endpoint will not be available until the
+cluster has finished provisioning. The initial value of the cluster's
+`status.state` attribute will be `provisioning`. When the cluster is ready,
+this will transition to `running`.
+
+@errors {401, 429, 500}
+
+@endpoint DELETE /v2/kubernetes/clusters/{cluster_id}
+@desc Delete a Kubernetes Cluster
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/kubernetes/clusters/{cluster_id}
+@desc Retrieve an Existing Kubernetes Cluster
+@required {cluster_id: str(uuid) # A unique ID that can be used to reference a Kubernetes cluster.}
+@returns(200) {kubernetes_cluster: any} # The response will be a JSON object with a key called `kubernetes_cluster`. The
+value of this will be an object containing the standard attributes of a
+Kubernetes cluster.
+
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/kubernetes/clusters/{cluster_id}
+@desc Update a Kubernetes Cluster
+@required {name: str # A human-readable name for a Kubernetes cluster.}
+@optional {auto_upgrade: bool=False # A boolean value indicating whether the cluster will be automatically upgraded to new patch releases during its maintenance window., ha: bool=False # A boolean value indicating whether the control plane is run in a highly available configuration in the cluster. Highly available control planes incur less downtime. The property cannot be disabled., maintenance_policy: any, surge_upgrade: bool=False # A boolean value indicating whether surge upgrade is enabled/disabled for the cluster. Surge upgrade makes cluster upgrades fast and reliable by bringing up new nodes before destroying the outdated nodes., tags: [str] # An array of tags applied to the Kubernetes cluster. All clusters are automatically tagged `k8s` and `k8s:$K8S_CLUSTER_ID`.}
+@returns(202) {kubernetes_cluster: any} # The response will be a JSON object with a key called `kubernetes_cluster`. The
+value of this will be an object containing the standard attributes of a
+Kubernetes cluster.
+
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/kubernetes/clusters/{cluster_id}/clusterlint
+@desc Fetch Clusterlint Diagnostics for a Kubernetes Cluster
+@optional {run_id: str(uuid) # Specifies the clusterlint run whose results will be retrieved.}
+@returns(200) {completed_at: str(date-time), diagnostics: [map], requested_at: str(date-time), run_id: str} # The response is a JSON object which contains the diagnostics on Kubernetes
+objects in the cluster. Each diagnostic will contain some metadata information
+about the object and feedback for users to act upon.
+
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/kubernetes/clusters/{cluster_id}/clusterlint
+@desc Run Clusterlint Checks on a Kubernetes Cluster
+@optional {exclude_checks: [str] # An array of checks that will be run when clusterlint executes checks., exclude_groups: [str] # An array of check groups that will be omitted when clusterlint executes checks., include_checks: [str] # An array of checks that will be run when clusterlint executes checks., include_groups: [str] # An array of check groups that will be run when clusterlint executes checks.}
+@returns(202) {run_id: str} # The response is a JSON object with a key called `run_id` that you can later use to fetch the run results.
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/kubernetes/clusters/{cluster_id}/credentials
+@desc Retrieve Credentials for a Kubernetes Cluster
+@returns(200) {certificate_authority_data: str(byte), client_certificate_data: str(byte)?, client_key_data: str(byte)?, expires_at: str(date-time), server: str(uri), token: str} # A JSON object containing credentials for a cluster.
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/kubernetes/clusters/{cluster_id}/destroy_with_associated_resources
+@desc List Associated Resources for Cluster Deletion
+@returns(200) {load_balancers: [map], volume_snapshots: [any], volumes: [any]} # The response will be a JSON object containing `load_balancers`, `volumes`, and `volume_snapshots` keys. Each will be set to an array of objects containing the standard attributes for associated resources.
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/kubernetes/clusters/{cluster_id}/destroy_with_associated_resources/dangerous
+@desc Delete a Cluster and All of its Associated Resources (Dangerous)
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/kubernetes/clusters/{cluster_id}/destroy_with_associated_resources/selective
+@desc Selectively Delete a Cluster and its Associated Resources
+@optional {load_balancers: [str] # A list of IDs for associated load balancers to destroy along with the cluster., volume_snapshots: [str] # A list of IDs for associated volume snapshots to destroy along with the cluster., volumes: [str] # A list of IDs for associated volumes to destroy along with the cluster.}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/kubernetes/clusters/{cluster_id}/kubeconfig
+@desc Retrieve the kubeconfig for a Kubernetes Cluster
+@optional {expiry_seconds: int=0 # The duration in seconds that the returned Kubernetes credentials will be valid. If not set or 0, the credentials will have a 7 day expiry.}
+@returns(200) A kubeconfig file for the cluster in YAML format.
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/kubernetes/clusters/{cluster_id}/node_pools
+@desc List All Node Pools in a Kubernetes Clusters
+@returns(200) {node_pools: [any]} # The response will be a JSON object with a key called `node_pools`. This will
+be set to an array of objects, each of which will contain the standard node
+pool attributes.
+
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/kubernetes/clusters/{cluster_id}/node_pools
+@desc Add a Node Pool to a Kubernetes Cluster
+@returns(201) {node_pool: any} # The response will be a JSON object with a key called `node_pool`. The value of
+this will be an object containing the standard attributes of a node pool.
+
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/kubernetes/clusters/{cluster_id}/node_pools/{node_pool_id}
+@desc Delete a Node Pool in a Kubernetes Cluster
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/kubernetes/clusters/{cluster_id}/node_pools/{node_pool_id}
+@desc Retrieve a Node Pool for a Kubernetes Cluster
+@required {node_pool_id: str(uuid) # A unique ID that can be used to reference a Kubernetes node pool.}
+@returns(200) {node_pool: any} # The response will be a JSON object with a key called `node_pool`. The value
+of this will be an object containing the standard attributes of a node pool.
+
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/kubernetes/clusters/{cluster_id}/node_pools/{node_pool_id}
+@desc Update a Node Pool in a Kubernetes Cluster
+@returns(202) {node_pool: any} # The response will be a JSON object with a key called `node_pool`. The value of
+this will be an object containing the standard attributes of a node pool.
+
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/kubernetes/clusters/{cluster_id}/node_pools/{node_pool_id}/nodes/{node_id}
+@desc Delete a Node in a Kubernetes Cluster
+@required {node_id: str(uuid) # A unique ID that can be used to reference a node in a Kubernetes node pool.}
+@optional {skip_drain: int=0 # Specifies whether or not to drain workloads from a node before it is deleted. Setting it to `1` causes node draining to be skipped. Omitting the query parameter or setting its value to `0` carries out draining prior to deletion., replace: int=0 # Specifies whether or not to replace a node after it has been deleted. Setting it to `1` causes the node to be replaced by a new one after deletion. Omitting the query parameter or setting its value to `0` deletes without replacement.}
+@returns(202)
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/kubernetes/clusters/{cluster_id}/node_pools/{node_pool_id}/recycle
+@desc Recycle a Kubernetes Node Pool
+@optional {nodes: [str]}
+@returns(202)
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/kubernetes/clusters/{cluster_id}/upgrade
+@desc Upgrade a Kubernetes Cluster
+@optional {version: str # The slug identifier for the version of Kubernetes that the cluster will be upgraded to.}
+@returns(202)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/kubernetes/clusters/{cluster_id}/upgrades
+@desc Retrieve Available Upgrades for an Existing Kubernetes Cluster
+@returns(200) {available_upgrade_versions: [map]?} # The response will be a JSON object with a key called
+`available_upgrade_versions`. The value of this will be an array of objects,
+representing the upgrade versions currently available for this cluster.
+
+If the cluster is up-to-date (i.e. there are no upgrades currently available)
+`available_upgrade_versions` will be `null`.
+
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/kubernetes/clusters/{cluster_id}/user
+@desc Retrieve User Information for a Kubernetes Cluster
+@returns(200) {kubernetes_cluster_user: map{groups: [str], username: str(email)}} # The response will be a JSON object with a key called `kubernetes_cluster_user`
+containing the username and in-cluster groups that it belongs to.
+
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/kubernetes/options
+@desc List Available Regions, Node Sizes, and Versions of Kubernetes
+@returns(200) {options: any} # The response will be a JSON object with a key called `options` which contains
+`regions`, `versions`, and `sizes` objects listing the available options and
+the matching slugs for use when creating a new cluster.
+
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/kubernetes/registry
+@desc Remove Container Registry from Kubernetes Clusters
+@returns(204)
+@errors {401, 429, 500}
+
+@endpoint POST /v2/kubernetes/registry
+@desc Add Container Registry to Kubernetes Clusters
+@optional {cluster_uuids: [str] # An array containing the UUIDs of Kubernetes clusters.}
+@returns(204)
+@errors {401, 429, 500}
+
+@endpoint GET /v2/load_balancers
+@desc List All Load Balancers
+@returns(200) A JSON object with a key of `load_balancers`. This will be set to an array of objects, each of which will contain the standard load balancer attributes.
+@errors {401, 429, 500}
+
+@endpoint POST /v2/load_balancers
+@desc Create a New Load Balancer
+@returns(202) {load_balancer: any} # Accepted
+@errors {401, 429, 500}
+
+@endpoint DELETE /v2/load_balancers/{lb_id}
+@desc Delete a Load Balancer
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/load_balancers/{lb_id}
+@desc Retrieve an Existing Load Balancer
+@required {lb_id: str # A unique identifier for a load balancer.}
+@returns(200) {load_balancer: any} # The response will be a JSON object with a key called `load_balancer`. The
+value of this will be an object that contains the standard attributes
+associated with a load balancer
+
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/load_balancers/{lb_id}
+@desc Update a Load Balancer
+@returns(200) {load_balancer: any} # The response will be a JSON object with a key called `load_balancer`. The
+value of this will be an object containing the standard attributes of a
+load balancer.
+
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/load_balancers/{lb_id}/droplets
+@desc Remove Droplets from a Load Balancer
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/load_balancers/{lb_id}/droplets
+@desc Add Droplets to a Load Balancer
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/load_balancers/{lb_id}/forwarding_rules
+@desc Remove Forwarding Rules from a Load Balancer
+@required {forwarding_rules: [any]}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/load_balancers/{lb_id}/forwarding_rules
+@desc Add Forwarding Rules to a Load Balancer
+@required {forwarding_rules: [any]}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/monitoring/alerts
+@desc List Alert Policies
+@returns(200) A list of alert policies.
+@errors {401, 429, 500}
+
+@endpoint POST /v2/monitoring/alerts
+@desc Create Alert Policy
+@required {alerts: any, compare: str(GreaterThan/LessThan), description: str, enabled: bool, entities: [str], tags: [str], type: str(v1/insights/droplet/load_1/v1/insights/droplet/load_5/v1/insights/droplet/load_15/v1/insights/droplet/memory_utilization_percent/v1/insights/droplet/disk_utilization_percent/v1/insights/droplet/cpu/v1/insights/droplet/disk_read/v1/insights/droplet/disk_write/v1/insights/droplet/public_outbound_bandwidth/v1/insights/droplet/public_inbound_bandwidth/v1/insights/droplet/private_outbound_bandwidth/v1/insights/droplet/private_inbound_bandwidth/v1/insights/lbaas/avg_cpu_utilization_percent/v1/insights/lbaas/connection_utilization_percent/v1/insights/lbaas/droplet_health/v1/insights/lbaas/tls_connections_per_second_utilization_percent/v1/insights/lbaas/increase_in_http_error_rate_percentage_5xx/v1/insights/lbaas/increase_in_http_error_rate_percentage_4xx/v1/insights/lbaas/increase_in_http_error_rate_count_5xx/v1/insights/lbaas/increase_in_http_error_rate_count_4xx/v1/insights/lbaas/high_http_request_response_time/v1/insights/lbaas/high_http_request_response_time_50p/v1/insights/lbaas/high_http_request_response_time_95p/v1/insights/lbaas/high_http_request_response_time_99p/v1/dbaas/alerts/load_15_alerts/v1/dbaas/alerts/memory_utilization_alerts/v1/dbaas/alerts/disk_utilization_alerts/v1/dbaas/alerts/cpu_alerts), value: num(float), window: str(5m/10m/30m/1h)}
+@returns(200) {policy: any} # An alert policy.
+@errors {401, 429, 500}
+
+@endpoint DELETE /v2/monitoring/alerts/{alert_uuid}
+@desc Delete an Alert Policy
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/monitoring/alerts/{alert_uuid}
+@desc Retrieve an Existing Alert Policy
+@required {alert_uuid: str # A unique identifier for an alert policy.}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/monitoring/alerts/{alert_uuid}
+@desc Update an Alert Policy
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/monitoring/metrics/droplet/bandwidth
+@desc Get Droplet Bandwidth Metrics
+@required {host_id: str # The droplet ID., interface: str(private/public) # The network interface., direction: str(inbound/outbound) # The traffic direction., start: str # Timestamp to start metric window., end: str # Timestamp to end metric window.}
+@returns(200) {data: map{result: [map], resultType: str}, status: str} # The response will be a JSON object with a key called `data` and `status`.
+@errors {401, 429, 500}
+
+@endpoint GET /v2/monitoring/metrics/droplet/cpu
+@desc Get Droplet CPU Metrics
+@returns(200) The response will be a JSON object with a key called `data` and `status`.
+@errors {401, 429, 500}
+
+@endpoint GET /v2/monitoring/metrics/droplet/filesystem_free
+@desc Get Droplet Filesystem Free Metrics
+@returns(200) The response will be a JSON object with a key called `data` and `status`.
+@errors {401, 429, 500}
+
+@endpoint GET /v2/monitoring/metrics/droplet/filesystem_size
+@desc Get Droplet Filesystem Size Metrics
+@returns(200)
+@errors {401, 429, 500}
+
+@endpoint GET /v2/monitoring/metrics/droplet/load_1
+@desc Get Droplet Load1 Metrics
+@returns(200) The response will be a JSON object with a key called `data` and `status`.
+@errors {401, 429, 500}
+
+@endpoint GET /v2/monitoring/metrics/droplet/load_15
+@desc Get Droplet Load15 Metrics
+@returns(200)
+@errors {401, 429, 500}
+
+@endpoint GET /v2/monitoring/metrics/droplet/load_5
+@desc Get Droplet Load5 Metrics
+@returns(200)
+@errors {401, 429, 500}
+
+@endpoint GET /v2/monitoring/metrics/droplet/memory_available
+@desc Get Droplet Available Memory Metrics
+@returns(200)
+@errors {401, 429, 500}
+
+@endpoint GET /v2/monitoring/metrics/droplet/memory_cached
+@desc Get Droplet Cached Memory Metrics
+@returns(200)
+@errors {401, 429, 500}
+
+@endpoint GET /v2/monitoring/metrics/droplet/memory_free
+@desc Get Droplet Free Memory Metrics
+@returns(200)
+@errors {401, 429, 500}
+
+@endpoint GET /v2/monitoring/metrics/droplet/memory_total
+@desc Get Droplet Total Memory Metrics
+@returns(200)
+@errors {401, 429, 500}
+
+@endpoint GET /v2/projects
+@desc List All Projects
+@returns(200) The response will be a JSON object with a key called `projects`. The value of this will be an object with the standard project attributes
+@errors {401, 429, 500}
+
+@endpoint POST /v2/projects
+@desc Create a Project
+@returns(201) {project: any} # The response will be a JSON object with a key called `project`. The value of this will be an object with the standard project attributes
+@errors {401, 429, 500}
+
+@endpoint GET /v2/projects/default
+@desc Retrieve the Default Project
+@returns(200) {project: any} # The response will be a JSON object with a key called `project`. The value of this will be an object with the standard project attributes
+@errors {401, 404, 429, 500}
+
+@endpoint PATCH /v2/projects/default
+@desc Patch the Default Project
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/projects/default
+@desc Update the Default Project
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/projects/default/resources
+@desc List Default Project Resources
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/projects/default/resources
+@desc Assign Resources to Default Project
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/projects/{project_id}
+@desc Delete an Existing Project
+@returns(204)
+@errors {401, 404, 412: Only an empty project can be deleted., 429, 500}
+
+@endpoint GET /v2/projects/{project_id}
+@desc Retrieve an Existing Project
+@required {project_id: str(uuid) # A unique identifier for a project.}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint PATCH /v2/projects/{project_id}
+@desc Patch a Project
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/projects/{project_id}
+@desc Update a Project
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/projects/{project_id}/resources
+@desc List Project Resources
+@returns(200) The response will be a JSON object with a key called `resources`. The value of this will be an object with the standard resource attributes.
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/projects/{project_id}/resources
+@desc Assign Resources to a Project
+@optional {resources: [any] # A list of uniform resource names (URNs) to be added to a project.}
+@returns(200) {resources: [any]} # The response will be a JSON object with a key called `resources`. The value of this will be an object with the standard resource attributes.
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/regions
+@desc List All Data Center Regions
+@returns(200) A JSON object with a key set to `regions`. The value is an array of `region` objects, each of which contain the standard `region` attributes.
+@errors {401, 429, 500}
+
+@endpoint DELETE /v2/registry
+@desc Delete Container Registry
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/registry
+@desc Get Container Registry Information
+@returns(200) {registry: map{created_at: str(date-time), name: str, region: str, storage_usage_bytes: int, storage_usage_bytes_updated_at: str(date-time), subscription: any}} # The response will be a JSON object with the key `registry` containing information about your registry.
+@errors {401, 429, 500}
+
+@endpoint POST /v2/registry
+@desc Create Container Registry
+@required {name: str # A globally unique name for the container registry. Must be lowercase and be composed only of numbers, letters and `-`, up to a limit of 63 characters., subscription_tier_slug: str(starter/basic/professional) # The slug of the subscription tier to sign up for. Valid values can be retrieved using the options endpoint.}
+@optional {region: str(nyc3/sfo3/ams3/sgp1/fra1) # Slug of the region where registry data is stored. When not provided, a region will be selected.}
+@returns(201)
+@errors {401, 429, 500}
+
+@endpoint GET /v2/registry/docker-credentials
+@desc Get Docker Credentials for Container Registry
+@optional {expiry_seconds: int=0 # The duration in seconds that the returned registry credentials will be valid. If not set or 0, the credentials will not expire., read_write: bool=False # By default, the registry credentials allow for read-only access. Set this query parameter to `true` to obtain read-write credentials.}
+@returns(200) {auths: map{registry.digitalocean.com: map{auth: str}}} # A Docker `config.json` file for the container registry.
+@errors {401, 429, 500}
+
+@endpoint GET /v2/registry/options
+@desc List Registry Options (Subscription Tiers and Available Regions)
+@returns(200) {options: map{available_regions: [str], subscription_tiers: [any]}} # The response will be a JSON object with a key called `options` which contains a key called `subscription_tiers` listing the available tiers.
+@errors {401, 429, 500}
+
+@endpoint GET /v2/registry/subscription
+@desc Get Subscription Information
+@returns(200) {subscription: any} # The response will be a JSON object with a key called `subscription` containing information about your subscription.
+@errors {401, 429, 500}
+
+@endpoint POST /v2/registry/subscription
+@desc Update Subscription Tier
+@optional {tier_slug: str(starter/basic/professional) # The slug of the subscription tier to sign up for.}
+@returns(200)
+@errors {401, 429, 500}
+
+@endpoint POST /v2/registry/validate-name
+@desc Validate a Container Registry Name
+@required {name: str # A globally unique name for the container registry. Must be lowercase and be composed only of numbers, letters and `-`, up to a limit of 63 characters.}
+@returns(204)
+@errors {401, 409, 429, 500}
+
+@endpoint GET /v2/registry/{registry_name}/garbage-collection
+@desc Get Active Garbage Collection
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/registry/{registry_name}/garbage-collection
+@desc Start Garbage Collection
+@returns(201) {garbage_collection: map{blobs_deleted: int, created_at: str(date-time), freed_bytes: int, registry_name: str, status: str, updated_at: str(date-time), uuid: str}} # The response will be a JSON object with a key of `garbage_collection`. This will be a json object with attributes representing the currently-active garbage collection.
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/registry/{registry_name}/garbage-collection/{garbage_collection_uuid}
+@desc Update Garbage Collection
+@required {garbage_collection_uuid: str # The UUID of a garbage collection run.}
+@optional {cancel: bool # A boolean value indicating that the garbage collection should be cancelled.}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/registry/{registry_name}/garbage-collections
+@desc List Garbage Collections
+@returns(200) {garbage_collections: [any]} # The response will be a JSON object with a key of `garbage_collections`. This will be set to an array containing objects representing each past garbage collection. Each will contain the standard Garbage Collection attributes.
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/registry/{registry_name}/repositories
+@desc List All Container Registry Repositories
+@required {registry_name: str # The name of a container registry.}
+@returns(200) The response body will be a JSON object with a key of `repositories`. This will be set to an array containing objects each representing a repository.
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/registry/{registry_name}/repositoriesV2
+@desc List All Container Registry Repositories (V2)
+@optional {page: int=1 # Which 'page' of paginated results to return. Ignored when 'page_token' is provided., page_token: str # Token to retrieve of the next or previous set of results more quickly than using 'page'.}
+@returns(200) The response body will be a JSON object with a key of `repositories`. This will be set to an array containing objects each representing a repository.
+@errors {400, 401, 404, 429, 500}
+
+@endpoint GET /v2/registry/{registry_name}/{repository_name}/digests
+@desc List All Container Registry Repository Manifests
+@returns(200) The response body will be a JSON object with a key of `manifests`. This will be set to an array containing objects each representing a manifest.
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/registry/{registry_name}/{repository_name}/digests/{manifest_digest}
+@desc Delete Container Registry Repository Manifest
+@required {manifest_digest: str # The manifest digest of a container registry repository tag.}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/registry/{registry_name}/{repository_name}/tags
+@desc List All Container Registry Repository Tags
+@required {repository_name: str # The name of a container registry repository. If the name contains `/` characters, they must be URL-encoded, e.g. `%2F`.}
+@returns(200) The response body will be a JSON object with a key of `tags`. This will be set to an array containing objects each representing a tag.
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/registry/{registry_name}/{repository_name}/tags/{repository_tag}
+@desc Delete Container Registry Repository Tag
+@required {repository_tag: str # The name of a container registry repository tag.}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/reports/droplet_neighbors_ids
+@desc List All Droplet Neighbors
+@returns(200) {neighbor_ids: [[int]]} # A JSON object with an `neighbor_ids` key.
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/reserved_ips
+@desc List All Reserved IPs
+@returns(200) The response will be a JSON object with a key called `reserved_ips`. This will be set to an array of reserved IP objects, each of which will contain the standard reserved IP attributes
+@errors {401, 429, 500}
+
+@endpoint POST /v2/reserved_ips
+@desc Create a New Reserved IP
+@returns(202) {links: map{actions: [any], droplets: [any]}, reserved_ip: any} # The response will be a JSON object with a key called `reserved_ip`. The value of this will be an object that contains the standard attributes associated with a reserved IP.
+When assigning a reserved IP to a Droplet at same time as it created, the response's `links` object will contain links to both the Droplet and the assignment action. The latter can be used to check the status of the action.
+@errors {401, 429, 500}
+
+@endpoint DELETE /v2/reserved_ips/{reserved_ip}
+@desc Delete a Reserved IP
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/reserved_ips/{reserved_ip}
+@desc Retrieve an Existing Reserved IP
+@required {reserved_ip: str(ipv4) # A reserved IP address.}
+@returns(200) {reserved_ip: any} # The response will be a JSON object with a key called `reserved_ip`. The value of this will be an object that contains the standard attributes associated with a reserved IP.
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/reserved_ips/{reserved_ip}/actions
+@desc List All Actions for a Reserved IP
+@returns(200) The results will be returned as a JSON object with an `actions` key. This will be set to an array filled with action objects containing the standard reserved IP action attributes.
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/reserved_ips/{reserved_ip}/actions
+@desc Initiate a Reserved IP Action
+@returns(201) {action: any} # The response will be an object with a key called `action`. The value of this will be an object that contains the standard reserved IP action attributes.
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/reserved_ips/{reserved_ip}/actions/{action_id}
+@desc Retrieve an Existing Reserved IP Action
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/sizes
+@desc List All Droplet Sizes
+@returns(200) A JSON object with a key called `sizes`. The value of this will be an array of `size` objects each of which contain the standard size attributes.
+@errors {401, 429, 500}
+
+@endpoint GET /v2/snapshots
+@desc List All Snapshots
+@optional {resource_type: str(droplet/volume) # Used to filter snapshots by a resource type.}
+@returns(200) A JSON object with a key of `snapshots`.
+@errors {401, 429, 500}
+
+@endpoint DELETE /v2/snapshots/{snapshot_id}
+@desc Delete a Snapshot
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/snapshots/{snapshot_id}
+@desc Retrieve an Existing Snapshot
+@required {snapshot_id: any # Either the ID of an existing snapshot. This will be an integer for a Droplet snapshot or a string for a volume snapshot.}
+@returns(200) {snapshot: any} # A JSON object with a key called `snapshot`.
+
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/tags
+@desc List All Tags
+@returns(200) To list all of your tags, you can send a `GET` request to `/v2/tags`.
+@errors {401, 429, 500}
+
+@endpoint POST /v2/tags
+@desc Create a New Tag
+@returns(201) {tag: any} # The response will be a JSON object with a key called tag.  The value of this will be a tag object containing the standard tag attributes
+@errors {400: Bad Request, 401, 429, 500}
+
+@endpoint DELETE /v2/tags/{tag_id}
+@desc Delete a Tag
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/tags/{tag_id}
+@desc Retrieve a Tag
+@required {tag_id: str # The name of the tag. Tags may contain letters, numbers, colons, dashes, and underscores. There is a limit of 255 characters per tag.}
+@returns(200) {tag: any} # The response will be a JSON object with a key called `tag`.  The value of this will be a tag object containing the standard tag attributes.
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/tags/{tag_id}/resources
+@desc Untag a Resource
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/tags/{tag_id}/resources
+@desc Tag a Resource
+@required {resources: [any] # An array of objects containing resource_id and resource_type  attributes.}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/uptime/checks
+@desc List All Checks
+@returns(200) The response will be a JSON object with a key called `checks`. This will be set to an array of objects, each of which will contain the standard attributes associated with an uptime check
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/uptime/checks
+@desc Create a New Check
+@returns(201) {check: any} # The response will be a JSON object with a key called `check`. The value of this will be an object that contains the standard attributes associated with an uptime check.
+@errors {401, 429, 500}
+
+@endpoint DELETE /v2/uptime/checks/{check_id}
+@desc Delete a Check
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/uptime/checks/{check_id}
+@desc Retrieve an Existing Check
+@required {check_id: str(uuid) # A unique identifier for a check.}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/uptime/checks/{check_id}
+@desc Update a Check
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/uptime/checks/{check_id}/alerts
+@desc List All Alerts
+@returns(200) The response will be a JSON object with a key called `alerts`. This will be set to an array of objects, each of which will contain the standard attributes associated with an uptime alert.
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/uptime/checks/{check_id}/alerts
+@desc Create a New Alert
+@returns(201) {alert: any} # The response will be a JSON object with a key called `alert`. The value of this will be an object that contains the standard attributes associated with an uptime alert.
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/uptime/checks/{check_id}/alerts/{alert_id}
+@desc Delete an Alert
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/uptime/checks/{check_id}/alerts/{alert_id}
+@desc Retrieve an Existing Alert
+@required {alert_id: str(uuid) # A unique identifier for an alert.}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/uptime/checks/{check_id}/alerts/{alert_id}
+@desc Update an Alert
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/uptime/checks/{check_id}/state
+@desc Retrieve Check State
+@returns(200) {state: map{previous_outage: map{duration_seconds: int, ended_at: str, region: str, started_at: str}, regions: map{eu_west: any, us_east: map}}} # The response will be a JSON object with a key called `state`. The value of this will be an object that contains the standard attributes associated with an uptime check's state.
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/volumes
+@desc Delete a Block Storage Volume by Name
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/volumes
+@desc List All Block Storage Volumes
+@optional {name: str # The block storage volume's name., region: any # The slug identifier for the region where the resource is available.}
+@returns(200) The response will be a JSON object with a key called `volumes`. This will be set to an array of volume objects, each of which will contain the standard volume attributes.
+@errors {401, 429, 500}
+
+@endpoint POST /v2/volumes
+@desc Create a New Block Storage Volume
+@returns(201) {volume: any} # The response will be a JSON object with a key called `volume`. The value will be an object containing the standard attributes associated with a volume.
+@errors {400, 401, 404, 429, 500}
+
+@endpoint POST /v2/volumes/actions
+@desc Initiate A Block Storage Action By Volume Name
+@returns(202) {action: map} # The response will be an object with a key called `action`. The value of this will be an object that contains the standard volume action attributes
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/volumes/snapshots/{snapshot_id}
+@desc Delete a Volume Snapshot
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/volumes/snapshots/{snapshot_id}
+@desc Retrieve an Existing Volume Snapshot
+@returns(200) {snapshot: any} # You will get back a JSON object that has a `snapshot` key. This will contain the standard snapshot attributes
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/volumes/{volume_id}
+@desc Delete a Block Storage Volume
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/volumes/{volume_id}
+@desc Retrieve an Existing Block Storage Volume
+@required {volume_id: str(uuid) # The ID of the block storage volume.}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/volumes/{volume_id}/actions
+@desc List All Actions for a Volume
+@returns(200) The response will be an object with a key called `action`. The value of this will be an object that contains the standard volume action attributes.
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/volumes/{volume_id}/actions
+@desc Initiate A Block Storage Action By Volume Id
+@returns(202)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/volumes/{volume_id}/actions/{action_id}
+@desc Retrieve an Existing Volume Action
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/volumes/{volume_id}/snapshots
+@desc List Snapshots for a Volume
+@returns(200) You will get back a JSON object that has a `snapshots` key. This will be set to an array of snapshot objects, each of which contain the standard snapshot attributes
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/volumes/{volume_id}/snapshots
+@desc Create Snapshot from a Volume
+@required {name: str # A human-readable name for the volume snapshot.}
+@optional {tags: any}
+@returns(201)
+@errors {400, 401, 404, 429, 500}
+
+@endpoint GET /v2/vpcs
+@desc List All VPCs
+@returns(200) The response will be a JSON object with a key called `vpcs`. This will be set to an array of objects, each of which will contain the standard attributes associated with a VPC
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/vpcs
+@desc Create a New VPC
+@returns(201) {vpc: any} # The response will be a JSON object with a key called `vpc`. The value of this will be an object that contains the standard attributes associated with a VPC.
+@errors {401, 429, 500}
+
+@endpoint DELETE /v2/vpcs/{vpc_id}
+@desc Delete a VPC
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/vpcs/{vpc_id}
+@desc Retrieve an Existing VPC
+@required {vpc_id: str(uuid) # A unique identifier for a VPC.}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint PATCH /v2/vpcs/{vpc_id}
+@desc Partially Update a VPC
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/vpcs/{vpc_id}
+@desc Update a VPC
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/vpcs/{vpc_id}/members
+@desc List the Member Resources of a VPC
+@optional {resource_type: str # Used to filter VPC members by a resource type.}
+@returns(200) The response will be a JSON object with a key called members. This will be set to an array of objects, each of which will contain the standard attributes associated with a VPC member.
+@errors {401, 404, 429, 500}
+
+@end
+

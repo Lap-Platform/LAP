@@ -1,0 +1,659 @@
+@doclean v0.2
+# Machine-readable API spec. Each @endpoint block is one API call.
+@api Vercel API
+@base https://api.vercel.com
+@version 0.0.1
+@auth Bearer bearer | OAuth2
+@endpoints 113
+@toc Get Edge Configs, Create an Edge Config, Delete an Edge Config, Get an Edge Config, Update an Edge Config, Get an Edge Config item, Get Edge Config items, Update Edge Config items in batch, Create an Edge Config token, Get Edge Config token meta data, Delete one or more Edge Config tokens, Get all tokens of an Edge Config, Login with email, Verify a login request to get an authentication token, Retrieve a list of all checks, Creates a new Check, Get a single check, Update a check, Rerequest a check, Update an existing DNS record, Delete an integration configuration, Retrieve an integration configuration, Get configurations for the authenticated user or team, List git namespaces by provider, Deletes the Integration log drain with the provided `id`, List git repositories linked to namespace by provider, Retrieves a list of Configurable Log Drains, Creates a Configurable Log Drain, Deletes a Configurable Log Drain, Retrieves a Configurable Log Drain, Retrieve the decrypted value of an environment variable of a project by id, Create a Team, Delete a Team, Delete a Team invite code, Invite a user, Join a team, Remove a Team Member, Update a Team Member, Request access to a team, Get access request status, Delete User Account, Get a list of webhooks, Creates a webhook, Deletes a webhook, Get a webhook, Create one or more environment variables, List Deployment Builds, Cancel a deployment, Create a new deployment, Get a deployment by ID or URL, Delete a Deployment, Delete an Alias, Get deployment events, List Deployment Aliases, Assign an Alias, Create a DNS record, Delete a DNS record, Upload Deployment Files, Retrieves a list of Integration log drains, Creates a new Integration Log Drain, Delete a secret, Change secret name, Create a new secret, List all teams, Get a Team, Update a Team, List team members, Get the User, List User Events, List secrets, Get a single secret, Create an Auth Token, Delete an authentication token, List aliases, Get an Alias, Register or transfer-in a new Domain, Purchase a domain, Check the price for a domain, Check a Domain Availability, List existing DNS records, List all the domains, Get Information for a Single Domain, List Auth Tokens, Get Auth Token Metadata, List deployments, List Deployment Files, Get Deployment File Contents, Remove a domain by name, Get a Domain's configuration, Issue a new cert, Upload a cert, Remove cert, Get cert by id, Query information about an artifact, Record an artifacts cache usage event, Get status of Remote Caching for this principal, Download a cache artifact, Check if a cache artifact exists, Upload a cache artifact, Retrieve a list of projects, Create a new project, Delete a Project, Find a project by id or name, Update an existing project, Retrieve project domains by project by id or name, Add a domain to a project, Remove a domain from a project, Get a project domain, Update a project domain, Verify project domain, Retrieve the environment variables of a project by id or name, Remove an environment variable, Edit an environment variable
+
+@endpoint GET /edge-config
+@optional {teamId: str}
+@returns(200) {createdAt: num?, creator: str, domain: str, id: str, itemCount: num, name: str, recordType: str, sizeInBytes: num, ttl: num, type: str, value: str}
+@errors {400, 403}
+
+@endpoint POST /edge-config
+@required {slug: str}
+@optional {teamId: str, items: map}
+@returns(201) {blocking: bool, completedAt: num, conclusion: str, createdAt: num, deploymentId: str, detailsUrl: str, externalId: str, id: str, integrationId: str, itemCount: num, name: str, output: map{metrics: map{CLS: map, FCP: map, LCP: map, TBT: map, virtualExperienceScore: map}}, path: str, rerequestable: bool, sizeInBytes: num, startedAt: num, status: str, updatedAt: num}
+@errors {400, 402, 403}
+
+@endpoint DELETE /edge-config/{edgeConfigId}
+@required {edgeConfigId: str}
+@optional {teamId: str}
+@returns(204)
+@errors {400, 402, 403, 404}
+
+@endpoint GET /edge-config/{edgeConfigId}
+@required {edgeConfigId: str}
+@optional {teamId: str}
+@returns(200) {createdAt: num?, creator: str, domain: str, id: str, itemCount: num, name: str, recordType: str, sizeInBytes: num, ttl: num, type: str, value: str}
+@errors {400, 403, 404}
+
+@endpoint PUT /edge-config/{edgeConfigId}
+@required {edgeConfigId: str, slug: str}
+@optional {teamId: str}
+@returns(200) {blocking: bool, completedAt: num, conclusion: str, createdAt: num, deploymentId: str, detailsUrl: str, externalId: str, id: str, integrationId: str, itemCount: num, name: str, output: map{metrics: map{CLS: map, FCP: map, LCP: map, TBT: map, virtualExperienceScore: map}}, path: str, rerequestable: bool, sizeInBytes: num, startedAt: num, status: str, updatedAt: num}
+@errors {400, 402, 403, 404}
+
+@endpoint GET /edge-config/{edgeConfigId}/item/{edgeConfigItemKey}
+@required {edgeConfigId: str, edgeConfigItemKey: str}
+@optional {teamId: str}
+@returns(200) {createdAt: num, edgeConfigId: str, key: str, updatedAt: num, value: null?}
+@errors {400, 403, 404}
+
+@endpoint GET /edge-config/{edgeConfigId}/items
+@required {edgeConfigId: str}
+@optional {teamId: str}
+@returns(200) {createdAt: num, edgeConfigId: str, key: str, updatedAt: num, value: null?}
+@errors {400, 403, 404}
+
+@endpoint PATCH /edge-config/{edgeConfigId}/items
+@required {edgeConfigId: str, items: [any]}
+@optional {teamId: str}
+@returns(200) {status: str}
+@errors {400, 402, 403, 404, 409}
+
+@endpoint POST /edge-config/{edgeConfigId}/token
+@required {edgeConfigId: str, label: str}
+@optional {teamId: str}
+@returns(201) {id: str, token: str}
+@errors {400, 402, 403, 404}
+
+@endpoint GET /edge-config/{edgeConfigId}/token/{token}
+@required {edgeConfigId: str, token: str}
+@optional {teamId: str}
+@returns(200) {createdAt: num, edgeConfigId: str, id: str, label: str, token: str}
+@errors {400, 403, 404}
+
+@endpoint DELETE /edge-config/{edgeConfigId}/tokens
+@required {edgeConfigId: str, tokens: [str]}
+@optional {teamId: str}
+@returns(204)
+@errors {400, 402, 403, 404}
+
+@endpoint GET /edge-config/{edgeConfigId}/tokens
+@required {edgeConfigId: str}
+@optional {teamId: str}
+@returns(200) {createdAt: num, edgeConfigId: str, id: str, label: str, token: str}
+@errors {400, 403, 404}
+
+@endpoint POST /registration
+@required {email: str}
+@optional {tokenName: str}
+@returns(200) {securityCode: str, token: str}
+@errors {400}
+
+@endpoint GET /registration/verify
+@required {token: str}
+@optional {email: str, tokenName: str, ssoUserId: str}
+@returns(200) {email: str, teamId: str, token: str}
+@errors {400, 403, 404}
+
+@endpoint GET /v1/deployments/{deploymentId}/checks
+@required {deploymentId: str}
+@optional {teamId: str}
+@returns(200) {checks: [map]}
+@errors {400, 403, 404}
+
+@endpoint POST /v1/deployments/{deploymentId}/checks
+@required {deploymentId: str, blocking: bool, name: str}
+@optional {teamId: str, detailsUrl: str, externalId: str, path: str, rerequestable: bool}
+@returns(200) {blocking: bool, completedAt: num, conclusion: str, createdAt: num, deploymentId: str, detailsUrl: str, externalId: str, id: str, integrationId: str, name: str, output: map{metrics: map{CLS: map, FCP: map, LCP: map, TBT: map, virtualExperienceScore: map}}, path: str, rerequestable: bool, startedAt: num, status: str, updatedAt: num}
+@errors {400, 403, 404}
+
+@endpoint GET /v1/deployments/{deploymentId}/checks/{checkId}
+@required {deploymentId: str, checkId: str}
+@optional {teamId: str}
+@returns(200) {createdAt: num?, creator: str, domain: str, id: str, name: str, recordType: str, ttl: num, type: str, value: str}
+@errors {400, 403, 404}
+
+@endpoint PATCH /v1/deployments/{deploymentId}/checks/{checkId}
+@required {deploymentId: str, checkId: str}
+@optional {teamId: str, conclusion: any(canceled/failed/neutral/succeeded/skipped), detailsUrl: str, externalId: str, name: str, output: map, path: str, status: any(running/completed)}
+@returns(200) {blocking: bool, completedAt: num, conclusion: str, createdAt: num, deploymentId: str, detailsUrl: str, externalId: str, id: str, integrationId: str, name: str, output: map{metrics: map{CLS: map, FCP: map, LCP: map, TBT: map, virtualExperienceScore: map}}, path: str, rerequestable: bool, startedAt: num, status: str, updatedAt: num}
+@errors {400, 403, 404, 413}
+
+@endpoint POST /v1/deployments/{deploymentId}/checks/{checkId}/rerequest
+@required {deploymentId: str, checkId: str}
+@optional {teamId: str}
+@returns(200)
+@errors {400, 403, 404}
+
+@endpoint PATCH /v1/domains/records/{recordId}
+@required {recordId: str}
+@optional {teamId: str, mxPriority: int, name: str, srv: map, ttl: int, type: str(A/AAAA/ALIAS/CAA/CNAME/MX/SRV/TXT/NS), value: str}
+@returns(200) {createdAt: num?, creator: str, domain: str, id: str, name: str, recordType: str, ttl: num, type: str, value: str}
+@errors {400, 401, 402, 403, 404, 409}
+
+@endpoint DELETE /v1/integrations/configuration/{id}
+@required {id: str}
+@optional {teamId: str}
+@returns(204)
+@errors {400, 403, 404}
+
+@endpoint GET /v1/integrations/configuration/{id}
+@required {id: str}
+@optional {teamId: str}
+@returns(200)
+@errors {400, 403, 404}
+
+@endpoint GET /v1/integrations/configurations
+@required {view: str(account/project)}
+@optional {teamId: str}
+@returns(200)
+@errors {400, 403}
+
+@endpoint GET /v1/integrations/git-namespaces
+@optional {provider: any(github/gitlab/bitbucket), teamId: str}
+@returns(200)
+@errors {400, 403}
+
+@endpoint DELETE /v1/integrations/log-drains/{id}
+@required {id: str}
+@optional {teamId: str}
+@returns(204)
+@errors {400, 403, 404}
+
+@endpoint GET /v1/integrations/search-repo
+@optional {query: str, namespaceId: str, provider: any(github/gitlab/bitbucket), installationId: str, teamId: str}
+@returns(200) {gitAccount: map{namespaceId: null?, provider: str}, repos: [map]}
+@errors {400, 403}
+
+@endpoint GET /v1/log-drains
+@optional {projectId: str, teamId: str}
+@returns(200)
+@errors {400, 403}
+
+@endpoint POST /v1/log-drains
+@required {deliveryFormat: any(json/ndjson), sources: [str], url: str(uri)}
+@optional {teamId: str, branch: str, environment: any(preview/production), headers: map, projectIds: [str]}
+@returns(200) {branch: str, configurationId: str, createdAt: num, deliveryFormat: str, environment: str, headers: map, id: str, ownerId: str, projectIds: [str], secret: str, sources: [str], type: str, url: str}
+@errors {400, 403}
+
+@endpoint DELETE /v1/log-drains/{id}
+@required {id: str}
+@optional {teamId: str}
+@returns(204)
+@errors {400, 403, 404}
+
+@endpoint GET /v1/log-drains/{id}
+@required {id: str}
+@optional {teamId: str}
+@returns(200) {branch: str, configurationId: str, createdAt: num, deliveryFormat: str, environment: str, headers: map, id: str, ownerId: str, projectIds: [str], sources: [str], type: str, url: str}
+@errors {400, 403, 404}
+
+@endpoint GET /v1/projects/{idOrName}/env/{id}
+@required {idOrName: str, id: str}
+@optional {teamId: str}
+@returns(200) {configurationId: str?, createdAt: num, createdBy: str?, decrypted: bool, edgeConfigId: str?, edgeConfigTokenId: str?, gitBranch: str, id: str, key: str, target: any, type: str, updatedAt: num, updatedBy: str?, value: str}
+@errors {400, 403, 404}
+
+@endpoint POST /v1/teams
+@required {slug: str}
+@optional {name: str}
+@returns(200) {id: str}
+@errors {400, 403, 404}
+
+@endpoint DELETE /v1/teams/{teamId}
+@required {teamId: str}
+@optional {reasons: [map]}
+@returns(200) {id: str}
+@errors {400, 402, 403, 404}
+
+@endpoint DELETE /v1/teams/{teamId}/invites/{inviteId}
+@required {inviteId: str, teamId: str}
+@returns(200) {id: str}
+@errors {400, 403, 404}
+
+@endpoint POST /v1/teams/{teamId}/members
+@required {teamId: str}
+@optional {email: str(email), role: any, uid: str}
+@returns(200) {email: str, role: str, uid: str, username: str}
+@errors {400, 403, 404}
+
+@endpoint POST /v1/teams/{teamId}/members/teams/join
+@required {teamId: str}
+@optional {inviteCode: str, teamId: str}
+@returns(200) {from: str, name: str, slug: str, teamId: str}
+@errors {400, 401, 402, 403, 404}
+
+@endpoint DELETE /v1/teams/{teamId}/members/{uid}
+@required {uid: str, teamId: str}
+@returns(200) {id: str}
+@errors {400, 403, 404}
+
+@endpoint PATCH /v1/teams/{teamId}/members/{uid}
+@required {uid: str, teamId: str}
+@optional {confirmed: bool, joinedFrom: map, role: str=['MEMBER', 'VIEWER']}
+@returns(200) {id: str}
+@errors {400, 401, 402, 403, 404}
+
+@endpoint POST /v1/teams/{teamId}/request
+@required {teamId: str, joinedFrom: map}
+@returns(200) {accessRequestedAt: num, bitbucket: map?, confirmed: bool, github: map?, gitlab: map?, joinedFrom: map{commitId: str, dsyncConnectedAt: num, dsyncUserId: str, gitUserId: any, gitUserLogin: str, idpUserId: str, origin: str, repoId: str, repoPath: str, ssoConnectedAt: num, ssoUserId: str}, teamName: str, teamSlug: str}
+@errors {400, 401, 403, 404}
+
+@endpoint GET /v1/teams/{teamId}/request/{userId}
+@required {userId: str, teamId: str}
+@returns(200) {accessRequestedAt: num, bitbucket: map?, confirmed: bool, github: map?, gitlab: map?, joinedFrom: map{commitId: str, dsyncConnectedAt: num, dsyncUserId: str, gitUserId: any, gitUserLogin: str, idpUserId: str, origin: str, repoId: str, repoPath: str, ssoConnectedAt: num, ssoUserId: str}, teamName: str, teamSlug: str}
+@errors {400, 403, 404}
+
+@endpoint DELETE /v1/user
+@optional {reasons: [map]}
+@returns(202) {email: str, id: str, message: str}
+@errors {400, 403}
+
+@endpoint GET /v1/webhooks
+@optional {projectId: str, teamId: str}
+@returns(200)
+@errors {400, 403}
+
+@endpoint POST /v1/webhooks
+@required {events: [str], url: str(uri)}
+@optional {teamId: str, projectIds: [str]}
+@returns(200) {createdAt: num, events: [str], id: str, ownerId: str, projectIds: [str], secret: str, updatedAt: num, url: str}
+@errors {400, 403}
+
+@endpoint DELETE /v1/webhooks/{id}
+@required {id: str}
+@optional {teamId: str}
+@returns(204)
+@errors {400, 403, 404}
+
+@endpoint GET /v1/webhooks/{id}
+@required {id: str}
+@optional {teamId: str}
+@returns(200) {createdAt: num, events: [str], id: str, ownerId: str, projectIds: [str], updatedAt: num, url: str}
+@errors {400, 403, 404}
+
+@endpoint POST /v10/projects/{idOrName}/env
+@required {idOrName: str}
+@optional {teamId: str}
+@returns(200)
+@returns(201) {created: any, failed: [map]}
+@errors {400, 402, 403, 404, 409}
+
+@endpoint GET /v11/deployments/{deploymentId}/builds
+@required {deploymentId: str}
+@optional {teamId: str}
+@returns(200) {builds: [map]}
+@errors {400, 403, 404}
+
+@endpoint PATCH /v12/deployments/{id}/cancel
+@required {id: str}
+@optional {teamId: str}
+@returns(200) {alias: [str], aliasAssigned: bool, aliasAssignedAt: null?, aliasError: map?, aliasFinal: str?, aliasWarning: map?, automaticAliases: [str], bootedAt: num, build: map{env: [str]}, buildErrorAt: num, buildingAt: num, builds: [map], canceledAt: num, checksConclusion: str, checksState: str, createdAt: num, createdIn: str, creator: map{uid: str, username: str}, env: [str], errorCode: str, errorLink: str, errorMessage: str?, errorStep: str, functions: map?, gitRepo: null?, gitSource: any, id: str, inspectorUrl: str?, isInConcurrentBuildsQueue: bool, lambdas: [map], meta: map, monorepoManager: str?, name: str, ownerId: str, plan: str, previewCommentsEnabled: bool, projectId: str, public: bool, readyState: str, regions: [str], routes: [any]?, source: str, target: str?, team: map{id: str, name: str, slug: str}, type: str, url: str, userAliases: [str], version: num}
+@errors {400, 403, 404}
+
+@endpoint POST /v13/deployments
+@required {name: str}
+@optional {forceNew: any(0/1), skipAutoDetectionConfirmation: any(0/1), teamId: str, $schema: str, alias: [str], build: map, buildCommand: str, builds: [map], cleanUrls: bool, crons: [map], deploymentId: str, devCommand: str, env: map, files: [any], framework: str(None/blitzjs/nextjs/gatsby/remix/astro/hexo/eleventy/docusaurus-2/docusaurus/preact/solidstart/dojo/ember/vue/scully/ionic-angular/angular/polymer/svelte/sveltekit/sveltekit-1/ionic-react/create-react-app/gridsome/umijs/sapper/saber/stencil/nuxtjs/redwoodjs/hugo/jekyll/brunch/middleman/zola/hydrogen/vite/vitepress/vuepress/parcel/sanity), functions: map, git: map, gitMetadata: map, gitSource: any, headers: [map], ignoreCommand: str, installCommand: str, meta: map, monorepoManager: str, outputDirectory: str, project: str, projectSettings: map, public: bool, redirects: [map], regions: [str], rewrites: [map], routes: [any], target: str(staging/production), trailingSlash: bool, withLatestCommit: bool}
+@returns(200) {alias: [str], aliasAssigned: bool, aliasAssignedAt: null?, aliasError: map?, aliasFinal: str?, aliasWarning: map?, automaticAliases: [str], bootedAt: num, build: map{env: [str]}, buildErrorAt: num, buildingAt: num, builds: [map], canceledAt: num, checksConclusion: str, checksState: str, createdAt: num, createdIn: str, creator: map{uid: str, username: str}, env: [str], errorCode: str, errorLink: str, errorMessage: str?, errorStep: str, functions: map?, gitRepo: null?, gitSource: any, id: str, inspectorUrl: str?, isInConcurrentBuildsQueue: bool, lambdas: [map], meta: map, monorepoManager: str?, name: str, ownerId: str, plan: str, previewCommentsEnabled: bool, projectId: str, public: bool, readyState: str, regions: [str], routes: [any]?, source: str, target: str?, team: map{id: str, name: str, slug: str}, type: str, url: str, userAliases: [str], version: num}
+@errors {400, 402, 403, 404, 409}
+
+@endpoint GET /v13/deployments/{idOrUrl}
+@required {idOrUrl: str}
+@optional {withGitRepoInfo: str, teamId: str}
+@returns(200)
+@errors {400, 403, 404}
+
+@endpoint DELETE /v13/deployments/{id}
+@required {id: str}
+@optional {url: str, teamId: str}
+@returns(200) {state: str, uid: str}
+@errors {400, 403, 404}
+
+@endpoint DELETE /v2/aliases/{aliasId}
+@required {aliasId: any}
+@optional {teamId: str}
+@returns(200) {status: str}
+@errors {400, 403, 404}
+
+@endpoint GET /v2/deployments/{idOrUrl}/events
+@required {idOrUrl: str}
+@optional {direction: str(backward/forward)=forward, follow: num(0/1), limit: num, name: str, since: num, until: num, statusCode: any, delimiter: num(0/1), builds: num(0/1), teamId: str}
+@returns(200)
+@errors {400, 403, 404}
+
+@endpoint GET /v2/deployments/{id}/aliases
+@required {id: str}
+@optional {teamId: str}
+@returns(200) {aliases: [map]}
+@errors {400, 403, 404}
+
+@endpoint POST /v2/deployments/{id}/aliases
+@required {id: any}
+@optional {teamId: str, alias: str, redirect: str}
+@returns(200) {alias: str, created: str(date-time), oldDeploymentId: str?, uid: str}
+@errors {400, 402, 403, 404, 409}
+
+@endpoint POST /v2/domains/{domain}/records
+@required {domain: str, type: str(A/AAAA/ALIAS/CAA/CNAME/MX/SRV/TXT/NS)}
+@optional {teamId: str}
+@returns(200)
+@errors {400, 401, 402, 403, 404, 409}
+
+@endpoint DELETE /v2/domains/{domain}/records/{recordId}
+@required {domain: str, recordId: str}
+@optional {teamId: str}
+@returns(200)
+@errors {400, 401, 403, 404}
+
+@endpoint POST /v2/files
+@optional {Content-Length: num, x-vercel-digest: str, x-now-digest: str, x-now-size: num, teamId: str}
+@returns(200)
+@errors {400, 403}
+
+@endpoint GET /v2/integrations/log-drains
+@optional {teamId: str}
+@returns(200)
+@errors {400, 403}
+
+@endpoint POST /v2/integrations/log-drains
+@required {name: str, url: str(uri)}
+@optional {teamId: str, branch: str, deliveryFormat: any(json/ndjson/syslog), environment: any(preview/production), headers: map, projectIds: [str], secret: str, sources: [str]}
+@returns(200) {branch: str, clientId: str, configurationId: str, createdAt: num, createdFrom: str, deliveryFormat: str, environment: str, headers: map, id: str, name: str, ownerId: str, projectId: str?, projectIds: [str], sources: [str], type: str, url: str}
+@errors {400, 403}
+
+@endpoint DELETE /v2/secrets/{idOrName}
+@required {idOrName: str}
+@optional {teamId: str}
+@returns(200) {created: num, name: str, uid: str}
+@errors {400, 403}
+
+@endpoint PATCH /v2/secrets/{name}
+@required {name: str, name: str}
+@optional {teamId: str}
+@returns(200) {created: str(date-time), name: str, oldName: str, uid: str}
+@errors {400, 403}
+
+@endpoint POST /v2/secrets/{name}
+@required {name: str, name: str, value: str}
+@optional {teamId: str, decryptable: bool, projectId: str}
+@returns(200) {created: str(date-time), createdAt: num, decryptable: bool, name: str, projectId: str, teamId: str?, uid: str, userId: str, value: map{data: [num], type: str}}
+@errors {400, 402, 403}
+
+@endpoint GET /v2/teams
+@optional {limit: num, since: num, until: num}
+@returns(200) {pagination: map{count: num, next: num?, prev: num?}, teams: [any]}
+@errors {400, 403, 404}
+
+@endpoint GET /v2/teams/{teamId}
+@required {teamId: str}
+@optional {slug: str}
+@returns(200)
+@errors {400, 403, 404}
+
+@endpoint PATCH /v2/teams/{teamId}
+@required {teamId: str}
+@optional {avatar: str(regex), description: str, emailDomain: str(regex), enablePreviewFeedback: str, migrateExistingEnvVariablesToSensitive: bool, name: str, previewDeploymentSuffix: str(hostname), regenerateInviteCode: bool, remoteCaching: map, saml: map, sensitiveEnvironmentVariablePolicy: str, slug: str}
+@returns(200)
+@errors {400, 402, 403, 404}
+
+@endpoint GET /v2/teams/{teamId}/members
+@required {teamId: str}
+@optional {limit: num, since: num, until: num, search: str, role: str(OWNER/MEMBER/DEVELOPER/VIEWER), excludeProject: str}
+@returns(200) {emailInviteCodes: [map], members: [map], pagination: map{count: num, hasNext: bool, next: num?, prev: num?}}
+@errors {400, 403, 404}
+
+@endpoint GET /v2/user
+@returns(200) {user: any}
+@errors {400, 403}
+
+@endpoint GET /v3/events
+@optional {limit: num, since: str, until: str, types: str, userId: str, teamId: str}
+@returns(200) {events: [map]}
+@errors {400, 403}
+
+@endpoint GET /v3/secrets
+@optional {id: str, projectId: str, teamId: str}
+@returns(200) {pagination: map{count: num, next: num?, prev: num?}, secrets: [map]}
+@errors {400, 403}
+
+@endpoint GET /v3/secrets/{idOrName}
+@required {idOrName: str}
+@optional {decrypt: str(true/false), teamId: str}
+@returns(200) {created: str(date-time), createdAt: num, decryptable: bool, name: str, projectId: str, teamId: str?, uid: str, userId: str, value: str}
+@errors {400, 403, 404}
+
+@endpoint POST /v3/user/tokens
+@optional {teamId: str}
+@returns(200) {bearerToken: str, token: map{activeAt: num, createdAt: num, expiresAt: num, id: str, name: str, origin: str, scopes: [any], type: str}}
+@errors {400, 403, 404}
+
+@endpoint DELETE /v3/user/tokens/{tokenId}
+@required {tokenId: str}
+@returns(200) {tokenId: str}
+@errors {400, 403, 404}
+
+@endpoint GET /v4/aliases
+@optional {domain: any, from: num, limit: num, projectId: str, since: num, until: num, rollbackDeploymentId: str, teamId: str}
+@returns(200) {aliases: [map], pagination: map{count: num, next: num?, prev: num?}}
+@errors {400, 403}
+
+@endpoint GET /v4/aliases/{idOrAlias}
+@required {idOrAlias: str}
+@optional {from: num, projectId: str, since: num, until: num, teamId: str}
+@returns(200) {alias: str, created: str(date-time), createdAt: num, creator: map{email: str, uid: str, username: str}, deletedAt: num, deployment: map{id: str, meta: str, url: str}, deploymentId: str?, projectId: str?, protectionBypass: map, redirect: str?, redirectStatusCode: num?, uid: str, updatedAt: num}
+@errors {400, 403, 404}
+
+@endpoint POST /v4/domains
+@optional {teamId: str, method: str}
+@returns(200) {domain: map{boughtAt: num?, createdAt: num, creator: map{customerId: str?, email: str, id: str, isDomainReseller: bool, username: str}, customNameservers: [str], expiresAt: num?, id: str, intendedNameservers: [str], name: str, nameservers: [str], orderedAt: num, renew: bool, serviceType: str, transferStartedAt: num, transferredAt: num?, verified: bool}}
+@errors {400, 402, 403, 404, 409}
+
+@endpoint POST /v4/domains/buy
+@required {name: str}
+@optional {teamId: str, expectedPrice: num, renew: bool}
+@returns(201) {domain: map{created: num, ns: [str], pending: bool, uid: str, verified: bool}}
+@errors {400, 403, 409, 429}
+
+@endpoint GET /v4/domains/price
+@required {name: str}
+@optional {type: str(new/renewal), teamId: str}
+@returns(200) {period: num, price: num}
+@errors {400, 403}
+
+@endpoint GET /v4/domains/status
+@required {name: str}
+@optional {teamId: str}
+@returns(200) {available: bool}
+@errors {400, 403}
+
+@endpoint GET /v4/domains/{domain}/records
+@required {domain: str}
+@optional {limit: str, since: str, until: str, teamId: str}
+@returns(200)
+@errors {400, 401, 403, 404}
+
+@endpoint GET /v5/domains
+@optional {limit: num, since: num, until: num, teamId: str}
+@returns(200) {domains: [map], pagination: map{count: num, next: num?, prev: num?}}
+@errors {400, 403, 409}
+
+@endpoint GET /v5/domains/{domain}
+@required {domain: str}
+@optional {teamId: str}
+@returns(200) {domain: map{boughtAt: num?, createdAt: num, creator: map{customerId: str?, email: str, id: str, isDomainReseller: bool, username: str}, customNameservers: [str], expiresAt: num?, id: str, intendedNameservers: [str], name: str, nameservers: [str], orderedAt: num, renew: bool, serviceType: str, suffix: bool, transferStartedAt: num, transferredAt: num?, verified: bool}}
+@errors {400, 403, 404}
+
+@endpoint GET /v5/user/tokens
+@returns(200) {pagination: map{count: num, next: num?, prev: num?}, testingToken: map{activeAt: num, createdAt: num, expiresAt: num, id: str, name: str, origin: str, scopes: [any], type: str}, tokens: [map]}
+@errors {400, 403}
+
+@endpoint GET /v5/user/tokens/{tokenId}
+@required {tokenId: str}
+@returns(200) {token: map{activeAt: num, createdAt: num, expiresAt: num, id: str, name: str, origin: str, scopes: [any], type: str}}
+@errors {400, 403, 404}
+
+@endpoint GET /v6/deployments
+@optional {app: str, from: num, limit: num, projectId: str, target: str(production/preview), to: num, users: str, since: num, until: num, state: str, rollbackCandidate: bool, teamId: str}
+@returns(200) {deployments: [map], pagination: map{count: num, next: num?, prev: num?}}
+@errors {400, 403}
+
+@endpoint GET /v6/deployments/{id}/files
+@required {id: str}
+@optional {teamId: str}
+@returns(200)
+@errors {400, 403, 404}
+
+@endpoint GET /v6/deployments/{id}/files/{fileId}
+@required {id: str, fileId: str}
+@optional {teamId: str}
+@errors {400, 403, 404}
+
+@endpoint DELETE /v6/domains/{domain}
+@required {domain: str}
+@optional {teamId: str}
+@returns(200) {uid: str}
+@errors {400, 403, 404, 409}
+
+@endpoint GET /v6/domains/{domain}/config
+@required {domain: str}
+@optional {teamId: str}
+@returns(200) {acceptedChallenges: [str], configuredBy: str?, misconfigured: bool}
+@errors {400, 403}
+
+@endpoint POST /v7/certs
+@optional {teamId: str, cns: [str]}
+@returns(200) {autoRenew: bool, cns: [str], createdAt: num, expiresAt: num, id: str}
+@errors {400, 402, 403, 404, 429, 449, 500}
+
+@endpoint PUT /v7/certs
+@required {ca: str, cert: str, key: str}
+@optional {teamId: str, skipValidation: bool}
+@returns(200) {autoRenew: bool, cns: [str], createdAt: num, expiresAt: num, id: str}
+@errors {400, 402, 403}
+
+@endpoint DELETE /v7/certs/{id}
+@required {id: str}
+@optional {teamId: str}
+@returns(200)
+@errors {400, 403, 404}
+
+@endpoint GET /v7/certs/{id}
+@required {id: str}
+@optional {teamId: str}
+@returns(200) {autoRenew: bool, cns: [str], createdAt: num, expiresAt: num, id: str}
+@errors {400, 403, 404}
+
+@endpoint POST /v8/artifacts
+@required {hashes: [str]}
+@optional {teamId: str}
+@returns(200)
+@errors {400, 401, 402, 403}
+
+@endpoint POST /v8/artifacts/events
+@optional {x-artifact-client-ci: str, x-artifact-client-interactive: int, teamId: str}
+@returns(200)
+@errors {400, 401, 402, 403}
+
+@endpoint GET /v8/artifacts/status
+@optional {teamId: str}
+@returns(200) {status: str}
+@errors {400, 402, 403}
+
+@endpoint GET /v8/artifacts/{hash}
+@required {hash: str}
+@optional {x-artifact-client-ci: str, x-artifact-client-interactive: int, teamId: str}
+@returns(200)
+@errors {400, 401, 402, 403, 404}
+
+@endpoint HEAD /v8/artifacts/{hash}
+@required {hash: str}
+@optional {teamId: str}
+@returns(200)
+@errors {400, 401, 402, 403, 404}
+
+@endpoint PUT /v8/artifacts/{hash}
+@required {Content-Length: num, hash: str}
+@optional {x-artifact-duration: num, x-artifact-client-ci: str, x-artifact-client-interactive: int, x-artifact-tag: str, teamId: str}
+@returns(202) {urls: [str]}
+@errors {400, 401, 402, 403}
+
+@endpoint GET /v9/projects
+@optional {from: str, gitForkProtection: str(1/0), limit: str, search: str, repo: str, repoId: str, repoUrl: str, excludeRepos: str, edgeConfigId: str, edgeConfigTokenId: str, connectConfigurationId: str, teamId: str}
+@returns(200) {pagination: map{count: num, next: num?, prev: num?}, projects: [map]}
+@errors {400, 403}
+
+@endpoint POST /v9/projects
+@required {name: str}
+@optional {teamId: str, buildCommand: str, commandForIgnoringBuildStep: str, devCommand: str, environmentVariables: [map], framework: any(None/blitzjs/nextjs/gatsby/remix/astro/hexo/eleventy/docusaurus-2/docusaurus/preact/solidstart/dojo/ember/vue/scully/ionic-angular/angular/polymer/svelte/sveltekit/sveltekit-1/ionic-react/create-react-app/gridsome/umijs/sapper/saber/stencil/nuxtjs/redwoodjs/hugo/jekyll/brunch/middleman/zola/hydrogen/vite/vitepress/vuepress/parcel/sanity), gitRepository: map, installCommand: str, outputDirectory: str, publicSource: bool, rootDirectory: str, serverlessFunctionRegion: str, skipGitConnectDuringLink: bool}
+@returns(200) {accountId: str, analytics: map{canceledAt: num?, disabledAt: num, enabledAt: num, id: str, paidAt: num, sampleRatePercent: num?, spendLimitInDollars: num?}, autoExposeSystemEnvs: bool, buildCommand: str?, commandForIgnoringBuildStep: str?, connectConfigurationId: str?, createdAt: num, devCommand: str?, directoryListing: bool, enablePreviewFeedback: bool?, env: [map], framework: str?, gitForkProtection: bool, hasFloatingAliases: bool, id: str, installCommand: str?, lastRollbackTarget: map?, latestDeployments: [map], link: any, live: bool, name: str, nodeVersion: str, outputDirectory: str?, passwordProtection: map?, permissions: map{Monitoring: [str], aliasGlobal: [str], aliasProject: [str], aliasProtectionBypass: [str], analytics: [str], analyticsSampling: [str], analyticsUsage: [str], auditLog: [str], awsBillingIntegration: [str], billingAddress: [str], billingInformation: [str], billingInvoice: [str], billingInvoiceEmailRecipient: [str], billingInvoiceLanguage: [str], billingPlan: [str], billingPurchaseOrder: [str], billingTaxId: [str], cacheArtifact: [str], cacheArtifactUsageEvent: [str], concurrentBuilds: [str], connect: [str], connectConfiguration: [str], connectConfigurationLink: [str], deployment: [str], deploymentCheck: [str], deploymentCheckPreview: [str], deploymentPreview: [str], deploymentPrivate: [str], deploymentProductionGit: [str], deploymentRollback: [str], domain: [str], domainAcceptDelegation: [str], domainAuthCodes: [str], domainCertificate: [str], domainCheckConfig: [str], domainMove: [str], domainPurchase: [str], domainRecord: [str], domainTransferIn: [str], edgeConfig: [str], edgeConfigItem: [str], edgeConfigToken: [str], endpointVerification: [str], event: [str], fileUpload: [str], gitRepository: [str], integration: [str], integrationConfiguration: [str], integrationConfigurationProjects: [str], integrationConfigurationTransfer: [str], integrationVercelConfigurationOverride: [str], job: [str], logDrain: [str], monitoringChart: [str], monitoringQuery: [str], notificationDomainConfiguration: [str], notificationDomainExpire: [str], notificationDomainMoved: [str], notificationDomainPurchase: [str], notificationDomainRenewal: [str], notificationDomainTransfer: [str], notificationDomainUnverified: [str], notificationPaymentFailed: [str], notificationSpendCap: [str], notificationUsageAlert: [str], openTelemetryEndpoint: [str], passwordProtection: [str], paymentMethod: [str], permissions: [str], previewDeploymentSuffix: [str], proTrialOnboarding: [str], project: [str], projectDeploymentHook: [str], projectDomain: [str], projectDomainMove: [str], projectEnvVars: [str], projectEnvVarsProduction: [str], projectEnvVarsUnownedByIntegration: [str], projectIntegrationConfiguration: [str], projectLink: [str], projectMember: [str], projectProductionBranch: [str], projectProtectionBypass: [str], projectTransfer: [str], rateLimit: [str], redis: [str], remoteCaching: [str], samlConfig: [str], secret: [str], sensitiveEnvironmentVariablePolicy: [str], sharedEnvVars: [str], sharedEnvVarsProduction: [str], spendCapConfiguration: [str], spendCapState: [str], supportCase: [str], supportCaseComment: [str], team: [str], teamAccessRequest: [str], teamFellowMembership: [str], teamInvite: [str], teamInviteCode: [str], teamJoin: [str], teamOwnMembership: [str], teamOwnMembershipDisconnectSAML: [str], token: [str], usage: [str], user: [str], userConnection: [str], webAnalytics: [str], webhook: [str], webhook-event: [str]}, protectionBypass: map, publicSource: bool?, rootDirectory: str?, serverlessFunctionRegion: str?, skipGitConnectDuringLink: bool, sourceFilesOutsideRootDirectory: bool, ssoProtection: map?, targets: map, transferCompletedAt: num, transferStartedAt: num, transferToAccountId: str, transferredFromAccountId: str, updatedAt: num}
+@errors {400, 402, 403, 409}
+
+@endpoint DELETE /v9/projects/{idOrName}
+@required {idOrName: str}
+@optional {teamId: str}
+@returns(204)
+@errors {400, 403, 404, 409}
+
+@endpoint GET /v9/projects/{idOrName}
+@required {idOrName: any}
+@optional {teamId: str}
+@returns(200) {accountId: str, analytics: map{canceledAt: num?, disabledAt: num, enabledAt: num, id: str, paidAt: num, sampleRatePercent: num?, spendLimitInDollars: num?}, autoExposeSystemEnvs: bool, buildCommand: str?, commandForIgnoringBuildStep: str?, connectConfigurationId: str?, createdAt: num, devCommand: str?, directoryListing: bool, enablePreviewFeedback: bool?, env: [map], framework: str?, gitForkProtection: bool, hasFloatingAliases: bool, id: str, installCommand: str?, lastRollbackTarget: map?, latestDeployments: [map], link: any, live: bool, name: str, nodeVersion: str, outputDirectory: str?, passwordProtection: map?, permissions: map{Monitoring: [str], aliasGlobal: [str], aliasProject: [str], aliasProtectionBypass: [str], analytics: [str], analyticsSampling: [str], analyticsUsage: [str], auditLog: [str], awsBillingIntegration: [str], billingAddress: [str], billingInformation: [str], billingInvoice: [str], billingInvoiceEmailRecipient: [str], billingInvoiceLanguage: [str], billingPlan: [str], billingPurchaseOrder: [str], billingTaxId: [str], cacheArtifact: [str], cacheArtifactUsageEvent: [str], concurrentBuilds: [str], connect: [str], connectConfiguration: [str], connectConfigurationLink: [str], deployment: [str], deploymentCheck: [str], deploymentCheckPreview: [str], deploymentPreview: [str], deploymentPrivate: [str], deploymentProductionGit: [str], deploymentRollback: [str], domain: [str], domainAcceptDelegation: [str], domainAuthCodes: [str], domainCertificate: [str], domainCheckConfig: [str], domainMove: [str], domainPurchase: [str], domainRecord: [str], domainTransferIn: [str], edgeConfig: [str], edgeConfigItem: [str], edgeConfigToken: [str], endpointVerification: [str], event: [str], fileUpload: [str], gitRepository: [str], integration: [str], integrationConfiguration: [str], integrationConfigurationProjects: [str], integrationConfigurationTransfer: [str], integrationVercelConfigurationOverride: [str], job: [str], logDrain: [str], monitoringChart: [str], monitoringQuery: [str], notificationDomainConfiguration: [str], notificationDomainExpire: [str], notificationDomainMoved: [str], notificationDomainPurchase: [str], notificationDomainRenewal: [str], notificationDomainTransfer: [str], notificationDomainUnverified: [str], notificationPaymentFailed: [str], notificationSpendCap: [str], notificationUsageAlert: [str], openTelemetryEndpoint: [str], passwordProtection: [str], paymentMethod: [str], permissions: [str], previewDeploymentSuffix: [str], proTrialOnboarding: [str], project: [str], projectDeploymentHook: [str], projectDomain: [str], projectDomainMove: [str], projectEnvVars: [str], projectEnvVarsProduction: [str], projectEnvVarsUnownedByIntegration: [str], projectIntegrationConfiguration: [str], projectLink: [str], projectMember: [str], projectProductionBranch: [str], projectProtectionBypass: [str], projectTransfer: [str], rateLimit: [str], redis: [str], remoteCaching: [str], samlConfig: [str], secret: [str], sensitiveEnvironmentVariablePolicy: [str], sharedEnvVars: [str], sharedEnvVarsProduction: [str], spendCapConfiguration: [str], spendCapState: [str], supportCase: [str], supportCaseComment: [str], team: [str], teamAccessRequest: [str], teamFellowMembership: [str], teamInvite: [str], teamInviteCode: [str], teamJoin: [str], teamOwnMembership: [str], teamOwnMembershipDisconnectSAML: [str], token: [str], usage: [str], user: [str], userConnection: [str], webAnalytics: [str], webhook: [str], webhook-event: [str]}, protectionBypass: map, publicSource: bool?, rootDirectory: str?, serverlessFunctionRegion: str?, skipGitConnectDuringLink: bool, sourceFilesOutsideRootDirectory: bool, ssoProtection: map?, targets: map, transferCompletedAt: num, transferStartedAt: num, transferToAccountId: str, transferredFromAccountId: str, updatedAt: num}
+@errors {400, 403, 404}
+
+@endpoint PATCH /v9/projects/{idOrName}
+@required {idOrName: str}
+@optional {teamId: str, autoExposeSystemEnvs: bool, buildCommand: str, commandForIgnoringBuildStep: str, devCommand: str, directoryListing: bool, enablePreviewFeedback: bool, framework: str(None/blitzjs/nextjs/gatsby/remix/astro/hexo/eleventy/docusaurus-2/docusaurus/preact/solidstart/dojo/ember/vue/scully/ionic-angular/angular/polymer/svelte/sveltekit/sveltekit-1/ionic-react/create-react-app/gridsome/umijs/sapper/saber/stencil/nuxtjs/redwoodjs/hugo/jekyll/brunch/middleman/zola/hydrogen/vite/vitepress/vuepress/parcel/sanity), gitForkProtection: bool, installCommand: str, name: str, nodeVersion: str(18.x/16.x/14.x/12.x/10.x), outputDirectory: str, passwordProtection: map, publicSource: bool, rootDirectory: str, serverlessFunctionRegion: str, skipGitConnectDuringLink: bool, sourceFilesOutsideRootDirectory: bool, ssoProtection: map}
+@returns(200) {accountId: str, analytics: map{canceledAt: num?, disabledAt: num, enabledAt: num, id: str, paidAt: num, sampleRatePercent: num?, spendLimitInDollars: num?}, autoExposeSystemEnvs: bool, buildCommand: str?, commandForIgnoringBuildStep: str?, connectConfigurationId: str?, createdAt: num, devCommand: str?, directoryListing: bool, enablePreviewFeedback: bool?, env: [map], framework: str?, gitForkProtection: bool, hasFloatingAliases: bool, id: str, installCommand: str?, lastRollbackTarget: map?, latestDeployments: [map], link: any, live: bool, name: str, nodeVersion: str, outputDirectory: str?, passwordProtection: map?, permissions: map{Monitoring: [str], aliasGlobal: [str], aliasProject: [str], aliasProtectionBypass: [str], analytics: [str], analyticsSampling: [str], analyticsUsage: [str], auditLog: [str], awsBillingIntegration: [str], billingAddress: [str], billingInformation: [str], billingInvoice: [str], billingInvoiceEmailRecipient: [str], billingInvoiceLanguage: [str], billingPlan: [str], billingPurchaseOrder: [str], billingTaxId: [str], cacheArtifact: [str], cacheArtifactUsageEvent: [str], concurrentBuilds: [str], connect: [str], connectConfiguration: [str], connectConfigurationLink: [str], deployment: [str], deploymentCheck: [str], deploymentCheckPreview: [str], deploymentPreview: [str], deploymentPrivate: [str], deploymentProductionGit: [str], deploymentRollback: [str], domain: [str], domainAcceptDelegation: [str], domainAuthCodes: [str], domainCertificate: [str], domainCheckConfig: [str], domainMove: [str], domainPurchase: [str], domainRecord: [str], domainTransferIn: [str], edgeConfig: [str], edgeConfigItem: [str], edgeConfigToken: [str], endpointVerification: [str], event: [str], fileUpload: [str], gitRepository: [str], integration: [str], integrationConfiguration: [str], integrationConfigurationProjects: [str], integrationConfigurationTransfer: [str], integrationVercelConfigurationOverride: [str], job: [str], logDrain: [str], monitoringChart: [str], monitoringQuery: [str], notificationDomainConfiguration: [str], notificationDomainExpire: [str], notificationDomainMoved: [str], notificationDomainPurchase: [str], notificationDomainRenewal: [str], notificationDomainTransfer: [str], notificationDomainUnverified: [str], notificationPaymentFailed: [str], notificationSpendCap: [str], notificationUsageAlert: [str], openTelemetryEndpoint: [str], passwordProtection: [str], paymentMethod: [str], permissions: [str], previewDeploymentSuffix: [str], proTrialOnboarding: [str], project: [str], projectDeploymentHook: [str], projectDomain: [str], projectDomainMove: [str], projectEnvVars: [str], projectEnvVarsProduction: [str], projectEnvVarsUnownedByIntegration: [str], projectIntegrationConfiguration: [str], projectLink: [str], projectMember: [str], projectProductionBranch: [str], projectProtectionBypass: [str], projectTransfer: [str], rateLimit: [str], redis: [str], remoteCaching: [str], samlConfig: [str], secret: [str], sensitiveEnvironmentVariablePolicy: [str], sharedEnvVars: [str], sharedEnvVarsProduction: [str], spendCapConfiguration: [str], spendCapState: [str], supportCase: [str], supportCaseComment: [str], team: [str], teamAccessRequest: [str], teamFellowMembership: [str], teamInvite: [str], teamInviteCode: [str], teamJoin: [str], teamOwnMembership: [str], teamOwnMembershipDisconnectSAML: [str], token: [str], usage: [str], user: [str], userConnection: [str], webAnalytics: [str], webhook: [str], webhook-event: [str]}, protectionBypass: map, publicSource: bool?, rootDirectory: str?, serverlessFunctionRegion: str?, skipGitConnectDuringLink: bool, sourceFilesOutsideRootDirectory: bool, ssoProtection: map?, targets: map, transferCompletedAt: num, transferStartedAt: num, transferToAccountId: str, transferredFromAccountId: str, updatedAt: num}
+@errors {400, 403, 404, 409}
+
+@endpoint GET /v9/projects/{idOrName}/domains
+@required {idOrName: any}
+@optional {production: any(true/false)=false, gitBranch: str, redirects: any(true/false)=true, redirect: str, verified: any(true/false), limit: num, since: num, until: num, order: any(ASC/DESC)=DESC, teamId: str}
+@returns(200) {domains: [map], pagination: map{count: num, next: num?, prev: num?}}
+@errors {400, 403, 404}
+
+@endpoint POST /v9/projects/{idOrName}/domains
+@required {idOrName: str, name: str}
+@optional {teamId: str, gitBranch: str, redirect: str, redirectStatusCode: int(None/301/302/307/308)}
+@returns(200) {apexName: str, createdAt: num, gitBranch: str?, name: str, projectId: str, redirect: str?, redirectStatusCode: num?, updatedAt: num, verification: [map], verified: bool}
+@errors {400, 402, 403, 404, 409}
+
+@endpoint DELETE /v9/projects/{idOrName}/domains/{domain}
+@required {idOrName: str, domain: str}
+@optional {teamId: str}
+@returns(200)
+@errors {400, 403, 404, 409}
+
+@endpoint GET /v9/projects/{idOrName}/domains/{domain}
+@required {idOrName: str, domain: str}
+@optional {teamId: str}
+@returns(200) {apexName: str, createdAt: num, gitBranch: str?, name: str, projectId: str, redirect: str?, redirectStatusCode: num?, updatedAt: num, verification: [map], verified: bool}
+@errors {400, 403, 404}
+
+@endpoint PATCH /v9/projects/{idOrName}/domains/{domain}
+@required {idOrName: str, domain: str}
+@optional {teamId: str, gitBranch: str, redirect: str, redirectStatusCode: int(None/301/302/307/308)}
+@returns(200) {apexName: str, createdAt: num, gitBranch: str?, name: str, projectId: str, redirect: str?, redirectStatusCode: num?, updatedAt: num, verification: [map], verified: bool}
+@errors {400, 403, 404, 409}
+
+@endpoint POST /v9/projects/{idOrName}/domains/{domain}/verify
+@required {idOrName: str, domain: str}
+@optional {teamId: str}
+@returns(200) {apexName: str, createdAt: num, gitBranch: str?, name: str, projectId: str, redirect: str?, redirectStatusCode: num?, updatedAt: num, verification: [map], verified: bool}
+@errors {400, 403}
+
+@endpoint GET /v9/projects/{idOrName}/env
+@required {idOrName: str}
+@optional {gitBranch: str, decrypt: str(true/false), source: str, teamId: str}
+@returns(200)
+@errors {400, 403, 404}
+
+@endpoint DELETE /v9/projects/{idOrName}/env/{id}
+@required {idOrName: str, id: str}
+@optional {teamId: str}
+@returns(200)
+@errors {400, 403, 404, 409}
+
+@endpoint PATCH /v9/projects/{idOrName}/env/{id}
+@required {idOrName: str, id: str}
+@optional {teamId: str, gitBranch: str, key: str, target: [any], type: str(system/secret/encrypted/plain/sensitive), value: str}
+@returns(200) {configurationId: str?, createdAt: num, createdBy: str?, decrypted: bool, edgeConfigId: str?, edgeConfigTokenId: str?, gitBranch: str, id: str, key: str, target: any, type: str, updatedAt: num, updatedBy: str?, value: str}
+@errors {400, 403, 404, 409}
+
+@end
+

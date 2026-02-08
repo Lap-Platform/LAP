@@ -1,0 +1,377 @@
+@doclean v0.2
+# Machine-readable API spec. Each @endpoint block is one API call.
+@api Resend
+@base https://api.resend.com
+@version 1.1.0
+@auth Bearer bearer
+@endpoints 70
+@toc Send an email, Retrieve a list of emails, Retrieve a single email, Update a single email, Cancel the schedule of the e-mail., Trigger up to 100 batch emails at once., Retrieve a list of attachments for a sent email, Retrieve a single attachment for a sent email, Retrieve a list of received emails, Retrieve a single received email, Retrieve a list of attachments for a received email, Retrieve a single attachment for a received email, Create a new domain, Retrieve a list of domains, Retrieve a single domain, Update an existing domain, Remove an existing domain, Verify an existing domain, Create a new API key, Retrieve a list of API keys, Remove an existing API key, Create a template, Retrieve a list of templates, Retrieve a single template, Update an existing template, Remove an existing template, Publish a template, Duplicate a template, Create a list of contacts, Retrieve a list of audiences, Remove an existing audience, Retrieve a single audience, Create a new contact, Retrieve a list of contacts, Remove an existing contact by email, Retrieves a single contact by email, Update a single contact by email, Remove an existing contact by id, Update a single contact by id, Retrieve a single contact by id, Create a broadcast, Retrieve a list of broadcasts, Remove an existing broadcast that is in the draft status, Retrieve a single broadcast, Update an existing broadcast, Send or schedule a broadcast, Create a new webhook, Retrieve a list of webhooks, Retrieve a single webhook, Update an existing webhook, Remove an existing webhook, Create a new segment, Retrieve a list of segments, Retrieve a single segment, Remove an existing segment, Create a new topic, Retrieve a list of topics, Retrieve a single topic, Update an existing topic, Remove an existing topic, Create a new contact property, Retrieve a list of contact properties, Retrieve a single contact property, Update an existing contact property, Remove an existing contact property, Add a contact to a segment, Retrieve a list of segments for a contact, Remove a contact from a segment, Retrieve topics for a contact, Update topics for a contact
+
+@endpoint POST /emails
+@desc Send an email
+@required {from: str # Sender email address. To include a friendly name, use the format "Your Name <sender@domain.com>"., to: [str], subject: str # Email subject.}
+@optional {Idempotency-Key: str # A unique identifier for the request to ensure emails are only sent once. [Learn more](https://resend.com/docs/dashboard/emails/idempotency-keys), bcc: str # Bcc recipient email address. For multiple addresses, send as an array of strings., cc: str # Cc recipient email address. For multiple addresses, send as an array of strings., reply_to: str # Reply-to email address. For multiple addresses, send as an array of strings., html: str # The HTML version of the message., text: str # The plain text version of the message., template: map, headers: map # Custom headers to add to the email., scheduled_at: str # Schedule email to be sent later. The date should be in ISO 8601 format., attachments: [map], tags: [map]}
+@returns(200) {id: str} # OK
+
+@endpoint GET /emails
+@desc Retrieve a list of emails
+@optional {limit: int # Number of items to return., after: str # Return items after this cursor., before: str # Return items before this cursor.}
+@returns(200) {object: str, has_more: bool, data: [map]} # OK
+
+@endpoint GET /emails/{email_id}
+@desc Retrieve a single email
+@required {email_id: str # The ID of the email.}
+@returns(200) {object: str, id: str, to: [str], from: str, created_at: str(date-time), subject: str, html: str, text: str, bcc: [str], cc: [str], reply_to: [str], last_event: str} # OK
+
+@endpoint PATCH /emails/{email_id}
+@desc Update a single email
+@required {email_id: str # The ID of the email.}
+@returns(200) {scheduled_at: str} # OK
+
+@endpoint POST /emails/{email_id}/cancel
+@desc Cancel the schedule of the e-mail.
+@required {email_id: str # The ID of the email.}
+@returns(200) {object: str, id: str, to: [str], from: str, created_at: str(date-time), subject: str, html: str, text: str, bcc: [str], cc: [str], reply_to: [str], last_event: str} # OK
+
+@endpoint POST /emails/batch
+@desc Trigger up to 100 batch emails at once.
+@optional {Idempotency-Key: str # A unique identifier for the request to ensure emails are only sent once. [Learn more](https://resend.com/docs/dashboard/emails/idempotency-keys)}
+@returns(200) {data: [map]} # OK
+
+@endpoint GET /emails/{email_id}/attachments
+@desc Retrieve a list of attachments for a sent email
+@required {email_id: str(uuid) # The ID of the email.}
+@optional {limit: int # Maximum number of attachments to return., after: str(uuid) # Pagination cursor to fetch results after this attachment ID. Cannot be used with 'before'., before: str(uuid) # Pagination cursor to fetch results before this attachment ID. Cannot be used with 'after'.}
+@returns(200) {object: str, has_more: bool, data: [map]} # OK
+
+@endpoint GET /emails/{email_id}/attachments/{attachment_id}
+@desc Retrieve a single attachment for a sent email
+@required {email_id: str(uuid) # The ID of the email., attachment_id: str(uuid) # The ID of the attachment.}
+@returns(200) {object: str, id: str(uuid), filename: str, content_type: str, content_id: str, content_disposition: str, download_url: str, expires_at: str(date-time), size: int} # OK
+
+@endpoint GET /emails/receiving
+@desc Retrieve a list of received emails
+@optional {limit: int # Maximum number of received emails to return., after: str(uuid) # Pagination cursor to fetch results after this email ID. Cannot be used with 'before'., before: str(uuid) # Pagination cursor to fetch results before this email ID. Cannot be used with 'after'.}
+@returns(200) {object: str, has_more: bool, data: [map]} # OK
+
+@endpoint GET /emails/receiving/{email_id}
+@desc Retrieve a single received email
+@required {email_id: str(uuid) # The ID of the received email.}
+@returns(200) {object: str, id: str(uuid), to: [str], from: str, subject: str, message_id: str, bcc: [str]?, cc: [str]?, reply_to: [str]?, html: str?, text: str?, headers: map?, created_at: str(date-time), attachments: [map]} # OK
+
+@endpoint GET /emails/receiving/{email_id}/attachments
+@desc Retrieve a list of attachments for a received email
+@required {email_id: str(uuid) # The ID of the received email.}
+@optional {limit: int # Maximum number of attachments to return., after: str(uuid) # Pagination cursor to fetch results after this attachment ID. Cannot be used with 'before'., before: str(uuid) # Pagination cursor to fetch results before this attachment ID. Cannot be used with 'after'.}
+@returns(200) {object: str, has_more: bool, data: [map]} # OK
+
+@endpoint GET /emails/receiving/{email_id}/attachments/{attachment_id}
+@desc Retrieve a single attachment for a received email
+@required {email_id: str(uuid) # The ID of the received email., attachment_id: str(uuid) # The ID of the attachment.}
+@returns(200) {object: str, id: str(uuid), filename: str, content_type: str, content_id: str, content_disposition: str, download_url: str, expires_at: str(date-time), size: int} # OK
+
+@endpoint POST /domains
+@desc Create a new domain
+@required {name: str # The name of the domain you want to create.}
+@optional {region: str(us-east-1/eu-west-1/sa-east-1/ap-northeast-1)=us-east-1 # The region where emails will be sent from. Possible values are us-east-1 | eu-west-1 | sa-east-1 | ap-northeast-1}
+@returns(201) {id: str, name: str, created_at: str(date-time), status: str, records: [map], region: str} # OK
+
+@endpoint GET /domains
+@desc Retrieve a list of domains
+@returns(200) {data: [map]} # OK
+
+@endpoint GET /domains/{domain_id}
+@desc Retrieve a single domain
+@required {domain_id: str # The ID of the domain.}
+@returns(200) {object: str, id: str, name: str, status: str, created_at: str(date-time), region: str, records: [map]} # OK
+
+@endpoint PATCH /domains/{domain_id}
+@desc Update an existing domain
+@required {domain_id: str # The ID of the domain.}
+@optional {open_tracking: bool # Track the open rate of each email., click_tracking: bool # Track clicks within the body of each HTML email., tls: str=opportunistic # enforced | opportunistic.}
+@returns(200) {id: str, object: str} # OK
+
+@endpoint DELETE /domains/{domain_id}
+@desc Remove an existing domain
+@required {domain_id: str # The ID of the domain.}
+@returns(200) {object: str, id: str, deleted: bool} # OK
+
+@endpoint POST /domains/{domain_id}/verify
+@desc Verify an existing domain
+@required {domain_id: str # The ID of the domain.}
+@returns(200) {object: str, id: str} # OK
+
+@endpoint POST /api-keys
+@desc Create a new API key
+@required {name: str # The API key name.}
+@optional {permission: str(full_access/sending_access) # The API key can have full access to Resend’s API or be only restricted to send emails. * full_access - Can create, delete, get, and update any resource. * sending_access - Can only send emails., domain_id: str # Restrict an API key to send emails only from a specific domain. Only used when the permission is sending_acces.}
+@returns(201) {id: str, token: str} # OK
+
+@endpoint GET /api-keys
+@desc Retrieve a list of API keys
+@returns(200) {data: [map]} # OK
+
+@endpoint DELETE /api-keys/{api_key_id}
+@desc Remove an existing API key
+@required {api_key_id: str # The API key ID.}
+@returns(200) OK
+
+@endpoint POST /templates
+@desc Create a template
+@required {name: str # The name of the template., html: str # The HTML version of the template.}
+@optional {alias: str # The alias of the template., from: str # Sender email address. To include a friendly name, use the format "Your Name <sender@domain.com>"., subject: str # Email subject., reply_to: [str] # Reply-to email addresses., text: str # The plain text version of the template., variables: [map]}
+@returns(201) {id: str, object: str} # OK
+
+@endpoint GET /templates
+@desc Retrieve a list of templates
+@optional {limit: int # Number of items to return., after: str # Return items after this cursor., before: str # Return items before this cursor.}
+@returns(200) {object: str, data: [map], has_more: bool} # OK
+
+@endpoint GET /templates/{id}
+@desc Retrieve a single template
+@required {id: str # The Template ID or alias.}
+@returns(200) {object: str, id: str, current_version_id: str, name: str, alias: str, from: str, subject: str, reply_to: [str]?, html: str, text: str, variables: [map], created_at: str(date-time), updated_at: str(date-time), status: str, published_at: str(date-time)?, has_unpublished_versions: bool} # OK
+
+@endpoint PATCH /templates/{id}
+@desc Update an existing template
+@required {id: str # The Template ID or alias.}
+@optional {name: str # The name of the template., alias: str # The alias of the template., from: str # Sender email address. To include a friendly name, use the format "Your Name <sender@domain.com>"., subject: str # Email subject., reply_to: [str] # Reply-to email addresses., html: str # The HTML version of the template., text: str # The plain text version of the template., variables: [map]}
+@returns(200) {id: str, object: str} # OK
+
+@endpoint DELETE /templates/{id}
+@desc Remove an existing template
+@required {id: str # The Template ID or alias.}
+@returns(200) {object: str, id: str, deleted: bool} # OK
+
+@endpoint POST /templates/{id}/publish
+@desc Publish a template
+@required {id: str # The Template ID or alias.}
+@returns(200) {id: str, object: str} # OK
+
+@endpoint POST /templates/{id}/duplicate
+@desc Duplicate a template
+@required {id: str # The Template ID or alias.}
+@returns(200) {id: str, object: str} # OK
+
+@endpoint POST /audiences
+@desc Create a list of contacts
+@required {name: str # The name of the audience you want to create.}
+@returns(201) {id: str, object: str, name: str} # OK
+
+@endpoint GET /audiences
+@desc Retrieve a list of audiences
+@returns(200) {object: str, data: [map]} # OK
+
+@endpoint DELETE /audiences/{id}
+@desc Remove an existing audience
+@required {id: str # The Audience ID.}
+@returns(200) {id: str, object: str, deleted: bool} # OK
+
+@endpoint GET /audiences/{id}
+@desc Retrieve a single audience
+@required {id: str # The Audience ID.}
+@returns(200) {id: str, object: str, name: str, created_at: str} # OK
+
+@endpoint POST /audiences/{audience_id}/contacts
+@desc Create a new contact
+@required {audience_id: str # The Audience ID., email: str # Email address of the contact.}
+@optional {first_name: str # First name of the contact., last_name: str # Last name of the contact., unsubscribed: bool # Indicates if the contact is unsubscribed., audience_id: str # Unique identifier of the audience to which the contact belongs.}
+@returns(201) {object: str, id: str} # OK
+
+@endpoint GET /audiences/{audience_id}/contacts
+@desc Retrieve a list of contacts
+@required {audience_id: str # The Audience ID.}
+@returns(200) {object: str, data: [map]} # OK
+
+@endpoint DELETE /audiences/{audience_id}/contacts/{email}
+@desc Remove an existing contact by email
+@required {email: str # The Contact email., audience_id: str # The Audience ID.}
+@returns(200) {object: str, id: str, deleted: bool} # OK
+
+@endpoint GET /audiences/{audience_id}/contacts/{email}
+@desc Retrieves a single contact by email
+@required {email: str # The Contact email., audience_id: str # The Audience ID.}
+@returns(200) {object: str, id: str, email: str, first_name: str, last_name: str, created_at: str(date-time), unsubscribed: bool} # OK
+
+@endpoint PATCH /audiences/{audience_id}/contacts/{email}
+@desc Update a single contact by email
+@required {email: str # The Contact email., audience_id: str # The Audience ID.}
+@returns(200) {object: str, id: str} # OK
+
+@endpoint DELETE /audiences/{audience_id}/contacts/{id}
+@desc Remove an existing contact by id
+@required {id: str # The Contact ID., audience_id: str # The Audience ID.}
+@returns(200) {object: str, id: str, deleted: bool} # OK
+
+@endpoint PATCH /audiences/{audience_id}/contacts/{id}
+@desc Update a single contact by id
+@required {id: str # The Contact ID., audience_id: str # The Audience ID.}
+@optional {email: str # Email address of the contact., first_name: str # First name of the contact., last_name: str # Last name of the contact., unsubscribed: bool # Indicates the subscription status of the contact.}
+@returns(200) {object: str, id: str} # OK
+
+@endpoint GET /audiences/{audience_id}/contacts/{id}
+@desc Retrieve a single contact by id
+@required {id: str # The Contact ID., audience_id: str # The Audience ID.}
+@returns(200) {object: str, id: str, email: str, first_name: str, last_name: str, created_at: str(date-time), unsubscribed: bool} # OK
+
+@endpoint POST /broadcasts
+@desc Create a broadcast
+@required {segment_id: str # Unique identifier of the segment this broadcast will be sent to., from: str # The email address of the sender., subject: str # The subject line of the email.}
+@optional {name: str # Name of the broadcast., audience_id: str # Use `segment_id` instead. Unique identifier of the segment this broadcast will be sent to., reply_to: [str] # The email addresses to which replies should be sent., preview_text: str # The preview text of the email., html: str # The HTML version of the message., text: str # The plain text version of the message., send: bool # Whether to send the broadcast immediately or keep it as a draft., scheduled_at: str # Schedule time to send the broadcast. Can only be used if `send` is true.}
+@returns(201) {id: str, object: str} # OK
+
+@endpoint GET /broadcasts
+@desc Retrieve a list of broadcasts
+@returns(200) {object: str, data: [map]} # OK
+
+@endpoint DELETE /broadcasts/{id}
+@desc Remove an existing broadcast that is in the draft status
+@required {id: str # The Broadcast ID.}
+@returns(200) {id: str, object: str, deleted: bool} # OK
+
+@endpoint GET /broadcasts/{id}
+@desc Retrieve a single broadcast
+@required {id: str # The Broadcast ID.}
+@returns(200) {id: str, name: str, audience_id: str?, segment_id: str?, from: str, subject: str, reply_to: [str], preview_text: str, status: str, created_at: str(date-time), scheduled_at: str(date-time), sent_at: str(date-time), text: str?, html: str?} # OK
+
+@endpoint PATCH /broadcasts/{id}
+@desc Update an existing broadcast
+@required {id: str # The Broadcast ID.}
+@optional {name: str # Name of the broadcast., audience_id: str # Unique identifier of the audience this broadcast will be sent to., segment_id: str # Unique identifier of the segment this broadcast will be sent to., from: str # The email address of the sender., subject: str # The subject line of the email., reply_to: [str] # The email addresses to which replies should be sent., preview_text: str # The preview text of the email., html: str # The HTML version of the message., text: str # The plain text version of the message.}
+@returns(200) {id: str, object: str} # OK
+
+@endpoint POST /broadcasts/{id}/send
+@desc Send or schedule a broadcast
+@required {id: str # The Broadcast ID.}
+@optional {scheduled_at: str # Schedule email to be sent later. The date should be in ISO 8601 format.}
+@returns(200) {id: str} # OK
+
+@endpoint POST /webhooks
+@desc Create a new webhook
+@required {endpoint: str # The URL where webhook events will be sent., events: [str] # Array of event types to subscribe to.}
+@returns(201) {object: str, id: str(uuid), signing_secret: str} # Created
+
+@endpoint GET /webhooks
+@desc Retrieve a list of webhooks
+@optional {limit: int # Maximum number of webhooks to return., after: str(uuid) # Pagination cursor to fetch results after this webhook ID. Cannot be used with 'before'., before: str(uuid) # Pagination cursor to fetch results before this webhook ID. Cannot be used with 'after'.}
+@returns(200) {object: str, has_more: bool, data: [map]} # OK
+
+@endpoint GET /webhooks/{webhook_id}
+@desc Retrieve a single webhook
+@required {webhook_id: str(uuid) # The Webhook ID.}
+@returns(200) {object: str, id: str(uuid), endpoint: str, events: [str]?, status: str, created_at: str(date-time), signing_secret: str} # OK
+
+@endpoint PATCH /webhooks/{webhook_id}
+@desc Update an existing webhook
+@required {webhook_id: str(uuid) # The Webhook ID.}
+@optional {endpoint: str # The URL where webhook events will be sent., events: [str] # Array of event types to subscribe to., status: str(enabled/disabled) # The status of the webhook.}
+@returns(200) {object: str, id: str(uuid)} # OK
+
+@endpoint DELETE /webhooks/{webhook_id}
+@desc Remove an existing webhook
+@required {webhook_id: str(uuid) # The Webhook ID.}
+@returns(200) {object: str, id: str(uuid), deleted: bool} # OK
+
+@endpoint POST /segments
+@desc Create a new segment
+@required {name: str # The name of the segment., audience_id: str # The ID of the audience this segment belongs to.}
+@optional {filter: map # Filter conditions for the segment.}
+@returns(201) {id: str, object: str} # OK
+
+@endpoint GET /segments
+@desc Retrieve a list of segments
+@optional {limit: int # Number of items to return., after: str # Return items after this cursor., before: str # Return items before this cursor.}
+@returns(200) {object: str, has_more: bool, data: [map]} # OK
+
+@endpoint GET /segments/{id}
+@desc Retrieve a single segment
+@required {id: str # The Segment ID.}
+@returns(200) {id: str, object: str, name: str, audience_id: str, filter: map, created_at: str(date-time)} # OK
+
+@endpoint DELETE /segments/{id}
+@desc Remove an existing segment
+@required {id: str # The Segment ID.}
+@returns(200) {id: str, object: str, deleted: bool} # OK
+
+@endpoint POST /topics
+@desc Create a new topic
+@required {name: str # The name of the topic., audience_id: str # The ID of the audience this topic belongs to.}
+@returns(201) {id: str, object: str} # OK
+
+@endpoint GET /topics
+@desc Retrieve a list of topics
+@optional {limit: int # Number of items to return., after: str # Return items after this cursor., before: str # Return items before this cursor.}
+@returns(200) {object: str, has_more: bool, data: [map]} # OK
+
+@endpoint GET /topics/{id}
+@desc Retrieve a single topic
+@required {id: str # The Topic ID.}
+@returns(200) {id: str, object: str, name: str, audience_id: str, created_at: str(date-time)} # OK
+
+@endpoint PATCH /topics/{id}
+@desc Update an existing topic
+@required {id: str # The Topic ID.}
+@optional {name: str # The name of the topic.}
+@returns(200) {id: str, object: str} # OK
+
+@endpoint DELETE /topics/{id}
+@desc Remove an existing topic
+@required {id: str # The Topic ID.}
+@returns(200) {id: str, object: str, deleted: bool} # OK
+
+@endpoint POST /contact-properties
+@desc Create a new contact property
+@required {name: str # The name of the contact property., type: str(string/number/boolean/date) # The type of the contact property.}
+@optional {description: str # A description of the contact property.}
+@returns(201) {id: str, object: str} # OK
+
+@endpoint GET /contact-properties
+@desc Retrieve a list of contact properties
+@optional {limit: int # Number of items to return., after: str # Return items after this cursor., before: str # Return items before this cursor.}
+@returns(200) {object: str, has_more: bool, data: [map]} # OK
+
+@endpoint GET /contact-properties/{id}
+@desc Retrieve a single contact property
+@required {id: str # The Contact Property ID.}
+@returns(200) {id: str, object: str, name: str, type: str, description: str, created_at: str(date-time)} # OK
+
+@endpoint PATCH /contact-properties/{id}
+@desc Update an existing contact property
+@required {id: str # The Contact Property ID.}
+@optional {name: str # The name of the contact property., description: str # A description of the contact property.}
+@returns(200) {id: str, object: str} # OK
+
+@endpoint DELETE /contact-properties/{id}
+@desc Remove an existing contact property
+@required {id: str # The Contact Property ID.}
+@returns(200) {id: str, object: str, deleted: bool} # OK
+
+@endpoint POST /audiences/{audience_id}/contacts/{id}/segments
+@desc Add a contact to a segment
+@required {audience_id: str # The Audience ID., id: str # The Contact ID., segment_id: str # The ID of the segment to add the contact to.}
+@returns(200) {object: str, contact_id: str, segment_id: str} # OK
+
+@endpoint GET /audiences/{audience_id}/contacts/{id}/segments
+@desc Retrieve a list of segments for a contact
+@required {audience_id: str # The Audience ID., id: str # The Contact ID.}
+@optional {limit: int # Number of items to return., after: str # Return items after this cursor., before: str # Return items before this cursor.}
+@returns(200) {object: str, has_more: bool, data: [map]} # OK
+
+@endpoint DELETE /audiences/{audience_id}/contacts/{id}/segments/{segment_id}
+@desc Remove a contact from a segment
+@required {audience_id: str # The Audience ID., id: str # The Contact ID., segment_id: str # The Segment ID.}
+@returns(200) {object: str, contact_id: str, segment_id: str, deleted: bool} # OK
+
+@endpoint GET /audiences/{audience_id}/contacts/{id}/topics
+@desc Retrieve topics for a contact
+@required {audience_id: str # The Audience ID., id: str # The Contact ID.}
+@optional {limit: int # Number of items to return., after: str # Return items after this cursor., before: str # Return items before this cursor.}
+@returns(200) {object: str, has_more: bool, data: [map]} # OK
+
+@endpoint PATCH /audiences/{audience_id}/contacts/{id}/topics
+@desc Update topics for a contact
+@required {audience_id: str # The Audience ID., id: str # The Contact ID., topics: [map]}
+@returns(200) {object: str, contact_id: str, topics: [map]} # OK
+
+@end
+

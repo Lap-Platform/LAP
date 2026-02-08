@@ -1,0 +1,633 @@
+@doclean v0.2
+# Machine-readable API spec. Each @endpoint block is one API call.
+@api Hetzner Cloud API
+@base https://api.hetzner.cloud/v1
+@version 1.0.0
+@endpoints 144
+@toc Get all Actions, Get an Action, Get all Certificates, Create a Certificate, Delete a Certificate, Get a Certificate, Update a Certificate, Get all Actions for a Certificate, Retry Issuance or Renewal, Get an Action for a Certificate, Get all Datacenters, Get a Datacenter, Get all Firewalls, Create a Firewall, Delete a Firewall, Get a Firewall, Update a Firewall, Get all Actions for a Firewall, Apply to Resources, Remove from Resources, Set Rules, Get an Action for a Firewall, Get all Floating IPs, Create a Floating IP, Delete a Floating IP, Get a Floating IP, Update a Floating IP, Get all Actions for a Floating IP, Assign a Floating IP to a Server, Change reverse DNS entry for a Floating IP, Change Floating IP Protection, Unassign a Floating IP, Get an Action for a Floating IP, Get all Images, Delete an Image, Get an Image, Update an Image, Get all Actions for an Image, Change Image Protection, Get an Action for an Image, Get all ISOs, Get an ISO, Get all Load Balancer Types, Get a Load Balancer Type, Get all Load Balancers, Create a Load Balancer, Delete a Load Balancer, Get a Load Balancer, Update a Load Balancer, Get all Actions for a Load Balancer, Add Service, Add Target, Attach a Load Balancer to a Network, Change Algorithm, Change reverse DNS entry for this Load Balancer, Change Load Balancer Protection, Change the Type of a Load Balancer, Delete Service, Detach a Load Balancer from a Network, Disable the public interface of a Load Balancer, Enable the public interface of a Load Balancer, Remove Target, Update Service, Get an Action for a Load Balancer, Get Metrics for a LoadBalancer, Get all Locations, Get a Location, Get all Networks, Create a Network, Delete a Network, Get a Network, Update a Network, Get all Actions for a Network, Add a route to a Network, Add a subnet to a Network, Change IP range of a Network, Change Network Protection, Delete a route from a Network, Delete a subnet from a Network, Get an Action for a Network, Get all PlacementGroups, Create a PlacementGroup, Delete a PlacementGroup, Get a PlacementGroup, Update a PlacementGroup, Get all prices, Get all Primary IPs, Create a Primary IP, Delete a Primary IP, Get a Primary IP, Update a Primary IP, Assign a Primary IP to a resource, Change reverse DNS entry for a Primary IP, Change Primary IP Protection, Unassign a Primary IP from a resource, Get all Server Types, Get a Server Type, Get all Servers, Create a Server, Delete a Server, Get a Server, Update a Server, Get all Actions for a Server, Add a Server to a Placement Group, Attach an ISO to a Server, Attach a Server to a Network, Change alias IPs of a Network, Change reverse DNS entry for this Server, Change Server Protection, Change the Type of a Server, Create Image from a Server, Detach a Server from a Network, Detach an ISO from a Server, Disable Backups for a Server, Disable Rescue Mode for a Server, Enable and Configure Backups for a Server, Enable Rescue Mode for a Server, Power off a Server, Power on a Server, Soft-reboot a Server, Rebuild a Server from an Image, Remove from Placement Group, Request Console for a Server, Reset a Server, Reset root Password of a Server, Shutdown a Server, Get an Action for a Server, Get Metrics for a Server, Get all SSH keys, Create an SSH key, Delete an SSH key, Get a SSH key, Update an SSH key, Get all Volumes, Create a Volume, Delete a Volume, Get a Volume, Update a Volume, Get all Actions for a Volume, Attach Volume to a Server, Change Volume Protection, Detach Volume, Resize Volume, Get an Action for a Volume
+
+@endpoint GET /actions
+@optional {id: int, sort: str(id/id:asc/id:desc/command/command:asc/command:desc/status/status:asc/status:desc/progress/progress:asc/progress:desc/started/started:asc/started:desc/finished/finished:asc/finished:desc), status: str(running/success/error)}
+@returns(200) {actions: [map], meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}}
+
+@endpoint GET /actions/{id}
+@required {id: int}
+@returns(200) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint GET /certificates
+@optional {sort: str(id/id:asc/id:desc/name/name:asc/name:desc/created/created:asc/created:desc), name: str, label_selector: str, type: str(uploaded/managed)}
+@returns(200) {certificates: [map], meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}}
+
+@endpoint POST /certificates
+@required {name: str}
+@optional {certificate: str, domain_names: [str], labels: map, private_key: str, type: str(uploaded/managed)}
+@returns(201) {action: map?{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}, certificate: map{certificate: str?, created: str, domain_names: [str], fingerprint: str?, id: int, labels: map, name: str, not_valid_after: str?, not_valid_before: str?, status: map?{error: map?, issuance: str, renewal: str}, type: str, used_by: [map]}}
+
+@endpoint DELETE /certificates/{id}
+@required {id: int}
+@returns(204)
+
+@endpoint GET /certificates/{id}
+@required {id: int}
+@returns(200) {certificate: map{certificate: str?, created: str, domain_names: [str], fingerprint: str?, id: int, labels: map, name: str, not_valid_after: str?, not_valid_before: str?, status: map?{error: map?, issuance: str, renewal: str}, type: str, used_by: [map]}}
+
+@endpoint PUT /certificates/{id}
+@required {id: int}
+@optional {labels: map, name: str}
+@returns(200) {certificate: map{certificate: str?, created: str, domain_names: [str], fingerprint: str?, id: int, labels: map, name: str, not_valid_after: str?, not_valid_before: str?, status: map?{error: map?, issuance: str, renewal: str}, type: str, used_by: [map]}}
+
+@endpoint GET /certificates/{id}/actions
+@required {id: int}
+@optional {sort: str(id/id:asc/id:desc/command/command:asc/command:desc/status/status:asc/status:desc/progress/progress:asc/progress:desc/started/started:asc/started:desc/finished/finished:asc/finished:desc), status: str(running/success/error)}
+@returns(200) {actions: [map], meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}}
+
+@endpoint POST /certificates/{id}/actions/retry
+@required {id: int}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint GET /certificates/{id}/actions/{action_id}
+@required {id: int, action_id: int}
+@returns(200) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint GET /datacenters
+@optional {name: str}
+@returns(200) {datacenters: [map], recommendation: num}
+
+@endpoint GET /datacenters/{id}
+@required {id: int}
+@returns(200) {datacenter: map{description: str, id: int, location: map{city: str, country: str, description: str, id: num, latitude: num, longitude: num, name: str, network_zone: str}, name: str, server_types: map{available: [num], available_for_migration: [num], supported: [num]}}}
+
+@endpoint GET /firewalls
+@optional {sort: str(id/id:asc/id:desc/name/name:asc/name:desc/created/created:asc/created:desc), name: str, label_selector: str}
+@returns(200) {firewalls: [map], meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}}
+
+@endpoint POST /firewalls
+@required {name: str}
+@optional {apply_to: [map], labels: map, rules: [map]}
+@returns(201) {actions: [map], firewall: map{applied_to: [map], created: str, id: int, labels: map, name: str, rules: [map]}}
+
+@endpoint DELETE /firewalls/{id}
+@required {id: int}
+@returns(204)
+
+@endpoint GET /firewalls/{id}
+@required {id: int}
+@returns(200) {firewall: map{applied_to: [map], created: str, id: int, labels: map, name: str, rules: [map]}}
+
+@endpoint PUT /firewalls/{id}
+@required {id: int}
+@optional {labels: map, name: str}
+@returns(200) {firewall: map{applied_to: [map], created: str, id: int, labels: map, name: str, rules: [map]}}
+
+@endpoint GET /firewalls/{id}/actions
+@required {id: int}
+@optional {sort: str(id/id:asc/id:desc/command/command:asc/command:desc/status/status:asc/status:desc/progress/progress:asc/progress:desc/started/started:asc/started:desc/finished/finished:asc/finished:desc), status: str(running/success/error)}
+@returns(200) {actions: [map], meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}}
+
+@endpoint POST /firewalls/{id}/actions/apply_to_resources
+@required {id: int, apply_to: [map]}
+@returns(201) {actions: [map], meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}}
+
+@endpoint POST /firewalls/{id}/actions/remove_from_resources
+@required {id: int, remove_from: [map]}
+@returns(201) {actions: [map], meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}}
+
+@endpoint POST /firewalls/{id}/actions/set_rules
+@required {id: int, rules: [map]}
+@returns(201) {actions: [map], meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}}
+
+@endpoint GET /firewalls/{id}/actions/{action_id}
+@required {id: int, action_id: int}
+@returns(200) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint GET /floating_ips
+@optional {name: str, label_selector: str, sort: str(id/id:asc/id:desc/created/created:asc/created:desc)}
+@returns(200) {floating_ips: [map], meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}}
+
+@endpoint POST /floating_ips
+@required {type: str(ipv4/ipv6)}
+@optional {description: str, home_location: str, labels: map, name: str, server: int}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}, floating_ip: map{blocked: bool, created: str, description: str?, dns_ptr: [map], home_location: map{city: str, country: str, description: str, id: num, latitude: num, longitude: num, name: str, network_zone: str}, id: int, ip: str, labels: map, name: str, protection: map{delete: bool}, server: int?, type: str}}
+
+@endpoint DELETE /floating_ips/{id}
+@required {id: int}
+@returns(204)
+
+@endpoint GET /floating_ips/{id}
+@required {id: int}
+@returns(200) {floating_ip: map{blocked: bool, created: str, description: str?, dns_ptr: [map], home_location: map{city: str, country: str, description: str, id: num, latitude: num, longitude: num, name: str, network_zone: str}, id: int, ip: str, labels: map, name: str, protection: map{delete: bool}, server: int?, type: str}}
+
+@endpoint PUT /floating_ips/{id}
+@required {id: int}
+@optional {description: str, labels: map, name: str}
+@returns(200) {floating_ip: map{blocked: bool, created: str, description: str?, dns_ptr: [map], home_location: map{city: str, country: str, description: str, id: num, latitude: num, longitude: num, name: str, network_zone: str}, id: int, ip: str, labels: map, name: str, protection: map{delete: bool}, server: int?, type: str}}
+
+@endpoint GET /floating_ips/{id}/actions
+@required {id: int}
+@optional {sort: str(id/id:asc/id:desc/command/command:asc/command:desc/status/status:asc/status:desc/progress/progress:asc/progress:desc/started/started:asc/started:desc/finished/finished:asc/finished:desc), status: str(running/success/error)}
+@returns(200) {actions: [map]}
+
+@endpoint POST /floating_ips/{id}/actions/assign
+@required {id: int, server: int}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint POST /floating_ips/{id}/actions/change_dns_ptr
+@required {id: int, dns_ptr: str, ip: str}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint POST /floating_ips/{id}/actions/change_protection
+@required {id: int}
+@optional {delete: bool}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint POST /floating_ips/{id}/actions/unassign
+@required {id: int}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint GET /floating_ips/{id}/actions/{action_id}
+@required {id: int, action_id: int}
+@returns(200) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint GET /images
+@optional {sort: str(id/id:asc/id:desc/name/name:asc/name:desc/created/created:asc/created:desc), type: str(system/snapshot/backup/app), status: str(available/creating), bound_to: str, include_deprecated: bool, name: str, label_selector: str}
+@returns(200) {images: [map], meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}}
+
+@endpoint DELETE /images/{id}
+@required {id: int}
+@returns(204)
+
+@endpoint GET /images/{id}
+@required {id: int}
+@returns(200) {image: map{bound_to: int?, created: str, created_from: map?{id: int, name: str}, deleted: str?, deprecated: str?, description: str, disk_size: num, id: int, image_size: num?, labels: map, name: str?, os_flavor: str, os_version: str?, protection: map{delete: bool}, rapid_deploy: bool, status: str, type: str}}
+
+@endpoint PUT /images/{id}
+@required {id: int}
+@optional {description: str, labels: map, type: str}
+@returns(200) {image: map{bound_to: int?, created: str, created_from: map?{id: int, name: str}, deleted: str?, deprecated: str?, description: str, disk_size: num, id: int, image_size: num?, labels: map, name: str?, os_flavor: str, os_version: str?, protection: map{delete: bool}, rapid_deploy: bool, status: str, type: str}}
+
+@endpoint GET /images/{id}/actions
+@required {id: int}
+@optional {sort: str(id/id:asc/id:desc/command/command:asc/command:desc/status/status:asc/status:desc/progress/progress:asc/progress:desc/started/started:asc/started:desc/finished/finished:asc/finished:desc), status: str(running/success/error)}
+@returns(200) {actions: [map], meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}}
+
+@endpoint POST /images/{id}/actions/change_protection
+@required {id: int}
+@optional {delete: bool}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint GET /images/{id}/actions/{action_id}
+@required {id: int, action_id: int}
+@returns(200) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint GET /isos
+@optional {name: str}
+@returns(200) {isos: [map], meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}}
+
+@endpoint GET /isos/{id}
+@required {id: int}
+@returns(200) {iso: map{deprecated: str?, description: str, id: int, name: str?, type: str}}
+
+@endpoint GET /load_balancer_types
+@optional {name: str}
+@returns(200) {load_balancer_types: [map]}
+
+@endpoint GET /load_balancer_types/{id}
+@required {id: int}
+@returns(200) {load_balancer_type: map{deprecated: str?, description: str, id: num, max_assigned_certificates: num, max_connections: num, max_services: num, max_targets: num, name: str, prices: [map]}}
+
+@endpoint GET /load_balancers
+@optional {sort: str(id/id:asc/id:desc/name/name:asc/name:desc/created/created:asc/created:desc), name: str, label_selector: str}
+@returns(200) {load_balancers: [map], meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}}
+
+@endpoint POST /load_balancers
+@required {algorithm: map, load_balancer_type: str, name: str}
+@optional {labels: map, location: str, network: int, network_zone: str, public_interface: bool, services: [map], targets: [map]}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}, load_balancer: map{algorithm: map{type: str}, created: str, id: int, included_traffic: int, ingoing_traffic: int?, labels: map, load_balancer_type: map{deprecated: str?, description: str, id: num, max_assigned_certificates: num, max_connections: num, max_services: num, max_targets: num, name: str, prices: [map]}, location: map{city: str, country: str, description: str, id: num, latitude: num, longitude: num, name: str, network_zone: str}, name: str, outgoing_traffic: int?, private_net: [map], protection: map{delete: bool}, public_net: map{enabled: bool, ipv4: map, ipv6: map}, services: [map], targets: [map]}}
+
+@endpoint DELETE /load_balancers/{id}
+@required {id: int}
+@returns(204)
+
+@endpoint GET /load_balancers/{id}
+@required {id: int}
+@returns(200) {load_balancer: map{algorithm: map{type: str}, created: str, id: int, included_traffic: int, ingoing_traffic: int?, labels: map, load_balancer_type: map{deprecated: str?, description: str, id: num, max_assigned_certificates: num, max_connections: num, max_services: num, max_targets: num, name: str, prices: [map]}, location: map{city: str, country: str, description: str, id: num, latitude: num, longitude: num, name: str, network_zone: str}, name: str, outgoing_traffic: int?, private_net: [map], protection: map{delete: bool}, public_net: map{enabled: bool, ipv4: map, ipv6: map}, services: [map], targets: [map]}}
+
+@endpoint PUT /load_balancers/{id}
+@required {id: int}
+@optional {labels: map, name: str}
+@returns(200) {load_balancer: map{algorithm: map{type: str}, created: str, id: int, included_traffic: int, ingoing_traffic: int?, labels: map, load_balancer_type: map{deprecated: str?, description: str, id: num, max_assigned_certificates: num, max_connections: num, max_services: num, max_targets: num, name: str, prices: [map]}, location: map{city: str, country: str, description: str, id: num, latitude: num, longitude: num, name: str, network_zone: str}, name: str, outgoing_traffic: int?, private_net: [map], protection: map{delete: bool}, public_net: map{enabled: bool, ipv4: map, ipv6: map}, services: [map], targets: [map]}}
+
+@endpoint GET /load_balancers/{id}/actions
+@required {id: int}
+@optional {sort: str(id/id:asc/id:desc/command/command:asc/command:desc/status/status:asc/status:desc/progress/progress:asc/progress:desc/started/started:asc/started:desc/finished/finished:asc/finished:desc), status: str(running/success/error)}
+@returns(200) {actions: [map], meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}}
+
+@endpoint POST /load_balancers/{id}/actions/add_service
+@required {id: int, destination_port: int, health_check: map, listen_port: int, protocol: str(tcp/http/https), proxyprotocol: bool}
+@optional {http: map}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint POST /load_balancers/{id}/actions/add_target
+@required {id: int, type: str(server/label_selector/ip)}
+@optional {ip: map, label_selector: map, server: map, use_private_ip: bool}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint POST /load_balancers/{id}/actions/attach_to_network
+@required {id: int, network: num}
+@optional {ip: str}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint POST /load_balancers/{id}/actions/change_algorithm
+@required {id: int, type: str(round_robin/least_connections)}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint POST /load_balancers/{id}/actions/change_dns_ptr
+@required {id: int, dns_ptr: str, ip: str}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint POST /load_balancers/{id}/actions/change_protection
+@required {id: int}
+@optional {delete: bool}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint POST /load_balancers/{id}/actions/change_type
+@required {id: int, load_balancer_type: str}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint POST /load_balancers/{id}/actions/delete_service
+@required {id: int, listen_port: num}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint POST /load_balancers/{id}/actions/detach_from_network
+@required {id: int, network: num}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint POST /load_balancers/{id}/actions/disable_public_interface
+@required {id: int}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint POST /load_balancers/{id}/actions/enable_public_interface
+@required {id: int}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint POST /load_balancers/{id}/actions/remove_target
+@required {id: int, type: str(server/label_selector/ip)}
+@optional {ip: map, label_selector: map, server: map}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint POST /load_balancers/{id}/actions/update_service
+@required {id: int, destination_port: int, health_check: map, listen_port: int, protocol: str(tcp/http/https), proxyprotocol: bool}
+@optional {http: map}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint GET /load_balancers/{id}/actions/{action_id}
+@required {id: int, action_id: int}
+@returns(200) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint GET /load_balancers/{id}/metrics
+@required {id: int, type: str(open_connections/connections_per_second/requests_per_second/bandwidth), start: str, end: str}
+@optional {step: str}
+@returns(200) {metrics: map{end: str, start: str, step: num, time_series: map}}
+
+@endpoint GET /locations
+@optional {name: str}
+@returns(200) {locations: [map]}
+
+@endpoint GET /locations/{id}
+@required {id: int}
+@returns(200) {location: map{city: str, country: str, description: str, id: num, latitude: num, longitude: num, name: str, network_zone: str}}
+
+@endpoint GET /networks
+@optional {name: str, label_selector: str}
+@returns(200) {meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}, networks: [map]}
+
+@endpoint POST /networks
+@required {ip_range: str, name: str}
+@optional {labels: map, routes: [map], subnets: [map]}
+@returns(201) {network: map{created: str, id: int, ip_range: str, labels: map, load_balancers: [int], name: str, protection: map{delete: bool}, routes: [map], servers: [int], subnets: [map]}}
+
+@endpoint DELETE /networks/{id}
+@required {id: int}
+@returns(204)
+
+@endpoint GET /networks/{id}
+@required {id: int}
+@returns(200) {network: map{created: str, id: int, ip_range: str, labels: map, load_balancers: [int], name: str, protection: map{delete: bool}, routes: [map], servers: [int], subnets: [map]}}
+
+@endpoint PUT /networks/{id}
+@required {id: int}
+@optional {labels: map, name: str}
+@returns(200) {network: map{created: str, id: int, ip_range: str, labels: map, load_balancers: [int], name: str, protection: map{delete: bool}, routes: [map], servers: [int], subnets: [map]}}
+
+@endpoint GET /networks/{id}/actions
+@required {id: int}
+@optional {sort: str(id/id:asc/id:desc/command/command:asc/command:desc/status/status:asc/status:desc/progress/progress:asc/progress:desc/started/started:asc/started:desc/finished/finished:asc/finished:desc), status: str(running/success/error)}
+@returns(200) {actions: [map], meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}}
+
+@endpoint POST /networks/{id}/actions/add_route
+@required {id: int, destination: str, gateway: str}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint POST /networks/{id}/actions/add_subnet
+@required {id: int, network_zone: str, type: str(cloud/server/vswitch)}
+@optional {ip_range: str, vswitch_id: int}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint POST /networks/{id}/actions/change_ip_range
+@required {id: int, ip_range: str}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint POST /networks/{id}/actions/change_protection
+@required {id: int}
+@optional {delete: bool}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint POST /networks/{id}/actions/delete_route
+@required {id: int, destination: str, gateway: str}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint POST /networks/{id}/actions/delete_subnet
+@required {id: int, ip_range: str}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint GET /networks/{id}/actions/{action_id}
+@required {id: int, action_id: int}
+@returns(200) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint GET /placement_groups
+@optional {sort: str(id/id:asc/id:desc/name/name:asc/name:desc/created/created:asc/created:desc), name: str, label_selector: str, type: str}
+@returns(200) {meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}, placement_groups: [map]}
+
+@endpoint POST /placement_groups
+@required {name: str, type: str}
+@optional {labels: map}
+@returns(201) {action: map?{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}, placement_group: map{created: str, id: int, labels: map, name: str, servers: [int], type: str}}
+
+@endpoint DELETE /placement_groups/{id}
+@required {id: int}
+@returns(204)
+
+@endpoint GET /placement_groups/{id}
+@required {id: int}
+@returns(200) {placement_group: map{created: str, id: int, labels: map, name: str, servers: [int], type: str}}
+
+@endpoint PUT /placement_groups/{id}
+@required {id: int}
+@optional {labels: map, name: str}
+@returns(200) {placement_group: map{created: str, id: int, labels: map, name: str, servers: [int], type: str}}
+
+@endpoint GET /pricing
+@returns(200) {pricing: map{currency: str, floating_ip: map{price_monthly: map}, floating_ips: [map], image: map{price_per_gb_month: map}, load_balancer_types: [map], primary_ips: [map], server_backup: map{percentage: str}, server_types: [map], traffic: map{price_per_tb: map}, vat_rate: str, volume: map{price_per_gb_month: map}}}
+
+@endpoint GET /primary_ips
+@optional {name: str, label_selector: str, ip: str, sort: str(id/id:asc/id:desc/created/created:asc/created:desc)}
+@returns(200) {meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}, primary_ips: [map]}
+
+@endpoint POST /primary_ips
+@required {assignee_type: str, name: str, type: str(ipv4/ipv6)}
+@optional {assignee_id: int, auto_delete: bool, datacenter: str, labels: map}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}, primary_ip: map{assignee_id: int?, assignee_type: str, auto_delete: bool, blocked: bool, created: str, datacenter: map{description: str, id: int, location: map, name: str, server_types: map}, dns_ptr: [map], id: int, ip: str, labels: map, name: str, protection: map{delete: bool}, type: str}}
+
+@endpoint DELETE /primary_ips/{id}
+@required {id: int}
+@returns(204)
+
+@endpoint GET /primary_ips/{id}
+@required {id: int}
+@returns(200) {primary_ip: map{assignee_id: int?, assignee_type: str, auto_delete: bool, blocked: bool, created: str, datacenter: map{description: str, id: int, location: map, name: str, server_types: map}, dns_ptr: [map], id: int, ip: str, labels: map, name: str, protection: map{delete: bool}, type: str}}
+
+@endpoint PUT /primary_ips/{id}
+@required {id: int}
+@optional {auto_delete: bool, labels: map, name: str}
+@returns(200) {primary_ip: map{assignee_id: int?, assignee_type: str, auto_delete: bool, blocked: bool, created: str, datacenter: map{description: str, id: int, location: map, name: str, server_types: map}, dns_ptr: [map], id: int, ip: str, labels: map, name: str, protection: map{delete: bool}, type: str}}
+
+@endpoint POST /primary_ips/{id}/actions/assign
+@required {id: int, assignee_id: int, assignee_type: str}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint POST /primary_ips/{id}/actions/change_dns_ptr
+@required {id: int, dns_ptr: str, ip: str}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint POST /primary_ips/{id}/actions/change_protection
+@required {id: int}
+@optional {delete: bool}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint POST /primary_ips/{id}/actions/unassign
+@required {id: int}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint GET /server_types
+@optional {name: str}
+@returns(200) {server_types: [map]}
+
+@endpoint GET /server_types/{id}
+@required {id: int}
+@returns(200) {server_type: map{cores: num, cpu_type: str, deprecated: bool, description: str, disk: num, id: num, memory: num, name: str, prices: [map], storage_type: str}}
+
+@endpoint GET /servers
+@optional {name: str, label_selector: str, sort: str(id/id:asc/id:desc/name/name:asc/name:desc/created/created:asc/created:desc), status: str(initializing/starting/running/stopping/False/deleting/rebuilding/migrating/unknown)}
+@returns(200) {meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}, servers: [map]}
+
+@endpoint POST /servers
+@required {image: str, name: str, server_type: str}
+@optional {automount: bool, datacenter: str, firewalls: [map], labels: map, location: str, networks: [int], placement_group: int, public_net: map, ssh_keys: [str], start_after_create: bool, user_data: str, volumes: [int]}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}, next_actions: [map], root_password: str?, server: map{backup_window: str?, created: str, datacenter: map{description: str, id: int, location: map, name: str, server_types: map}, id: int, image: map?{bound_to: int?, created: str, created_from: map?, deleted: str?, deprecated: str?, description: str, disk_size: num, id: int, image_size: num?, labels: map, name: str?, os_flavor: str, os_version: str?, protection: map, rapid_deploy: bool, status: str, type: str}, included_traffic: num?, ingoing_traffic: num?, iso: map?{deprecated: str?, description: str, id: int, name: str?, type: str}, labels: map, load_balancers: [int], locked: bool, name: str, outgoing_traffic: num?, placement_group: map?{created: str, id: int, labels: map, name: str, servers: [int], type: str}, primary_disk_size: num, private_net: [map], protection: map{delete: bool, rebuild: bool}, public_net: map{firewalls: [map], floating_ips: [int], ipv4: map?, ipv6: map?}, rescue_enabled: bool, server_type: map{cores: num, cpu_type: str, deprecated: bool, description: str, disk: num, id: int, memory: num, name: str, prices: [map], storage_type: str}, status: str, volumes: [int]}}
+
+@endpoint DELETE /servers/{id}
+@required {id: int}
+@returns(200) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint GET /servers/{id}
+@required {id: int}
+@returns(200) {server: map{backup_window: str?, created: str, datacenter: map{description: str, id: int, location: map, name: str, server_types: map}, id: int, image: map?{bound_to: int?, created: str, created_from: map?, deleted: str?, deprecated: str?, description: str, disk_size: num, id: int, image_size: num?, labels: map, name: str?, os_flavor: str, os_version: str?, protection: map, rapid_deploy: bool, status: str, type: str}, included_traffic: num?, ingoing_traffic: num?, iso: map?{deprecated: str?, description: str, id: int, name: str?, type: str}, labels: map, load_balancers: [int], locked: bool, name: str, outgoing_traffic: num?, placement_group: map?{created: str, id: int, labels: map, name: str, servers: [int], type: str}, primary_disk_size: num, private_net: [map], protection: map{delete: bool, rebuild: bool}, public_net: map{firewalls: [map], floating_ips: [int], ipv4: map?, ipv6: map?}, rescue_enabled: bool, server_type: map{cores: num, cpu_type: str, deprecated: bool, description: str, disk: num, id: int, memory: num, name: str, prices: [map], storage_type: str}, status: str, volumes: [int]}}
+
+@endpoint PUT /servers/{id}
+@required {id: int}
+@optional {labels: map, name: str}
+@returns(200) {server: map{backup_window: str?, created: str, datacenter: map{description: str, id: int, location: map, name: str, server_types: map}, id: int, image: map?{bound_to: int?, created: str, created_from: map?, deleted: str?, deprecated: str?, description: str, disk_size: num, id: int, image_size: num?, labels: map, name: str?, os_flavor: str, os_version: str?, protection: map, rapid_deploy: bool, status: str, type: str}, included_traffic: num?, ingoing_traffic: num?, iso: map?{deprecated: str?, description: str, id: int, name: str?, type: str}, labels: map, load_balancers: [int], locked: bool, name: str, outgoing_traffic: num?, placement_group: map?{created: str, id: int, labels: map, name: str, servers: [int], type: str}, primary_disk_size: num, private_net: [map], protection: map{delete: bool, rebuild: bool}, public_net: map{firewalls: [map], floating_ips: [int], ipv4: map?, ipv6: map?}, rescue_enabled: bool, server_type: map{cores: num, cpu_type: str, deprecated: bool, description: str, disk: num, id: int, memory: num, name: str, prices: [map], storage_type: str}, status: str, volumes: [int]}}
+
+@endpoint GET /servers/{id}/actions
+@required {id: int}
+@optional {sort: str(id/id:asc/id:desc/command/command:asc/command:desc/status/status:asc/status:desc/progress/progress:asc/progress:desc/started/started:asc/started:desc/finished/finished:asc/finished:desc), status: str(running/success/error)}
+@returns(200) {actions: [map], meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}}
+
+@endpoint POST /servers/{id}/actions/add_to_placement_group
+@required {id: int, placement_group: int}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint POST /servers/{id}/actions/attach_iso
+@required {id: int, iso: str}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint POST /servers/{id}/actions/attach_to_network
+@required {id: int, network: int}
+@optional {alias_ips: [str], ip: str}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint POST /servers/{id}/actions/change_alias_ips
+@required {id: int, alias_ips: [str], network: int}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint POST /servers/{id}/actions/change_dns_ptr
+@required {id: int, dns_ptr: str, ip: str}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint POST /servers/{id}/actions/change_protection
+@required {id: int}
+@optional {delete: bool, rebuild: bool}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint POST /servers/{id}/actions/change_type
+@required {id: int, server_type: str, upgrade_disk: bool}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint POST /servers/{id}/actions/create_image
+@required {id: int}
+@optional {description: str, labels: map, type: str(snapshot/backup)}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}, image: map{bound_to: int?, created: str, created_from: map?{id: int, name: str}, deleted: str?, deprecated: str?, description: str, disk_size: num, id: int, image_size: num?, labels: map, name: str?, os_flavor: str, os_version: str?, protection: map{delete: bool}, rapid_deploy: bool, status: str, type: str}}
+
+@endpoint POST /servers/{id}/actions/detach_from_network
+@required {id: int, network: int}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint POST /servers/{id}/actions/detach_iso
+@required {id: int}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint POST /servers/{id}/actions/disable_backup
+@required {id: int}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint POST /servers/{id}/actions/disable_rescue
+@required {id: int}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint POST /servers/{id}/actions/enable_backup
+@required {id: int}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint POST /servers/{id}/actions/enable_rescue
+@required {id: int}
+@optional {ssh_keys: [int], type: str(linux64/linux32)}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}, root_password: str}
+
+@endpoint POST /servers/{id}/actions/poweroff
+@required {id: int}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint POST /servers/{id}/actions/poweron
+@required {id: int}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint POST /servers/{id}/actions/reboot
+@required {id: int}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint POST /servers/{id}/actions/rebuild
+@required {id: int, image: str}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}, root_password: str?}
+
+@endpoint POST /servers/{id}/actions/remove_from_placement_group
+@required {id: int}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint POST /servers/{id}/actions/request_console
+@required {id: int}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}, password: str, wss_url: str}
+
+@endpoint POST /servers/{id}/actions/reset
+@required {id: int}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint POST /servers/{id}/actions/reset_password
+@required {id: int}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}, root_password: str}
+
+@endpoint POST /servers/{id}/actions/shutdown
+@required {id: int}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint GET /servers/{id}/actions/{action_id}
+@required {id: int, action_id: int}
+@returns(200) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint GET /servers/{id}/metrics
+@required {id: int, type: str(cpu/disk/network), start: str, end: str}
+@optional {step: str}
+@returns(200) {metrics: map{end: str, start: str, step: num, time_series: map}}
+
+@endpoint GET /ssh_keys
+@optional {sort: str(id/id:asc/id:desc/name/name:asc/name:desc), name: str, fingerprint: str, label_selector: str}
+@returns(200) {meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}, ssh_keys: [map]}
+
+@endpoint POST /ssh_keys
+@required {name: str, public_key: str}
+@optional {labels: map}
+@returns(201) {ssh_key: map{created: str, fingerprint: str, id: int, labels: map, name: str, public_key: str}}
+
+@endpoint DELETE /ssh_keys/{id}
+@required {id: str}
+@returns(204)
+
+@endpoint GET /ssh_keys/{id}
+@required {id: int}
+@returns(200) {ssh_key: map{created: str, fingerprint: str, id: int, labels: map, name: str, public_key: str}}
+
+@endpoint PUT /ssh_keys/{id}
+@required {id: str}
+@optional {labels: map, name: str}
+@returns(200) {ssh_key: map{created: str, fingerprint: str, id: int, labels: map, name: str, public_key: str}}
+
+@endpoint GET /volumes
+@optional {status: str(available/creating), sort: str(id/id:asc/id:desc/name/name:asc/name:desc/created/created:asc/created:desc), name: str, label_selector: str}
+@returns(200) {meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}, volumes: [map]}
+
+@endpoint POST /volumes
+@required {name: str, size: int}
+@optional {automount: bool, format: str, labels: map, location: str, server: int}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}, next_actions: [map], volume: map{created: str, format: str?, id: int, labels: map, linux_device: str, location: map{city: str, country: str, description: str, id: num, latitude: num, longitude: num, name: str, network_zone: str}, name: str, protection: map{delete: bool}, server: int?, size: num, status: str}}
+
+@endpoint DELETE /volumes/{id}
+@required {id: str}
+@returns(204)
+
+@endpoint GET /volumes/{id}
+@required {id: int}
+@returns(200) {volume: map{created: str, format: str?, id: int, labels: map, linux_device: str, location: map{city: str, country: str, description: str, id: num, latitude: num, longitude: num, name: str, network_zone: str}, name: str, protection: map{delete: bool}, server: int?, size: num, status: str}}
+
+@endpoint PUT /volumes/{id}
+@required {id: str, name: str}
+@optional {labels: map}
+@returns(200) {volume: map{created: str, format: str?, id: int, labels: map, linux_device: str, location: map{city: str, country: str, description: str, id: num, latitude: num, longitude: num, name: str, network_zone: str}, name: str, protection: map{delete: bool}, server: int?, size: num, status: str}}
+
+@endpoint GET /volumes/{id}/actions
+@required {id: int}
+@optional {sort: str(id/id:asc/id:desc/command/command:asc/command:desc/status/status:asc/status:desc/progress/progress:asc/progress:desc/started/started:asc/started:desc/finished/finished:asc/finished:desc), status: str(running/success/error)}
+@returns(200) {actions: [map], meta: map{pagination: map{last_page: num?, next_page: num?, page: num, per_page: num, previous_page: num?, total_entries: num?}}}
+
+@endpoint POST /volumes/{id}/actions/attach
+@required {id: int, server: int}
+@optional {automount: bool}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint POST /volumes/{id}/actions/change_protection
+@required {id: int}
+@optional {delete: bool}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint POST /volumes/{id}/actions/detach
+@required {id: int}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint POST /volumes/{id}/actions/resize
+@required {id: int, size: num}
+@returns(201) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@endpoint GET /volumes/{id}/actions/{action_id}
+@required {id: int, action_id: int}
+@returns(200) {action: map{command: str, error: map?{code: str, message: str}, finished: str?, id: int, progress: num, resources: [map], started: str, status: str}}
+
+@end
+

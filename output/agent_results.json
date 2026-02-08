@@ -1,0 +1,226 @@
+[
+  {
+    "spec": "specs/stripe-charges.yaml",
+    "task": "Create a charge for $10.00 USD using a test token tok_visa",
+    "tokens": {
+      "verbose": 913,
+      "doclean": 1052,
+      "lean": 521,
+      "reduction_std": "-15.2%",
+      "reduction_lean": "42.9%"
+    },
+    "dry_run": true,
+    "expect_endpoint": "POST /v1/charges",
+    "expect_params": [
+      "amount",
+      "currency",
+      "source"
+    ],
+    "status": "dry-run",
+    "responses": null
+  },
+  {
+    "spec": "specs/stripe-charges.yaml",
+    "task": "Retrieve the details of charge ch_1234567890",
+    "tokens": {
+      "verbose": 908,
+      "doclean": 1047,
+      "lean": 516,
+      "reduction_std": "-15.3%",
+      "reduction_lean": "43.2%"
+    },
+    "dry_run": true,
+    "expect_endpoint": "GET /v1/charges/{id}",
+    "expect_params": [
+      "id"
+    ],
+    "status": "dry-run",
+    "responses": null
+  },
+  {
+    "spec": "specs/stripe-charges.yaml",
+    "task": "List all charges with a limit of 5",
+    "tokens": {
+      "verbose": 906,
+      "doclean": 1045,
+      "lean": 514,
+      "reduction_std": "-15.3%",
+      "reduction_lean": "43.3%"
+    },
+    "dry_run": true,
+    "expect_endpoint": "GET /v1/charges",
+    "expect_params": [
+      "limit"
+    ],
+    "status": "dry-run",
+    "responses": null
+  },
+  {
+    "spec": "specs/github-core.yaml",
+    "task": "List issues for the repository octocat/Hello-World",
+    "tokens": {
+      "verbose": 910,
+      "doclean": 1010,
+      "lean": 601,
+      "reduction_std": "-11.0%",
+      "reduction_lean": "34.0%"
+    },
+    "dry_run": true,
+    "expect_endpoint": "GET /repos/{owner}/{repo}/issues",
+    "expect_params": [
+      "owner",
+      "repo"
+    ],
+    "status": "dry-run",
+    "responses": null
+  },
+  {
+    "spec": "specs/github-core.yaml",
+    "task": "Create a new issue titled 'Bug report' in repo octocat/Hello-World",
+    "tokens": {
+      "verbose": 916,
+      "doclean": 1016,
+      "lean": 607,
+      "reduction_std": "-10.9%",
+      "reduction_lean": "33.7%"
+    },
+    "dry_run": true,
+    "expect_endpoint": "POST /repos/{owner}/{repo}/issues",
+    "expect_params": [
+      "owner",
+      "repo",
+      "title"
+    ],
+    "status": "dry-run",
+    "responses": null
+  },
+  {
+    "spec": "specs/github-core.yaml",
+    "task": "Get the repository details for octocat/Hello-World",
+    "tokens": {
+      "verbose": 910,
+      "doclean": 1010,
+      "lean": 601,
+      "reduction_std": "-11.0%",
+      "reduction_lean": "34.0%"
+    },
+    "dry_run": true,
+    "expect_endpoint": "GET /repos/{owner}/{repo}",
+    "expect_params": [
+      "owner",
+      "repo"
+    ],
+    "status": "dry-run",
+    "responses": null
+  },
+  {
+    "spec": "specs/openai-core.yaml",
+    "task": "Create a chat completion using gpt-4 with the message 'Hello, world!'",
+    "tokens": {
+      "verbose": 892,
+      "doclean": 1050,
+      "lean": 514,
+      "reduction_std": "-17.7%",
+      "reduction_lean": "42.4%"
+    },
+    "dry_run": true,
+    "expect_endpoint": "POST /v1/chat/completions",
+    "expect_params": [
+      "model",
+      "messages"
+    ],
+    "status": "dry-run",
+    "responses": null
+  },
+  {
+    "spec": "specs/openai-core.yaml",
+    "task": "List all available models",
+    "tokens": {
+      "verbose": 879,
+      "doclean": 1037,
+      "lean": 501,
+      "reduction_std": "-18.0%",
+      "reduction_lean": "43.0%"
+    },
+    "dry_run": true,
+    "expect_endpoint": "GET /v1/models",
+    "expect_params": [],
+    "status": "dry-run",
+    "responses": null
+  },
+  {
+    "spec": "specs/openai-core.yaml",
+    "task": "Create an embedding for the text 'Hello world' using text-embedding-ada-002",
+    "tokens": {
+      "verbose": 893,
+      "doclean": 1051,
+      "lean": 515,
+      "reduction_std": "-17.7%",
+      "reduction_lean": "42.3%"
+    },
+    "dry_run": true,
+    "expect_endpoint": "POST /v1/embeddings",
+    "expect_params": [
+      "model",
+      "input"
+    ],
+    "status": "dry-run",
+    "responses": null
+  },
+  {
+    "spec": "specs/twilio-core.yaml",
+    "task": "Send an SMS from +15551234567 to +15559876543 with body 'Hello from Twilio'",
+    "tokens": {
+      "verbose": 1247,
+      "doclean": 1362,
+      "lean": 760,
+      "reduction_std": "-9.2%",
+      "reduction_lean": "39.1%"
+    },
+    "dry_run": true,
+    "expect_endpoint": "POST /2010-04-01/Accounts/{AccountSid}/Messages.json",
+    "expect_params": [
+      "To",
+      "From",
+      "Body"
+    ],
+    "status": "dry-run",
+    "responses": null
+  },
+  {
+    "spec": "specs/twilio-core.yaml",
+    "task": "List all messages for your account",
+    "tokens": {
+      "verbose": 1230,
+      "doclean": 1345,
+      "lean": 743,
+      "reduction_std": "-9.3%",
+      "reduction_lean": "39.6%"
+    },
+    "dry_run": true,
+    "expect_endpoint": "GET /2010-04-01/Accounts/{AccountSid}/Messages.json",
+    "expect_params": [],
+    "status": "dry-run",
+    "responses": null
+  },
+  {
+    "spec": "specs/twilio-core.yaml",
+    "task": "Make a voice call from +15551234567 to +15559876543 with TwiML URL http://example.com/twiml",
+    "tokens": {
+      "verbose": 1253,
+      "doclean": 1368,
+      "lean": 766,
+      "reduction_std": "-9.2%",
+      "reduction_lean": "38.9%"
+    },
+    "dry_run": true,
+    "expect_endpoint": "POST /2010-04-01/Accounts/{AccountSid}/Calls.json",
+    "expect_params": [
+      "To",
+      "From",
+      "Url"
+    ],
+    "status": "dry-run",
+    "responses": null
+  }
+]

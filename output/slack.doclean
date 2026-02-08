@@ -1,0 +1,33 @@
+@doclean v0.2
+# Machine-readable API spec. Each @endpoint block is one API call.
+@api Slack Web API
+@base https://slack.com/api
+@version 1.0
+@auth Bearer bearer
+@endpoints 4
+@toc Send a message to a channel, List channels in a workspace, List all users in a workspace, Upload a file to a channel
+
+@endpoint POST /chat.postMessage
+@desc Send a message to a channel
+@required {channel: str # Channel ID or name, text: str # Message text (supports mrkdwn)}
+@optional {blocks: [map] # Block Kit layout blocks, thread_ts: str # Thread timestamp to reply in, unfurl_links: bool=True}
+@returns(200) {ok: bool, channel: str, ts: str, message: map} # Message response
+
+@endpoint GET /conversations.list
+@desc List channels in a workspace
+@optional {types: str=public_channel # Comma-separated list: public_channel, private_channel, mpim, im, limit: int=100, cursor: str # Pagination cursor}
+@returns(200) {ok: bool, channels: [map], response_metadata: map} # Channel list
+
+@endpoint GET /users.list
+@desc List all users in a workspace
+@optional {limit: int=200, cursor: str}
+@returns(200) {ok: bool, members: [map], response_metadata: map} # User list
+
+@endpoint POST /files.upload
+@desc Upload a file to a channel
+@required {channels: str # Comma-separated channel IDs, content: str # File content (for text files)}
+@optional {filename: str, filetype: str # File type identifier (e.g. python, csv), title: str, initial_comment: str}
+@returns(200) {ok: bool, file: map} # Upload response
+
+@end
+

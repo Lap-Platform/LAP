@@ -1,0 +1,1287 @@
+@doclean v0.2
+# Machine-readable API spec. Each @endpoint block is one API call.
+@api DigitalOcean API
+@base https://api.digitalocean.com
+@version 2.0
+@auth Bearer bearer
+@endpoints 290
+@toc List 1-Click Applications, Install Kubernetes 1-Click Applications, Get User Information, List All SSH Keys, Create a New SSH Key, Delete an SSH Key, Retrieve an Existing SSH Key, Update an SSH Key's Name, List All Actions, Retrieve an Existing Action, List All Apps, Create a New App, Retrieve Multiple Apps' Daily Bandwidth Metrics, Propose an App Spec, List App Regions, List App Tiers, List Instance Sizes, Retrieve an Instance Size, Retrieve an App Tier, List all app alerts, Update destinations for alerts, Retrieve Active Deployment Logs, List App Deployments, Create an App Deployment, Retrieve an App Deployment, Cancel a Deployment, Retrieve Deployment Logs, Retrieve Aggregate Deployment Logs, Retrieve Active Deployment Aggregate Logs, Retrieve App Daily Bandwidth Metrics, Rollback App, Commit App Rollback, Revert App Rollback, Validate App Rollback, Delete an App, Retrieve an Existing App, Update an App, List All CDN Endpoints, Create a New CDN Endpoint, Delete a CDN Endpoint, Retrieve an Existing CDN Endpoint, Update a CDN Endpoint, Purge the Cache for an Existing CDN Endpoint, List All Certificates, Create a New Certificate, Delete a Certificate, Retrieve an Existing Certificate, Get Customer Balance, List Billing History, List All Invoices, Retrieve an Invoice by UUID, Retrieve an Invoice CSV by UUID, Retrieve an Invoice PDF by UUID, Retrieve an Invoice Summary by UUID, List All Database Clusters, Create a New Database Cluster, List Database Options, Destroy a Database Cluster, Retrieve an Existing Database Cluster, List Backups for a Database Cluster, Retrieve the Public Certificate, Retrieve an Existing Database Cluster Configuration, Update the Database Configuration for an Existing Database, List All Databases, Add a New Database, Delete a Database, Retrieve an Existing Database, Retrieve the Eviction Policy for a Redis Cluster, Configure the Eviction Policy for a Redis Cluster, List Firewall Rules (Trusted Sources) for a Database Cluster, Update Firewall Rules (Trusted Sources) for a Database, Configure a Database Cluster's Maintenance Window, Migrate a Database Cluster to a New Region, Retrieve the Status of an Online Migration, Start an Online Migration, Stop an Online Migration, List Connection Pools (PostgreSQL), Add a New Connection Pool (PostgreSQL), Delete a Connection Pool (PostgreSQL), Retrieve Existing Connection Pool (PostgreSQL), Update Connection Pools (PostgreSQL), List All Read-only Replicas, Create a Read-only Replica, Destroy a Read-only Replica, Retrieve an Existing Read-only Replica, Promote a Read-only Replica to become a Primary Cluster, Resize a Database Cluster, Retrieve the SQL Modes for a MySQL Cluster, Update SQL Mode for a Cluster, Upgrade Major Version for a Database, List all Database Users, Add a Database User, Remove a Database User, Retrieve an Existing Database User, Reset a Database User's Password or Authentication Method, List All Domains, Create a New Domain, Delete a Domain, Retrieve an Existing Domain, List All Domain Records, Create a New Domain Record, Delete a Domain Record, Retrieve an Existing Domain Record, Update a Domain Record, Update a Domain Record, Deleting Droplets by Tag, List All Droplets, Create a New Droplet, Acting on Tagged Droplets, Delete an Existing Droplet, Retrieve an Existing Droplet, List Actions for a Droplet, Initiate a Droplet Action, Retrieve a Droplet Action, List Backups for a Droplet, List Associated Resources for a Droplet, Destroy a Droplet and All of its Associated Resources (Dangerous), Retry a Droplet Destroy with Associated Resources Request, Selectively Destroy a Droplet and its Associated Resources, Check Status of a Droplet Destroy with Associated Resources Request, List all Firewalls Applied to a Droplet, List All Available Kernels for a Droplet, List Neighbors for a Droplet, List Snapshots for a Droplet, List All Firewalls, Create a New Firewall, Delete a Firewall, Retrieve an Existing Firewall, Update a Firewall, Remove Droplets from a Firewall, Add Droplets to a Firewall, Remove Rules from a Firewall, Add Rules to a Firewall, Remove Tags from a Firewall, Add Tags to a Firewall, List All Floating IPs, Create a New Floating IP, Delete a Floating IP, Retrieve an Existing Floating IP, List All Actions for a Floating IP, Initiate a Floating IP Action, Retrieve an Existing Floating IP Action, List Namespaces, Create Namespace, Delete Namespace, Get Namespace, List Triggers, Create Trigger, Delete Trigger, Get Trigger, Update Trigger, List All Images, Create a Custom Image, Delete an Image, Retrieve an Existing Image, Update an Image, List All Actions for an Image, Initiate an Image Action, Retrieve an Existing Action, List All Kubernetes Clusters, Create a New Kubernetes Cluster, Delete a Kubernetes Cluster, Retrieve an Existing Kubernetes Cluster, Update a Kubernetes Cluster, Fetch Clusterlint Diagnostics for a Kubernetes Cluster, Run Clusterlint Checks on a Kubernetes Cluster, Retrieve Credentials for a Kubernetes Cluster, List Associated Resources for Cluster Deletion, Delete a Cluster and All of its Associated Resources (Dangerous), Selectively Delete a Cluster and its Associated Resources, Retrieve the kubeconfig for a Kubernetes Cluster, List All Node Pools in a Kubernetes Clusters, Add a Node Pool to a Kubernetes Cluster, Delete a Node Pool in a Kubernetes Cluster, Retrieve a Node Pool for a Kubernetes Cluster, Update a Node Pool in a Kubernetes Cluster, Delete a Node in a Kubernetes Cluster, Recycle a Kubernetes Node Pool, Upgrade a Kubernetes Cluster, Retrieve Available Upgrades for an Existing Kubernetes Cluster, Retrieve User Information for a Kubernetes Cluster, List Available Regions, Node Sizes, and Versions of Kubernetes, Remove Container Registry from Kubernetes Clusters, Add Container Registry to Kubernetes Clusters, List All Load Balancers, Create a New Load Balancer, Delete a Load Balancer, Retrieve an Existing Load Balancer, Update a Load Balancer, Remove Droplets from a Load Balancer, Add Droplets to a Load Balancer, Remove Forwarding Rules from a Load Balancer, Add Forwarding Rules to a Load Balancer, List Alert Policies, Create Alert Policy, Delete an Alert Policy, Retrieve an Existing Alert Policy, Update an Alert Policy, Get Droplet Bandwidth Metrics, Get Droplet CPU Metrics, Get Droplet Filesystem Free Metrics, Get Droplet Filesystem Size Metrics, Get Droplet Load1 Metrics, Get Droplet Load15 Metrics, Get Droplet Load5 Metrics, Get Droplet Available Memory Metrics, Get Droplet Cached Memory Metrics, Get Droplet Free Memory Metrics, Get Droplet Total Memory Metrics, List All Projects, Create a Project, Retrieve the Default Project, Patch the Default Project, Update the Default Project, List Default Project Resources, Assign Resources to Default Project, Delete an Existing Project, Retrieve an Existing Project, Patch a Project, Update a Project, List Project Resources, Assign Resources to a Project, List All Data Center Regions, Delete Container Registry, Get Container Registry Information, Create Container Registry, Get Docker Credentials for Container Registry, List Registry Options (Subscription Tiers and Available Regions), Get Subscription Information, Update Subscription Tier, Validate a Container Registry Name, Get Active Garbage Collection, Start Garbage Collection, Update Garbage Collection, List Garbage Collections, List All Container Registry Repositories, List All Container Registry Repositories (V2), List All Container Registry Repository Manifests, Delete Container Registry Repository Manifest, List All Container Registry Repository Tags, Delete Container Registry Repository Tag, List All Droplet Neighbors, List All Reserved IPs, Create a New Reserved IP, Delete a Reserved IP, Retrieve an Existing Reserved IP, List All Actions for a Reserved IP, Initiate a Reserved IP Action, Retrieve an Existing Reserved IP Action, List All Droplet Sizes, List All Snapshots, Delete a Snapshot, Retrieve an Existing Snapshot, List All Tags, Create a New Tag, Delete a Tag, Retrieve a Tag, Untag a Resource, Tag a Resource, List All Checks, Create a New Check, Delete a Check, Retrieve an Existing Check, Update a Check, List All Alerts, Create a New Alert, Delete an Alert, Retrieve an Existing Alert, Update an Alert, Retrieve Check State, Delete a Block Storage Volume by Name, List All Block Storage Volumes, Create a New Block Storage Volume, Initiate A Block Storage Action By Volume Name, Delete a Volume Snapshot, Retrieve an Existing Volume Snapshot, Delete a Block Storage Volume, Retrieve an Existing Block Storage Volume, List All Actions for a Volume, Initiate A Block Storage Action By Volume Id, Retrieve an Existing Volume Action, List Snapshots for a Volume, Create Snapshot from a Volume, List All VPCs, Create a New VPC, Delete a VPC, Retrieve an Existing VPC, Partially Update a VPC, Update a VPC, List the Member Resources of a VPC
+
+@endpoint GET /v2/1-clicks
+@optional {type: str(droplet/kubernetes)}
+@returns(200) {1_clicks: [map]}
+@errors {401, 429, 500}
+
+@endpoint POST /v2/1-clicks/kubernetes
+@required {addon_slugs: [str]=[], cluster_uuid: str}
+@returns(200) {message: str}
+@errors {401, 429, 500}
+
+@endpoint GET /v2/account
+@returns(200) {account: map{droplet_limit: int, email: str, email_verified: bool, floating_ip_limit: int, status: str, status_message: str, team: map{name: str, uuid: str}, uuid: str}}
+@errors {401, 429, 500}
+
+@endpoint GET /v2/account/keys
+@optional {per_page: int=20, page: int=1}
+@returns(200)
+@errors {401, 429, 500}
+
+@endpoint POST /v2/account/keys
+@returns(201) {ssh_key: any}
+@errors {401, 429, 500}
+
+@endpoint DELETE /v2/account/keys/{ssh_key_identifier}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/account/keys/{ssh_key_identifier}
+@required {ssh_key_identifier: any}
+@returns(200) {ssh_key: any}
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/account/keys/{ssh_key_identifier}
+@optional {name: any}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/actions
+@returns(200)
+@errors {401, 429, 500}
+
+@endpoint GET /v2/actions/{action_id}
+@required {action_id: int}
+@returns(200) {action: any}
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/apps
+@optional {with_projects: bool}
+@returns(200)
+@errors {401, 429, 500}
+
+@endpoint POST /v2/apps
+@required {spec: any}
+@optional {Accept: str(application/json/application/yaml), Content-Type: str(application/json/application/yaml), project_id: str}
+@returns(200) {app: any}
+@errors {401, 429, 500}
+
+@endpoint POST /v2/apps/metrics/bandwidth_daily
+@required {app_ids: [str]}
+@optional {date: str(date-time)}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/apps/propose
+@required {spec: any}
+@optional {app_id: str}
+@returns(200) {app_cost: int(int32), app_is_static: bool, app_name_available: bool, app_name_suggestion: str, app_tier_downgrade_cost: int(int32), existing_static_apps: str, spec: any}
+@errors {401, 429, 500}
+
+@endpoint GET /v2/apps/regions
+@returns(200) {regions: [any]}
+@errors {401, 429, 500}
+
+@endpoint GET /v2/apps/tiers
+@returns(200) {tiers: [map]}
+@errors {401, 429, 500}
+
+@endpoint GET /v2/apps/tiers/instance_sizes
+@returns(200) {discount_percent: num(float), instance_sizes: [map]}
+@errors {401, 429, 500}
+
+@endpoint GET /v2/apps/tiers/instance_sizes/{slug}
+@required {slug: str}
+@returns(200) {instance_size: any}
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/apps/tiers/{slug}
+@required {slug: str}
+@returns(200) {tier: any}
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/apps/{app_id}/alerts
+@returns(200) {alerts: [map]}
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/apps/{app_id}/alerts/{alert_id}/destinations
+@required {alert_id: str}
+@optional {emails: [any], slack_webhooks: [any]}
+@returns(200) {alert: any}
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/apps/{app_id}/components/{component_name}/logs
+@required {app_id: str, component_name: str, type: str(UNSPECIFIED/BUILD/DEPLOY/RUN)=UNSPECIFIED}
+@optional {follow: bool, pod_connection_timeout: str}
+@returns(200) {historic_urls: [str], live_url: str}
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/apps/{app_id}/deployments
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/apps/{app_id}/deployments
+@optional {force_build: bool}
+@returns(200) {deployment: any}
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/apps/{app_id}/deployments/{deployment_id}
+@required {deployment_id: str}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/apps/{app_id}/deployments/{deployment_id}/cancel
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/apps/{app_id}/deployments/{deployment_id}/components/{component_name}/logs
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/apps/{app_id}/deployments/{deployment_id}/logs
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/apps/{app_id}/logs
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/apps/{app_id}/metrics/bandwidth_daily
+@optional {date: str(date-time)}
+@returns(200) {app_bandwidth_usage: [map], date: str(date-time)}
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/apps/{app_id}/rollback
+@optional {deployment_id: str, skip_pin: bool}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/apps/{app_id}/rollback/commit
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/apps/{app_id}/rollback/revert
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/apps/{app_id}/rollback/validate
+@returns(200) {error: any, valid: bool, warnings: [any]}
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/apps/{id}
+@required {id: str}
+@returns(200) {id: str}
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/apps/{id}
+@optional {name: str}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/apps/{id}
+@required {spec: any}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/cdn/endpoints
+@returns(200)
+@errors {401, 429, 500}
+
+@endpoint POST /v2/cdn/endpoints
+@returns(201) {endpoint: any}
+@errors {401, 429, 500}
+
+@endpoint DELETE /v2/cdn/endpoints/{cdn_id}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/cdn/endpoints/{cdn_id}
+@required {cdn_id: str(uuid)}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/cdn/endpoints/{cdn_id}
+@optional {certificate_id: str(uuid), custom_domain: str(hostname), ttl: int(60/600/3600/86400/604800)=3600}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/cdn/endpoints/{cdn_id}/cache
+@required {files: [str]}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/certificates
+@returns(200)
+@errors {401, 429, 500}
+
+@endpoint POST /v2/certificates
+@returns(201) {certificate: any}
+@errors {401, 429, 500}
+
+@endpoint DELETE /v2/certificates/{certificate_id}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/certificates/{certificate_id}
+@required {certificate_id: str(uuid)}
+@returns(200) {certificate: any}
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/customers/my/balance
+@returns(200) {account_balance: str, generated_at: str(date-time), month_to_date_balance: str, month_to_date_usage: str}
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/customers/my/billing_history
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/customers/my/invoices
+@returns(200)
+@errors {401, 429, 500}
+
+@endpoint GET /v2/customers/my/invoices/{invoice_uuid}
+@required {invoice_uuid: str}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/customers/my/invoices/{invoice_uuid}/csv
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/customers/my/invoices/{invoice_uuid}/pdf
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/customers/my/invoices/{invoice_uuid}/summary
+@returns(200) {amount: str, billing_period: str, credits_and_adjustments: any, invoice_uuid: str, overages: any, product_charges: any, taxes: any, user_billing_address: any, user_company: str, user_email: str, user_name: str}
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/databases
+@optional {tag_name: str}
+@returns(200) {databases: [map]}
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/databases
+@returns(201) {database: any}
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/databases/options
+@returns(200) {options: map{mongodb: any, mysql: any, pg: any, redis: any}, version_availability: map{mongodb: any, mysql: any, pg: [map], redis: any}}
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/databases/{database_cluster_uuid}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/databases/{database_cluster_uuid}
+@required {database_cluster_uuid: str(uuid)}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/databases/{database_cluster_uuid}/backups
+@returns(200) {backups: [map]}
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/databases/{database_cluster_uuid}/ca
+@returns(200) {ca: map{certificate: str}}
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/databases/{database_cluster_uuid}/config
+@returns(200) {config: any}
+@errors {401, 404, 429, 500}
+
+@endpoint PATCH /v2/databases/{database_cluster_uuid}/config
+@optional {config: any}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/databases/{database_cluster_uuid}/dbs
+@returns(200) {dbs: [map]}
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/databases/{database_cluster_uuid}/dbs
+@returns(201) {db: any}
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/databases/{database_cluster_uuid}/dbs/{database_name}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/databases/{database_cluster_uuid}/dbs/{database_name}
+@required {database_name: str}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/databases/{database_cluster_uuid}/eviction_policy
+@returns(200) {eviction_policy: any}
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/databases/{database_cluster_uuid}/eviction_policy
+@required {eviction_policy: any}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/databases/{database_cluster_uuid}/firewall
+@returns(200) {rules: [any]}
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/databases/{database_cluster_uuid}/firewall
+@optional {rules: [any]}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/databases/{database_cluster_uuid}/maintenance
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/databases/{database_cluster_uuid}/migrate
+@required {region: str}
+@returns(202)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/databases/{database_cluster_uuid}/online-migration
+@returns(200) {created_at: str, id: str, status: str}
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/databases/{database_cluster_uuid}/online-migration
+@optional {disable_ssl: bool, source: any}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/databases/{database_cluster_uuid}/online-migration/{migration_id}
+@required {migration_id: str}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/databases/{database_cluster_uuid}/pools
+@returns(200) {pools: [map]}
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/databases/{database_cluster_uuid}/pools
+@returns(201) {pool: any}
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/databases/{database_cluster_uuid}/pools/{pool_name}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/databases/{database_cluster_uuid}/pools/{pool_name}
+@required {pool_name: str}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/databases/{database_cluster_uuid}/pools/{pool_name}
+@required {db: str, mode: str, size: int(int32)}
+@optional {user: str}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/databases/{database_cluster_uuid}/replicas
+@returns(200) {replicas: [map]}
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/databases/{database_cluster_uuid}/replicas
+@returns(201) {replica: any}
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/databases/{database_cluster_uuid}/replicas/{replica_name}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/databases/{database_cluster_uuid}/replicas/{replica_name}
+@required {replica_name: str}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/databases/{database_cluster_uuid}/replicas/{replica_name}/promote
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/databases/{database_cluster_uuid}/resize
+@required {num_nodes: int(int32), size: str}
+@returns(202)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/databases/{database_cluster_uuid}/sql_mode
+@returns(200) {sql_mode: str}
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/databases/{database_cluster_uuid}/sql_mode
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/databases/{database_cluster_uuid}/upgrade
+@optional {version: any}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/databases/{database_cluster_uuid}/users
+@returns(200) {users: [any]}
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/databases/{database_cluster_uuid}/users
+@returns(201) {user: any}
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/databases/{database_cluster_uuid}/users/{username}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/databases/{database_cluster_uuid}/users/{username}
+@required {username: str}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/databases/{database_cluster_uuid}/users/{username}/reset_auth
+@optional {mysql_settings: any}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/domains
+@returns(200)
+@errors {401, 429, 500}
+
+@endpoint POST /v2/domains
+@returns(201) {domain: any}
+@errors {401, 429, 500}
+
+@endpoint DELETE /v2/domains/{domain_name}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/domains/{domain_name}
+@required {domain_name: str}
+@returns(200) {domain: any}
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/domains/{domain_name}/records
+@optional {name: str, type: str(A/AAAA/CAA/CNAME/MX/NS/SOA/SRV/TXT)}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/domains/{domain_name}/records
+@returns(201) {domain_record: any}
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/domains/{domain_name}/records/{domain_record_id}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/domains/{domain_name}/records/{domain_record_id}
+@required {domain_record_id: int}
+@returns(200) {domain_record: any}
+@errors {401, 404, 429, 500}
+
+@endpoint PATCH /v2/domains/{domain_name}/records/{domain_record_id}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/domains/{domain_name}/records/{domain_record_id}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/droplets
+@required {tag_name: str}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/droplets
+@optional {tag_name: str, name: str}
+@returns(200)
+@errors {401, 429, 500}
+
+@endpoint POST /v2/droplets
+@returns(202)
+@errors {401, 429, 500}
+
+@endpoint POST /v2/droplets/actions
+@returns(201) {actions: [any]}
+@errors {401, 429, 500}
+
+@endpoint DELETE /v2/droplets/{droplet_id}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/droplets/{droplet_id}
+@required {droplet_id: int}
+@returns(200) {droplet: any}
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/droplets/{droplet_id}/actions
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/droplets/{droplet_id}/actions
+@returns(201) {action: any}
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/droplets/{droplet_id}/actions/{action_id}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/droplets/{droplet_id}/backups
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/droplets/{droplet_id}/destroy_with_associated_resources
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/droplets/{droplet_id}/destroy_with_associated_resources/dangerous
+@required {X-Dangerous: bool}
+@returns(202)
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/droplets/{droplet_id}/destroy_with_associated_resources/retry
+@returns(202)
+@errors {401, 404, 409, 429, 500}
+
+@endpoint DELETE /v2/droplets/{droplet_id}/destroy_with_associated_resources/selective
+@optional {floating_ips: [str], reserved_ips: [str], snapshots: [str], volume_snapshots: [str], volumes: [str]}
+@returns(202)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/droplets/{droplet_id}/destroy_with_associated_resources/status
+@returns(200) {completed_at: str(date-time), droplet: map{destroyed_at: str(date-time), error_message: str, id: str, name: str}, failures: int, resources: map{floating_ips: [any], reserved_ips: [any], snapshots: [any], volume_snapshots: [any], volumes: [any]}}
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/droplets/{droplet_id}/firewalls
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/droplets/{droplet_id}/kernels
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/droplets/{droplet_id}/neighbors
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/droplets/{droplet_id}/snapshots
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/firewalls
+@returns(200)
+@errors {401, 429, 500}
+
+@endpoint POST /v2/firewalls
+@returns(202) {firewall: any}
+@errors {400, 401, 429, 500}
+
+@endpoint DELETE /v2/firewalls/{firewall_id}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/firewalls/{firewall_id}
+@required {firewall_id: str(uuid)}
+@returns(200) {firewall: any}
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/firewalls/{firewall_id}
+@returns(200) {firewall: any}
+@errors {400, 401, 404, 429, 500}
+
+@endpoint DELETE /v2/firewalls/{firewall_id}/droplets
+@required {droplet_ids: [int]}
+@returns(204)
+@errors {400, 401, 404, 429, 500}
+
+@endpoint POST /v2/firewalls/{firewall_id}/droplets
+@required {droplet_ids: [int]}
+@returns(204)
+@errors {400, 401, 404, 429, 500}
+
+@endpoint DELETE /v2/firewalls/{firewall_id}/rules
+@returns(204)
+@errors {400, 401, 404, 429, 500}
+
+@endpoint POST /v2/firewalls/{firewall_id}/rules
+@returns(204)
+@errors {400, 401, 404, 429, 500}
+
+@endpoint DELETE /v2/firewalls/{firewall_id}/tags
+@required {tags: any}
+@returns(204)
+@errors {400, 401, 404, 429, 500}
+
+@endpoint POST /v2/firewalls/{firewall_id}/tags
+@required {tags: any}
+@returns(204)
+@errors {400, 401, 404, 429, 500}
+
+@endpoint GET /v2/floating_ips
+@returns(200)
+@errors {401, 429, 500}
+
+@endpoint POST /v2/floating_ips
+@returns(202) {floating_ip: any, links: map{actions: [any], droplets: [any]}}
+@errors {401, 429, 500}
+
+@endpoint DELETE /v2/floating_ips/{floating_ip}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/floating_ips/{floating_ip}
+@required {floating_ip: str(ipv4)}
+@returns(200) {floating_ip: any}
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/floating_ips/{floating_ip}/actions
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/floating_ips/{floating_ip}/actions
+@returns(201) {action: any}
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/floating_ips/{floating_ip}/actions/{action_id}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/functions/namespaces
+@returns(200)
+@errors {401, 429, 500}
+
+@endpoint POST /v2/functions/namespaces
+@required {label: str, region: str}
+@returns(200) {namespace: any}
+@errors {401, 404, 422, 429, 500}
+
+@endpoint DELETE /v2/functions/namespaces/{namespace_id}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/functions/namespaces/{namespace_id}
+@required {namespace_id: str}
+@returns(200)
+@errors {401, 403, 404, 429, 500}
+
+@endpoint GET /v2/functions/namespaces/{namespace_id}/triggers
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/functions/namespaces/{namespace_id}/triggers
+@required {function: str, is_enabled: bool, name: str, scheduled_details: any, type: str}
+@returns(200) {trigger: any}
+@errors {400, 401, 404, 422, 429, 500}
+
+@endpoint DELETE /v2/functions/namespaces/{namespace_id}/triggers/{trigger_name}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/functions/namespaces/{namespace_id}/triggers/{trigger_name}
+@required {trigger_name: str}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/functions/namespaces/{namespace_id}/triggers/{trigger_name}
+@optional {is_enabled: bool, scheduled_details: any}
+@returns(200)
+@errors {400, 401, 404, 429, 500}
+
+@endpoint GET /v2/images
+@optional {type: str(application/distribution), private: bool, tag_name: str}
+@returns(200)
+@errors {401, 429, 500}
+
+@endpoint POST /v2/images
+@returns(202) {image: any}
+@errors {401, 429, 500}
+
+@endpoint DELETE /v2/images/{image_id}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/images/{image_id}
+@required {image_id: any}
+@returns(200) {image: any}
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/images/{image_id}
+@required {image_id: int}
+@returns(200) {image: any}
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/images/{image_id}/actions
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/images/{image_id}/actions
+@returns(201)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/images/{image_id}/actions/{action_id}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/kubernetes/clusters
+@returns(200)
+@errors {401, 429, 500}
+
+@endpoint POST /v2/kubernetes/clusters
+@returns(201) {kubernetes_cluster: any}
+@errors {401, 429, 500}
+
+@endpoint DELETE /v2/kubernetes/clusters/{cluster_id}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/kubernetes/clusters/{cluster_id}
+@required {cluster_id: str(uuid)}
+@returns(200) {kubernetes_cluster: any}
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/kubernetes/clusters/{cluster_id}
+@required {name: str}
+@optional {auto_upgrade: bool=False, ha: bool=False, maintenance_policy: any, surge_upgrade: bool=False, tags: [str]}
+@returns(202) {kubernetes_cluster: any}
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/kubernetes/clusters/{cluster_id}/clusterlint
+@optional {run_id: str(uuid)}
+@returns(200) {completed_at: str(date-time), diagnostics: [map], requested_at: str(date-time), run_id: str}
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/kubernetes/clusters/{cluster_id}/clusterlint
+@optional {exclude_checks: [str], exclude_groups: [str], include_checks: [str], include_groups: [str]}
+@returns(202) {run_id: str}
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/kubernetes/clusters/{cluster_id}/credentials
+@returns(200) {certificate_authority_data: str(byte), client_certificate_data: str(byte)?, client_key_data: str(byte)?, expires_at: str(date-time), server: str(uri), token: str}
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/kubernetes/clusters/{cluster_id}/destroy_with_associated_resources
+@returns(200) {load_balancers: [map], volume_snapshots: [any], volumes: [any]}
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/kubernetes/clusters/{cluster_id}/destroy_with_associated_resources/dangerous
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/kubernetes/clusters/{cluster_id}/destroy_with_associated_resources/selective
+@optional {load_balancers: [str], volume_snapshots: [str], volumes: [str]}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/kubernetes/clusters/{cluster_id}/kubeconfig
+@optional {expiry_seconds: int=0}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/kubernetes/clusters/{cluster_id}/node_pools
+@returns(200) {node_pools: [any]}
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/kubernetes/clusters/{cluster_id}/node_pools
+@returns(201) {node_pool: any}
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/kubernetes/clusters/{cluster_id}/node_pools/{node_pool_id}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/kubernetes/clusters/{cluster_id}/node_pools/{node_pool_id}
+@required {node_pool_id: str(uuid)}
+@returns(200) {node_pool: any}
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/kubernetes/clusters/{cluster_id}/node_pools/{node_pool_id}
+@returns(202) {node_pool: any}
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/kubernetes/clusters/{cluster_id}/node_pools/{node_pool_id}/nodes/{node_id}
+@required {node_id: str(uuid)}
+@optional {skip_drain: int=0, replace: int=0}
+@returns(202)
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/kubernetes/clusters/{cluster_id}/node_pools/{node_pool_id}/recycle
+@optional {nodes: [str]}
+@returns(202)
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/kubernetes/clusters/{cluster_id}/upgrade
+@optional {version: str}
+@returns(202)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/kubernetes/clusters/{cluster_id}/upgrades
+@returns(200) {available_upgrade_versions: [map]?}
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/kubernetes/clusters/{cluster_id}/user
+@returns(200) {kubernetes_cluster_user: map{groups: [str], username: str(email)}}
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/kubernetes/options
+@returns(200) {options: any}
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/kubernetes/registry
+@returns(204)
+@errors {401, 429, 500}
+
+@endpoint POST /v2/kubernetes/registry
+@optional {cluster_uuids: [str]}
+@returns(204)
+@errors {401, 429, 500}
+
+@endpoint GET /v2/load_balancers
+@returns(200)
+@errors {401, 429, 500}
+
+@endpoint POST /v2/load_balancers
+@returns(202) {load_balancer: any}
+@errors {401, 429, 500}
+
+@endpoint DELETE /v2/load_balancers/{lb_id}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/load_balancers/{lb_id}
+@required {lb_id: str}
+@returns(200) {load_balancer: any}
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/load_balancers/{lb_id}
+@returns(200) {load_balancer: any}
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/load_balancers/{lb_id}/droplets
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/load_balancers/{lb_id}/droplets
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/load_balancers/{lb_id}/forwarding_rules
+@required {forwarding_rules: [any]}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/load_balancers/{lb_id}/forwarding_rules
+@required {forwarding_rules: [any]}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/monitoring/alerts
+@returns(200)
+@errors {401, 429, 500}
+
+@endpoint POST /v2/monitoring/alerts
+@required {alerts: any, compare: str(GreaterThan/LessThan), description: str, enabled: bool, entities: [str], tags: [str], type: str(v1/insights/droplet/load_1/v1/insights/droplet/load_5/v1/insights/droplet/load_15/v1/insights/droplet/memory_utilization_percent/v1/insights/droplet/disk_utilization_percent/v1/insights/droplet/cpu/v1/insights/droplet/disk_read/v1/insights/droplet/disk_write/v1/insights/droplet/public_outbound_bandwidth/v1/insights/droplet/public_inbound_bandwidth/v1/insights/droplet/private_outbound_bandwidth/v1/insights/droplet/private_inbound_bandwidth/v1/insights/lbaas/avg_cpu_utilization_percent/v1/insights/lbaas/connection_utilization_percent/v1/insights/lbaas/droplet_health/v1/insights/lbaas/tls_connections_per_second_utilization_percent/v1/insights/lbaas/increase_in_http_error_rate_percentage_5xx/v1/insights/lbaas/increase_in_http_error_rate_percentage_4xx/v1/insights/lbaas/increase_in_http_error_rate_count_5xx/v1/insights/lbaas/increase_in_http_error_rate_count_4xx/v1/insights/lbaas/high_http_request_response_time/v1/insights/lbaas/high_http_request_response_time_50p/v1/insights/lbaas/high_http_request_response_time_95p/v1/insights/lbaas/high_http_request_response_time_99p/v1/dbaas/alerts/load_15_alerts/v1/dbaas/alerts/memory_utilization_alerts/v1/dbaas/alerts/disk_utilization_alerts/v1/dbaas/alerts/cpu_alerts), value: num(float), window: str(5m/10m/30m/1h)}
+@returns(200) {policy: any}
+@errors {401, 429, 500}
+
+@endpoint DELETE /v2/monitoring/alerts/{alert_uuid}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/monitoring/alerts/{alert_uuid}
+@required {alert_uuid: str}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/monitoring/alerts/{alert_uuid}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/monitoring/metrics/droplet/bandwidth
+@required {host_id: str, interface: str(private/public), direction: str(inbound/outbound), start: str, end: str}
+@returns(200) {data: map{result: [map], resultType: str}, status: str}
+@errors {401, 429, 500}
+
+@endpoint GET /v2/monitoring/metrics/droplet/cpu
+@returns(200)
+@errors {401, 429, 500}
+
+@endpoint GET /v2/monitoring/metrics/droplet/filesystem_free
+@returns(200)
+@errors {401, 429, 500}
+
+@endpoint GET /v2/monitoring/metrics/droplet/filesystem_size
+@returns(200)
+@errors {401, 429, 500}
+
+@endpoint GET /v2/monitoring/metrics/droplet/load_1
+@returns(200)
+@errors {401, 429, 500}
+
+@endpoint GET /v2/monitoring/metrics/droplet/load_15
+@returns(200)
+@errors {401, 429, 500}
+
+@endpoint GET /v2/monitoring/metrics/droplet/load_5
+@returns(200)
+@errors {401, 429, 500}
+
+@endpoint GET /v2/monitoring/metrics/droplet/memory_available
+@returns(200)
+@errors {401, 429, 500}
+
+@endpoint GET /v2/monitoring/metrics/droplet/memory_cached
+@returns(200)
+@errors {401, 429, 500}
+
+@endpoint GET /v2/monitoring/metrics/droplet/memory_free
+@returns(200)
+@errors {401, 429, 500}
+
+@endpoint GET /v2/monitoring/metrics/droplet/memory_total
+@returns(200)
+@errors {401, 429, 500}
+
+@endpoint GET /v2/projects
+@returns(200)
+@errors {401, 429, 500}
+
+@endpoint POST /v2/projects
+@returns(201) {project: any}
+@errors {401, 429, 500}
+
+@endpoint GET /v2/projects/default
+@returns(200) {project: any}
+@errors {401, 404, 429, 500}
+
+@endpoint PATCH /v2/projects/default
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/projects/default
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/projects/default/resources
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/projects/default/resources
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/projects/{project_id}
+@returns(204)
+@errors {401, 404, 412, 429, 500}
+
+@endpoint GET /v2/projects/{project_id}
+@required {project_id: str(uuid)}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint PATCH /v2/projects/{project_id}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/projects/{project_id}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/projects/{project_id}/resources
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/projects/{project_id}/resources
+@optional {resources: [any]}
+@returns(200) {resources: [any]}
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/regions
+@returns(200)
+@errors {401, 429, 500}
+
+@endpoint DELETE /v2/registry
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/registry
+@returns(200) {registry: map{created_at: str(date-time), name: str, region: str, storage_usage_bytes: int, storage_usage_bytes_updated_at: str(date-time), subscription: any}}
+@errors {401, 429, 500}
+
+@endpoint POST /v2/registry
+@required {name: str, subscription_tier_slug: str(starter/basic/professional)}
+@optional {region: str(nyc3/sfo3/ams3/sgp1/fra1)}
+@returns(201)
+@errors {401, 429, 500}
+
+@endpoint GET /v2/registry/docker-credentials
+@optional {expiry_seconds: int=0, read_write: bool=False}
+@returns(200) {auths: map{registry.digitalocean.com: map{auth: str}}}
+@errors {401, 429, 500}
+
+@endpoint GET /v2/registry/options
+@returns(200) {options: map{available_regions: [str], subscription_tiers: [any]}}
+@errors {401, 429, 500}
+
+@endpoint GET /v2/registry/subscription
+@returns(200) {subscription: any}
+@errors {401, 429, 500}
+
+@endpoint POST /v2/registry/subscription
+@optional {tier_slug: str(starter/basic/professional)}
+@returns(200)
+@errors {401, 429, 500}
+
+@endpoint POST /v2/registry/validate-name
+@required {name: str}
+@returns(204)
+@errors {401, 409, 429, 500}
+
+@endpoint GET /v2/registry/{registry_name}/garbage-collection
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/registry/{registry_name}/garbage-collection
+@returns(201) {garbage_collection: map{blobs_deleted: int, created_at: str(date-time), freed_bytes: int, registry_name: str, status: str, updated_at: str(date-time), uuid: str}}
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/registry/{registry_name}/garbage-collection/{garbage_collection_uuid}
+@required {garbage_collection_uuid: str}
+@optional {cancel: bool}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/registry/{registry_name}/garbage-collections
+@returns(200) {garbage_collections: [any]}
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/registry/{registry_name}/repositories
+@required {registry_name: str}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/registry/{registry_name}/repositoriesV2
+@optional {page: int=1, page_token: str}
+@returns(200)
+@errors {400, 401, 404, 429, 500}
+
+@endpoint GET /v2/registry/{registry_name}/{repository_name}/digests
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/registry/{registry_name}/{repository_name}/digests/{manifest_digest}
+@required {manifest_digest: str}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/registry/{registry_name}/{repository_name}/tags
+@required {repository_name: str}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/registry/{registry_name}/{repository_name}/tags/{repository_tag}
+@required {repository_tag: str}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/reports/droplet_neighbors_ids
+@returns(200) {neighbor_ids: [[int]]}
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/reserved_ips
+@returns(200)
+@errors {401, 429, 500}
+
+@endpoint POST /v2/reserved_ips
+@returns(202) {links: map{actions: [any], droplets: [any]}, reserved_ip: any}
+@errors {401, 429, 500}
+
+@endpoint DELETE /v2/reserved_ips/{reserved_ip}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/reserved_ips/{reserved_ip}
+@required {reserved_ip: str(ipv4)}
+@returns(200) {reserved_ip: any}
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/reserved_ips/{reserved_ip}/actions
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/reserved_ips/{reserved_ip}/actions
+@returns(201) {action: any}
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/reserved_ips/{reserved_ip}/actions/{action_id}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/sizes
+@returns(200)
+@errors {401, 429, 500}
+
+@endpoint GET /v2/snapshots
+@optional {resource_type: str(droplet/volume)}
+@returns(200)
+@errors {401, 429, 500}
+
+@endpoint DELETE /v2/snapshots/{snapshot_id}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/snapshots/{snapshot_id}
+@required {snapshot_id: any}
+@returns(200) {snapshot: any}
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/tags
+@returns(200)
+@errors {401, 429, 500}
+
+@endpoint POST /v2/tags
+@returns(201) {tag: any}
+@errors {400, 401, 429, 500}
+
+@endpoint DELETE /v2/tags/{tag_id}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/tags/{tag_id}
+@required {tag_id: str}
+@returns(200) {tag: any}
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/tags/{tag_id}/resources
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/tags/{tag_id}/resources
+@required {resources: [any]}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/uptime/checks
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/uptime/checks
+@returns(201) {check: any}
+@errors {401, 429, 500}
+
+@endpoint DELETE /v2/uptime/checks/{check_id}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/uptime/checks/{check_id}
+@required {check_id: str(uuid)}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/uptime/checks/{check_id}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/uptime/checks/{check_id}/alerts
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/uptime/checks/{check_id}/alerts
+@returns(201) {alert: any}
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/uptime/checks/{check_id}/alerts/{alert_id}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/uptime/checks/{check_id}/alerts/{alert_id}
+@required {alert_id: str(uuid)}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/uptime/checks/{check_id}/alerts/{alert_id}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/uptime/checks/{check_id}/state
+@returns(200) {state: map{previous_outage: map{duration_seconds: int, ended_at: str, region: str, started_at: str}, regions: map{eu_west: any, us_east: map}}}
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/volumes
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/volumes
+@optional {name: str, region: any}
+@returns(200)
+@errors {401, 429, 500}
+
+@endpoint POST /v2/volumes
+@returns(201) {volume: any}
+@errors {400, 401, 404, 429, 500}
+
+@endpoint POST /v2/volumes/actions
+@returns(202) {action: map}
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/volumes/snapshots/{snapshot_id}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/volumes/snapshots/{snapshot_id}
+@returns(200) {snapshot: any}
+@errors {401, 404, 429, 500}
+
+@endpoint DELETE /v2/volumes/{volume_id}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/volumes/{volume_id}
+@required {volume_id: str(uuid)}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/volumes/{volume_id}/actions
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/volumes/{volume_id}/actions
+@returns(202)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/volumes/{volume_id}/actions/{action_id}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/volumes/{volume_id}/snapshots
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/volumes/{volume_id}/snapshots
+@required {name: str}
+@optional {tags: any}
+@returns(201)
+@errors {400, 401, 404, 429, 500}
+
+@endpoint GET /v2/vpcs
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint POST /v2/vpcs
+@returns(201) {vpc: any}
+@errors {401, 429, 500}
+
+@endpoint DELETE /v2/vpcs/{vpc_id}
+@returns(204)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/vpcs/{vpc_id}
+@required {vpc_id: str(uuid)}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint PATCH /v2/vpcs/{vpc_id}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint PUT /v2/vpcs/{vpc_id}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@endpoint GET /v2/vpcs/{vpc_id}/members
+@optional {resource_type: str}
+@returns(200)
+@errors {401, 404, 429, 500}
+
+@end
+

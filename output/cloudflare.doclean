@@ -1,0 +1,28 @@
+@doclean v0.2
+# Machine-readable API spec. Each @endpoint block is one API call.
+@api Cloudflare API
+@base https://api.cloudflare.com/client/v4
+@version 4
+@auth Bearer bearer
+@endpoints 3
+@toc List zones, Create DNS record, Purge cache
+
+@endpoint GET /zones
+@desc List zones
+@optional {name: str # Domain name filter, status: str(active/pending/initializing/moved/deleted/deactivated), page: int=1, per_page: int=20}
+@returns(200) {success: bool, result: [map], result_info: map} # Zone list
+
+@endpoint POST /zones/{zone_id}/dns_records
+@desc Create DNS record
+@required {zone_id: str, type: str(A/AAAA/CNAME/TXT/MX/NS/SRV/CAA) # DNS record type (A, AAAA, CNAME, TXT, MX, etc.), name: str # DNS record name (e.g. example.com), content: str # Record content (e.g. IP address)}
+@optional {ttl: int=1 # TTL in seconds (1 = automatic), proxied: bool # Whether traffic is proxied through Cloudflare, priority: int # Priority for MX records}
+@returns(200) {success: bool, result: map} # Created DNS record
+
+@endpoint POST /zones/{zone_id}/purge_cache
+@desc Purge cache
+@required {zone_id: str}
+@optional {purge_everything: bool # Purge all cached content, files: [str] # Array of URLs to purge, tags: [str] # Cache-Tag values to purge, hosts: [str] # Hostnames to purge}
+@returns(200) {success: bool, result: map} # Purge result
+
+@end
+

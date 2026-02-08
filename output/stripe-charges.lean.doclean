@@ -1,0 +1,39 @@
+@doclean v0.2
+# Machine-readable API spec. Each @endpoint block is one API call.
+@api Stripe Charges API
+@base https://api.stripe.com
+@version 2024-12-18
+@auth Bearer bearer
+@endpoints 5
+@toc Create a charge, List all charges, Retrieve a charge, Update a charge, Capture a charge
+
+@endpoint POST /v1/charges
+@required {amount: int, currency: str}
+@optional {source: str, customer: str, description: str, metadata: map, receipt_email: str, shipping: map, statement_descriptor: str, capture: bool, transfer_data: map, application_fee_amount: int, on_behalf_of: str}
+@returns(200) {id: str, object: str, amount: int, amount_captured: int, amount_refunded: int, currency: str, customer: str?, description: str?, status: str, paid: bool, captured: bool, livemode: bool, metadata: map, payment_method: str, receipt_email: str?, receipt_url: str?, failure_code: str?, failure_message: str?, created: int(unix-timestamp), billing_details: map{name: str?, email: str?, phone: str?, address: map}, outcome: map{network_status: str, risk_level: str, risk_score: int, seller_message: str, type: str}}
+@errors {400, 401, 402, 429}
+
+@endpoint GET /v1/charges
+@optional {customer: str, created: map, limit: int=10, starting_after: str, ending_before: str}
+@returns(200)
+@errors {401}
+
+@endpoint GET /v1/charges/{charge}
+@required {charge: str}
+@returns(200)
+@errors {404}
+
+@endpoint POST /v1/charges/{charge}
+@required {charge: str}
+@optional {description: str, metadata: map, receipt_email: str, shipping: map, fraud_details: map, transfer_group: str}
+@returns(200)
+@errors {400}
+
+@endpoint POST /v1/charges/{charge}/capture
+@required {charge: str}
+@optional {amount: int, receipt_email: str, statement_descriptor: str, application_fee_amount: int, transfer_data: map}
+@returns(200)
+@errors {400}
+
+@end
+

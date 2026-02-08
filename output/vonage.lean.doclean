@@ -1,0 +1,25 @@
+@doclean v0.2
+# Machine-readable API spec. Each @endpoint block is one API call.
+@api Account API
+@base https://api.vonage.com/t/vbc.prod/provisioning
+@version 1.11.8
+@auth Bearer bearer
+@endpoints 3
+@toc Get account data by ID, Get account locations data by account ID, Get location data by account ID and location ID
+
+@endpoint GET /api/accounts/{account_id}
+@required {account_id: num}
+@returns(200) {_embedded: map{data: map{address: map, id: num, name: str, status: str}}, _links: map{first: map{href: str}, last: map{href: str}, next: map{href: str}, prev: map{href: str}, self: map{href: str}}, page: num, page_size: num, total_items: num, total_pages: num}
+@errors {404}
+
+@endpoint GET /api/accounts/{account_id}/locations
+@required {account_id: num}
+@returns(200) {_embedded: map{data: [map]}, _links: map{first: map{href: str}, last: map{href: str}, next: map{href: str}, prev: map{href: str}, self: map{href: str}}, page: num, page_size: num, total_items: num, total_pages: num}
+
+@endpoint GET /api/accounts/{account_id}/locations/{location_id}
+@required {account_id: num, location_id: num}
+@returns(200) {_embedded: map{data: map{address: map, id: num, name: str}}, _links: map{first: map{href: str}, last: map{href: str}, next: map{href: str}, prev: map{href: str}, self: map{href: str}}, page: num, page_size: num, total_items: num, total_pages: num}
+@errors {404}
+
+@end
+

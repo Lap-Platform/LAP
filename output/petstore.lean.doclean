@@ -1,0 +1,105 @@
+@doclean v0.2
+# Machine-readable API spec. Each @endpoint block is one API call.
+@api Swagger Petstore - OpenAPI 3.0
+@base /api/v3
+@version 1.0.27
+@auth ApiKey api_key in header | OAuth2
+@endpoints 19
+@toc Add a new pet to the store., Update an existing pet., Finds Pets by status., Finds Pets by tags., Deletes a pet., Find pet by ID., Updates a pet in the store with form data., Uploads an image., Returns pet inventories by status., Place an order for a pet., Delete purchase order by identifier., Find purchase order by ID., Create user., Creates list of users with given input array., Logs user into the system., Logs out current logged in user session., Delete user resource., Get user by user name., Update user resource.
+
+@endpoint POST /pet
+@required {name: str, photoUrls: [str]}
+@optional {category: map, id: int(int64), status: str(available/pending/sold), tags: [map]}
+@returns(200) {category: map{id: int(int64), name: str}, id: int(int64), name: str, photoUrls: [str], status: str, tags: [map]}
+@errors {400, 422}
+
+@endpoint PUT /pet
+@required {name: str, photoUrls: [str]}
+@optional {category: map, id: int(int64), status: str(available/pending/sold), tags: [map]}
+@returns(200) {category: map{id: int(int64), name: str}, id: int(int64), name: str, photoUrls: [str], status: str, tags: [map]}
+@errors {400, 404, 422}
+
+@endpoint GET /pet/findByStatus
+@required {status: str(available/pending/sold)=available}
+@returns(200)
+@errors {400}
+
+@endpoint GET /pet/findByTags
+@required {tags: [str]}
+@returns(200)
+@errors {400}
+
+@endpoint DELETE /pet/{petId}
+@required {petId: int(int64)}
+@optional {api_key: str}
+@returns(200)
+@errors {400}
+
+@endpoint GET /pet/{petId}
+@required {petId: int(int64)}
+@returns(200) {category: map{id: int(int64), name: str}, id: int(int64), name: str, photoUrls: [str], status: str, tags: [map]}
+@errors {400, 404}
+
+@endpoint POST /pet/{petId}
+@required {petId: int(int64)}
+@optional {name: str, status: str}
+@returns(200) {category: map{id: int(int64), name: str}, id: int(int64), name: str, photoUrls: [str], status: str, tags: [map]}
+@errors {400}
+
+@endpoint POST /pet/{petId}/uploadImage
+@required {petId: int(int64)}
+@optional {additionalMetadata: str}
+@returns(200) {code: int(int32), message: str, type: str}
+@errors {400, 404}
+
+@endpoint GET /store/inventory
+@returns(200)
+
+@endpoint POST /store/order
+@optional {complete: bool, id: int(int64), petId: int(int64), quantity: int(int32), shipDate: str(date-time), status: str(placed/approved/delivered)}
+@returns(200) {complete: bool, id: int(int64), petId: int(int64), quantity: int(int32), shipDate: str(date-time), status: str}
+@errors {400, 422}
+
+@endpoint DELETE /store/order/{orderId}
+@required {orderId: int(int64)}
+@returns(200)
+@errors {400, 404}
+
+@endpoint GET /store/order/{orderId}
+@required {orderId: int(int64)}
+@returns(200) {complete: bool, id: int(int64), petId: int(int64), quantity: int(int32), shipDate: str(date-time), status: str}
+@errors {400, 404}
+
+@endpoint POST /user
+@optional {email: str, firstName: str, id: int(int64), lastName: str, password: str, phone: str, userStatus: int(int32), username: str}
+@returns(200) {email: str, firstName: str, id: int(int64), lastName: str, password: str, phone: str, userStatus: int(int32), username: str}
+
+@endpoint POST /user/createWithList
+@returns(200) {email: str, firstName: str, id: int(int64), lastName: str, password: str, phone: str, userStatus: int(int32), username: str}
+
+@endpoint GET /user/login
+@optional {username: str, password: str}
+@returns(200)
+@errors {400}
+
+@endpoint GET /user/logout
+@returns(200)
+
+@endpoint DELETE /user/{username}
+@required {username: str}
+@returns(200)
+@errors {400, 404}
+
+@endpoint GET /user/{username}
+@required {username: str}
+@returns(200) {email: str, firstName: str, id: int(int64), lastName: str, password: str, phone: str, userStatus: int(int32), username: str}
+@errors {400, 404}
+
+@endpoint PUT /user/{username}
+@required {username: str}
+@optional {email: str, firstName: str, id: int(int64), lastName: str, password: str, phone: str, userStatus: int(int32), username: str}
+@returns(200)
+@errors {400, 404}
+
+@end
+

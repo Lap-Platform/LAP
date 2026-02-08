@@ -1,0 +1,377 @@
+@doclean v0.2
+# Machine-readable API spec. Each @endpoint block is one API call.
+@api Twitter API v2
+@base https://api.twitter.com
+@version 2.61
+@auth Bearer bearer | OAuth2 | Bearer OAuth
+@endpoints 80
+@toc List Compliance Jobs, Create compliance job, Get Compliance Job, Create a new DM Conversation, Get DM Events for a DM Conversation, Send a new message to a user, Send a new message to a DM Conversation, Get DM Events for a DM Conversation, Get recent DM Events, Create List, Delete List, List lookup by List ID., Update List., Returns User objects that follow a List by the provided List ID, Returns User objects that are members of a List by the provided List ID., Add a List member, Remove a List member, List Tweets timeline by List ID., Returns the OpenAPI Specification document., Space lookup up Space IDs, Space lookup by their creators, Search for Spaces, Space lookup by Space ID, Retrieve the list of Users who purchased a ticket to the given space, Retrieve Tweets from a Space., Tweet lookup by Tweet IDs, Creation of a Tweet, Tweets Compliance stream, Full archive search counts, Recent search counts, Firehose stream, Tweets Label stream, Sample stream, Sample 10% stream, Full-archive search, Recent search, Filtered stream, Rules lookup, Add/Delete rules, Tweet delete by Tweet ID, Tweet lookup by Tweet ID, Returns User objects that have liked the provided Tweet ID, Retrieve Tweets that quote a Tweet., Returns User objects that have retweeted the provided Tweet ID, Hide replies, User lookup by IDs, User lookup by usernames, User lookup by username, Users Compliance stream, User lookup me, User lookup by ID, Returns User objects that are blocked by provided User ID, Block User by User ID, Bookmarks by User, Add Tweet to Bookmarks, Remove a bookmarked Tweet, Get User's Followed Lists, Follow a List, Unfollow a List, Followers by User ID, Following by User ID, Follow User, Returns Tweet objects liked by the provided User ID, Causes the User (in the path) to like the specified Tweet, Causes the User (in the path) to unlike the specified Tweet, Get a User's List Memberships, User mention timeline by User ID, Returns User objects that are muted by the provided User ID, Mute User by User ID., Get a User's Owned Lists., Get a User's Pinned Lists, Pin a List, Unpin a List, Causes the User (in the path) to retweet the specified Tweet., Causes the User (in the path) to unretweet the specified Tweet, User home timeline by User ID, User Tweets timeline by User ID, Unblock User by User ID, Unfollow User, Unmute User by User ID
+
+@endpoint GET /2/compliance/jobs
+@required {type: str(tweets/users)}
+@optional {status: str(created/in_progress/failed/complete), compliance_job.fields: [str]}
+@returns(200) {data: [map], errors: [map], meta: map{result_count: int(int32)}}
+
+@endpoint POST /2/compliance/jobs
+@required {type: str(tweets/users)}
+@optional {name: str, resumable: bool}
+@returns(200) {data: map{created_at: str(date-time), download_expires_at: str(date-time), download_url: str(uri), id: str, name: str, status: str, type: str, upload_expires_at: str(date-time), upload_url: str(uri)}, errors: [map]}
+
+@endpoint GET /2/compliance/jobs/{id}
+@required {id: str}
+@optional {compliance_job.fields: [str]}
+@returns(200) {data: map{created_at: str(date-time), download_expires_at: str(date-time), download_url: str(uri), id: str, name: str, status: str, type: str, upload_expires_at: str(date-time), upload_url: str(uri)}, errors: [map]}
+
+@endpoint POST /2/dm_conversations
+@required {conversation_type: str, message: any, participant_ids: [str]}
+@returns(201) {data: map{dm_conversation_id: str, dm_event_id: str}, errors: [map]}
+
+@endpoint GET /2/dm_conversations/with/{participant_id}/dm_events
+@required {participant_id: str}
+@optional {max_results: int(int32)=100, pagination_token: str, event_types: [str]=['MessageCreate', 'ParticipantsLeave', 'ParticipantsJoin'], dm_event.fields: [str], expansions: [str], media.fields: [str], user.fields: [str], tweet.fields: [str]}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{next_token: str, previous_token: str, result_count: int(int32)}}
+
+@endpoint POST /2/dm_conversations/with/{participant_id}/messages
+@required {participant_id: str}
+@returns(201) {data: map{dm_conversation_id: str, dm_event_id: str}, errors: [map]}
+
+@endpoint POST /2/dm_conversations/{dm_conversation_id}/messages
+@required {dm_conversation_id: str}
+@returns(201) {data: map{dm_conversation_id: str, dm_event_id: str}, errors: [map]}
+
+@endpoint GET /2/dm_conversations/{id}/dm_events
+@required {id: str}
+@optional {max_results: int(int32)=100, pagination_token: str, event_types: [str]=['MessageCreate', 'ParticipantsLeave', 'ParticipantsJoin'], dm_event.fields: [str], expansions: [str], media.fields: [str], user.fields: [str], tweet.fields: [str]}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{next_token: str, previous_token: str, result_count: int(int32)}}
+
+@endpoint GET /2/dm_events
+@optional {max_results: int(int32)=100, pagination_token: str, event_types: [str]=['MessageCreate', 'ParticipantsLeave', 'ParticipantsJoin'], dm_event.fields: [str], expansions: [str], media.fields: [str], user.fields: [str], tweet.fields: [str]}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{next_token: str, previous_token: str, result_count: int(int32)}}
+
+@endpoint POST /2/lists
+@required {name: str}
+@optional {description: str, private: bool=False}
+@returns(200) {data: map{id: str, name: str}, errors: [map]}
+
+@endpoint DELETE /2/lists/{id}
+@required {id: str}
+@returns(200) {data: map{deleted: bool}, errors: [map]}
+
+@endpoint GET /2/lists/{id}
+@required {id: str}
+@optional {list.fields: [str], expansions: [str], user.fields: [str]}
+@returns(200) {data: map{created_at: str(date-time), description: str, follower_count: int, id: str, member_count: int, name: str, owner_id: str, private: bool}, errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}}
+
+@endpoint PUT /2/lists/{id}
+@required {id: str}
+@optional {description: str, name: str, private: bool}
+@returns(200) {data: map{updated: bool}, errors: [map]}
+
+@endpoint GET /2/lists/{id}/followers
+@required {id: str}
+@optional {max_results: int(int32)=100, pagination_token: str, user.fields: [str], expansions: [str], tweet.fields: [str]}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{next_token: str, previous_token: str, result_count: int(int32)}}
+
+@endpoint GET /2/lists/{id}/members
+@required {id: str}
+@optional {max_results: int(int32)=100, pagination_token: str, user.fields: [str], expansions: [str], tweet.fields: [str]}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{next_token: str, previous_token: str, result_count: int(int32)}}
+
+@endpoint POST /2/lists/{id}/members
+@required {id: str, user_id: str}
+@returns(200) {data: map{is_member: bool}, errors: [map]}
+
+@endpoint DELETE /2/lists/{id}/members/{user_id}
+@required {id: str, user_id: str}
+@returns(200) {data: map{is_member: bool}, errors: [map]}
+
+@endpoint GET /2/lists/{id}/tweets
+@required {id: str}
+@optional {max_results: int(int32)=100, pagination_token: str, tweet.fields: [str], expansions: [str], media.fields: [str], poll.fields: [str], user.fields: [str], place.fields: [str]}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{next_token: str, previous_token: str, result_count: int(int32)}}
+
+@endpoint GET /2/openapi.json
+@returns(200)
+
+@endpoint GET /2/spaces
+@required {ids: [str]}
+@optional {space.fields: [str], expansions: [str], user.fields: [str], topic.fields: [str]}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}}
+
+@endpoint GET /2/spaces/by/creator_ids
+@required {user_ids: [str]}
+@optional {space.fields: [str], expansions: [str], user.fields: [str], topic.fields: [str]}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{result_count: int(int32)}}
+
+@endpoint GET /2/spaces/search
+@required {query: str}
+@optional {state: str(live/scheduled/all)=all, max_results: int(int32)=100, space.fields: [str], expansions: [str], user.fields: [str], topic.fields: [str]}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{result_count: int(int32)}}
+
+@endpoint GET /2/spaces/{id}
+@required {id: str}
+@optional {space.fields: [str], expansions: [str], user.fields: [str], topic.fields: [str]}
+@returns(200) {data: map{created_at: str(date-time), creator_id: str, ended_at: str(date-time), host_ids: [str], id: str, invited_user_ids: [str], is_ticketed: bool, lang: str, participant_count: int(int32), scheduled_start: str(date-time), speaker_ids: [str], started_at: str(date-time), state: str, subscriber_count: int(int32), title: str, topics: [map], updated_at: str(date-time)}, errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}}
+
+@endpoint GET /2/spaces/{id}/buyers
+@required {id: str}
+@optional {pagination_token: str, max_results: int(int32)=100, user.fields: [str], expansions: [str], tweet.fields: [str]}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{next_token: str, previous_token: str, result_count: int(int32)}}
+
+@endpoint GET /2/spaces/{id}/tweets
+@required {id: str}
+@optional {max_results: int(int32)=100, tweet.fields: [str], expansions: [str], media.fields: [str], poll.fields: [str], user.fields: [str], place.fields: [str]}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{next_token: str, previous_token: str, result_count: int(int32)}}
+
+@endpoint GET /2/tweets
+@required {ids: [str]}
+@optional {tweet.fields: [str], expansions: [str], media.fields: [str], poll.fields: [str], user.fields: [str], place.fields: [str]}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}}
+
+@endpoint POST /2/tweets
+@optional {card_uri: str, direct_message_deep_link: str, for_super_followers_only: bool=False, geo: map, media: map, nullcast: bool=False, poll: map, quote_tweet_id: str, reply: map, reply_settings: str(following/mentionedUsers), text: str}
+@returns(201) {data: map{id: str, text: str}, errors: [map]}
+
+@endpoint GET /2/tweets/compliance/stream
+@required {partition: int(int32)}
+@optional {backfill_minutes: int(int32), start_time: str(date-time), end_time: str(date-time)}
+@returns(200)
+
+@endpoint GET /2/tweets/counts/all
+@required {query: str}
+@optional {start_time: str(date-time), end_time: str(date-time), since_id: str, until_id: str, next_token: str, pagination_token: str, granularity: str(minute/hour/day)=hour, search_count.fields: [str]}
+@returns(200) {data: [map], errors: [map], meta: map{newest_id: str, next_token: str, oldest_id: str, total_tweet_count: int(int32)}}
+
+@endpoint GET /2/tweets/counts/recent
+@required {query: str}
+@optional {start_time: str(date-time), end_time: str(date-time), since_id: str, until_id: str, next_token: str, pagination_token: str, granularity: str(minute/hour/day)=hour, search_count.fields: [str]}
+@returns(200) {data: [map], errors: [map], meta: map{newest_id: str, next_token: str, oldest_id: str, total_tweet_count: int(int32)}}
+
+@endpoint GET /2/tweets/firehose/stream
+@required {partition: int(int32)}
+@optional {backfill_minutes: int(int32), start_time: str(date-time), end_time: str(date-time), tweet.fields: [str], expansions: [str], media.fields: [str], poll.fields: [str], user.fields: [str], place.fields: [str]}
+@returns(200) {data: map{attachments: map{media_keys: [str], poll_ids: [str]}, author_id: str, context_annotations: [map], conversation_id: str, created_at: str(date-time), edit_controls: map{editable_until: str(date-time), edits_remaining: int, is_edit_eligible: bool}, edit_history_tweet_ids: [str], entities: map{annotations: [any], cashtags: [any], hashtags: [any], mentions: [any], urls: [any]}, geo: map{coordinates: map, place_id: str}, id: str, in_reply_to_user_id: str, lang: str, non_public_metrics: map{impression_count: int(int32)}, organic_metrics: map{impression_count: int, like_count: int, reply_count: int, retweet_count: int}, possibly_sensitive: bool, promoted_metrics: map{impression_count: int(int32), like_count: int(int32), reply_count: int(int32), retweet_count: int(int32)}, public_metrics: map{impression_count: int(int32), like_count: int, quote_count: int, reply_count: int, retweet_count: int}, referenced_tweets: [map], reply_settings: str, source: str, text: str, withheld: map{copyright: bool, country_codes: [str], scope: str}}, errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}}
+
+@endpoint GET /2/tweets/label/stream
+@optional {backfill_minutes: int(int32), start_time: str(date-time), end_time: str(date-time)}
+@returns(200)
+
+@endpoint GET /2/tweets/sample/stream
+@optional {backfill_minutes: int(int32), tweet.fields: [str], expansions: [str], media.fields: [str], poll.fields: [str], user.fields: [str], place.fields: [str]}
+@returns(200) {data: map{attachments: map{media_keys: [str], poll_ids: [str]}, author_id: str, context_annotations: [map], conversation_id: str, created_at: str(date-time), edit_controls: map{editable_until: str(date-time), edits_remaining: int, is_edit_eligible: bool}, edit_history_tweet_ids: [str], entities: map{annotations: [any], cashtags: [any], hashtags: [any], mentions: [any], urls: [any]}, geo: map{coordinates: map, place_id: str}, id: str, in_reply_to_user_id: str, lang: str, non_public_metrics: map{impression_count: int(int32)}, organic_metrics: map{impression_count: int, like_count: int, reply_count: int, retweet_count: int}, possibly_sensitive: bool, promoted_metrics: map{impression_count: int(int32), like_count: int(int32), reply_count: int(int32), retweet_count: int(int32)}, public_metrics: map{impression_count: int(int32), like_count: int, quote_count: int, reply_count: int, retweet_count: int}, referenced_tweets: [map], reply_settings: str, source: str, text: str, withheld: map{copyright: bool, country_codes: [str], scope: str}}, errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}}
+
+@endpoint GET /2/tweets/sample10/stream
+@required {partition: int(int32)}
+@optional {backfill_minutes: int(int32), start_time: str(date-time), end_time: str(date-time), tweet.fields: [str], expansions: [str], media.fields: [str], poll.fields: [str], user.fields: [str], place.fields: [str]}
+@returns(200) {data: map{attachments: map{media_keys: [str], poll_ids: [str]}, author_id: str, context_annotations: [map], conversation_id: str, created_at: str(date-time), edit_controls: map{editable_until: str(date-time), edits_remaining: int, is_edit_eligible: bool}, edit_history_tweet_ids: [str], entities: map{annotations: [any], cashtags: [any], hashtags: [any], mentions: [any], urls: [any]}, geo: map{coordinates: map, place_id: str}, id: str, in_reply_to_user_id: str, lang: str, non_public_metrics: map{impression_count: int(int32)}, organic_metrics: map{impression_count: int, like_count: int, reply_count: int, retweet_count: int}, possibly_sensitive: bool, promoted_metrics: map{impression_count: int(int32), like_count: int(int32), reply_count: int(int32), retweet_count: int(int32)}, public_metrics: map{impression_count: int(int32), like_count: int, quote_count: int, reply_count: int, retweet_count: int}, referenced_tweets: [map], reply_settings: str, source: str, text: str, withheld: map{copyright: bool, country_codes: [str], scope: str}}, errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}}
+
+@endpoint GET /2/tweets/search/all
+@required {query: str}
+@optional {start_time: str(date-time), end_time: str(date-time), since_id: str, until_id: str, max_results: int(int32)=10, next_token: str, pagination_token: str, sort_order: str(recency/relevancy), tweet.fields: [str], expansions: [str], media.fields: [str], poll.fields: [str], user.fields: [str], place.fields: [str]}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{newest_id: str, next_token: str, oldest_id: str, result_count: int(int32)}}
+
+@endpoint GET /2/tweets/search/recent
+@required {query: str}
+@optional {start_time: str(date-time), end_time: str(date-time), since_id: str, until_id: str, max_results: int(int32)=10, next_token: str, pagination_token: str, sort_order: str(recency/relevancy), tweet.fields: [str], expansions: [str], media.fields: [str], poll.fields: [str], user.fields: [str], place.fields: [str]}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{newest_id: str, next_token: str, oldest_id: str, result_count: int(int32)}}
+
+@endpoint GET /2/tweets/search/stream
+@optional {backfill_minutes: int(int32), start_time: str(date-time), end_time: str(date-time), tweet.fields: [str], expansions: [str], media.fields: [str], poll.fields: [str], user.fields: [str], place.fields: [str]}
+@returns(200) {data: map{attachments: map{media_keys: [str], poll_ids: [str]}, author_id: str, context_annotations: [map], conversation_id: str, created_at: str(date-time), edit_controls: map{editable_until: str(date-time), edits_remaining: int, is_edit_eligible: bool}, edit_history_tweet_ids: [str], entities: map{annotations: [any], cashtags: [any], hashtags: [any], mentions: [any], urls: [any]}, geo: map{coordinates: map, place_id: str}, id: str, in_reply_to_user_id: str, lang: str, non_public_metrics: map{impression_count: int(int32)}, organic_metrics: map{impression_count: int, like_count: int, reply_count: int, retweet_count: int}, possibly_sensitive: bool, promoted_metrics: map{impression_count: int(int32), like_count: int(int32), reply_count: int(int32), retweet_count: int(int32)}, public_metrics: map{impression_count: int(int32), like_count: int, quote_count: int, reply_count: int, retweet_count: int}, referenced_tweets: [map], reply_settings: str, source: str, text: str, withheld: map{copyright: bool, country_codes: [str], scope: str}}, errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, matching_rules: [map]}
+
+@endpoint GET /2/tweets/search/stream/rules
+@optional {ids: [str], max_results: int(int32)=1000, pagination_token: str}
+@returns(200) {data: [map], meta: map{next_token: str, result_count: int(int32), sent: str, summary: any}}
+
+@endpoint POST /2/tweets/search/stream/rules
+@optional {dry_run: bool}
+@returns(200) {data: [map], errors: [map], meta: map{next_token: str, result_count: int(int32), sent: str, summary: any}}
+
+@endpoint DELETE /2/tweets/{id}
+@required {id: str}
+@returns(200) {data: map{deleted: bool}, errors: [map]}
+
+@endpoint GET /2/tweets/{id}
+@required {id: str}
+@optional {tweet.fields: [str], expansions: [str], media.fields: [str], poll.fields: [str], user.fields: [str], place.fields: [str]}
+@returns(200) {data: map{attachments: map{media_keys: [str], poll_ids: [str]}, author_id: str, context_annotations: [map], conversation_id: str, created_at: str(date-time), edit_controls: map{editable_until: str(date-time), edits_remaining: int, is_edit_eligible: bool}, edit_history_tweet_ids: [str], entities: map{annotations: [any], cashtags: [any], hashtags: [any], mentions: [any], urls: [any]}, geo: map{coordinates: map, place_id: str}, id: str, in_reply_to_user_id: str, lang: str, non_public_metrics: map{impression_count: int(int32)}, organic_metrics: map{impression_count: int, like_count: int, reply_count: int, retweet_count: int}, possibly_sensitive: bool, promoted_metrics: map{impression_count: int(int32), like_count: int(int32), reply_count: int(int32), retweet_count: int(int32)}, public_metrics: map{impression_count: int(int32), like_count: int, quote_count: int, reply_count: int, retweet_count: int}, referenced_tweets: [map], reply_settings: str, source: str, text: str, withheld: map{copyright: bool, country_codes: [str], scope: str}}, errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}}
+
+@endpoint GET /2/tweets/{id}/liking_users
+@required {id: str}
+@optional {max_results: int(int32)=100, pagination_token: str, user.fields: [str], expansions: [str], tweet.fields: [str]}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{next_token: str, previous_token: str, result_count: int(int32)}}
+
+@endpoint GET /2/tweets/{id}/quote_tweets
+@required {id: str}
+@optional {max_results: int(int32)=10, pagination_token: str, exclude: [str], tweet.fields: [str], expansions: [str], media.fields: [str], poll.fields: [str], user.fields: [str], place.fields: [str]}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{next_token: str, result_count: int(int32)}}
+
+@endpoint GET /2/tweets/{id}/retweeted_by
+@required {id: str}
+@optional {max_results: int(int32)=100, pagination_token: str, user.fields: [str], expansions: [str], tweet.fields: [str]}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{next_token: str, previous_token: str, result_count: int(int32)}}
+
+@endpoint PUT /2/tweets/{tweet_id}/hidden
+@required {tweet_id: str, hidden: bool}
+@returns(200) {data: map{hidden: bool}}
+
+@endpoint GET /2/users
+@required {ids: [str]}
+@optional {user.fields: [str], expansions: [str], tweet.fields: [str]}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}}
+
+@endpoint GET /2/users/by
+@required {usernames: [str]}
+@optional {user.fields: [str], expansions: [str], tweet.fields: [str]}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}}
+
+@endpoint GET /2/users/by/username/{username}
+@required {username: str}
+@optional {user.fields: [str], expansions: [str], tweet.fields: [str]}
+@returns(200) {data: map{created_at: str(date-time), description: str, entities: map{description: map, url: map}, id: str, location: str, name: str, pinned_tweet_id: str, profile_image_url: str(uri), protected: bool, public_metrics: map{followers_count: int, following_count: int, listed_count: int, tweet_count: int}, url: str, username: str, verified: bool, verified_type: str, withheld: map{country_codes: [str], scope: str}}, errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}}
+
+@endpoint GET /2/users/compliance/stream
+@required {partition: int(int32)}
+@optional {backfill_minutes: int(int32), start_time: str(date-time), end_time: str(date-time)}
+@returns(200)
+
+@endpoint GET /2/users/me
+@optional {user.fields: [str], expansions: [str], tweet.fields: [str]}
+@returns(200) {data: map{created_at: str(date-time), description: str, entities: map{description: map, url: map}, id: str, location: str, name: str, pinned_tweet_id: str, profile_image_url: str(uri), protected: bool, public_metrics: map{followers_count: int, following_count: int, listed_count: int, tweet_count: int}, url: str, username: str, verified: bool, verified_type: str, withheld: map{country_codes: [str], scope: str}}, errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}}
+
+@endpoint GET /2/users/{id}
+@required {id: str}
+@optional {user.fields: [str], expansions: [str], tweet.fields: [str]}
+@returns(200) {data: map{created_at: str(date-time), description: str, entities: map{description: map, url: map}, id: str, location: str, name: str, pinned_tweet_id: str, profile_image_url: str(uri), protected: bool, public_metrics: map{followers_count: int, following_count: int, listed_count: int, tweet_count: int}, url: str, username: str, verified: bool, verified_type: str, withheld: map{country_codes: [str], scope: str}}, errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}}
+
+@endpoint GET /2/users/{id}/blocking
+@required {id: str}
+@optional {max_results: int(int32), pagination_token: str, user.fields: [str], expansions: [str], tweet.fields: [str]}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{next_token: str, previous_token: str, result_count: int(int32)}}
+
+@endpoint POST /2/users/{id}/blocking
+@required {id: str, target_user_id: str}
+@returns(200) {data: map{blocking: bool}, errors: [map]}
+
+@endpoint GET /2/users/{id}/bookmarks
+@required {id: str}
+@optional {max_results: int(int32), pagination_token: str, tweet.fields: [str], expansions: [str], media.fields: [str], poll.fields: [str], user.fields: [str], place.fields: [str]}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{next_token: str, previous_token: str, result_count: int(int32)}}
+
+@endpoint POST /2/users/{id}/bookmarks
+@required {id: str, tweet_id: str}
+@returns(200) {data: map{bookmarked: bool}, errors: [map]}
+
+@endpoint DELETE /2/users/{id}/bookmarks/{tweet_id}
+@required {id: str, tweet_id: str}
+@returns(200) {data: map{bookmarked: bool}, errors: [map]}
+
+@endpoint GET /2/users/{id}/followed_lists
+@required {id: str}
+@optional {max_results: int(int32)=100, pagination_token: str, list.fields: [str], expansions: [str], user.fields: [str]}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{next_token: str, previous_token: str, result_count: int(int32)}}
+
+@endpoint POST /2/users/{id}/followed_lists
+@required {id: str, list_id: str}
+@returns(200) {data: map{following: bool}, errors: [map]}
+
+@endpoint DELETE /2/users/{id}/followed_lists/{list_id}
+@required {id: str, list_id: str}
+@returns(200) {data: map{following: bool}, errors: [map]}
+
+@endpoint GET /2/users/{id}/followers
+@required {id: str}
+@optional {max_results: int(int32), pagination_token: str, user.fields: [str], expansions: [str], tweet.fields: [str]}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{next_token: str, previous_token: str, result_count: int(int32)}}
+
+@endpoint GET /2/users/{id}/following
+@required {id: str}
+@optional {max_results: int(int32), pagination_token: str, user.fields: [str], expansions: [str], tweet.fields: [str]}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{next_token: str, previous_token: str, result_count: int(int32)}}
+
+@endpoint POST /2/users/{id}/following
+@required {id: str, target_user_id: str}
+@returns(200) {data: map{following: bool, pending_follow: bool}, errors: [map]}
+
+@endpoint GET /2/users/{id}/liked_tweets
+@required {id: str}
+@optional {max_results: int(int32), pagination_token: str, tweet.fields: [str], expansions: [str], media.fields: [str], poll.fields: [str], user.fields: [str], place.fields: [str]}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{next_token: str, previous_token: str, result_count: int(int32)}}
+
+@endpoint POST /2/users/{id}/likes
+@required {id: str, tweet_id: str}
+@returns(200) {data: map{liked: bool}, errors: [map]}
+
+@endpoint DELETE /2/users/{id}/likes/{tweet_id}
+@required {id: str, tweet_id: str}
+@returns(200) {data: map{liked: bool}, errors: [map]}
+
+@endpoint GET /2/users/{id}/list_memberships
+@required {id: str}
+@optional {max_results: int(int32)=100, pagination_token: str, list.fields: [str], expansions: [str], user.fields: [str]}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{next_token: str, previous_token: str, result_count: int(int32)}}
+
+@endpoint GET /2/users/{id}/mentions
+@required {id: str}
+@optional {since_id: str, until_id: str, max_results: int(int32), pagination_token: str, start_time: str(date-time), end_time: str(date-time), tweet.fields: [str], expansions: [str], media.fields: [str], poll.fields: [str], user.fields: [str], place.fields: [str]}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{newest_id: str, next_token: str, oldest_id: str, previous_token: str, result_count: int(int32)}}
+
+@endpoint GET /2/users/{id}/muting
+@required {id: str}
+@optional {max_results: int(int32)=100, pagination_token: str, user.fields: [str], expansions: [str], tweet.fields: [str]}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{next_token: str, previous_token: str, result_count: int(int32)}}
+
+@endpoint POST /2/users/{id}/muting
+@required {id: str, target_user_id: str}
+@returns(200) {data: map{muting: bool}, errors: [map]}
+
+@endpoint GET /2/users/{id}/owned_lists
+@required {id: str}
+@optional {max_results: int(int32)=100, pagination_token: str, list.fields: [str], expansions: [str], user.fields: [str]}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{next_token: str, previous_token: str, result_count: int(int32)}}
+
+@endpoint GET /2/users/{id}/pinned_lists
+@required {id: str}
+@optional {list.fields: [str], expansions: [str], user.fields: [str]}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{result_count: int(int32)}}
+
+@endpoint POST /2/users/{id}/pinned_lists
+@required {id: str, list_id: str}
+@returns(200) {data: map{pinned: bool}, errors: [map]}
+
+@endpoint DELETE /2/users/{id}/pinned_lists/{list_id}
+@required {id: str, list_id: str}
+@returns(200) {data: map{pinned: bool}, errors: [map]}
+
+@endpoint POST /2/users/{id}/retweets
+@required {id: str, tweet_id: str}
+@returns(200) {data: map{retweeted: bool}, errors: [map]}
+
+@endpoint DELETE /2/users/{id}/retweets/{source_tweet_id}
+@required {id: str, source_tweet_id: str}
+@returns(200) {data: map{retweeted: bool}, errors: [map]}
+
+@endpoint GET /2/users/{id}/timelines/reverse_chronological
+@required {id: str}
+@optional {since_id: str, until_id: str, max_results: int(int32), pagination_token: str, exclude: [str], start_time: str(date-time), end_time: str(date-time), tweet.fields: [str], expansions: [str], media.fields: [str], poll.fields: [str], user.fields: [str], place.fields: [str]}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{newest_id: str, next_token: str, oldest_id: str, previous_token: str, result_count: int(int32)}}
+
+@endpoint GET /2/users/{id}/tweets
+@required {id: str}
+@optional {since_id: str, until_id: str, max_results: int(int32), pagination_token: str, exclude: [str], start_time: str(date-time), end_time: str(date-time), tweet.fields: [str], expansions: [str], media.fields: [str], poll.fields: [str], user.fields: [str], place.fields: [str]}
+@returns(200) {data: [map], errors: [map], includes: map{media: [map], places: [map], polls: [map], topics: [map], tweets: [map], users: [map]}, meta: map{newest_id: str, next_token: str, oldest_id: str, previous_token: str, result_count: int(int32)}}
+
+@endpoint DELETE /2/users/{source_user_id}/blocking/{target_user_id}
+@required {source_user_id: str, target_user_id: str}
+@returns(200) {data: map{blocking: bool}, errors: [map]}
+
+@endpoint DELETE /2/users/{source_user_id}/following/{target_user_id}
+@required {source_user_id: str, target_user_id: str}
+@returns(200) {data: map{following: bool}, errors: [map]}
+
+@endpoint DELETE /2/users/{source_user_id}/muting/{target_user_id}
+@required {source_user_id: str, target_user_id: str}
+@returns(200) {data: map{muting: bool}, errors: [map]}
+
+@end
+

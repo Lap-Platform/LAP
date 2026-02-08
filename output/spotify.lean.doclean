@@ -1,0 +1,29 @@
+@doclean v0.2
+# Machine-readable API spec. Each @endpoint block is one API call.
+@api Spotify Web API
+@base https://api.spotify.com/v1
+@version 1.0
+@auth OAuth2
+@endpoints 4
+@toc Get a track, Search for items, Get a playlist, Get current user profile
+
+@endpoint GET /tracks/{id}
+@required {id: str}
+@optional {market: str}
+@returns(200) {id: str, name: str, artists: [map], album: map, duration_ms: int, popularity: int, preview_url: str?, uri: str}
+
+@endpoint GET /search
+@required {q: str, type: str}
+@optional {limit: int=20, offset: int=0, market: str}
+@returns(200) {tracks: map, artists: map, albums: map, playlists: map}
+
+@endpoint GET /playlists/{playlist_id}
+@required {playlist_id: str}
+@optional {fields: str, market: str}
+@returns(200) {id: str, name: str, description: str?, owner: map, tracks: map, public: bool?, followers: map}
+
+@endpoint GET /me
+@returns(200) {id: str, display_name: str, email: str, country: str, product: str, followers: map, images: [map]}
+
+@end
+
