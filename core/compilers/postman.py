@@ -189,7 +189,7 @@ def _extract_body_params(request: dict) -> list:
                     params.append(Param(
                         name=key,
                         type=_infer_type(val),
-                        required=True,
+                        required=not _is_likely_optional(key, val),
                         description='',
                     ))
         except (json.JSONDecodeError, TypeError):
@@ -214,6 +214,19 @@ def _extract_body_params(request: dict) -> list:
             ))
 
     return params
+
+
+def _is_likely_optional(key: str, value) -> bool:
+    """Heuristic: infer if a raw JSON body field is optional based on its example value."""
+    if value is None:
+        return True
+    if isinstance(value, str) and value.strip() == '':
+        return True
+    if isinstance(value, str) and value.startswith('{{') and value.endswith('}}'):
+        return False  # Postman variable placeholder → likely required
+    if isinstance(value, list) and len(value) == 0:
+        return True
+    return False
 
 
 def _infer_type(value) -> str:

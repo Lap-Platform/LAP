@@ -1,0 +1,142 @@
+You are running an API benchmark. Below is API documentation followed by 5 tasks.
+For each task, write the EXACT curl command. Do NOT read any files - everything you need is below.
+
+Format your response EXACTLY as:
+TASK 1: <curl command>
+TASK 2: <curl command>
+TASK 3: <curl command>
+TASK 4: <curl command>
+TASK 5: <curl command>
+
+You are an API integration assistant. Given API documentation and tasks, write the exact API call (curl command) for each.
+
+Format: TASK 1: <curl command>  through TASK 5: <curl command>
+
+--- API DOCUMENTATION ---
+@doclean v0.1
+@api Swagger Petstore - OpenAPI 3.0
+@base /api/v3
+@version 1.0.27
+@auth ApiKey api_key in header | OAuth2
+
+@endpoint POST /pet
+@desc Add a new pet to the store.
+@required {name: str, photoUrls: [str]}
+@optional {category: map, id: int(int64), status: str(available/pending/sold) # pet status in the store, tags: [map]}
+@returns(200) {category: map{id: int(int64), name: str}, id: int(int64), name: str, photoUrls: [str], status: str, tags: [map]} # Successful operation
+@errors {400: Invalid input, 422: Validation exception}
+
+@endpoint PUT /pet
+@desc Update an existing pet.
+@required {name: str, photoUrls: [str]}
+@optional {category: map, id: int(int64), status: str(available/pending/sold) # pet status in the store, tags: [map]}
+@returns(200) {category: map{id: int(int64), name: str}, id: int(int64), name: str, photoUrls: [str], status: str, tags: [map]} # Successful operation
+@errors {400: Invalid ID supplied, 404: Pet not found, 422: Validation exception}
+
+@endpoint GET /pet/findByStatus
+@desc Finds Pets by status.
+@required {status: str(available/pending/sold)=available # Status values that need to be considered for filter}
+@returns(200) successful operation
+@errors {400: Invalid status value}
+
+@endpoint GET /pet/findByTags
+@desc Finds Pets by tags.
+@required {tags: [str] # Tags to filter by}
+@returns(200) successful operation
+@errors {400: Invalid tag value}
+
+@endpoint DELETE /pet/{petId}
+@desc Deletes a pet.
+@required {petId: int(int64) # Pet id to delete}
+@optional {api_key: str}
+@returns(200) Pet deleted
+@errors {400: Invalid pet value}
+
+@endpoint GET /pet/{petId}
+@desc Find pet by ID.
+@required {petId: int(int64) # ID of pet to return}
+@returns(200) {category: map{id: int(int64), name: str}, id: int(int64), name: str, photoUrls: [str], status: str, tags: [map]} # successful operation
+@errors {400: Invalid ID supplied, 404: Pet not found}
+
+@endpoint POST /pet/{petId}
+@desc Updates a pet in the store with form data.
+@required {petId: int(int64) # ID of pet that needs to be updated}
+@optional {name: str # Name of pet that needs to be updated, status: str # Status of pet that needs to be updated}
+@returns(200) {category: map{id: int(int64), name: str}, id: int(int64), name: str, photoUrls: [str], status: str, tags: [map]} # successful operation
+@errors {400: Invalid input}
+
+@endpoint POST /pet/{petId}/uploadImage
+@desc Uploads an image.
+@required {petId: int(int64) # ID of pet to update}
+@optional {additionalMetadata: str # Additional Metadata}
+@returns(200) {code: int(int32), message: str, type: str} # successful operation
+@errors {400: No file uploaded, 404: Pet not found}
+
+@endpoint GET /store/inventory
+@desc Returns pet inventories by status.
+@returns(200) successful operation
+
+@endpoint POST /store/order
+@desc Place an order for a pet.
+@optional {complete: bool, id: int(int64), petId: int(int64), quantity: int(int32), shipDate: str(date-time), status: str(placed/approved/delivered) # Order Status}
+@returns(200) {complete: bool, id: int(int64), petId: int(int64), quantity: int(int32), shipDate: str(date-time), status: str} # successful operation
+@errors {400: Invalid input, 422: Validation exception}
+
+@endpoint DELETE /store/order/{orderId}
+@desc Delete purchase order by identifier.
+@required {orderId: int(int64) # ID of the order that needs to be deleted}
+@returns(200) order deleted
+@errors {400: Invalid ID supplied, 404: Order not found}
+
+@endpoint GET /store/order/{orderId}
+@desc Find purchase order by ID.
+@required {orderId: int(int64) # ID of order that needs to be fetched}
+@returns(200) {complete: bool, id: int(int64), petId: int(int64), quantity: int(int32), shipDate: str(date-time), status: str} # successful operation
+@errors {400: Invalid ID supplied, 404: Order not found}
+
+@endpoint POST /user
+@desc Create user.
+@optional {email: str, firstName: str, id: int(int64), lastName: str, password: str, phone: str, userStatus: int(int32) # User Status, username: str}
+@returns(200) {email: str, firstName: str, id: int(int64), lastName: str, password: str, phone: str, userStatus: int(int32), username: str} # successful operation
+
+@endpoint POST /user/createWithList
+@desc Creates list of users with given input array.
+@returns(200) {email: str, firstName: str, id: int(int64), lastName: str, password: str, phone: str, userStatus: int(int32), username: str} # Successful operation
+
+@endpoint GET /user/login
+@desc Logs user into the system.
+@optional {username: str # The user name for login, password: str # The password for login in clear text}
+@returns(200) successful operation
+@errors {400: Invalid username/password supplied}
+
+@endpoint GET /user/logout
+@desc Logs out current logged in user session.
+@returns(200) successful operation
+
+@endpoint DELETE /user/{username}
+@desc Delete user resource.
+@required {username: str # The name that needs to be deleted}
+@returns(200) User deleted
+@errors {400: Invalid username supplied, 404: User not found}
+
+@endpoint GET /user/{username}
+@desc Get user by user name.
+@required {username: str # The name that needs to be fetched. Use user1 for testing}
+@returns(200) {email: str, firstName: str, id: int(int64), lastName: str, password: str, phone: str, userStatus: int(int32), username: str} # successful operation
+@errors {400: Invalid username supplied, 404: User not found}
+
+@endpoint PUT /user/{username}
+@desc Update user resource.
+@required {username: str # name that need to be deleted}
+@optional {email: str, firstName: str, id: int(int64), lastName: str, password: str, phone: str, userStatus: int(int32) # User Status, username: str}
+@returns(200) successful operation
+@errors {400: bad request, 404: user not found}
+
+--- END DOCUMENTATION ---
+
+TASKS:
+1. Add a new pet to the store with name 'Fluffy'
+2. Get details of pet with ID 123
+3. Update an existing pet's information
+4. Find pets by status 'available'
+5. Delete pet with ID 456

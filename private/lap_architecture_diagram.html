@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><style>
+body { margin: 0; padding: 20px; background: #1a1a2e; font-family: -apple-system, sans-serif; color: #e0e0e0; }
+.container { max-width: 900px; margin: 0 auto; }
+h1 { text-align: center; color: #00e5a0; font-size: 24px; margin-bottom: 5px; }
+h2 { text-align: center; color: #888; font-size: 14px; font-weight: normal; margin-top: 0; }
+.diagram { position: relative; padding: 20px 0; }
+
+/* Flow sections */
+.section { margin: 15px 0; display: flex; align-items: center; gap: 12px; }
+.section-label { width: 100px; text-align: right; font-size: 11px; color: #666; flex-shrink: 0; }
+
+.box { padding: 14px 18px; border-radius: 10px; text-align: center; flex: 1; position: relative; }
+.box .title { font-weight: 700; font-size: 14px; }
+.box .sub { font-size: 11px; margin-top: 4px; opacity: 0.8; }
+
+/* Colors */
+.api { background: #2a2a4a; border: 2px solid #4a4a8a; }
+.lap { background: #0a3d2a; border: 2px solid #00e5a0; box-shadow: 0 0 15px rgba(0,229,160,0.2); }
+.llm { background: #2a2a4a; border: 2px solid #4a9eff; }
+.output { background: #2a2a4a; border: 2px solid #ff6b6b; }
+
+/* Arrows */
+.arrow { text-align: center; padding: 5px 0; }
+.arrow-line { color: #00e5a0; font-size: 20px; }
+.arrow-label { color: #00e5a0; font-size: 11px; font-weight: 600; }
+
+/* Comparison */
+.compare { display: flex; gap: 20px; margin: 25px 0; }
+.compare-col { flex: 1; border-radius: 10px; padding: 15px; }
+.compare-col.before { background: rgba(255,80,80,0.1); border: 1px solid rgba(255,80,80,0.3); }
+.compare-col.after { background: rgba(0,229,160,0.1); border: 1px solid rgba(0,229,160,0.3); }
+.compare-col h3 { margin: 0 0 10px; font-size: 13px; }
+.compare-col.before h3 { color: #ff6b6b; }
+.compare-col.after h3 { color: #00e5a0; }
+.compare-col pre { font-size: 10px; background: #111; padding: 10px; border-radius: 6px; overflow-x: auto; margin: 0; line-height: 1.4; }
+
+/* Key point */
+.key-point { background: rgba(0,229,160,0.1); border: 1px solid rgba(0,229,160,0.3); border-radius: 10px; padding: 15px; margin: 20px 0; text-align: center; }
+.key-point .emoji { font-size: 24px; }
+.key-point .text { color: #00e5a0; font-size: 14px; font-weight: 600; margin-top: 5px; }
+.key-point .detail { color: #aaa; font-size: 12px; margin-top: 5px; }
+
+/* No retraining section */
+.reasons { display: flex; gap: 12px; margin: 15px 0; }
+.reason { flex: 1; background: #1e1e3a; border-radius: 10px; padding: 12px; text-align: center; }
+.reason .icon { font-size: 28px; }
+.reason .rtitle { font-size: 12px; font-weight: 700; color: #4a9eff; margin: 6px 0 4px; }
+.reason .rdesc { font-size: 11px; color: #aaa; }
+
+.tokens { display: flex; gap: 15px; margin: 15px 0; align-items: center; justify-content: center; }
+.token-box { padding: 10px 20px; border-radius: 8px; text-align: center; }
+.token-box.red { background: rgba(255,80,80,0.15); border: 1px solid rgba(255,80,80,0.3); }
+.token-box.green { background: rgba(0,229,160,0.15); border: 1px solid rgba(0,229,160,0.3); }
+.token-box .num { font-size: 22px; font-weight: 800; }
+.token-box.red .num { color: #ff6b6b; }
+.token-box.green .num { color: #00e5a0; }
+.token-box .label { font-size: 10px; color: #888; }
+.vs { color: #666; font-size: 14px; font-weight: 700; }
+</style></head><body>
+<div class="container">
+
+<h1>🏗️ Where LAP Sits in the Stack</h1>
+<h2>No retraining. No migration. Just a smarter delivery layer.</h2>
+
+<!-- Architecture Flow -->
+<div class="diagram">
+  <div class="section">
+    <div class="section-label">Exists today<br>No change</div>
+    <div class="box api">
+      <div class="title">📄 API Providers</div>
+      <div class="sub">Stripe, GitHub, Snyk, Twilio...</div>
+      <div class="sub">Publish OpenAPI/YAML specs as usual</div>
+    </div>
+  </div>
+
+  <div class="arrow"><span class="arrow-line">⬇</span> <span class="arrow-label">OpenAPI YAML (200K tokens)</span></div>
+
+  <div class="section">
+    <div class="section-label" style="color:#00e5a0; font-weight:700">⭐ LAP<br>We add this</div>
+    <div class="box lap">
+      <div class="title">⚡ LAP Compiler + Registry</div>
+      <div class="sub">Automatic compilation: OpenAPI → DocLean</div>
+      <div class="sub">No human intervention needed</div>
+    </div>
+  </div>
+
+  <div class="arrow"><span class="arrow-line">⬇</span> <span class="arrow-label">DocLean (4K tokens) — 82% smaller</span></div>
+
+  <div class="section">
+    <div class="section-label">Exists today<br>No change</div>
+    <div class="box llm">
+      <div class="title">🤖 Any LLM (Claude, GPT, Gemini...)</div>
+      <div class="sub">Reads DocLean as plain text — no training needed</div>
+      <div class="sub">Produces identical output</div>
+    </div>
+  </div>
+
+  <div class="arrow"><span class="arrow-line">⬇</span> <span class="arrow-label">Same correct code</span></div>
+
+  <div class="section">
+    <div class="section-label">Same result</div>
+    <div class="box output">
+      <div class="title">✅ Working API Integration</div>
+      <div class="sub">Identical code output — proven with real agents</div>
+    </div>
+  </div>
+</div>
+
+<!-- Real Snyk results -->
+<div class="tokens">
+  <div class="token-box red">
+    <div class="num">249,430</div>
+    <div class="label">tokens WITHOUT LAP</div>
+  </div>
+  <div class="vs">→</div>
+  <div class="token-box green">
+    <div class="num">45,099</div>
+    <div class="label">tokens WITH LAP</div>
+  </div>
+</div>
+<p style="text-align:center; color:#666; font-size:11px;">Real Snyk API test — same task, same output, 82% fewer tokens</p>
+
+<!-- Why no retraining -->
+<h1 style="margin-top:30px;">🧠 Why No Retraining Needed?</h1>
+
+<div class="reasons">
+  <div class="reason">
+    <div class="icon">📖</div>
+    <div class="rtitle">It's Just Text</div>
+    <div class="rdesc">DocLean is plain structured text. Any LLM that can read English can read it. Nothing proprietary.</div>
+  </div>
+  <div class="reason">
+    <div class="icon">📉</div>
+    <div class="rtitle">Simpler, Not Harder</div>
+    <div class="rdesc">DocLean is EASIER to parse than YAML. Flat directives vs 8 levels of nesting. Less ambiguity.</div>
+  </div>
+  <div class="reason">
+    <div class="icon">🎯</div>
+    <div class="rtitle">Signal, Not Noise</div>
+    <div class="rdesc">We remove boilerplate that confuses LLMs. The information density goes UP, not down.</div>
+  </div>
+</div>
+
+<!-- Format comparison -->
+<div class="compare">
+  <div class="compare-col before">
+    <h3>❌ OpenAPI YAML — What LLM Gets Today</h3>
+    <pre>/org/{orgId}/projects:
+  post:
+    summary: "List all projects"
+    operationId: "listOrgProjects"
+    parameters:
+      - name: orgId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: "The org ID"
+    requestBody:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              filters:
+                type: object
+                properties:
+                  name:
+                    type: string
+    responses:
+      200:
+        description: "Success"
+        content:
+          application/json:
+            schema:
+              ...</pre>
+    <p style="color:#ff6b6b; font-size:12px; text-align:center; margin:8px 0 0;">~45 tokens for ONE endpoint</p>
+  </div>
+  <div class="compare-col after">
+    <h3>✅ DocLean — What LLM Gets With LAP</h3>
+    <pre>@endpoint POST /org/{orgId}/projects
+@required {orgId: str(uuid)}
+@optional {filters: map}
+@returns(200)</pre>
+    <p style="color:#00e5a0; font-size:12px; text-align:center; margin:8px 0 0;">~12 tokens — same information</p>
+  </div>
+</div>
+
+<div class="key-point">
+  <div class="emoji">💡</div>
+  <div class="text">LAP is like JPEG for API docs</div>
+  <div class="detail">Cameras didn't change. Screens didn't change. We just added a smarter format in between.<br>Same picture, 80% smaller file. Same API call, 82% fewer tokens.</div>
+</div>
+
+</div>
+</body></html>
