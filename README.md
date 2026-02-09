@@ -5,7 +5,7 @@
 **Cut API spec tokens by 10×. Same information. Fraction of the cost.**
 
 [![PyPI](https://img.shields.io/pypi/v/lap.svg)](https://pypi.org/project/lap/)
-[![Tests](https://github.com/lean-agent-protocol/lap/actions/workflows/tests.yml/badge.svg)](https://github.com/lean-agent-protocol/lap/actions/workflows/tests.yml)
+[![CI](https://github.com/Lean-Agent-Protocol/lap/actions/workflows/ci.yml/badge.svg)](https://github.com/Lean-Agent-Protocol/lap/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 
