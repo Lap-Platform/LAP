@@ -107,35 +107,30 @@ def _split_top_level_simple(s: str, sep: str = ',') -> list[str]:
 
 def _looks_like_field_start(text: str) -> bool:
     """Check if text starts with a field definition (word: type pattern).
-    
+
     Must have a type-like token after the colon (any/str/int/map/list/bool/num/etc),
     not just any value like 'false' or 'true'.
+
+    The regex handles field names with colons (e.g. 'header:correlationId: str')
+    by allowing colons in the field name character class.
     """
-    if not _FIELD_START_RE.match(text):
+    m = _FIELD_START_RE.match(text)
+    if not m:
         return False
-    # Try all ': ' positions (colon followed by space) to find one where the
-    # remainder looks like a type. This handles field names with colons like
-    # 'header:correlationId: str'.
     type_keywords = {'any', 'str', 'int', 'num', 'bool', 'map', 'list', 'array', 'object', 'float', 'date', 'enum', 'file', 'binary', 'bytes'}
-    idx = -1
-    while True:
-        idx = text.find(': ', idx + 1)
-        if idx == -1:
-            break
-        after_colon = text[idx + 2:].lstrip()
-        if not after_colon:
-            continue
-        first_word = after_colon.split()[0] if after_colon.split() else ''
-        # Remove trailing punctuation and default values for matching
-        first_word = first_word.split('=')[0].split('{')[0].split('<')[0].rstrip('?,;:(')
-        is_custom_type = bool(first_word) and first_word[0].isupper()
-        if (first_word in type_keywords or 
+    # Use the regex match boundary to find the type token
+    after_match = text[m.end():].lstrip()
+    if not after_match:
+        return False
+    first_word = after_match.split()[0] if after_match.split() else ''
+    # Remove trailing punctuation and default values for matching
+    first_word = first_word.split('=')[0].split('{')[0].split('<')[0].rstrip('?,;:(')
+    is_custom_type = bool(first_word) and first_word[0].isupper()
+    return (first_word in type_keywords or
             any(first_word.startswith(t + '(') for t in type_keywords) or
             first_word.startswith('[') or
             first_word.startswith('enum(') or
-            is_custom_type):
-            return True
-    return False
+            is_custom_type)
 
 
 def _parse_field(text: str) -> ResponseField:
@@ -281,14 +276,48 @@ def _parse_returns(line: str) -> ResponseSchema:
     return ResponseSchema(status_code=code, description=desc, fields=fields)
 
 
+def _split_error_entries(content: str) -> list[str]:
+    """Split error block by comma, but only at boundaries between error codes.
+
+    Only splits when the text after a comma starts with a digit (HTTP status code)
+    or 'default'. Commas inside error descriptions are preserved.
+    """
+    parts = []
+    depth = 0
+    current = []
+    i = 0
+    while i < len(content):
+        ch = content[i]
+        if ch in ('{', '('):
+            depth += 1
+            current.append(ch)
+        elif ch in ('}', ')'):
+            depth -= 1
+            current.append(ch)
+        elif ch == ',' and depth == 0:
+            rest = content[i + 1:].lstrip()
+            if rest and (rest[0].isdigit() or rest.startswith('default')):
+                parts.append(''.join(current).strip())
+                current = []
+                i += 1
+                continue
+            current.append(ch)
+        else:
+            current.append(ch)
+        i += 1
+    tail = ''.join(current).strip()
+    if tail:
+        parts.append(tail)
+    return parts
+
+
 def _parse_errors(line: str) -> list[ErrorSchema]:
     """Parse @errors {400: desc, 401: desc} or @errors {400, 401}."""
     m = re.match(r'^@errors\s*\{(.*)\}\s*$', line, re.DOTALL)
     if not m:
         return []
     content = m.group(1).strip()
-    # Error blocks use simple comma separation (not field-start heuristic)
-    parts = _split_top_level_simple(content)
+    parts = _split_error_entries(content)
     errors = []
     for part in parts:
         part = part.strip()
@@ -364,6 +393,29 @@ def parse_doclean(text: str) -> DocLeanSpec:
             elif stripped.startswith('@type '):
                 # Type definition — store for reference but not as endpoint
                 # @type Name {fields}
+                continue
+            elif stripped.startswith('@common_fields'):
+                # Parse common fields applied to all endpoints
+                m = re.match(r'^@common_fields\s*\{(.*)\}\s*$', stripped, re.DOTALL)
+                if m:
+                    content = m.group(1).strip()
+                    parts = _split_top_level(content)
+                    common = [_parse_param(p) for p in parts if p]
+                    for p in common:
+                        p.required = False
+                    spec.common_fields = common
+                continue
+            elif stripped.startswith('@hint '):
+                # Download hint metadata, skip
+                continue
+            elif stripped.startswith('@group '):
+                # Group marker for partial fetching, skip
+                continue
+            elif stripped == '@endgroup':
+                # End group marker, skip
+                continue
+            elif stripped.startswith('@example_request'):
+                # Request example, skip (informational)
                 continue
             elif stripped.startswith('@auth ') and current_endpoint is None:
                 spec.auth_scheme = stripped[6:].strip()
