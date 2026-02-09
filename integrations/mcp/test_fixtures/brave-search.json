@@ -1,0 +1,167 @@
+{
+  "name": "brave-search",
+  "version": "0.2.0",
+  "description": "MCP server for Brave Search API integration providing web search, local search, and search suggestions with privacy-focused results",
+  "tools": [
+    {
+      "name": "brave_web_search",
+      "description": "Perform a web search using Brave Search API. Returns web results with titles, URLs, descriptions, and optional snippets. Brave Search provides independent, privacy-respecting search results without filter bubbles. Supports various filters and parameters for refined searches.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Search query string"
+          },
+          "count": {
+            "type": "integer",
+            "description": "Number of results to return (default: 10, max: 50)"
+          },
+          "offset": {
+            "type": "integer",
+            "description": "Pagination offset (default: 0)"
+          },
+          "country": {
+            "type": "string",
+            "description": "Country code for localized results (e.g., 'US', 'GB', 'DE')"
+          },
+          "search_lang": {
+            "type": "string",
+            "description": "Language code for search results (e.g., 'en', 'es', 'fr')"
+          },
+          "safesearch": {
+            "type": "string",
+            "description": "Safe search level: 'off', 'moderate', or 'strict' (default: moderate)"
+          },
+          "freshness": {
+            "type": "string",
+            "description": "Filter by time: 'pd' (past day), 'pw' (past week), 'pm' (past month), 'py' (past year)"
+          }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "brave_local_search",
+      "description": "Search for local businesses and points of interest using Brave's local search API. Returns local results with addresses, ratings, phone numbers, and business hours. Useful for location-based queries.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Local search query (e.g., 'coffee shops near me', 'restaurants in Seattle')"
+          },
+          "count": {
+            "type": "integer",
+            "description": "Number of results to return (default: 5, max: 20)"
+          }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "brave_news_search",
+      "description": "Search for recent news articles using Brave Search. Returns news results with headlines, publication dates, sources, and article summaries. Focuses on recent and newsworthy content.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "News search query"
+          },
+          "count": {
+            "type": "integer",
+            "description": "Number of news articles to return (default: 10, max: 20)"
+          },
+          "country": {
+            "type": "string",
+            "description": "Country code for localized news (e.g., 'US', 'GB')"
+          },
+          "search_lang": {
+            "type": "string",
+            "description": "Language code for news articles (e.g., 'en', 'es')"
+          },
+          "freshness": {
+            "type": "string",
+            "description": "Time filter: 'pd' (past day), 'pw' (past week), 'pm' (past month)"
+          }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "brave_image_search",
+      "description": "Search for images using Brave Search. Returns image results with URLs, thumbnails, dimensions, and source information. Useful for finding visual content.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Image search query"
+          },
+          "count": {
+            "type": "integer",
+            "description": "Number of images to return (default: 20, max: 150)"
+          },
+          "safesearch": {
+            "type": "string",
+            "description": "Safe search level: 'off', 'moderate', or 'strict' (default: strict)"
+          },
+          "color": {
+            "type": "string",
+            "description": "Filter by color: 'color', 'black_white', or specific color names"
+          },
+          "type": {
+            "type": "string",
+            "description": "Image type: 'photo', 'clipart', 'line', 'animated'"
+          },
+          "size": {
+            "type": "string",
+            "description": "Image size: 'small', 'medium', 'large', 'extra_large'"
+          }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "brave_video_search",
+      "description": "Search for videos using Brave Search. Returns video results with titles, URLs, thumbnails, duration, and source platforms. Aggregates from multiple video platforms.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Video search query"
+          },
+          "count": {
+            "type": "integer",
+            "description": "Number of videos to return (default: 10, max: 20)"
+          },
+          "country": {
+            "type": "string",
+            "description": "Country code for localized results"
+          }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "brave_suggest",
+      "description": "Get search suggestions and autocomplete results for a query. Useful for helping users refine their searches or discovering related topics.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Partial search query to get suggestions for"
+          },
+          "country": {
+            "type": "string",
+            "description": "Country code for localized suggestions"
+          }
+        },
+        "required": ["query"]
+      }
+    }
+  ]
+}

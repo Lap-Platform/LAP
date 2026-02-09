@@ -1,0 +1,212 @@
+{
+  "name": "slack",
+  "version": "0.2.0",
+  "description": "MCP server for Slack integration providing channel management, messaging, user operations, and workspace interactions",
+  "tools": [
+    {
+      "name": "slack_list_channels",
+      "description": "List all channels in the Slack workspace. Returns both public channels you're a member of and all public channels if you have appropriate permissions. Useful for discovering channels before posting messages or getting channel info.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "description": "Maximum number of channels to return (default: 100, max: 1000)"
+          },
+          "types": {
+            "type": "string",
+            "description": "Comma-separated list of channel types: public_channel, private_channel, mpim, im (default: public_channel)"
+          }
+        }
+      }
+    },
+    {
+      "name": "slack_post_message",
+      "description": "Post a new message to a Slack channel or direct message. Supports rich formatting with Slack's mrkdwn format, thread replies, and message blocks for interactive content.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "channel": {
+            "type": "string",
+            "description": "Channel ID or name (with #) to post to"
+          },
+          "text": {
+            "type": "string",
+            "description": "Message text (supports Slack mrkdwn formatting)"
+          },
+          "thread_ts": {
+            "type": "string",
+            "description": "Thread timestamp to reply in a thread (optional)"
+          },
+          "blocks": {
+            "type": "array",
+            "description": "Array of Slack Block Kit blocks for rich formatting",
+            "items": {
+              "type": "object"
+            }
+          }
+        },
+        "required": ["channel", "text"]
+      }
+    },
+    {
+      "name": "slack_get_channel_history",
+      "description": "Retrieve message history from a Slack channel. Returns recent messages with user info, timestamps, and thread information. Useful for reading context before responding.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "channel": {
+            "type": "string",
+            "description": "Channel ID to get history from"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Number of messages to retrieve (default: 10, max: 100)"
+          },
+          "oldest": {
+            "type": "string",
+            "description": "Only messages after this Unix timestamp (inclusive)"
+          },
+          "latest": {
+            "type": "string",
+            "description": "Only messages before this Unix timestamp (exclusive)"
+          }
+        },
+        "required": ["channel"]
+      }
+    },
+    {
+      "name": "slack_add_reaction",
+      "description": "Add an emoji reaction to a Slack message. Reactions are a lightweight way to acknowledge messages without sending a full reply.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "channel": {
+            "type": "string",
+            "description": "Channel containing the message"
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "Timestamp of the message to react to"
+          },
+          "emoji": {
+            "type": "string",
+            "description": "Emoji name without colons (e.g., 'thumbsup', 'rocket')"
+          }
+        },
+        "required": ["channel", "timestamp", "emoji"]
+      }
+    },
+    {
+      "name": "slack_get_users",
+      "description": "List all users in the Slack workspace with their profile information including display name, real name, email, and status.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "description": "Maximum number of users to return (default: 100)"
+          }
+        }
+      }
+    },
+    {
+      "name": "slack_create_channel",
+      "description": "Create a new public or private channel in the Slack workspace. You must have permission to create channels in the workspace.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Channel name (lowercase, no spaces, may contain dashes and underscores)"
+          },
+          "is_private": {
+            "type": "boolean",
+            "description": "Create as private channel (default: false)"
+          },
+          "description": {
+            "type": "string",
+            "description": "Channel topic/description"
+          }
+        },
+        "required": ["name"]
+      }
+    },
+    {
+      "name": "slack_invite_to_channel",
+      "description": "Invite one or more users to a Slack channel. You must be a member of the channel to invite others.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "channel": {
+            "type": "string",
+            "description": "Channel ID to invite users to"
+          },
+          "users": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Array of user IDs to invite"
+          }
+        },
+        "required": ["channel", "users"]
+      }
+    },
+    {
+      "name": "slack_upload_file",
+      "description": "Upload a file to a Slack channel or direct message. Supports various file types with optional title and comment.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "channels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Array of channel IDs to share the file in"
+          },
+          "file": {
+            "type": "string",
+            "description": "File content as base64 encoded string"
+          },
+          "filename": {
+            "type": "string",
+            "description": "Filename for the upload"
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the file"
+          },
+          "initial_comment": {
+            "type": "string",
+            "description": "Message to post with the file"
+          }
+        },
+        "required": ["channels", "file", "filename"]
+      }
+    },
+    {
+      "name": "slack_search_messages",
+      "description": "Search for messages across all channels you have access to. Supports Slack's search syntax for filtering by user, channel, date, etc.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Search query (supports Slack search syntax)"
+          },
+          "count": {
+            "type": "integer",
+            "description": "Number of results to return (default: 20, max: 100)"
+          },
+          "sort": {
+            "type": "string",
+            "description": "Sort order: 'score' or 'timestamp' (default: score)"
+          }
+        },
+        "required": ["query"]
+      }
+    }
+  ]
+}

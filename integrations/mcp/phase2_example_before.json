@@ -1,0 +1,75 @@
+{
+  "name": "github",
+  "version": "0.3.0",
+  "description": "MCP server for GitHub API integration providing repository management, issue tracking, PR operations, and code search",
+  "tools": [
+    {
+      "name": "create_or_update_file",
+      "description": "Create or update a single file in a GitHub repository. This tool will create a new file if it doesn't exist or update an existing file. If updating, you should provide the current file's SHA (obtained via get_file_contents). If the file already exists and no SHA is provided, the operation will fail.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "owner": {
+            "type": "string",
+            "description": "Repository owner (username or organization)"
+          },
+          "repo": {
+            "type": "string",
+            "description": "Repository name"
+          },
+          "path": {
+            "type": "string",
+            "description": "Path where to create/update the file"
+          },
+          "content": {
+            "type": "string",
+            "description": "Content of the file (will be base64 encoded automatically)"
+          },
+          "message": {
+            "type": "string",
+            "description": "Commit message"
+          },
+          "branch": {
+            "type": "string",
+            "description": "Branch to create/update the file in (defaults to repo's default branch)"
+          },
+          "sha": {
+            "type": "string",
+            "description": "SHA of the file being replaced (required when updating existing files)"
+          }
+        },
+        "required": [
+          "owner",
+          "repo",
+          "path",
+          "content",
+          "message"
+        ]
+      }
+    },
+    {
+      "name": "search_repositories",
+      "description": "Search for GitHub repositories. Returns a list of repositories matching the search query, sorted by best match. You can filter by language, stars, topics, and more using GitHub's search syntax.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Search query (supports GitHub search syntax)"
+          },
+          "page": {
+            "type": "integer",
+            "description": "Page number for pagination (default: 1)"
+          },
+          "perPage": {
+            "type": "integer",
+            "description": "Number of results per page, max 100 (default: 30)"
+          }
+        },
+        "required": [
+          "query"
+        ]
+      }
+    }
+  ]
+}

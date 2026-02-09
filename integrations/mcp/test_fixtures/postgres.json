@@ -1,0 +1,187 @@
+{
+  "name": "postgres",
+  "version": "0.4.0",
+  "description": "MCP server for PostgreSQL database integration with schema inspection, query execution, and data manipulation capabilities",
+  "tools": [
+    {
+      "name": "postgres_query",
+      "description": "Execute a SELECT query against the PostgreSQL database and return results. Supports complex queries with JOINs, aggregations, and subqueries. Results are returned as an array of objects. Use with caution and always validate inputs to prevent SQL injection.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "SQL SELECT query to execute"
+          },
+          "params": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Query parameters for prepared statement (prevents SQL injection)"
+          }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "postgres_list_tables",
+      "description": "List all tables in the connected PostgreSQL database with their schemas. Returns table names, schemas, and row counts. Useful for discovering what data is available.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "schema": {
+            "type": "string",
+            "description": "Filter tables by schema name (default: public)"
+          }
+        }
+      }
+    },
+    {
+      "name": "postgres_describe_table",
+      "description": "Get detailed schema information about a specific table including column names, data types, constraints, indexes, and foreign keys. Essential for understanding table structure before querying.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "table": {
+            "type": "string",
+            "description": "Table name to describe"
+          },
+          "schema": {
+            "type": "string",
+            "description": "Schema name (default: public)"
+          }
+        },
+        "required": ["table"]
+      }
+    },
+    {
+      "name": "postgres_insert",
+      "description": "Insert one or more rows into a PostgreSQL table. Supports returning inserted values and handles data type conversion automatically.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "table": {
+            "type": "string",
+            "description": "Table name to insert into"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            },
+            "description": "Array of row objects to insert (keys = column names)"
+          },
+          "returning": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Columns to return after insert (e.g., ['id', 'created_at'])"
+          }
+        },
+        "required": ["table", "data"]
+      }
+    },
+    {
+      "name": "postgres_update",
+      "description": "Update existing rows in a PostgreSQL table based on conditions. Returns the number of affected rows. Use with caution - always include a WHERE clause to avoid updating all rows.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "table": {
+            "type": "string",
+            "description": "Table name to update"
+          },
+          "data": {
+            "type": "object",
+            "description": "Object with column names and new values"
+          },
+          "where": {
+            "type": "string",
+            "description": "WHERE clause condition (without the WHERE keyword)"
+          },
+          "params": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Parameters for the WHERE clause"
+          }
+        },
+        "required": ["table", "data", "where"]
+      }
+    },
+    {
+      "name": "postgres_delete",
+      "description": "Delete rows from a PostgreSQL table based on conditions. Returns the number of deleted rows. Always requires a WHERE clause to prevent accidental deletion of all data.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "table": {
+            "type": "string",
+            "description": "Table name to delete from"
+          },
+          "where": {
+            "type": "string",
+            "description": "WHERE clause condition (without the WHERE keyword)"
+          },
+          "params": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Parameters for the WHERE clause"
+          }
+        },
+        "required": ["table", "where"]
+      }
+    },
+    {
+      "name": "postgres_create_table",
+      "description": "Create a new table in the PostgreSQL database with specified columns, data types, and constraints. Supports primary keys, foreign keys, unique constraints, and indexes.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "table": {
+            "type": "string",
+            "description": "Name for the new table"
+          },
+          "columns": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            },
+            "description": "Array of column definitions with name, type, and constraints"
+          },
+          "schema": {
+            "type": "string",
+            "description": "Schema to create table in (default: public)"
+          }
+        },
+        "required": ["table", "columns"]
+      }
+    },
+    {
+      "name": "postgres_execute_raw",
+      "description": "Execute arbitrary SQL statements (DDL, DML, DCL). Use for operations not covered by other tools like CREATE INDEX, ALTER TABLE, GRANT, etc. Exercise extreme caution with this tool.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "sql": {
+            "type": "string",
+            "description": "Raw SQL statement to execute"
+          },
+          "params": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Parameters for prepared statement"
+          }
+        },
+        "required": ["sql"]
+      }
+    }
+  ]
+}
