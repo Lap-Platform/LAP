@@ -81,24 +81,28 @@ paths:
 
 ```mermaid
 graph LR
-    A[📄 API Spec] --> B[Format Detection]
-    B --> C{Parser}
-    C -->|OpenAPI| D[YAML/JSON Parser]
-    C -->|GraphQL| E[SDL Parser]
-    C -->|AsyncAPI| F[Event Schema Parser]
-    C -->|Protobuf| G[Proto Parser]
-    C -->|Postman| H[Collection Parser]
-    
-    D & E & F & G & H --> I[🔬 Unified IR]
-    
-    I --> J[Structural Noise Removal]
-    J --> K[Directive Grammar]
-    K --> L[Type Compression]
-    L --> M[Redundancy Elimination]
-    M --> N[Description Stripping]
-    
-    N --> O[📦 DocLean Output]
-    
+    A["API Spec"] --> B["Format Detection"]
+    B --> C{"Parser"}
+    C -->|OpenAPI| D["YAML/JSON Parser"]
+    C -->|GraphQL| E["SDL Parser"]
+    C -->|AsyncAPI| F["Event Schema Parser"]
+    C -->|Protobuf| G["Proto Parser"]
+    C -->|Postman| H["Collection Parser"]
+
+    D --> I["Unified IR"]
+    E --> I
+    F --> I
+    G --> I
+    H --> I
+
+    I --> J["1. Strip Structural Noise"]
+    J --> K["2. Directive Grammar"]
+    K --> L["3. Type Compression"]
+    L --> M["4. Redundancy Elimination"]
+    M --> N["5. Description Stripping"]
+
+    N --> O["DocLean Output"]
+
     style A fill:#ff6b6b,color:#fff
     style I fill:#4a9eff,color:#fff
     style O fill:#00e5a0,color:#fff
