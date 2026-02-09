@@ -89,6 +89,83 @@ paths:
 4. **Redundancy elimination** — Deduplicate error schemas, shared params, common fields (~20%)
 5. **Description stripping** (lean mode) — LLMs infer meaning from param names (~15%)
 
+## DocLean Format Conventions
+
+DocLean uses `@directives` — a flat, line-oriented grammar designed for LLM parsing.
+
+### Header Directives
+
+| Directive | Purpose | Example |
+|-----------|---------|---------|
+| `@doclean` | Format version | `@doclean v0.3` |
+| `@api` | API name | `@api Stripe Charges API` |
+| `@base` | Base URL | `@base https://api.stripe.com` |
+| `@version` | API version | `@version 2024-12-18` |
+| `@auth` | Auth scheme | `@auth Bearer bearer` |
+| `@endpoints` | Total endpoint count | `@endpoints 5` |
+| `@toc` | Table of contents | `@toc charges(5)` |
+| `@end` | End of document | `@end` |
+
+### Endpoint Directives
+
+| Directive | Purpose | Example |
+|-----------|---------|---------|
+| `@endpoint` | Method + path | `@endpoint POST /v1/charges` |
+| `@desc` | Description (standard mode) | `@desc Create a charge` |
+| `@required` | Required params with types | `@required {amount: int, currency: str}` |
+| `@optional` | Optional params with types | `@optional {limit: int=10, cursor: str}` |
+| `@returns(code)` | Response schema | `@returns(200) {id: str, status: str}` |
+| `@errors` | Error codes | `@errors {400, 401, 404}` |
+
+### Type System
+
+| Type | Meaning | Example |
+|------|---------|---------|
+| `str` | String | `name: str` |
+| `int` | Integer | `amount: int` |
+| `bool` | Boolean | `capture: bool` |
+| `float` | Float | `price: float` |
+| `map` | Object/dict | `metadata: map` |
+| `[T]` | Array of T | `items: [str]` |
+| `T?` | Nullable | `email: str?` |
+| `str(format)` | Typed string | `id: str(uuid)` |
+| `int(format)` | Typed int | `created: int(unix-timestamp)` |
+| `enum(a\|b\|c)` | Enum values | `status: enum(active\|inactive)` |
+| `T=default` | Default value | `limit: int=10` |
+| `map{k: T}` | Typed object | `billing: map{name: str, email: str}` |
+
+### Standard vs Lean Mode
+
+- **Standard** — includes `@desc` and inline `# comments` after fields
+- **Lean** — strips descriptions and comments; LLMs infer meaning from param names
+
+```
+# Standard:  @required {amount: int # Amount in cents., currency: str # ISO 4217 code.}
+# Lean:      @required {amount: int, currency: str}
+```
+
+### Example (Lean)
+
+```
+@doclean v0.3
+@api Stripe Charges API
+@base https://api.stripe.com
+@auth Bearer bearer
+
+@endpoint POST /v1/charges
+@required {amount: int, currency: str}
+@optional {source: str, customer: str, metadata: map}
+@returns(200) {id: str, amount: int, status: str, paid: bool}
+@errors {400, 401, 402}
+
+@endpoint GET /v1/charges/{charge}
+@required {charge: str}
+@returns(200)
+@errors {404}
+
+@end
+```
+
 ## Supported Formats
 
 ```bash

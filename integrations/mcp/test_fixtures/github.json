@@ -1,0 +1,245 @@
+{
+  "name": "github",
+  "version": "0.3.0",
+  "description": "MCP server for GitHub API integration providing repository management, issue tracking, PR operations, and code search",
+  "tools": [
+    {
+      "name": "create_or_update_file",
+      "description": "Create or update a single file in a GitHub repository. This tool will create a new file if it doesn't exist or update an existing file. If updating, you should provide the current file's SHA (obtained via get_file_contents). If the file already exists and no SHA is provided, the operation will fail.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "owner": {
+            "type": "string",
+            "description": "Repository owner (username or organization)"
+          },
+          "repo": {
+            "type": "string",
+            "description": "Repository name"
+          },
+          "path": {
+            "type": "string",
+            "description": "Path where to create/update the file"
+          },
+          "content": {
+            "type": "string",
+            "description": "Content of the file (will be base64 encoded automatically)"
+          },
+          "message": {
+            "type": "string",
+            "description": "Commit message"
+          },
+          "branch": {
+            "type": "string",
+            "description": "Branch to create/update the file in (defaults to repo's default branch)"
+          },
+          "sha": {
+            "type": "string",
+            "description": "SHA of the file being replaced (required when updating existing files)"
+          }
+        },
+        "required": ["owner", "repo", "path", "content", "message"]
+      }
+    },
+    {
+      "name": "search_repositories",
+      "description": "Search for GitHub repositories. Returns a list of repositories matching the search query, sorted by best match. You can filter by language, stars, topics, and more using GitHub's search syntax.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Search query (supports GitHub search syntax)"
+          },
+          "page": {
+            "type": "integer",
+            "description": "Page number for pagination (default: 1)"
+          },
+          "perPage": {
+            "type": "integer",
+            "description": "Number of results per page, max 100 (default: 30)"
+          }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "create_repository",
+      "description": "Create a new GitHub repository in your account or organization. You can specify visibility (public/private), initialize with README, add .gitignore and license.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Repository name"
+          },
+          "description": {
+            "type": "string",
+            "description": "Repository description"
+          },
+          "private": {
+            "type": "boolean",
+            "description": "Whether the repository should be private (default: false)"
+          },
+          "autoInit": {
+            "type": "boolean",
+            "description": "Initialize with README (default: false)"
+          }
+        },
+        "required": ["name"]
+      }
+    },
+    {
+      "name": "get_file_contents",
+      "description": "Get the contents of a file or directory from a GitHub repository. For files, returns the content and metadata. For directories, returns a list of files.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "owner": {
+            "type": "string",
+            "description": "Repository owner"
+          },
+          "repo": {
+            "type": "string",
+            "description": "Repository name"
+          },
+          "path": {
+            "type": "string",
+            "description": "Path to file or directory"
+          },
+          "branch": {
+            "type": "string",
+            "description": "Branch name (defaults to repo's default branch)"
+          }
+        },
+        "required": ["owner", "repo", "path"]
+      }
+    },
+    {
+      "name": "create_issue",
+      "description": "Create a new issue in a GitHub repository. Issues are used for tracking bugs, feature requests, and other tasks.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "owner": {
+            "type": "string",
+            "description": "Repository owner"
+          },
+          "repo": {
+            "type": "string",
+            "description": "Repository name"
+          },
+          "title": {
+            "type": "string",
+            "description": "Issue title"
+          },
+          "body": {
+            "type": "string",
+            "description": "Issue body/description"
+          },
+          "labels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Array of label names"
+          },
+          "assignees": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Array of usernames to assign"
+          }
+        },
+        "required": ["owner", "repo", "title"]
+      }
+    },
+    {
+      "name": "create_pull_request",
+      "description": "Create a new pull request in a GitHub repository. Pull requests let you propose changes and request review before merging into the main branch.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "owner": {
+            "type": "string",
+            "description": "Repository owner"
+          },
+          "repo": {
+            "type": "string",
+            "description": "Repository name"
+          },
+          "title": {
+            "type": "string",
+            "description": "Pull request title"
+          },
+          "body": {
+            "type": "string",
+            "description": "Pull request description"
+          },
+          "head": {
+            "type": "string",
+            "description": "The branch containing changes (source branch)"
+          },
+          "base": {
+            "type": "string",
+            "description": "The branch to merge into (target branch)"
+          },
+          "draft": {
+            "type": "boolean",
+            "description": "Create as draft PR (default: false)"
+          }
+        },
+        "required": ["owner", "repo", "title", "head", "base"]
+      }
+    },
+    {
+      "name": "fork_repository",
+      "description": "Fork a GitHub repository to your account or specified organization. Creates a copy of the repository that you can modify independently.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "owner": {
+            "type": "string",
+            "description": "Repository owner to fork from"
+          },
+          "repo": {
+            "type": "string",
+            "description": "Repository name to fork"
+          },
+          "organization": {
+            "type": "string",
+            "description": "Organization to fork to (optional, defaults to your personal account)"
+          }
+        },
+        "required": ["owner", "repo"]
+      }
+    },
+    {
+      "name": "create_branch",
+      "description": "Create a new branch in a GitHub repository from an existing branch or commit.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "owner": {
+            "type": "string",
+            "description": "Repository owner"
+          },
+          "repo": {
+            "type": "string",
+            "description": "Repository name"
+          },
+          "branch": {
+            "type": "string",
+            "description": "Name for the new branch"
+          },
+          "from_branch": {
+            "type": "string",
+            "description": "Source branch to create from (defaults to repo's default branch)"
+          }
+        },
+        "required": ["owner", "repo", "branch"]
+      }
+    }
+  ]
+}
