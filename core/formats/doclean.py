@@ -5,10 +5,12 @@ DocLean is a compressed, structured representation of API documentation
 optimized for LLM agent consumption.
 """
 
+import re
+from collections import OrderedDict
 from dataclasses import dataclass, field
 from typing import Optional
 
-DOCLEAN_VERSION = "v0.2"
+DOCLEAN_VERSION = "v0.3"
 
 
 @dataclass
@@ -97,6 +99,7 @@ class Endpoint:
     error_schemas: list = field(default_factory=list)
     responses: dict = field(default_factory=dict)
     errors: dict = field(default_factory=dict)
+    example_request: str = ""
 
     def to_doclean(self, lean: bool = False) -> str:
         lines = [f"@endpoint {self.method.upper()} {self.path}"]
@@ -141,7 +144,21 @@ class Endpoint:
                 err_str = ", ".join(f"{code}: {msg}" for code, msg in self.errors.items())
             lines.append(f"@errors {{{err_str}}}")
 
+        if self.example_request and not lean:
+            lines.append(f"@example_request {self.example_request}")
+
         return "\n".join(lines)
+
+
+def _group_name(path: str) -> str:
+    """Extract meaningful group name from endpoint path, skipping version prefixes."""
+    parts = [p for p in path.strip('/').split('/') if p]
+    if not parts:
+        return 'root'
+    i = 0
+    while i < len(parts) and re.match(r'^v\d+$', parts[i]):
+        i += 1
+    return parts[i] if i < len(parts) else parts[0]
 
 
 @dataclass
@@ -152,6 +169,7 @@ class DocLeanSpec:
     version: str = ""
     auth_scheme: str = ""
     endpoints: list = field(default_factory=list)
+    common_fields: list = field(default_factory=list)
 
     def to_doclean(self, lean: bool = False) -> str:
         lines = [f"@doclean {DOCLEAN_VERSION}"]
@@ -165,14 +183,27 @@ class DocLeanSpec:
         if self.auth_scheme:
             lines.append(f"@auth {self.auth_scheme}")
 
+        # Common fields -- params that repeat across nearly all endpoints
+        if self.common_fields:
+            fields = ", ".join(p.to_doclean(lean=lean) for p in self.common_fields)
+            lines.append(f"@common_fields {{{fields}}}")
+
         # Completeness header: endpoint count
         lines.append(f"@endpoints {len(self.endpoints)}")
 
-        # Table of contents
+        # Download hint for large specs
+        if len(self.endpoints) > 20:
+            lines.append("@hint download_for_search")
+
+        # Grouped table of contents
         if self.endpoints:
-            toc_entries = []
+            groups = OrderedDict()
             for ep in self.endpoints:
-                toc_entries.append(ep.summary if ep.summary else f"{ep.method.upper()} {ep.path}")
+                gname = _group_name(ep.path)
+                if gname not in groups:
+                    groups[gname] = 0
+                groups[gname] += 1
+            toc_entries = [f"{name}({count})" for name, count in groups.items()]
             lines.append(f"@toc {', '.join(toc_entries)}")
 
         # Emit @type blocks for reused types (set by protobuf compiler)
@@ -184,8 +215,25 @@ class DocLeanSpec:
 
         lines.append("")
 
-        for endpoint in self.endpoints:
-            lines.append(endpoint.to_doclean(lean=lean))
+        # Emit endpoints with @group markers, preserving original order
+        distinct_groups = OrderedDict()
+        for ep in self.endpoints:
+            distinct_groups[_group_name(ep.path)] = True
+        use_groups = len(distinct_groups) > 1
+
+        current_group = None
+        for ep in self.endpoints:
+            gname = _group_name(ep.path)
+            if use_groups and gname != current_group:
+                if current_group is not None:
+                    lines.append(f"@endgroup")
+                    lines.append("")
+                lines.append(f"@group {gname}")
+                current_group = gname
+            lines.append(ep.to_doclean(lean=lean))
+            lines.append("")
+        if use_groups and current_group is not None:
+            lines.append(f"@endgroup")
             lines.append("")
 
         # Explicit end marker

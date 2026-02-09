@@ -139,6 +139,125 @@ class TestParseErrors:
         assert errors[1].code == '401'
         assert errors[1].description == ''
 
+    def test_description_with_commas(self):
+        """Commas inside error descriptions should not split into new errors."""
+        errors = _parse_errors('@errors {404: Not found, check the ID, 500: Server error}')
+        assert len(errors) == 2
+        assert errors[0].code == '404'
+        assert 'check the ID' in errors[0].description
+        assert errors[1].code == '500'
+
+
+# ── v0.3 format tests ──
+
+class TestExpandedMapType:
+    def test_param_with_inline_map(self):
+        p = _parse_param('user: map{legal_name!: str, email: str}')
+        assert p.name == 'user'
+        assert p.type == 'map{legal_name!: str, email: str}'
+
+    def test_param_with_inline_map_and_desc(self):
+        p = _parse_param('user: map{name!: str, email: str} # User info')
+        assert p.name == 'user'
+        assert p.type == 'map{name!: str, email: str}'
+        assert p.description == 'User info'
+
+
+class TestV03Directives:
+    def test_common_fields(self):
+        doc = """@doclean v0.3
+@api Test
+@auth OAuth2
+@common_fields {client_id: str # Your client ID, secret: str # Your secret}
+@endpoints 1
+
+@endpoint POST /items
+@required {name: str}
+@returns(200)
+"""
+        spec = parse_doclean(doc)
+        assert len(spec.common_fields) == 2
+        assert spec.common_fields[0].name == 'client_id'
+        assert spec.common_fields[1].name == 'secret'
+
+    def test_hint_skipped(self):
+        doc = """@doclean v0.3
+@api Test
+@endpoints 0
+@hint download_for_search
+"""
+        spec = parse_doclean(doc)
+        assert spec.api_name == 'Test'
+
+    def test_group_markers_skipped(self):
+        doc = """@doclean v0.3
+@api Test
+
+@group users
+@endpoint GET /users
+@returns(200)
+@endgroup
+
+@group items
+@endpoint GET /items
+@returns(200)
+@endgroup
+"""
+        spec = parse_doclean(doc)
+        assert len(spec.endpoints) == 2
+        assert spec.endpoints[0].path == '/users'
+        assert spec.endpoints[1].path == '/items'
+
+    def test_example_request_skipped(self):
+        doc = """@doclean v0.3
+@api Test
+
+@endpoint POST /items
+@required {name: str}
+@example_request {"name":"test"}
+@returns(201)
+"""
+        spec = parse_doclean(doc)
+        assert len(spec.endpoints) == 1
+        assert spec.endpoints[0].path == '/items'
+
+    def test_grouped_toc(self):
+        """Grouped TOC format: name(count), ..."""
+        from core.formats.doclean import DocLeanSpec, Endpoint
+        spec = DocLeanSpec(
+            api_name='Test',
+            endpoints=[
+                Endpoint(method='get', path='/v1/users', summary='List'),
+                Endpoint(method='post', path='/v1/users', summary='Create'),
+                Endpoint(method='get', path='/v1/items', summary='List items'),
+            ],
+        )
+        text = spec.to_doclean()
+        assert '@toc users(2), items(1)' in text
+
+    def test_group_markers_emitted(self):
+        """Multiple path prefixes emit @group markers."""
+        from core.formats.doclean import DocLeanSpec, Endpoint
+        spec = DocLeanSpec(
+            api_name='Test',
+            endpoints=[
+                Endpoint(method='get', path='/users'),
+                Endpoint(method='get', path='/items'),
+            ],
+        )
+        text = spec.to_doclean()
+        assert '@group users' in text
+        assert '@group items' in text
+        assert '@endgroup' in text
+
+    def test_download_hint(self):
+        """Specs with >20 endpoints emit @hint."""
+        from core.formats.doclean import DocLeanSpec, Endpoint
+        endpoints = [Endpoint(method='get', path=f'/ep{i}') for i in range(25)]
+        spec = DocLeanSpec(api_name='Test', endpoints=endpoints)
+        text = spec.to_doclean()
+        assert '@hint download_for_search' in text
+
 
 # ── Full document parsing ──
 
