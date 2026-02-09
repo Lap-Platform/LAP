@@ -7,6 +7,7 @@ Usage:
 """
 
 import argparse
+import datetime
 import json
 import sys
 from pathlib import Path
@@ -63,6 +64,41 @@ def extract_type(schema: dict, spec: dict) -> str:
     return t
 
 
+def extract_type_inline(schema: dict, spec: dict, depth: int = 0, max_depth: int = 1) -> str:
+    """Extract type string, inlining object properties up to max_depth.
+
+    Never returns bare 'map' for objects with known properties.
+    Uses '!' suffix on required nested field names.
+    """
+    if "$ref" in schema:
+        schema = resolve_ref(spec, schema["$ref"])
+
+    t = schema.get("type", "any")
+    if isinstance(t, list):
+        non_null = [x for x in t if x != "null"]
+        t = non_null[0] if non_null else "any"
+
+    if t == "object" and schema.get("properties") and depth < max_depth:
+        props = schema.get("properties", {})
+        required_names = set(schema.get("required", []))
+        parts = []
+        for prop_name, prop_schema in props.items():
+            if "$ref" in prop_schema:
+                prop_schema = resolve_ref(spec, prop_schema["$ref"])
+            prop_type = extract_type_inline(prop_schema, spec, depth + 1, max_depth)
+            req_marker = "!" if prop_name in required_names else ""
+            parts.append(f"{prop_name}{req_marker}: {prop_type}")
+        return f"map{{{', '.join(parts)}}}"
+
+    if t == "array":
+        items_schema = schema.get("items", {})
+        items_type = extract_type_inline(items_schema, spec, depth, max_depth)
+        return f"[{items_type}]"
+
+    # Fall back to regular extract_type for scalars or objects at max depth
+    return extract_type(schema, spec)
+
+
 def extract_params(param_list: list, spec: dict) -> tuple[list, list]:
     """Extract required and optional params from OpenAPI parameters."""
     required = []
@@ -76,12 +112,13 @@ def extract_params(param_list: list, spec: dict) -> tuple[list, list]:
             continue  # skip malformed params
 
         schema = p.get("schema", {})
+        enum_vals = [v for v in schema.get("enum", []) if v is not None]
         param = Param(
             name=p["name"],
             type=extract_type(schema, spec),
             required=p.get("required", False),
             description=p.get("description", "").replace('\n', ' ').strip(),
-            enum=schema.get("enum", []),
+            enum=enum_vals,
             default=str(schema["default"]) if "default" in schema else None,
         )
 
@@ -94,7 +131,7 @@ def extract_params(param_list: list, spec: dict) -> tuple[list, list]:
 
 
 def extract_request_body(body: dict, spec: dict) -> list:
-    """Extract params from request body."""
+    """Extract params from request body, inlining nested object schemas."""
     if not body:
         return []
 
@@ -117,12 +154,16 @@ def extract_request_body(body: dict, spec: dict) -> list:
         if "$ref" in schema:
             schema = resolve_ref(spec, schema["$ref"])
 
+        # Use inline expansion for object-type params to avoid bare 'map'
+        type_str = extract_type_inline(schema, spec, depth=0, max_depth=1)
+
+        enum_vals = [v for v in schema.get("enum", []) if v is not None]
         params.append(Param(
             name=name,
-            type=extract_type(schema, spec),
+            type=type_str,
             required=name in required_names,
             description=schema.get("description", "").replace('\n', ' ').strip(),
-            enum=schema.get("enum", []),
+            enum=enum_vals,
             default=str(schema["default"]) if "default" in schema else None,
         ))
 
@@ -169,7 +210,7 @@ def extract_response_schemas(responses: dict, spec: dict) -> tuple:
         if "$ref" in resp:
             resp = resolve_ref(spec, resp["$ref"])
 
-        desc = resp.get("description", "")
+        desc = resp.get("description", "").replace('\n', ' ').strip()
 
         # Extract response body schema
         content = resp.get("content", {})
@@ -218,6 +259,48 @@ def extract_auth(spec: dict) -> str:
     return " | ".join(parts)
 
 
+def _json_default(obj):
+    """Handle non-serializable types in OpenAPI examples (datetime, date, etc.)."""
+    if isinstance(obj, (datetime.datetime, datetime.date)):
+        return obj.isoformat()
+    return str(obj)
+
+
+def extract_request_example(body: dict, spec: dict) -> str:
+    """Extract a request example from OpenAPI requestBody as compact JSON."""
+    if not body:
+        return ""
+
+    if "$ref" in body:
+        body = resolve_ref(spec, body["$ref"])
+
+    content = body.get("content", {})
+    json_content = content.get("application/json", {})
+
+    # Direct example on media type
+    example = json_content.get("example")
+    if example:
+        return json.dumps(example, separators=(',', ':'), default=_json_default)
+
+    # Named examples
+    examples = json_content.get("examples", {})
+    if examples:
+        first = next(iter(examples.values()), {})
+        if isinstance(first, dict):
+            if "$ref" in first:
+                first = resolve_ref(spec, first["$ref"])
+            value = first.get("value")
+            if value:
+                return json.dumps(value, separators=(',', ':'), default=_json_default)
+
+    return ""
+
+
+# Threshold: a body param must appear in this fraction of body-having
+# endpoints to be considered "common" and extracted into @common_fields.
+_COMMON_FIELD_THRESHOLD = 0.95
+
+
 def compile_openapi(spec_path: str) -> DocLeanSpec:
     """Compile an OpenAPI spec to DocLean format."""
     path = Path(spec_path)
@@ -260,6 +343,11 @@ def compile_openapi(spec_path: str) -> DocLeanSpec:
                     details.get("responses", {}), spec
                 )
 
+                # Extract request example
+                example = extract_request_example(
+                    details.get("requestBody", {}), spec
+                )
+
                 endpoint = Endpoint(
                     method=method,
                     path=path_str,
@@ -269,8 +357,44 @@ def compile_openapi(spec_path: str) -> DocLeanSpec:
                     request_body=body_params,
                     response_schemas=response_schemas,
                     error_schemas=error_schemas,
+                    example_request=example,
                 )
                 doclean.endpoints.append(endpoint)
+
+    # Deduplicate common fields -- any param (body, query, path, header)
+    # appearing in >95% of all endpoints gets extracted into @common_fields.
+    if len(doclean.endpoints) > 5:
+        from collections import Counter
+        name_counts = Counter()
+        for ep in doclean.endpoints:
+            seen = set()
+            for p in ep.request_body + ep.required_params + ep.optional_params:
+                if p.name not in seen:
+                    name_counts[p.name] += 1
+                    seen.add(p.name)
+
+        threshold = len(doclean.endpoints) * _COMMON_FIELD_THRESHOLD
+        common_names = {name for name, count in name_counts.items()
+                        if count >= threshold}
+
+        if common_names:
+            # Collect param objects from first endpoint that has each
+            common_params = []
+            found = set()
+            for ep in doclean.endpoints:
+                for p in ep.request_body + ep.required_params + ep.optional_params:
+                    if p.name in common_names and p.name not in found:
+                        common_params.append(p)
+                        found.add(p.name)
+            # Strip from all endpoints
+            for ep in doclean.endpoints:
+                ep.request_body = [p for p in ep.request_body
+                                  if p.name not in common_names]
+                ep.required_params = [p for p in ep.required_params
+                                     if p.name not in common_names]
+                ep.optional_params = [p for p in ep.optional_params
+                                     if p.name not in common_names]
+            doclean.common_fields = common_params
 
     return doclean
 
