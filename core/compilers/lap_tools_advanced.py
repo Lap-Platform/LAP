@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 """
-ToolLean — Compressed AI tool/skill manifests for the LAP protocol
+LAP — Compressed AI tool/skill manifests for the LAP protocol
 
-Part of LAP (Lean Agent Protocol). ToolLean provides a compact, structured
+Part of LAP (Lean Agent Protocol). LAP provides a compact, structured
 representation for AI tool definitions from any source: MCP servers,
 OpenClaw/ClawHub skills, Claude skills, or generic agent tools.
 
 Usage:
-    python toollean.py compile-mcp <manifest.json> [-o output.toollean]
-    python toollean.py compile-skill <SKILL.md> [-o output.toollean]
-    python toollean.py compile-json <tool.json> [-o output.toollean]
-    python toollean.py parse <file.toollean>
-    python toollean.py stats <file.toollean>
+    python lap.py compile-mcp <manifest.json> [-o output.lap]
+    python lap.py compile-skill <SKILL.md> [-o output.lap]
+    python lap.py compile-json <tool.json> [-o output.lap]
+    python lap.py parse <file.lap>
+    python lap.py stats <file.lap>
 """
 
 import argparse
@@ -19,36 +19,36 @@ import json
 import sys
 from pathlib import Path
 
-from core.formats.toollean import ToolLeanSpec, ToolLeanBundle
-from core.compilers.toollean import (
+from core.formats.lap_tools import LAPToolSpec, LAPToolBundle
+from core.compilers.lap_tools import (
     compile_mcp_file, compile_mcp_tool, compile_mcp_manifest,
     compile_skill_file, compile_skill_md,
     compile_generic_file, compile_generic_json,
 )
-from core.compilers.toollean_parser import parse_toollean, parse_single_tool
+from core.compilers.lap_tools_parser import parse_lap_tools, parse_single_tool
 
 
 def cmd_compile_mcp(args):
     bundle = compile_mcp_file(args.input)
-    result = bundle.to_toollean(lean=args.lean)
+    result = bundle.to_lap(lean=args.lean)
     _output(result, args.output)
 
 
 def cmd_compile_skill(args):
     spec = compile_skill_file(args.input)
-    result = spec.to_toollean(lean=args.lean)
+    result = spec.to_lap(lean=args.lean)
     _output(result, args.output)
 
 
 def cmd_compile_json(args):
     spec = compile_generic_file(args.input)
-    result = spec.to_toollean(lean=args.lean)
+    result = spec.to_lap(lean=args.lean)
     _output(result, args.output)
 
 
 def cmd_parse(args):
     text = Path(args.input).read_text()
-    bundle = parse_toollean(text)
+    bundle = parse_lap_tools(text)
     for tool in bundle.tools:
         print(f"Tool: {tool.name}")
         print(f"  Desc: {tool.description}")
@@ -66,7 +66,7 @@ def cmd_parse(args):
 
 def cmd_stats(args):
     text = Path(args.input).read_text()
-    bundle = parse_toollean(text)
+    bundle = parse_lap_tools(text)
     original_size = Path(args.input).stat().st_size
     print(f"File: {args.input}")
     print(f"Size: {original_size} bytes")
@@ -84,7 +84,7 @@ def _output(text: str, path: str = None):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="ToolLean — Compressed AI tool manifests")
+    parser = argparse.ArgumentParser(description="LAP — Compressed AI tool manifests")
     sub = parser.add_subparsers(dest="command")
 
     for name in ("compile-mcp", "compile-skill", "compile-json", "parse", "stats"):

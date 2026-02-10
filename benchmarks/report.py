@@ -28,12 +28,12 @@ def compile_all_specs():
         name = sp.stem
         spec = compile_openapi(str(sp))
         verbose = spec.to_original_text()
-        doclean = spec.to_doclean(lean=False)
-        lean = spec.to_doclean(lean=True)
-        tv, td, tl = count_tokens(verbose), count_tokens(doclean), count_tokens(lean)
+        lap = spec.to_lap(lean=False)
+        lean = spec.to_lap(lean=True)
+        tv, td, tl = count_tokens(verbose), count_tokens(lap), count_tokens(lean)
         results.append({
-            "name": name, "verbose_chars": len(verbose), "doclean_chars": len(doclean), "lean_chars": len(lean),
-            "verbose_tokens": tv, "doclean_tokens": td, "lean_tokens": tl,
+            "name": name, "verbose_chars": len(verbose), "lap_chars": len(lap), "lean_chars": len(lean),
+            "verbose_tokens": tv, "lap_tokens": td, "lean_tokens": tl,
             "reduction_std": (1 - td / tv) * 100, "reduction_lean": (1 - tl / tv) * 100,
         })
     return results
@@ -52,19 +52,19 @@ def generate():
     agent = load_agent_results()
 
     lines = [
-        "# LAP DocLean — Benchmark Report",
+        "# LAP LAP — Benchmark Report",
         f"\n*Generated: {now}*\n",
         "## Token Compression Benchmarks\n",
-        "| Spec | Verbose | DocLean | Lean | Reduction (Std) | Reduction (Lean) |",
+        "| Spec | Verbose | LAP | Lean | Reduction (Std) | Reduction (Lean) |",
         "|------|--------:|--------:|-----:|----------------:|-----------------:|",
     ]
 
     totals = {"v": 0, "d": 0, "l": 0}
     for s in specs:
         totals["v"] += s["verbose_tokens"]
-        totals["d"] += s["doclean_tokens"]
+        totals["d"] += s["lap_tokens"]
         totals["l"] += s["lean_tokens"]
-        lines.append(f"| {s['name']} | {s['verbose_tokens']:,} | {s['doclean_tokens']:,} | {s['lean_tokens']:,} "
+        lines.append(f"| {s['name']} | {s['verbose_tokens']:,} | {s['lap_tokens']:,} | {s['lean_tokens']:,} "
                       f"| {s['reduction_std']:.1f}% | {s['reduction_lean']:.1f}% |")
 
     overall_std = (1 - totals["d"] / totals["v"]) * 100
@@ -75,7 +75,7 @@ def generate():
     # Cost projections
     lines.extend([
         "\n## Cost Projections (per 1K lookups)\n",
-        "| Model | Verbose | DocLean | Lean | Savings |",
+        "| Model | Verbose | LAP | Lean | Savings |",
         "|-------|--------:|--------:|-----:|--------:|",
     ])
     for model, cost in MODEL_COSTS.items():
@@ -87,7 +87,7 @@ def generate():
     if agent:
         lines.extend([
             "\n## Agent Validation Tests\n",
-            "| # | API | Task | Verbose | DocLean | Lean | Reduction | Status |",
+            "| # | API | Task | Verbose | LAP | Lean | Reduction | Status |",
             "|---|-----|------|--------:|--------:|-----:|----------:|--------|",
         ])
         for i, r in enumerate(agent, 1):
@@ -96,7 +96,7 @@ def generate():
             emoji = "🏃" if status == "dry-run" else ("✅" if status == "pass" else "⚠️")
             task_short = r["task"][:40]
             api = r.get("spec", "").split("/")[-1].split("-")[0].title()
-            lines.append(f"| {i} | {api} | {task_short} | {t['verbose']:,} | {t['doclean']:,} | {t['lean']:,} "
+            lines.append(f"| {i} | {api} | {task_short} | {t['verbose']:,} | {t['lap']:,} | {t['lean']:,} "
                          f"| {t['reduction_lean']} | {emoji} {status} |")
 
         if any(r.get("equivalence") for r in agent):
@@ -113,7 +113,7 @@ def generate():
         "",
         "## Methodology\n",
         "- Token counts via tiktoken (cl100k_base encoding)",
-        "- DocLean compiled from OpenAPI 3.x specs",
+        "- LAP compiled from OpenAPI 3.x specs",
         "- Agent tests use identical prompts, varying only the documentation format",
         "- Functional equivalence = same HTTP method, endpoint path, and required parameters",
     ])

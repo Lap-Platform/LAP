@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-DocLean Schema Diff Engine — structured API change detection.
+LAP Schema Diff Engine — structured API change detection.
 
-Compares two DocLeanSpec objects and produces typed diffs with
+Compares two LAPSpec objects and produces typed diffs with
 breaking-change classification and semver severity.
 """
 
 from dataclasses import dataclass, field
 from typing import Optional
-from core.formats.doclean import DocLeanSpec, Endpoint, Param, ResponseField, ErrorSchema
+from core.formats.lap import LAPSpec, Endpoint, Param, ResponseField, ErrorSchema
 
 
 # ── Change Types ─────────────────────────────────────────────────────
@@ -91,8 +91,8 @@ def _is_required(param: Param, ep: Endpoint) -> bool:
 
 # ── Core Diff ────────────────────────────────────────────────────────
 
-def diff_specs(old: DocLeanSpec, new: DocLeanSpec) -> DiffResult:
-    """Diff two DocLeanSpec objects. Returns a DiffResult with all changes."""
+def diff_specs(old: LAPSpec, new: LAPSpec) -> DiffResult:
+    """Diff two LAPSpec objects. Returns a DiffResult with all changes."""
     result = DiffResult()
 
     old_eps = {_ep_key(ep): ep for ep in old.endpoints}
@@ -208,7 +208,7 @@ def _diff_endpoint(old_ep: Endpoint, new_ep: Endpoint, key: str, result: DiffRes
 
 # ── Compatibility Checker ────────────────────────────────────────────
 
-def check_compatibility(old: DocLeanSpec, new: DocLeanSpec) -> CompatibilityResult:
+def check_compatibility(old: LAPSpec, new: LAPSpec) -> CompatibilityResult:
     """Check backward compatibility between two spec versions."""
     diff = diff_specs(old, new)
     breaking = diff.breaking_changes
@@ -234,7 +234,7 @@ def check_compatibility(old: DocLeanSpec, new: DocLeanSpec) -> CompatibilityResu
 
 # ── Changelog Generator ─────────────────────────────────────────────
 
-def generate_changelog(old: DocLeanSpec, new: DocLeanSpec, version: str = "0.0.0") -> str:
+def generate_changelog(old: LAPSpec, new: LAPSpec, version: str = "0.0.0") -> str:
     """Generate a markdown changelog from two specs."""
     diff = diff_specs(old, new)
     lines = [f"## v{version}", ""]

@@ -13,17 +13,17 @@ from lap.middleware import LAPDocLoader
 
 # Import the canonical parser from src/
 import sys
-from core.parser import parse_doclean as _parse_doclean
+from core.parser import parse_lap as _parse_lap
 
 FIXTURES = Path(__file__).resolve().parents[2] / ".." / "output"
-STRIPE = str(FIXTURES / "stripe-charges.doclean")
+STRIPE = str(FIXTURES / "stripe-charges.lap")
 
 
 class TestLAPClient(unittest.TestCase):
     def setUp(self):
         self.client = LAPClient()
         if not Path(STRIPE).exists():
-            self.skipTest("stripe-charges.doclean not found")
+            self.skipTest("stripe-charges.lap not found")
         self.docs = self.client.load(STRIPE)
 
     def test_load_api_name(self):
@@ -88,7 +88,7 @@ class TestRegistry(unittest.TestCase):
 class TestMiddleware(unittest.TestCase):
     def setUp(self):
         if not Path(STRIPE).exists():
-            self.skipTest("stripe-charges.doclean not found")
+            self.skipTest("stripe-charges.lap not found")
 
     def test_load_documents(self):
         loader = LAPDocLoader(STRIPE)
@@ -105,7 +105,7 @@ class TestMiddleware(unittest.TestCase):
 
 class TestParser(unittest.TestCase):
     def test_parse_minimal(self):
-        text = """@doclean v0.1
+        text = """@lap v0.1
 @api Test API
 @base https://example.com
 
@@ -113,7 +113,7 @@ class TestParser(unittest.TestCase):
 @required {id: str}
 @returns(200) {result: str}
 """
-        spec = _parse_doclean(text)
+        spec = _parse_lap(text)
         self.assertEqual(spec.api_name, "Test API")
         self.assertEqual(len(spec.endpoints), 1)
         self.assertEqual(spec.endpoints[0].method, "get")

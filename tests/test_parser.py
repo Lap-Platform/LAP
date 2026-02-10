@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for DocLean parser and converter."""
+"""Tests for LAP parser and converter."""
 
 import sys
 import os
@@ -8,10 +8,10 @@ import pytest
 import yaml
 from pathlib import Path
 
-from core.formats.doclean import DocLeanSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema
-from core.parser import parse_doclean, _parse_param, _parse_field, _parse_returns, _parse_errors, _split_top_level
+from core.formats.lap import LAPSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema
+from core.parser import parse_lap, _parse_param, _parse_field, _parse_returns, _parse_errors, _split_top_level
 from core.compilers.openapi import compile_openapi
-from core.converter import doclean_to_openapi
+from core.converter import lap_to_openapi
 
 
 # ── Helper ──
@@ -165,7 +165,7 @@ class TestExpandedMapType:
 
 class TestV03Directives:
     def test_common_fields(self):
-        doc = """@doclean v0.3
+        doc = """@lap v0.3
 @api Test
 @auth OAuth2
 @common_fields {client_id: str # Your client ID, secret: str # Your secret}
@@ -175,22 +175,22 @@ class TestV03Directives:
 @required {name: str}
 @returns(200)
 """
-        spec = parse_doclean(doc)
+        spec = parse_lap(doc)
         assert len(spec.common_fields) == 2
         assert spec.common_fields[0].name == 'client_id'
         assert spec.common_fields[1].name == 'secret'
 
     def test_hint_skipped(self):
-        doc = """@doclean v0.3
+        doc = """@lap v0.3
 @api Test
 @endpoints 0
 @hint download_for_search
 """
-        spec = parse_doclean(doc)
+        spec = parse_lap(doc)
         assert spec.api_name == 'Test'
 
     def test_group_markers_skipped(self):
-        doc = """@doclean v0.3
+        doc = """@lap v0.3
 @api Test
 
 @group users
@@ -203,13 +203,13 @@ class TestV03Directives:
 @returns(200)
 @endgroup
 """
-        spec = parse_doclean(doc)
+        spec = parse_lap(doc)
         assert len(spec.endpoints) == 2
         assert spec.endpoints[0].path == '/users'
         assert spec.endpoints[1].path == '/items'
 
     def test_example_request_skipped(self):
-        doc = """@doclean v0.3
+        doc = """@lap v0.3
 @api Test
 
 @endpoint POST /items
@@ -217,14 +217,14 @@ class TestV03Directives:
 @example_request {"name":"test"}
 @returns(201)
 """
-        spec = parse_doclean(doc)
+        spec = parse_lap(doc)
         assert len(spec.endpoints) == 1
         assert spec.endpoints[0].path == '/items'
 
     def test_grouped_toc(self):
         """Grouped TOC format: name(count), ..."""
-        from core.formats.doclean import DocLeanSpec, Endpoint
-        spec = DocLeanSpec(
+        from core.formats.lap import LAPSpec, Endpoint
+        spec = LAPSpec(
             api_name='Test',
             endpoints=[
                 Endpoint(method='get', path='/v1/users', summary='List'),
@@ -232,30 +232,30 @@ class TestV03Directives:
                 Endpoint(method='get', path='/v1/items', summary='List items'),
             ],
         )
-        text = spec.to_doclean()
+        text = spec.to_lap()
         assert '@toc users(2), items(1)' in text
 
     def test_group_markers_emitted(self):
         """Multiple path prefixes emit @group markers."""
-        from core.formats.doclean import DocLeanSpec, Endpoint
-        spec = DocLeanSpec(
+        from core.formats.lap import LAPSpec, Endpoint
+        spec = LAPSpec(
             api_name='Test',
             endpoints=[
                 Endpoint(method='get', path='/users'),
                 Endpoint(method='get', path='/items'),
             ],
         )
-        text = spec.to_doclean()
+        text = spec.to_lap()
         assert '@group users' in text
         assert '@group items' in text
         assert '@endgroup' in text
 
     def test_download_hint(self):
         """Specs with >20 endpoints emit @hint."""
-        from core.formats.doclean import DocLeanSpec, Endpoint
+        from core.formats.lap import LAPSpec, Endpoint
         endpoints = [Endpoint(method='get', path=f'/ep{i}') for i in range(25)]
-        spec = DocLeanSpec(api_name='Test', endpoints=endpoints)
-        text = spec.to_doclean()
+        spec = LAPSpec(api_name='Test', endpoints=endpoints)
+        text = spec.to_lap()
         assert '@hint download_for_search' in text
 
 
@@ -263,7 +263,7 @@ class TestV03Directives:
 
 class TestParseFull:
     def test_minimal(self):
-        doc = """@doclean v0.1
+        doc = """@lap v0.1
 @api Test API
 @base https://api.test.com
 @version 1.0
@@ -275,7 +275,7 @@ class TestParseFull:
 @returns(200) {id: str, name: str}
 @errors {401: Unauthorized}
 """
-        spec = parse_doclean(doc)
+        spec = parse_lap(doc)
         assert spec.api_name == 'Test API'
         assert spec.base_url == 'https://api.test.com'
         assert spec.version == '1.0'
@@ -293,7 +293,7 @@ class TestParseFull:
         assert len(ep.error_schemas) == 1
 
     def test_multiple_endpoints(self):
-        doc = """@doclean v0.1
+        doc = """@lap v0.1
 @api Test
 
 @endpoint GET /a
@@ -303,7 +303,7 @@ class TestParseFull:
 @required {x: str}
 @returns(201)
 """
-        spec = parse_doclean(doc)
+        spec = parse_lap(doc)
         assert len(spec.endpoints) == 2
         assert spec.endpoints[0].path == '/a'
         assert spec.endpoints[1].path == '/b'
@@ -313,17 +313,17 @@ class TestParseFull:
 
 class TestRoundTrip:
     def _round_trip(self, spec_file: str, lean: bool = False):
-        """Compile OpenAPI → DocLean → parse back and verify."""
+        """Compile OpenAPI → LAP → parse back and verify."""
         spec_path = SPECS_DIR / spec_file
         if not spec_path.exists():
             pytest.skip(f'{spec_file} not found')
 
-        # Forward: OpenAPI → DocLeanSpec → DocLean text
+        # Forward: OpenAPI → LAPSpec → LAP text
         original = compile_openapi(str(spec_path))
-        text = original.to_doclean(lean=lean)
+        text = original.to_lap(lean=lean)
 
-        # Reverse: DocLean text → DocLeanSpec
-        parsed = parse_doclean(text)
+        # Reverse: LAP text → LAPSpec
+        parsed = parse_lap(text)
 
         # Verify header
         assert parsed.api_name == original.api_name
@@ -381,21 +381,21 @@ class TestRoundTrip:
 # ── Parse from file tests ──
 
 class TestParseFromFile:
-    def test_parse_stripe_doclean(self):
-        path = OUTPUT_DIR / 'stripe-charges.doclean'
+    def test_parse_stripe_lap(self):
+        path = OUTPUT_DIR / 'stripe-charges.lap'
         if not path.exists():
-            pytest.skip('stripe-charges.doclean not found')
-        spec = parse_doclean(path.read_text())
+            pytest.skip('stripe-charges.lap not found')
+        spec = parse_lap(path.read_text())
         assert spec.api_name == 'Stripe Charges API'
         assert len(spec.endpoints) == 5
         assert spec.endpoints[0].method == 'post'
         assert spec.endpoints[0].path == '/v1/charges'
 
     def test_parse_stripe_lean(self):
-        path = OUTPUT_DIR / 'stripe-charges.lean.doclean'
+        path = OUTPUT_DIR / 'stripe-charges.lean.lap'
         if not path.exists():
-            pytest.skip('stripe-charges.lean.doclean not found')
-        spec = parse_doclean(path.read_text())
+            pytest.skip('stripe-charges.lean.lap not found')
+        spec = parse_lap(path.read_text())
         assert spec.api_name == 'Stripe Charges API'
         assert len(spec.endpoints) == 5
 
@@ -404,16 +404,16 @@ class TestParseFromFile:
 
 class TestConverter:
     def test_roundtrip_openapi(self):
-        """OpenAPI → DocLean → parse → OpenAPI: verify structural equivalence."""
+        """OpenAPI → LAP → parse → OpenAPI: verify structural equivalence."""
         spec_path = SPECS_DIR / 'stripe-charges.yaml'
         if not spec_path.exists():
             pytest.skip('stripe-charges.yaml not found')
 
         original_openapi = yaml.safe_load(spec_path.read_text())
-        doclean_spec = compile_openapi(str(spec_path))
-        text = doclean_spec.to_doclean(lean=False)
-        parsed = parse_doclean(text)
-        regenerated = doclean_to_openapi(parsed)
+        lap_spec = compile_openapi(str(spec_path))
+        text = lap_spec.to_lap(lean=False)
+        parsed = parse_lap(text)
+        regenerated = lap_to_openapi(parsed)
 
         # Verify same paths exist
         orig_paths = set(original_openapi.get('paths', {}).keys())
@@ -427,7 +427,7 @@ class TestConverter:
             assert orig_methods == regen_methods, f'{path}: methods {orig_methods} vs {regen_methods}'
 
     def test_converter_produces_valid_yaml(self):
-        doc = """@doclean v0.1
+        doc = """@lap v0.1
 @api Test API
 @base https://api.test.com
 @version 1.0
@@ -436,8 +436,8 @@ class TestConverter:
 @optional {limit: int=25}
 @returns(200) {items: [map], total: int}
 """
-        spec = parse_doclean(doc)
-        openapi = doclean_to_openapi(spec)
+        spec = parse_lap(doc)
+        openapi = lap_to_openapi(spec)
         assert openapi['openapi'] == '3.0.0'
         assert openapi['info']['title'] == 'Test API'
         assert '/items' in openapi['paths']

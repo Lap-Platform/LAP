@@ -2,13 +2,13 @@
 
 ## TL;DR
 
-**ToolLean achieves 48.7% token savings vs pretty-printed JSON Schema and 35.4% vs compact JSON**, with 100% round-trip fidelity across all 6 tested MCP servers.
+**LAP achieves 48.7% token savings vs pretty-printed JSON Schema and 35.4% vs compact JSON**, with 100% round-trip fidelity across all 6 tested MCP servers.
 
-Phase 1's description-only compression got 3.7%. The real waste is in JSON Schema's structural overhead — and ToolLean eliminates it.
+Phase 1's description-only compression got 3.7%. The real waste is in JSON Schema's structural overhead — and LAP eliminates it.
 
 ## Token Comparison (cl100k_base)
 
-| MCP Server | Tools | JSON (pretty) | JSON (compact) | ToolLean | Savings vs Pretty | Savings vs Compact |
+| MCP Server | Tools | JSON (pretty) | JSON (compact) | LAP | Savings vs Pretty | Savings vs Compact |
 |------------|------:|---------------:|---------------:|---------:|-------------------:|-------------------:|
 | brave-search | 6 | 1,403 | 1,154 | 797 | **43.2%** | 30.9% |
 | filesystem | 14 | 764 | 615 | 427 | **44.1%** | 30.6% |
@@ -22,8 +22,8 @@ Phase 1's description-only compression got 3.7%. The real waste is in JSON Schem
 
 | | Tokens | Savings vs Pretty |
 |--|-------:|-------------------:|
-| ToolLean (full) | 3,789 | 48.7% |
-| ToolLean (lean) | 2,701 | 63.4% |
+| LAP (full) | 3,789 | 48.7% |
+| LAP (lean) | 2,701 | 63.4% |
 
 ## Where the Savings Come From
 
@@ -34,7 +34,7 @@ The JSON Schema tax per parameter:
   "description": "Repository owner"
 }
 ```
-→ ToolLean: `@in owner:str Repository owner`
+→ LAP: `@in owner:str Repository owner`
 
 That's **~10 tokens → ~5 tokens per parameter**. Multiply by dozens of parameters across a server's tools and it adds up fast.
 
@@ -75,13 +75,13 @@ Additional structural overhead eliminated:
 }
 ```
 
-### After (ToolLean — same 2 tools, 243 tokens)
+### After (LAP — same 2 tools, 243 tokens)
 
 ```
 # github
 # MCP server for GitHub API integration
 
-@toollean v0.1
+@lap v0.1
 @tool create_or_update_file
 @desc Create or update a single file in a GitHub repository...
 @in owner:str Repository owner (username or organization)
@@ -92,7 +92,7 @@ Additional structural overhead eliminated:
 @in branch:str? Branch to create/update the file in (defaults to repo's default branch)
 @in sha:str? SHA of the file being replaced (required when updating existing files)
 
-@toollean v0.1
+@lap v0.1
 @tool search_repositories
 @desc Search for GitHub repositories...
 @in query:str Search query (supports GitHub search syntax)
@@ -102,7 +102,7 @@ Additional structural overhead eliminated:
 
 ## Round-Trip Fidelity
 
-The LAP MCP Proxy can reconstruct the original JSON Schema from ToolLean with **100% fidelity**:
+The LAP MCP Proxy can reconstruct the original JSON Schema from LAP with **100% fidelity**:
 
 | Server | Tools | Fidelity | Issues |
 |--------|------:|---------:|--------|
@@ -118,9 +118,9 @@ All parameter names, types, required flags, descriptions, and enums survive the 
 ## Architecture: LAP MCP Proxy
 
 ```
-MCP Server → tools/list JSON → [LAP Proxy] → ToolLean text → LLM
+MCP Server → tools/list JSON → [LAP Proxy] → LAP text → LLM
                                      ↓
-                              Stored ToolLean
+                              Stored LAP
                                      ↓
 LLM → tools/call → [LAP Proxy] → JSON Schema validation → MCP Server
 ```
@@ -152,6 +152,6 @@ See: `lap_mcp_proxy.py`
 ## Files
 
 - `phase2_measure.py` — Token measurement script
-- `lap_mcp_proxy.py` — MCP proxy with ToolLean compression + round-trip reconstruction
+- `lap_mcp_proxy.py` — MCP proxy with LAP compression + round-trip reconstruction
 - `phase2_data.json` — Raw measurement data
 - `phase2_example_before.json` / `phase2_example_after.txt` — Full before/after examples

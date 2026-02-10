@@ -23,8 +23,8 @@ def process_spec(name, raw_text, compile_fn, filepath):
     try:
         print(f"  {name}...", end=" ", flush=True)
         result = compile_fn(filepath)
-        std = result.to_doclean()
-        lean = result.to_doclean(lean=True)
+        std = result.to_lap()
+        lean = result.to_lap(lean=True)
         raw_tok = count_tokens(raw_text)
         std_tok = count_tokens(std)
         lean_tok = count_tokens(lean)
@@ -152,10 +152,10 @@ with open(outdir / "median_benchmark.json", "w") as f:
 md = ["# LAP Benchmark: Median vs Mean Compression Ratios\n"]
 md.append(f"*Generated: 2026-02-08 | Tokenizer: tiktoken o200k_base*\n")
 md.append("## Summary\n")
-md.append("Compression ratio = DocLean tokens / Raw tokens (lower = better compression)\n")
+md.append("Compression ratio = LAP tokens / Raw tokens (lower = better compression)\n")
 
 # Summary table - Standard
-md.append("### Standard DocLean Compression\n")
+md.append("### Standard LAP Compression\n")
 md.append("| Format | Specs | Median | Mean | Min | Max | P25 | P75 |")
 md.append("|--------|-------|--------|------|-----|-----|-----|-----|")
 for fmt in ["openapi", "graphql", "asyncapi", "protobuf", "postman"]:
@@ -165,7 +165,7 @@ for fmt in ["openapi", "graphql", "asyncapi", "protobuf", "postman"]:
     s = a["std_compression"]
     md.append(f"| {fmt} | {a['count']} | {s['median']:.4f} | {s['mean']:.4f} | {s['min']:.4f} | {s['max']:.4f} | {s['p25']:.4f} | {s['p75']:.4f} |")
 
-md.append("\n### Lean DocLean Compression\n")
+md.append("\n### Lean LAP Compression\n")
 md.append("| Format | Specs | Median | Mean | Min | Max | P25 | P75 |")
 md.append("|--------|-------|--------|------|-----|-----|-----|-----|")
 for fmt in ["openapi", "graphql", "asyncapi", "protobuf", "postman"]:

@@ -18,10 +18,10 @@ import pytest
 import yaml
 from pathlib import Path
 
-from core.formats.doclean import DocLeanSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema
-from core.parser import parse_doclean
+from core.formats.lap import LAPSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema
+from core.parser import parse_lap
 from core.compilers.openapi import compile_openapi
-from core.converter import doclean_to_openapi
+from core.converter import lap_to_openapi
 
 SPECS_DIR = Path(__file__).parent.parent / 'examples' / 'verbose' / 'openapi'
 FIXTURES_DIR = Path(__file__).parent / 'fixtures'
@@ -54,10 +54,10 @@ class TestFullPipelineRoundTrip:
     """For every spec: compile → parse → convert → verify."""
 
     def test_standard_round_trip(self, spec_file):
-        """OpenAPI → DocLean(standard) → parse → verify structure."""
+        """OpenAPI → LAP(standard) → parse → verify structure."""
         original = compile_openapi(spec_file)
-        text = original.to_doclean(lean=False)
-        parsed = parse_doclean(text)
+        text = original.to_lap(lean=False)
+        parsed = parse_lap(text)
 
         assert parsed.api_name == original.api_name
         assert parsed.base_url == original.base_url
@@ -85,10 +85,10 @@ class TestFullPipelineRoundTrip:
                 assert pp.type == op.type
 
     def test_lean_round_trip(self, spec_file):
-        """OpenAPI → DocLean(lean) → parse → verify no descriptions."""
+        """OpenAPI → LAP(lean) → parse → verify no descriptions."""
         original = compile_openapi(spec_file)
-        text = original.to_doclean(lean=True)
-        parsed = parse_doclean(text)
+        text = original.to_lap(lean=True)
+        parsed = parse_lap(text)
 
         assert len(parsed.endpoints) == len(original.endpoints)
 
@@ -99,12 +99,12 @@ class TestFullPipelineRoundTrip:
                     f'{ep.method} {ep.path} param {p.name} has description in lean mode'
 
     def test_convert_back_to_openapi(self, spec_file):
-        """OpenAPI → DocLean → parse → OpenAPI: same paths and methods."""
+        """OpenAPI → LAP → parse → OpenAPI: same paths and methods."""
         original_yaml = yaml.safe_load(Path(spec_file).read_text())
         compiled = compile_openapi(spec_file)
-        text = compiled.to_doclean(lean=False)
-        parsed = parse_doclean(text)
-        regenerated = doclean_to_openapi(parsed)
+        text = compiled.to_lap(lean=False)
+        parsed = parse_lap(text)
+        regenerated = lap_to_openapi(parsed)
 
         orig_paths = set(original_yaml.get('paths', {}).keys())
         regen_paths = set(regenerated.get('paths', {}).keys())
@@ -118,9 +118,9 @@ class TestFullPipelineRoundTrip:
     def test_idempotent_serialization(self, spec_file):
         """Serialize → parse → serialize should produce identical output."""
         compiled = compile_openapi(spec_file)
-        text1 = compiled.to_doclean()
-        parsed = parse_doclean(text1)
-        text2 = parsed.to_doclean()
+        text1 = compiled.to_lap()
+        parsed = parse_lap(text1)
+        text2 = parsed.to_lap()
         assert text1.strip() == text2.strip()
 
 
@@ -133,15 +133,15 @@ class TestEdgeCaseEmpty:
         spec = compile_openapi(str(FIXTURES_DIR / 'empty_spec.yaml'))
         assert spec.api_name == 'Empty API'
         assert len(spec.endpoints) == 0
-        text = spec.to_doclean()
-        parsed = parse_doclean(text)
+        text = spec.to_lap()
+        parsed = parse_lap(text)
         assert len(parsed.endpoints) == 0
 
     def test_empty_spec_to_openapi(self):
         spec = compile_openapi(str(FIXTURES_DIR / 'empty_spec.yaml'))
-        text = spec.to_doclean()
-        parsed = parse_doclean(text)
-        openapi = doclean_to_openapi(parsed)
+        text = spec.to_lap()
+        parsed = parse_lap(text)
+        openapi = lap_to_openapi(parsed)
         assert openapi['paths'] == {}
 
 
@@ -153,8 +153,8 @@ class TestEdgeCaseNoParams:
         assert ep.required_params == []
         assert ep.optional_params == []
         assert ep.request_body == []
-        text = spec.to_doclean()
-        parsed = parse_doclean(text)
+        text = spec.to_lap()
+        parsed = parse_lap(text)
         assert len(parsed.endpoints) == 1
         assert parsed.endpoints[0].required_params == []
         assert parsed.endpoints[0].optional_params == []
@@ -167,8 +167,8 @@ class TestEdgeCaseOnlyRequired:
         assert len(ep.required_params) == 1
         assert ep.required_params[0].name == 'user_id'
         assert ep.optional_params == []
-        text = spec.to_doclean()
-        parsed = parse_doclean(text)
+        text = spec.to_lap()
+        parsed = parse_lap(text)
         assert len(parsed.endpoints[0].required_params) == 1
         assert parsed.endpoints[0].required_params[0].name == 'user_id'
 
@@ -178,8 +178,8 @@ class TestEdgeCaseDeepNested:
         spec = compile_openapi(str(FIXTURES_DIR / 'deep_nested.yaml'))
         ep = spec.endpoints[0]
         assert len(ep.response_schemas) == 1
-        text = spec.to_doclean()
-        parsed = parse_doclean(text)
+        text = spec.to_lap()
+        parsed = parse_lap(text)
         assert len(parsed.endpoints) == 1
         rs = parsed.endpoints[0].response_schemas[0]
         field_names = {f.name for f in rs.fields}
@@ -192,8 +192,8 @@ class TestEdgeCaseManyParams:
         ep = spec.endpoints[0]
         total_orig = len(ep.required_params) + len(ep.optional_params)
         assert total_orig >= 20
-        text = spec.to_doclean()
-        parsed = parse_doclean(text)
+        text = spec.to_lap()
+        parsed = parse_lap(text)
         ep_parsed = parsed.endpoints[0]
         total_parsed = len(ep_parsed.required_params) + len(ep_parsed.optional_params)
         assert total_parsed == total_orig
@@ -203,8 +203,8 @@ class TestEdgeCaseNoAuth:
     def test_no_auth_round_trip(self):
         spec = compile_openapi(str(FIXTURES_DIR / 'no_auth.yaml'))
         assert spec.auth_scheme == ''
-        text = spec.to_doclean()
-        parsed = parse_doclean(text)
+        text = spec.to_lap()
+        parsed = parse_lap(text)
         assert parsed.auth_scheme == ''
         assert len(parsed.endpoints) == 2
 
@@ -216,8 +216,8 @@ class TestEdgeCaseSpecialChars:
         param_names = {p.name for p in ep.required_params + ep.optional_params}
         assert 'query' in param_names
         assert 'format' in param_names
-        text = spec.to_doclean()
-        parsed = parse_doclean(text)
+        text = spec.to_lap()
+        parsed = parse_lap(text)
         parsed_names = {p.name for p in parsed.endpoints[0].required_params + parsed.endpoints[0].optional_params}
         assert 'query' in parsed_names
 
@@ -228,8 +228,8 @@ class TestEdgeCaseBigEnum:
         ep = spec.endpoints[0]
         country_param = next(p for p in ep.required_params + ep.optional_params if p.name == 'country')
         assert len(country_param.enum) == 20
-        text = spec.to_doclean()
-        parsed = parse_doclean(text)
+        text = spec.to_lap()
+        parsed = parse_lap(text)
         ep_parsed = parsed.endpoints[0]
         country_parsed = next(p for p in ep_parsed.required_params + ep_parsed.optional_params if p.name == 'country')
         assert len(country_parsed.enum) == 20
@@ -244,8 +244,8 @@ class TestEdgeCaseArrayNested:
         rs = ep.response_schemas[0]
         field_names = {f.name for f in rs.fields}
         assert 'orders' in field_names or 'total' in field_names
-        text = spec.to_doclean()
-        parsed = parse_doclean(text)
+        text = spec.to_lap()
+        parsed = parse_lap(text)
         assert len(parsed.endpoints) == 1
 
 
@@ -255,8 +255,8 @@ class TestEdgeCaseMultiAuth:
         assert 'Bearer' in spec.auth_scheme
         assert 'ApiKey' in spec.auth_scheme
         assert 'OAuth2' in spec.auth_scheme
-        text = spec.to_doclean()
-        parsed = parse_doclean(text)
+        text = spec.to_lap()
+        parsed = parse_lap(text)
         assert 'Bearer' in parsed.auth_scheme
         assert 'ApiKey' in parsed.auth_scheme
         assert 'OAuth2' in parsed.auth_scheme
@@ -280,7 +280,7 @@ class TestCLICompile:
             capture_output=True, text=True, cwd=str(PROJECT_DIR)
         )
         assert result.returncode == 0
-        assert '@doclean' in result.stdout
+        assert '@lap' in result.stdout
         assert '@api' in result.stdout
         assert '@endpoint' in result.stdout
 
@@ -293,7 +293,7 @@ class TestCLICompile:
         assert '@desc' not in result.stdout
 
     def test_compile_to_file(self, tmp_path):
-        out = tmp_path / 'test.doclean'
+        out = tmp_path / 'test.lap'
         result = subprocess.run(
             [sys.executable, CLI, 'compile', str(SPECS_DIR / 'stripe-charges.yaml'), '-o', str(out)],
             capture_output=True, text=True, cwd=str(PROJECT_DIR)
@@ -301,7 +301,7 @@ class TestCLICompile:
         assert result.returncode == 0
         assert out.exists()
         content = out.read_text()
-        assert '@doclean' in content
+        assert '@lap' in content
 
 
 class TestCLIValidate:
@@ -328,18 +328,18 @@ class TestCLIBenchmark:
 
 
 class TestCLIInspect:
-    def _ensure_doclean(self):
-        doclean_file = OUTPUT_DIR / 'stripe-charges.doclean'
-        if not doclean_file.exists():
+    def _ensure_lap(self):
+        lap_file = OUTPUT_DIR / 'stripe-charges.lap'
+        if not lap_file.exists():
             subprocess.run(
                 [sys.executable, CLI, 'compile', str(SPECS_DIR / 'stripe-charges.yaml'),
-                 '-o', str(doclean_file)],
+                 '-o', str(lap_file)],
                 capture_output=True, text=True, cwd=str(PROJECT_DIR)
             )
-        return doclean_file
+        return lap_file
 
     def test_inspect_all(self):
-        f = self._ensure_doclean()
+        f = self._ensure_lap()
         result = subprocess.run(
             [sys.executable, CLI, 'inspect', str(f)],
             capture_output=True, text=True, cwd=str(PROJECT_DIR)
@@ -348,7 +348,7 @@ class TestCLIInspect:
         assert 'Stripe' in result.stdout or 'stripe' in result.stdout.lower()
 
     def test_inspect_with_endpoint_filter(self):
-        f = self._ensure_doclean()
+        f = self._ensure_lap()
         result = subprocess.run(
             [sys.executable, CLI, 'inspect', str(f), '--endpoint', 'POST /v1/charges'],
             capture_output=True, text=True, cwd=str(PROJECT_DIR)
@@ -358,18 +358,18 @@ class TestCLIInspect:
 
 
 class TestCLIConvert:
-    def _ensure_doclean(self):
-        doclean_file = OUTPUT_DIR / 'stripe-charges.doclean'
-        if not doclean_file.exists():
+    def _ensure_lap(self):
+        lap_file = OUTPUT_DIR / 'stripe-charges.lap'
+        if not lap_file.exists():
             subprocess.run(
                 [sys.executable, CLI, 'compile', str(SPECS_DIR / 'stripe-charges.yaml'),
-                 '-o', str(doclean_file)],
+                 '-o', str(lap_file)],
                 capture_output=True, text=True, cwd=str(PROJECT_DIR)
             )
-        return doclean_file
+        return lap_file
 
     def test_convert_stdout(self):
-        f = self._ensure_doclean()
+        f = self._ensure_lap()
         result = subprocess.run(
             [sys.executable, CLI, 'convert', str(f)],
             capture_output=True, text=True, cwd=str(PROJECT_DIR)
@@ -380,7 +380,7 @@ class TestCLIConvert:
         assert 'paths' in parsed
 
     def test_convert_to_file(self, tmp_path):
-        f = self._ensure_doclean()
+        f = self._ensure_lap()
         out = tmp_path / 'output.yaml'
         result = subprocess.run(
             [sys.executable, CLI, 'convert', str(f), '-o', str(out)],

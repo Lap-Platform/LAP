@@ -4,7 +4,7 @@ LAP Implementation Benchmark — End-to-End Agent Token Cost Comparison
 
 Compares the full token cost when an AI agent implements code using:
   A) Full OpenAPI specs as context
-  B) DocLean compressed specs as context
+  B) LAP compressed specs as context
 
 Proves agents produce equal-quality code with 70%+ less context tokens.
 """
@@ -38,7 +38,7 @@ SCENARIOS = [
         "id": "stripe-payment-intent",
         "name": "Stripe: Create & Confirm Payment Intent",
         "spec_file": "stripe-charges.yaml",
-        "lean_file": "stripe-charges.lean.doclean",
+        "lean_file": "stripe-charges.lean.lap",
         "user_prompt": "Implement a function that creates a Stripe payment intent for a given amount and currency, confirms it with a payment method, and handles errors like card_declined, insufficient_funds, and rate limits. Include retry logic with exponential backoff.",
         "response": '''```python
 import time
@@ -204,7 +204,7 @@ if __name__ == "__main__":
         "id": "github-pr",
         "name": "GitHub: Create PR with Reviewers & Labels",
         "spec_file": "github-core.yaml",
-        "lean_file": "github-core.lean.doclean",
+        "lean_file": "github-core.lean.lap",
         "user_prompt": "Implement a function that creates a GitHub pull request, adds reviewers and labels, and returns the PR URL. Handle cases where reviewers don't have permission or labels don't exist.",
         "response": '''```python
 import requests
@@ -354,7 +354,7 @@ if __name__ == "__main__":
         "id": "twilio-sms",
         "name": "Twilio: Send SMS with Delivery Callback",
         "spec_file": "twilio-core.yaml",
-        "lean_file": "twilio-core.lean.doclean",
+        "lean_file": "twilio-core.lean.lap",
         "user_prompt": "Implement a function that sends a Twilio SMS with a delivery status callback URL. Support message scheduling, and handle errors like invalid phone numbers and insufficient funds. Include a webhook handler for status updates.",
         "response": '''```python
 import requests
@@ -509,7 +509,7 @@ if __name__ == "__main__":
         "id": "slack-channels",
         "name": "Slack: List Channels & Post Message",
         "spec_file": "slack.yaml",
-        "lean_file": "slack.lean.doclean",
+        "lean_file": "slack.lean.lap",
         "user_prompt": "Implement a function that lists Slack channels (with pagination), finds a channel by name, and posts a message with block kit attachments. Handle rate limiting and token expiration.",
         "response": '''```python
 import time
@@ -712,7 +712,7 @@ if __name__ == "__main__":
         "id": "hetzner-infra",
         "name": "Hetzner: Server + Floating IP + Firewall",
         "spec_file": "hetzner.yaml",
-        "lean_file": "hetzner.lean.doclean",
+        "lean_file": "hetzner.lean.lap",
         "user_prompt": "Implement a function that creates a Hetzner cloud server, assigns a floating IP to it, and creates a firewall with rules allowing SSH (22), HTTP (80), and HTTPS (443). Handle errors and return all resource IDs.",
         "response": '''```python
 import time
@@ -901,9 +901,9 @@ def build_prompt_a(scenario: dict) -> tuple[str, str, str]:
     return system, scenario["user_prompt"], scenario["response"]
 
 def build_prompt_b(scenario: dict) -> tuple[str, str, str]:
-    """Build DocLean prompt. Returns (system, user, response)."""
+    """Build LAP prompt. Returns (system, user, response)."""
     lean = load_file(OUTPUT / scenario["lean_file"])
-    system = f"{SYSTEM_PROMPT}\n\n# API Documentation (DocLean Format)\n\n{lean}"
+    system = f"{SYSTEM_PROMPT}\n\n# API Documentation (LAP Format)\n\n{lean}"
     return system, scenario["user_prompt"], scenario["response"]
 
 def measure_scenario(scenario: dict) -> dict:
@@ -924,7 +924,7 @@ def measure_scenario(scenario: dict) -> dict:
             "output_tokens": output_tokens,
             "total_tokens": input_a + output_tokens,
         },
-        "doclean": {
+        "lap": {
             "system_tokens": count_tokens(sys_b),
             "user_tokens": count_tokens(user_b),
             "input_tokens": input_b,
@@ -940,7 +940,7 @@ def measure_scenario(scenario: dict) -> dict:
         # Truncated prompt previews
         "preview": {
             "openapi_system_first_500": sys_a[:500] + "...",
-            "doclean_system_first_500": sys_b[:500] + "...",
+            "lap_system_first_500": sys_b[:500] + "...",
         }
     }
 
@@ -951,21 +951,21 @@ def multi_call_scenario(results: list[dict], n_calls: int = 10) -> dict:
     scenarios_to_use = [r for r in results if r["id"] != "hetzner-infra"]
     
     openapi_total = 0
-    doclean_total = 0
+    lap_total = 0
     
     for i in range(n_calls):
         s = scenarios_to_use[i % len(scenarios_to_use)]
         # Each call: input context sent again + new output
         openapi_total += s["openapi"]["total_tokens"]
-        doclean_total += s["doclean"]["total_tokens"]
+        lap_total += s["lap"]["total_tokens"]
     
     return {
         "description": f"Agent making {n_calls} API implementation calls in one session",
         "n_calls": n_calls,
         "openapi_total_tokens": openapi_total,
-        "doclean_total_tokens": doclean_total,
-        "tokens_saved": openapi_total - doclean_total,
-        "pct_saved": round((1 - doclean_total / openapi_total) * 100, 1) if openapi_total else 0,
+        "lap_total_tokens": lap_total,
+        "tokens_saved": openapi_total - lap_total,
+        "pct_saved": round((1 - lap_total / openapi_total) * 100, 1) if openapi_total else 0,
     }
 
 
@@ -975,20 +975,20 @@ def multi_api_scenario(results: list[dict]) -> dict:
     selected = [r for r in results if r["id"] in apis]
     
     openapi_input = sum(r["openapi"]["input_tokens"] for r in selected)
-    doclean_input = sum(r["doclean"]["input_tokens"] for r in selected)
+    lap_input = sum(r["lap"]["input_tokens"] for r in selected)
     output = sum(r["openapi"]["output_tokens"] for r in selected)
     
     return {
         "description": "Agent using Stripe + GitHub + Slack APIs in one task (all docs loaded)",
         "apis": [r["name"] for r in selected],
         "openapi_input_tokens": openapi_input,
-        "doclean_input_tokens": doclean_input,
+        "lap_input_tokens": lap_input,
         "output_tokens": output,
         "openapi_total": openapi_input + output,
-        "doclean_total": doclean_input + output,
-        "input_saved": openapi_input - doclean_input,
-        "input_pct_saved": round((1 - doclean_input / openapi_input) * 100, 1),
-        "total_pct_saved": round((1 - (doclean_input + output) / (openapi_input + output)) * 100, 1),
+        "lap_total": lap_input + output,
+        "input_saved": openapi_input - lap_input,
+        "input_pct_saved": round((1 - lap_input / openapi_input) * 100, 1),
+        "total_pct_saved": round((1 - (lap_input + output) / (openapi_input + output)) * 100, 1),
     }
 
 
@@ -1002,10 +1002,10 @@ def generate_report(results: list[dict], multi_call: dict, multi_api: dict) -> s
         "## Executive Summary",
         "",
         "This benchmark simulates a real-world scenario: **an AI agent implementing code using API documentation**.",
-        "We compare the full token cost when the agent receives OpenAPI specs vs DocLean-compressed specs.",
+        "We compare the full token cost when the agent receives OpenAPI specs vs LAP-compressed specs.",
         "",
         "**Key finding:** Agents produce **identical-quality implementations** with **70-95% fewer input tokens**",
-        "when using DocLean format, because DocLean preserves all the information developers actually need",
+        "when using LAP format, because LAP preserves all the information developers actually need",
         "(endpoints, parameters, types, auth) while eliminating verbose YAML boilerplate.",
         "",
         "---",
@@ -1016,12 +1016,12 @@ def generate_report(results: list[dict], multi_call: dict, multi_api: dict) -> s
 
     for r in results:
         oa = r["openapi"]
-        dl = r["doclean"]
+        dl = r["lap"]
         sv = r["savings"]
         lines.extend([
             f"### {r['name']}",
             "",
-            f"| Metric | OpenAPI | DocLean | Savings |",
+            f"| Metric | OpenAPI | LAP | Savings |",
             f"|--------|---------|---------|---------|",
             f"| Input tokens (docs + prompt) | {oa['input_tokens']:,} | {dl['input_tokens']:,} | **{sv['input_tokens_saved']:,} ({sv['input_pct_saved']}%)** |",
             f"| Output tokens (implementation) | {oa['output_tokens']:,} | {dl['output_tokens']:,} | 0 (same code) |",
@@ -1032,7 +1032,7 @@ def generate_report(results: list[dict], multi_call: dict, multi_api: dict) -> s
         if r["id"] == "hetzner-infra":
             lines.extend([
                 f"> 💡 **This is a large spec (144 endpoints).** The OpenAPI YAML alone is {oa['system_tokens']:,} tokens.",
-                f"> DocLean compresses it to {dl['system_tokens']:,} tokens — the agent still produces the same implementation.",
+                f"> LAP compresses it to {dl['system_tokens']:,} tokens — the agent still produces the same implementation.",
                 "",
             ])
 
@@ -1042,16 +1042,16 @@ def generate_report(results: list[dict], multi_call: dict, multi_api: dict) -> s
         "",
         "## Summary Table",
         "",
-        "| Scenario | OpenAPI Total | DocLean Total | Tokens Saved | % Saved |",
+        "| Scenario | OpenAPI Total | LAP Total | Tokens Saved | % Saved |",
         "|----------|--------------|--------------|-------------|---------|",
     ])
     for r in results:
         lines.append(
-            f"| {r['name']} | {r['openapi']['total_tokens']:,} | {r['doclean']['total_tokens']:,} | {r['savings']['total_tokens_saved']:,} | **{r['savings']['total_pct_saved']}%** |"
+            f"| {r['name']} | {r['openapi']['total_tokens']:,} | {r['lap']['total_tokens']:,} | {r['savings']['total_tokens_saved']:,} | **{r['savings']['total_pct_saved']}%** |"
         )
 
     total_oa = sum(r["openapi"]["total_tokens"] for r in results)
-    total_dl = sum(r["doclean"]["total_tokens"] for r in results)
+    total_dl = sum(r["lap"]["total_tokens"] for r in results)
     total_saved = total_oa - total_dl
     total_pct = round((1 - total_dl / total_oa) * 100, 1)
     lines.append(f"| **TOTAL** | **{total_oa:,}** | **{total_dl:,}** | **{total_saved:,}** | **{total_pct}%** |")
@@ -1065,9 +1065,9 @@ def generate_report(results: list[dict], multi_call: dict, multi_api: dict) -> s
         "",
         f"**{multi_call['description']}**",
         "",
-        f"| Metric | OpenAPI | DocLean |",
+        f"| Metric | OpenAPI | LAP |",
         f"|--------|---------|---------|",
-        f"| Total tokens ({multi_call['n_calls']} calls) | {multi_call['openapi_total_tokens']:,} | {multi_call['doclean_total_tokens']:,} |",
+        f"| Total tokens ({multi_call['n_calls']} calls) | {multi_call['openapi_total_tokens']:,} | {multi_call['lap_total_tokens']:,} |",
         f"| Tokens saved | — | **{multi_call['tokens_saved']:,}** |",
         f"| % saved | — | **{multi_call['pct_saved']}%** |",
         "",
@@ -1082,17 +1082,17 @@ def generate_report(results: list[dict], multi_call: dict, multi_api: dict) -> s
         "",
         f"**{multi_api['description']}**",
         "",
-        f"| Metric | OpenAPI | DocLean |",
+        f"| Metric | OpenAPI | LAP |",
         f"|--------|---------|---------|",
-        f"| Combined input tokens | {multi_api['openapi_input_tokens']:,} | {multi_api['doclean_input_tokens']:,} |",
+        f"| Combined input tokens | {multi_api['openapi_input_tokens']:,} | {multi_api['lap_input_tokens']:,} |",
         f"| Output tokens | {multi_api['output_tokens']:,} | {multi_api['output_tokens']:,} |",
-        f"| **Total** | **{multi_api['openapi_total']:,}** | **{multi_api['doclean_total']:,}** |",
+        f"| **Total** | **{multi_api['openapi_total']:,}** | **{multi_api['lap_total']:,}** |",
         f"| Input tokens saved | — | **{multi_api['input_saved']:,} ({multi_api['input_pct_saved']}%)** |",
         f"| Total saved | — | **{multi_api['total_pct_saved']}%** |",
         "",
         "> When agents need multiple APIs simultaneously, context windows fill up fast.",
         "> With OpenAPI, 3 specs may not even fit in a standard context window.",
-        "> DocLean makes multi-API tasks practical.",
+        "> LAP makes multi-API tasks practical.",
         "",
     ])
 
@@ -1105,17 +1105,17 @@ def generate_report(results: list[dict], multi_call: dict, multi_api: dict) -> s
         "",
         "## Cost Impact (at GPT-4o pricing: $3/M input, $15/M output)",
         "",
-        "| Scenario | OpenAPI Cost | DocLean Cost | Savings |",
+        "| Scenario | OpenAPI Cost | LAP Cost | Savings |",
         "|----------|-------------|-------------|---------|",
     ])
     for r in results:
         oa_cost = r["openapi"]["input_tokens"] * COST_PER_MTK_INPUT / 1_000_000 + r["openapi"]["output_tokens"] * COST_PER_MTK_OUTPUT / 1_000_000
-        dl_cost = r["doclean"]["input_tokens"] * COST_PER_MTK_INPUT / 1_000_000 + r["doclean"]["output_tokens"] * COST_PER_MTK_OUTPUT / 1_000_000
+        dl_cost = r["lap"]["input_tokens"] * COST_PER_MTK_INPUT / 1_000_000 + r["lap"]["output_tokens"] * COST_PER_MTK_OUTPUT / 1_000_000
         lines.append(f"| {r['name']} | ${oa_cost:.4f} | ${dl_cost:.4f} | ${oa_cost - dl_cost:.4f} |")
 
     # 1000 calls/day projection
     daily_oa = sum(r["openapi"]["input_tokens"] for r in results) * 200  # 1000 calls spread across 5 APIs
-    daily_dl = sum(r["doclean"]["input_tokens"] for r in results) * 200
+    daily_dl = sum(r["lap"]["input_tokens"] for r in results) * 200
     daily_oa_cost = daily_oa * COST_PER_MTK_INPUT / 1_000_000
     daily_dl_cost = daily_dl * COST_PER_MTK_INPUT / 1_000_000
     monthly_saved = (daily_oa_cost - daily_dl_cost) * 30
@@ -1124,14 +1124,14 @@ def generate_report(results: list[dict], multi_call: dict, multi_api: dict) -> s
         "",
         f"> **At scale (1,000 agent calls/day across these APIs):**",
         f"> - OpenAPI input cost: ${daily_oa_cost:.2f}/day → ${daily_oa_cost * 30:.2f}/month",
-        f"> - DocLean input cost: ${daily_dl_cost:.2f}/day → ${daily_dl_cost * 30:.2f}/month",
+        f"> - LAP input cost: ${daily_dl_cost:.2f}/day → ${daily_dl_cost * 30:.2f}/month",
         f"> - **Monthly savings: ${monthly_saved:.2f}**",
         "",
         "---",
         "",
         "## Key Takeaway",
         "",
-        "DocLean doesn't degrade output quality — the agent writes the **exact same code**.",
+        "LAP doesn't degrade output quality — the agent writes the **exact same code**.",
         "It simply removes the verbose YAML/JSON boilerplate that LLMs don't need.",
         "For agent-heavy workloads, this means:",
         "",
@@ -1157,7 +1157,7 @@ def main():
         results.append(r)
         sv = r["savings"]
         print(f"   OpenAPI: {r['openapi']['total_tokens']:,} tokens")
-        print(f"   DocLean: {r['doclean']['total_tokens']:,} tokens")
+        print(f"   LAP: {r['lap']['total_tokens']:,} tokens")
         print(f"   Saved:   {sv['total_tokens_saved']:,} tokens ({sv['total_pct_saved']}%)")
 
     multi_call = multi_call_scenario(results)

@@ -3,14 +3,14 @@
 ## Overview
 
 ```
-lap [-h] {compile,validate,benchmark,benchmark-all,inspect,convert,diff,registry,toollean} ...
+lap [-h] {compile,validate,benchmark,benchmark-all,inspect,convert,diff,registry,lap} ...
 ```
 
 ## Commands
 
 ### `lap compile`
 
-Compile an OpenAPI spec to DocLean format.
+Compile an OpenAPI spec to LAP format.
 
 ```
 lap compile [-h] [-o OUTPUT] [--lean] spec
@@ -28,7 +28,7 @@ lap compile [-h] [-o OUTPUT] [--lean] spec
 # Compile to stdout
 $ lap compile specs/stripe-charges.yaml
 
-@doclean v0.1
+@lap v0.1
 @api Stripe Charges API
 @base https://api.stripe.com
 @version 2024-12-18
@@ -40,14 +40,14 @@ $ lap compile specs/stripe-charges.yaml
 ...
 
 # Compile to file
-$ lap compile specs/stripe-charges.yaml -o output/stripe.doclean
-✓ Compiled stripe-charges.yaml → output/stripe.doclean
+$ lap compile specs/stripe-charges.yaml -o output/stripe.lap
+✓ Compiled stripe-charges.yaml → output/stripe.lap
 ✓ 5 endpoints | 4,291 chars | standard mode
 
 # Lean mode
 $ lap compile specs/stripe-charges.yaml --lean
 
-@doclean v0.1
+@lap v0.1
 @api Stripe Charges API
 @base https://api.stripe.com
 @version 2024-12-18
@@ -65,7 +65,7 @@ $ lap compile specs/stripe-charges.yaml --lean
 
 ### `lap validate`
 
-Validate that DocLean compilation preserves all information from the source spec.
+Validate that LAP compilation preserves all information from the source spec.
 
 ```
 lap validate [-h] spec
@@ -89,7 +89,7 @@ PASS — Zero information loss!
 
 ### `lap benchmark`
 
-Benchmark token usage comparing verbose docs vs DocLean for a single spec.
+Benchmark token usage comparing verbose docs vs LAP for a single spec.
 
 ```
 lap benchmark [-h] spec
@@ -100,15 +100,15 @@ lap benchmark [-h] spec
 ```bash
 $ lap benchmark specs/stripe-charges.yaml
 
-📊 LAP DocLean Token Benchmark
+📊 LAP LAP Token Benchmark
 
 📏 Character Count:
   Raw OpenAPI spec:      11,160 chars
   Verbose (human-readable):    3,536 chars
-  DocLean (compressed):    4,291 chars
+  LAP (compressed):    4,291 chars
 
 🔢 Token Counts:
-  Model                   Verbose    DocLean  Reduction    Ratio
+  Model                   Verbose    LAP  Reduction    Ratio
   ------------------   ---------- ---------- ---------- --------
   gpt-4o                      852        992     -16.4%     0.9x
   claude-sonnet-4             852        992     -16.4%     0.9x
@@ -136,7 +136,7 @@ $ lap benchmark-all specs/
 
 ### `lap inspect`
 
-Parse and display a DocLean file in a structured, readable format.
+Parse and display a LAP file in a structured, readable format.
 
 ```
 lap inspect [-h] [--endpoint ENDPOINT] file
@@ -144,15 +144,15 @@ lap inspect [-h] [--endpoint ENDPOINT] file
 
 | Argument | Description |
 |----------|-------------|
-| `file` | Path to `.doclean` file |
+| `file` | Path to `.lap` file |
 | `-e, --endpoint` | Filter to specific endpoint, e.g. `"POST /v1/charges"` |
 
 **Example:**
 
 ```bash
-$ lap inspect output/stripe-charges.doclean
+$ lap inspect output/stripe-charges.lap
 
-╭──────────────────────── DocLean Spec ────────────────────────╮
+╭──────────────────────── LAP Spec ────────────────────────╮
 │ Stripe Charges API v2024-12-18                               │
 │ Base: https://api.stripe.com                                 │
 │ Auth: Bearer bearer                                          │
@@ -175,14 +175,14 @@ GET /v1/charges  List all charges
   ...
 
 # Filter to one endpoint
-$ lap inspect output/stripe-charges.doclean -e "POST /v1/charges"
+$ lap inspect output/stripe-charges.lap -e "POST /v1/charges"
 ```
 
 ---
 
 ### `lap convert`
 
-Convert a DocLean file back to OpenAPI format.
+Convert a LAP file back to OpenAPI format.
 
 ```
 lap convert [-h] [-f FORMAT] [-o OUTPUT] file
@@ -190,21 +190,21 @@ lap convert [-h] [-f FORMAT] [-o OUTPUT] file
 
 | Argument | Description |
 |----------|-------------|
-| `file` | Path to `.doclean` file |
+| `file` | Path to `.lap` file |
 | `-f, --format` | Output format (default: `openapi`) |
 | `-o, --output` | Output file path |
 
 **Example:**
 
 ```bash
-$ lap convert output/stripe-charges.doclean -f openapi -o stripe-roundtrip.yaml
+$ lap convert output/stripe-charges.lap -f openapi -o stripe-roundtrip.yaml
 ```
 
 ---
 
 ### `lap diff`
 
-Diff two DocLean files to detect API changes.
+Diff two LAP files to detect API changes.
 
 ```
 lap diff [-h] [--format {summary,changelog}] [--version VERSION] old new
@@ -212,15 +212,15 @@ lap diff [-h] [--format {summary,changelog}] [--version VERSION] old new
 
 | Argument | Description |
 |----------|-------------|
-| `old` | Path to old `.doclean` file |
-| `new` | Path to new `.doclean` file |
+| `old` | Path to old `.lap` file |
+| `new` | Path to new `.lap` file |
 | `--format` | Output format: `summary` or `changelog` |
 | `--version` | Version label for changelog output |
 
 **Example:**
 
 ```bash
-$ lap diff v1.doclean v2.doclean --format changelog --version "2.0"
+$ lap diff v1.lap v2.lap --format changelog --version "2.0"
 ```
 
 ---
@@ -255,16 +255,16 @@ $ lap registry search output/ "create"
 
 ---
 
-### `lap toollean`
+### `lap lap`
 
-Compile, parse, and inspect ToolLean tool manifests.
+Compile, parse, and inspect LAP tool manifests.
 
-#### `lap toollean compile-mcp`
+#### `lap lap compile-mcp`
 
-Compile an MCP server tool manifest to ToolLean format.
+Compile an MCP server tool manifest to LAP format.
 
 ```
-lap toollean compile-mcp [-h] [-o OUTPUT] [--lean] input
+lap lap compile-mcp [-h] [-o OUTPUT] [--lean] input
 ```
 
 | Argument | Description |
@@ -276,60 +276,60 @@ lap toollean compile-mcp [-h] [-o OUTPUT] [--lean] input
 **Example:**
 
 ```bash
-$ lap toollean compile-mcp mcp-server-tools.json -o tools.toollean
+$ lap lap compile-mcp mcp-server-tools.json -o tools.lap
 
-@toollean v0.1
+@lap v0.1
 @tool read_file
 @desc Read complete contents of a file
 @in path:str File path to read
 
-@toollean v0.1
+@lap v0.1
 @tool write_file
 @desc Create or overwrite a file
 @in path:str File path to write
 @in content:str Content to write
 ```
 
-#### `lap toollean compile-skill`
+#### `lap lap compile-skill`
 
-Compile an OpenClaw/ClawHub SKILL.md to ToolLean format.
-
-```
-lap toollean compile-skill [-h] [-o OUTPUT] [--lean] input
-```
-
-**Example:**
-
-```bash
-$ lap toollean compile-skill SKILL.md -o skill.toollean
-```
-
-#### `lap toollean compile-json`
-
-Compile a generic JSON tool definition to ToolLean format.
+Compile an OpenClaw/ClawHub SKILL.md to LAP format.
 
 ```
-lap toollean compile-json [-h] [-o OUTPUT] [--lean] input
+lap lap compile-skill [-h] [-o OUTPUT] [--lean] input
 ```
 
 **Example:**
 
 ```bash
-$ lap toollean compile-json tool.json -o tool.toollean
+$ lap lap compile-skill SKILL.md -o skill.lap
 ```
 
-#### `lap toollean parse`
+#### `lap lap compile-json`
 
-Parse a ToolLean file and display structured tool information.
+Compile a generic JSON tool definition to LAP format.
 
 ```
-lap toollean parse [-h] input
+lap lap compile-json [-h] [-o OUTPUT] [--lean] input
 ```
 
 **Example:**
 
 ```bash
-$ lap toollean parse tools.toollean
+$ lap lap compile-json tool.json -o tool.lap
+```
+
+#### `lap lap parse`
+
+Parse a LAP file and display structured tool information.
+
+```
+lap lap parse [-h] input
+```
+
+**Example:**
+
+```bash
+$ lap lap parse tools.lap
 
 Tool: read_file
   Desc: Read complete contents of a file
@@ -340,20 +340,20 @@ Tool: read_file
   Outputs: 0
 ```
 
-#### `lap toollean stats`
+#### `lap lap stats`
 
-Show size and tool statistics for a ToolLean file.
+Show size and tool statistics for a LAP file.
 
 ```
-lap toollean stats [-h] input
+lap lap stats [-h] input
 ```
 
 **Example:**
 
 ```bash
-$ lap toollean stats tools.toollean
+$ lap lap stats tools.lap
 
-File: tools.toollean
+File: tools.lap
 Size: 240 bytes
 Tools: 2
 Total params: 3

@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 """
-ToolLean Parser — ToolLean text → structured Python objects
+LAP Parser — LAP text → structured Python objects
 
-The reverse of the compiler: proves ToolLean is a true protocol
-by enabling round-trip: source → ToolLean → structured data.
+The reverse of the compiler: proves LAP is a true protocol
+by enabling round-trip: source → LAP → structured data.
 """
 
 import re
 import warnings
 
-from core.formats.toollean import ToolLeanSpec, ToolLeanBundle, ToolParam, ToolOutput, ToolExample
+from core.formats.lap_tools import LAPToolSpec, LAPToolBundle, ToolParam, ToolOutput, ToolExample
 
 
 class ParseError(Exception):
-    """Raised when ToolLean parsing encounters invalid syntax."""
+    """Raised when LAP parsing encounters invalid syntax."""
     def __init__(self, message: str, line_number: int = 0):
         self.line_number = line_number
         super().__init__(f"Line {line_number}: {message}" if line_number else message)
@@ -78,8 +78,8 @@ def _parse_output_line(text: str) -> ToolOutput:
     return ToolOutput(name=name, type=type_str, description=desc, children=children)
 
 
-def parse_toollean(text: str) -> ToolLeanBundle:
-    """Parse ToolLean text into a ToolLeanBundle (one or more tools).
+def parse_lap_tools(text: str) -> LAPToolBundle:
+    """Parse LAP text into a LAPToolBundle (one or more tools).
     
     Returns a bundle even for single tools, for consistency.
     """
@@ -119,13 +119,13 @@ def parse_toollean(text: str) -> ToolLeanBundle:
                 current.examples.append(current_example)
                 current_example = None
 
-        if line.startswith("@toollean "):
+        if line.startswith("@lap "):
             continue  # version header
 
         elif line.startswith("@tool "):
             if current:
                 tools.append(current)
-            current = ToolLeanSpec(name=line[6:].strip())
+            current = LAPToolSpec(name=line[6:].strip())
 
         elif line.startswith("@desc ") and current:
             current.description = line[6:].strip()
@@ -158,12 +158,12 @@ def parse_toollean(text: str) -> ToolLeanBundle:
     if current:
         tools.append(current)
 
-    return ToolLeanBundle(name=bundle_name, description=bundle_desc, tools=tools)
+    return LAPToolBundle(name=bundle_name, description=bundle_desc, tools=tools)
 
 
-def parse_single_tool(text: str) -> ToolLeanSpec:
-    """Parse ToolLean text expected to contain a single tool."""
-    bundle = parse_toollean(text)
+def parse_single_tool(text: str) -> LAPToolSpec:
+    """Parse LAP text expected to contain a single tool."""
+    bundle = parse_lap_tools(text)
     if not bundle.tools:
         raise ParseError("No @tool found in input")
     return bundle.tools[0]

@@ -1,15 +1,15 @@
 """
-Convert DocLean specs to OpenAI function-calling format.
+Convert LAP specs to OpenAI function-calling format.
 
-Automatically generates function definitions from DocLean endpoints,
+Automatically generates function definitions from LAP endpoints,
 enabling direct use with OpenAI's function calling API.
 
 Example usage:
-    >>> from integrations.openai.function_converter import doclean_to_functions
-    >>> from src.parser import parse_doclean
+    >>> from integrations.openai.function_converter import lap_to_functions
+    >>> from src.parser import parse_lap
     >>>
-    >>> spec = parse_doclean(open("examples/doclean/openapi/petstore.doclean").read())
-    >>> functions = doclean_to_functions(spec)
+    >>> spec = parse_lap(open("examples/lap/openapi/petstore.lap").read())
+    >>> functions = lap_to_functions(spec)
     >>> print(functions[0])
     {
         'type': 'function',
@@ -47,10 +47,10 @@ _src = str(Path(__file__).resolve().parent.parent.parent / "src")
 if _src not in sys.path:
     sys.path.insert(0, _src)
 
-from core.formats.doclean import DocLeanSpec, Endpoint, Param
+from core.formats.lap import LAPSpec, Endpoint, Param
 
 
-# DocLean type → JSON Schema type mapping
+# LAP type → JSON Schema type mapping
 _TYPE_MAP = {
     "str": "string",
     "int": "integer",
@@ -61,18 +61,18 @@ _TYPE_MAP = {
 }
 
 
-def _doclean_type_to_json_schema(type_str: str) -> dict[str, Any]:
-    """Convert a DocLean type string to JSON Schema."""
+def _lap_type_to_json_schema(type_str: str) -> dict[str, Any]:
+    """Convert a LAP type string to JSON Schema."""
     # Array: [inner]
     if type_str.startswith("[") and type_str.endswith("]"):
         inner = type_str[1:-1]
-        return {"type": "array", "items": _doclean_type_to_json_schema(inner)}
+        return {"type": "array", "items": _lap_type_to_json_schema(inner)}
 
     # Type with format: str(email), int(unix-timestamp)
     m = re.match(r"^(\w+)\(([^)]+)\)$", type_str)
     if m:
         base, fmt = m.group(1), m.group(2)
-        schema = _doclean_type_to_json_schema(base)
+        schema = _lap_type_to_json_schema(base)
         # Map common formats
         if fmt in ("email", "uri", "date-time", "date", "uuid"):
             schema["format"] = fmt
@@ -82,8 +82,8 @@ def _doclean_type_to_json_schema(type_str: str) -> dict[str, Any]:
 
 
 def _param_to_property(param: Param) -> dict[str, Any]:
-    """Convert a DocLean Param to a JSON Schema property."""
-    prop = _doclean_type_to_json_schema(param.type)
+    """Convert a LAP Param to a JSON Schema property."""
+    prop = _lap_type_to_json_schema(param.type)
     if param.description:
         prop["description"] = param.description
     if param.enum:
@@ -112,7 +112,7 @@ def _endpoint_to_function_name(endpoint: Endpoint) -> str:
 
 
 def endpoint_to_function(endpoint: Endpoint, api_name: str = "") -> dict[str, Any]:
-    """Convert a single DocLean endpoint to an OpenAI function tool definition.
+    """Convert a single LAP endpoint to an OpenAI function tool definition.
 
     Returns a dict in the OpenAI tools format:
     {'type': 'function', 'function': {'name': ..., 'description': ..., 'parameters': ...}}
@@ -152,11 +152,11 @@ def endpoint_to_function(endpoint: Endpoint, api_name: str = "") -> dict[str, An
     }
 
 
-def doclean_to_functions(spec: DocLeanSpec) -> list[dict[str, Any]]:
-    """Convert all endpoints in a DocLean spec to OpenAI function definitions.
+def lap_to_functions(spec: LAPSpec) -> list[dict[str, Any]]:
+    """Convert all endpoints in a LAP spec to OpenAI function definitions.
 
     Args:
-        spec: A parsed DocLeanSpec object
+        spec: A parsed LAPSpec object
 
     Returns:
         List of OpenAI tool definitions ready for the `tools` parameter

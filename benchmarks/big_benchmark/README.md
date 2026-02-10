@@ -1,6 +1,6 @@
 # LAP Big Benchmark
 
-This directory contains the complete LAP benchmark harness for evaluating DocLean compression effectiveness.
+This directory contains the complete LAP benchmark harness for evaluating LAP compression effectiveness.
 
 ## Quick Start
 
@@ -11,17 +11,17 @@ cat ../big_benchmark_config.json | jq
 # Run a sample evaluation (verbose)
 cat verbose_stripe-charges.txt | your-llm-tool
 
-# Run a sample evaluation (DocLean)
-cat doclean_stripe-charges.txt | your-llm-tool
+# Run a sample evaluation (LAP)
+cat lap_stripe-charges.txt | your-llm-tool
 
 # Compare results
-diff <(your-llm verbose_stripe-charges.txt) <(your-llm doclean_stripe-charges.txt)
+diff <(your-llm verbose_stripe-charges.txt) <(your-llm lap_stripe-charges.txt)
 ```
 
 ## File Naming Convention
 
 - `verbose_{spec}.txt` - Full OpenAPI YAML specification + tasks
-- `doclean_{spec}.txt` - Compiled DocLean format + tasks
+- `lap_{spec}.txt` - Compiled LAP format + tasks
 
 ## Specs Included
 
@@ -67,7 +67,7 @@ TASK 5: <curl command>
 ## Metrics to Track
 
 - **Accuracy:** Percentage of correct endpoints identified
-- **Token Count:** Input tokens (verbose vs DocLean)
+- **Token Count:** Input tokens (verbose vs LAP)
 - **Latency:** Time to first response
 - **Cost:** API cost per evaluation
 - **Completeness:** Percentage of required parameters included

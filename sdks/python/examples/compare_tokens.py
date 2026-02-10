@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Token comparison demo — full vs lean DocLean."""
+"""Token comparison demo — full vs lean LAP."""
 import sys
 sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parents[1]))
 
 from lap import LAPClient
 
 client = LAPClient()
-docs = client.load("../../output/stripe-charges.doclean")
+docs = client.load("../../output/stripe-charges.lap")
 
 full_tokens = docs.token_count(lean=False)
 lean_tokens = docs.token_count(lean=True)

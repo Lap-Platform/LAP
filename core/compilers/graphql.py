@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-GraphQL SDL → DocLean compiler.
+GraphQL SDL → LAP compiler.
 
-Produces a compact GraphQL-native DocLean representation that defines
+Produces a compact GraphQL-native LAP representation that defines
 types once and references them by name, avoiding the massive expansion
 that comes from inlining response fields in every endpoint.
 """
@@ -24,7 +24,7 @@ from graphql import (
     Undefined,
 )
 
-from core.formats.doclean import DocLeanSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema
+from core.formats.lap import LAPSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema
 
 
 # ── Type string helpers ──────────────────────────────────────────────
@@ -250,7 +250,7 @@ def _compact_type_def(name, t, lean=False, conn_types=None) -> str:
 # ── Endpoint compilation ─────────────────────────────────────────────
 
 def _arg_to_param(name: str, arg: GraphQLArgument) -> Param:
-    """Convert a GraphQL argument to a DocLean Param."""
+    """Convert a GraphQL argument to a LAP Param."""
     base, type_str, nullable = _unwrap(arg.type)
     has_default = arg.default_value is not Undefined
     required = not nullable and not has_default
@@ -341,8 +341,8 @@ def _compile_field(field_name, field, method, schema):
 
 # ── Main compile function ────────────────────────────────────────────
 
-def compile_graphql(spec_path: str) -> 'GraphQLDocLeanSpec':
-    """Compile a GraphQL SDL file to DocLean format."""
+def compile_graphql(spec_path: str) -> 'GraphQLLAPSpec':
+    """Compile a GraphQL SDL file to LAP format."""
     path = Path(spec_path)
     sdl = path.read_text()
     schema = build_schema(sdl)
@@ -398,7 +398,7 @@ def compile_graphql(spec_path: str) -> 'GraphQLDocLeanSpec':
     compact_body = "\n".join(type_defs_lines) + "\n\n" + "\n".join(ops_lines)
 
     # Also build the legacy endpoints for backward compatibility
-    doclean = GraphQLDocLeanSpec(
+    lap = GraphQLLAPSpec(
         api_name=api_name,
         base_url="/graphql",
         version="",
@@ -411,19 +411,19 @@ def compile_graphql(spec_path: str) -> 'GraphQLDocLeanSpec':
 
     if schema.query_type:
         for fname, field in schema.query_type.fields.items():
-            doclean.endpoints.append(_compile_field(fname, field, "GET", schema))
+            lap.endpoints.append(_compile_field(fname, field, "GET", schema))
     if schema.mutation_type:
         for fname, field in schema.mutation_type.fields.items():
-            doclean.endpoints.append(_compile_field(fname, field, "POST", schema))
+            lap.endpoints.append(_compile_field(fname, field, "POST", schema))
     if schema.subscription_type:
         for fname, field in schema.subscription_type.fields.items():
-            doclean.endpoints.append(_compile_field(fname, field, "EVENT", schema))
+            lap.endpoints.append(_compile_field(fname, field, "EVENT", schema))
 
-    return doclean
+    return lap
 
 
-class GraphQLDocLeanSpec(DocLeanSpec):
-    """DocLeanSpec subclass with compact GraphQL-native output."""
+class GraphQLLAPSpec(LAPSpec):
+    """LAPSpec subclass with compact GraphQL-native output."""
 
     def __init__(self, *args, type_defs: str = "", compact_body: str = "",
                  user_types=None, ops_lines=None, **kwargs):
@@ -433,9 +433,9 @@ class GraphQLDocLeanSpec(DocLeanSpec):
         self._user_types = user_types or {}
         self._ops_lines = ops_lines or []
 
-    def to_doclean(self, lean: bool = False) -> str:
-        """Produce compact GraphQL-native DocLean output."""
-        lines = [f"@doclean v0.1", f"@api {self.api_name}", f"@base {self.base_url}", ""]
+    def to_lap(self, lean: bool = False) -> str:
+        """Produce compact GraphQL-native LAP output."""
+        lines = [f"@lap v0.1", f"@api {self.api_name}", f"@base {self.base_url}", ""]
 
         if lean:
             # Build connection type map: ConnectionName -> NodeTypeName

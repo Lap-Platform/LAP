@@ -20,7 +20,7 @@ except ImportError:
 
 
 class LAPDocLoader(BaseLoader):
-    """LangChain-compatible document loader for DocLean files."""
+    """LangChain-compatible document loader for LAP files."""
 
     def __init__(self, path: str, lean: bool = True):
         self.path = path
@@ -28,7 +28,7 @@ class LAPDocLoader(BaseLoader):
         self._client = LAPClient()
 
     def load(self):
-        """Load DocLean file as LangChain Document objects."""
+        """Load LAP file as LangChain Document objects."""
         doc = self._client.load(self.path)
         documents = []
 

@@ -21,8 +21,8 @@ def run_one(compiler_fn, filepath, timeout_sec=120):
         raw = open(filepath).read()
         raw_tokens = count_tokens_approx(raw)
         spec = compiler_fn(filepath)
-        standard = spec.to_doclean(lean=False)
-        lean = spec.to_doclean(lean=True)
+        standard = spec.to_lap(lean=False)
+        lean = spec.to_lap(lean=True)
         std_tokens = count_tokens_approx(standard)
         lean_tokens = count_tokens_approx(lean)
         endpoints = len(spec.endpoints)
@@ -126,7 +126,7 @@ for results in formats.values():
 global_median = round(statistics.median(all_ratios), 2) if all_ratios else 0
 
 md = []
-md.append("# DocLean Compression Benchmark v2")
+md.append("# LAP Compression Benchmark v2")
 md.append("")
 md.append(f"**{total_specs} API specs** across 5 formats · **{total_endpoints:,} endpoints** · **{total_raw:,} → {total_lean:,} tokens**")
 md.append("")

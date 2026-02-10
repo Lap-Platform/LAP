@@ -5,7 +5,7 @@ sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parents[1]
 
 from lap.middleware import LAPDocLoader
 
-loader = LAPDocLoader("../../output/stripe-charges.doclean")
+loader = LAPDocLoader("../../output/stripe-charges.lap")
 docs = loader.load()
 
 print(f"Loaded {len(docs)} endpoint documents\n")

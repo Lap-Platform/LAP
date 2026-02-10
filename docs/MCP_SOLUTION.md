@@ -7,7 +7,7 @@ MCP servers today expose tools with verbose, uncompressed documentation. A typic
 1. **Token bloat in tool descriptions**: Each `tools/list` response dumps the full schema into the LLM context. For a 50-endpoint API, that's 10-100KB of JSON Schema — repeated every turn.
 2. **Verbose tool results**: `tools/call` responses often return full JSON blobs, human-readable error messages, and documentation-style text that could be compressed.
 
-LAP (via DocLean and ToolLean) already solves this for API documentation. The MCP integration bridges these two worlds.
+LAP (via LAP and LAP) already solves this for API documentation. The MCP integration bridges these two worlds.
 
 ---
 
@@ -31,20 +31,20 @@ LAP (via DocLean and ToolLean) already solves this for API documentation. The MC
 │ Server           │              │ Server (Proxy)       │
 │                  │              │                      │
 │ tools/list →     │              │ tools/list →         │
-│  verbose JSON    │              │  ToolLean-compressed │
+│  verbose JSON    │              │  LAP-compressed │
 │  Schema          │              │  descriptions        │
 │                  │              │                      │
 │ tools/call →     │              │ tools/call →         │
-│  full response   │              │  DocLean-compressed  │
+│  full response   │              │  LAP-compressed  │
 │                  │              │  response            │
 └──────────────────┘              └──────────┬───────────┘
                                              │
                                     ┌────────▼────────┐
                                     │ LAP Compiler     │
                                     │                  │
-                                    │ ToolLean: tool   │
+                                    │ LAP: tool   │
                                     │  manifests       │
-                                    │ DocLean: API     │
+                                    │ LAP: API     │
                                     │  docs/responses  │
                                     └──────────────────┘
 ```
@@ -62,26 +62,26 @@ Host ←→ [LAP Proxy MCP Server] ←→ [Original MCP Server]
 ```
 
 **How it works:**
-1. On `tools/list`: Fetches tools from upstream, compiles each tool's description + inputSchema → ToolLean format, returns compressed tool definitions
-2. On `tools/call`: Passes through to upstream, optionally compresses the response via DocLean
+1. On `tools/list`: Fetches tools from upstream, compiles each tool's description + inputSchema → LAP format, returns compressed tool definitions
+2. On `tools/call`: Passes through to upstream, optionally compresses the response via LAP
 3. On `initialize`: Negotiates capabilities with both host and upstream
 
 **Key design decisions:**
-- The proxy is **stateful** — it caches the ToolLean-compiled manifests and refreshes on `notifications/tools/list_changed`
+- The proxy is **stateful** — it caches the LAP-compiled manifests and refreshes on `notifications/tools/list_changed`
 - Tool names pass through unchanged (the proxy is transparent to the host)
 - inputSchema stays as JSON Schema (MCP spec requires it) but descriptions get compressed
 - The **real savings** come from description compression + response compression
 
 ### Mode 2: Native LAP MCP Server (serves pre-compiled specs)
 
-A standalone MCP server that directly serves DocLean/ToolLean specs as tools. No upstream server needed.
+A standalone MCP server that directly serves LAP/LAP specs as tools. No upstream server needed.
 
 ```
-Host ←→ [LAP Native MCP Server] ← reads → [.doclean / .toollean files]
+Host ←→ [LAP Native MCP Server] ← reads → [.lap / .lap files]
 ```
 
 **How it works:**
-1. Loads pre-compiled `.doclean` and `.toollean` files at startup
+1. Loads pre-compiled `.lap` and `.lap` files at startup
 2. Each endpoint/tool becomes an MCP tool with compressed descriptions
 3. `tools/call` returns the lean documentation needed to make the actual API call
 
@@ -91,7 +91,7 @@ Host ←→ [LAP Native MCP Server] ← reads → [.doclean / .toollean files]
 
 ## What Gets Compressed (and What Doesn't)
 
-### ToolLean compression targets (tool manifest):
+### LAP compression targets (tool manifest):
 
 | Field | Standard MCP | LAP-Enhanced | Savings |
 |-------|-------------|-------------|---------|
@@ -109,7 +109,7 @@ Host ←→ [LAP Native MCP Server] ← reads → [.doclean / .toollean files]
 | Content | Standard | LAP-Enhanced | Savings |
 |---------|----------|-------------|---------|
 | Error messages | Full prose + stack traces | Structured error codes + lean descriptions | ~50% |
-| API documentation in results | Raw OpenAPI/markdown | DocLean format | 50-95% (proven in benchmarks) |
+| API documentation in results | Raw OpenAPI/markdown | LAP format | 50-95% (proven in benchmarks) |
 | JSON data responses | Pass-through | Pass-through (no compression — it's data, not docs) | 0% |
 
 ---
@@ -149,7 +149,7 @@ class LAPProxyServer:
     # --- Compression ---
     
     def compress_tool_manifest(self, tool: dict) -> dict:
-        """Compress a tool's descriptions using ToolLean."""
+        """Compress a tool's descriptions using LAP."""
         compressed = tool.copy()
         # Compress top-level description
         compressed["description"] = compile_description_lean(tool["description"])
@@ -178,21 +178,21 @@ class LAPProxyServer:
 
 ```python
 class LAPNativeServer:
-    """MCP server that serves pre-compiled DocLean/ToolLean specs."""
+    """MCP server that serves pre-compiled LAP/LAP specs."""
     
     def __init__(self, specs_dir: str):
-        self.specs = {}       # api_name → DocLeanSpec
+        self.specs = {}       # api_name → LAPSpec
         self.tools = []       # MCP tool definitions
         self.tool_map = {}    # tool_name → (spec, endpoint)
         self.load_specs(specs_dir)
     
     def load_specs(self, specs_dir: str):
-        """Load .doclean and .toollean files."""
-        for f in Path(specs_dir).glob("*.doclean"):
-            spec = parse_doclean(f.read_text())
+        """Load .lap and .lap files."""
+        for f in Path(specs_dir).glob("*.lap"):
+            spec = parse_lap(f.read_text())
             self.register_spec(spec)
-        for f in Path(specs_dir).glob("*.toollean"):
-            bundle = parse_toollean(f.read_text())
+        for f in Path(specs_dir).glob("*.lap"):
+            bundle = parse_lap_tools(f.read_text())
             self.register_bundle(bundle)
     
     async def handle_list_tools(self, cursor=None) -> dict:
@@ -205,7 +205,7 @@ class LAPNativeServer:
         return {
             "content": [{
                 "type": "text",
-                "text": endpoint.to_doclean(lean=True)
+                "text": endpoint.to_lap(lean=True)
             }]
         }
 ```
@@ -243,7 +243,7 @@ def compress_schema_descriptions(schema: dict) -> dict:
 
 **Setup:**
 - Collect tool manifests from 5+ popular MCP servers (filesystem, GitHub, Slack, database, web-search)
-- Compile each through ToolLean compression
+- Compile each through LAP compression
 - Measure: character count, token count (tiktoken), JSON size
 
 **Expected:** 40-60% description token reduction while preserving all semantic info.
@@ -274,7 +274,7 @@ def compress_schema_descriptions(schema: dict) -> dict:
 **Goal:** Real LLM agent performance comparison: standard MCP vs LAP-enhanced MCP.
 
 **Setup:**
-- Same approach as our DocLean benchmarks:
+- Same approach as our LAP benchmarks:
   - Agent A: standard MCP server (verbose tools)
   - Agent B: LAP proxy MCP server (compressed tools)
   - Same model, same tasks, same system prompt
@@ -316,7 +316,7 @@ def compress_schema_descriptions(schema: dict) -> dict:
 
 ## Implementation Priority
 
-1. **Phase 1: ToolLean MCP Compiler** — Compile real MCP tool manifests → compressed format
+1. **Phase 1: LAP MCP Compiler** — Compile real MCP tool manifests → compressed format
 2. **Phase 2: Mock Tests** — Unit + integration tests with mock servers
 3. **Phase 3: Proxy Server** — Full MCP proxy with stdio transport
 4. **Phase 4: Live Benchmark** — End-to-end agent comparison with real MCP servers

@@ -1,11 +1,11 @@
-# DocLean Format Specification Reference
+# LAP Format Specification Reference
 
 ## Quick Reference Card
 
 ### Header Directives
 
 ```
-@doclean v0.1              # Format version (required, first line)
+@lap v0.1              # Format version (required, first line)
 @api <name>                # API name
 @base <url>                # Base URL for all endpoints
 @version <version>         # API version string
@@ -46,7 +46,7 @@ name: map{key: type, ...}     # Object with known fields
 
 ### Primitive Types
 
-| DocLean | JSON Schema | Description |
+| LAP | JSON Schema | Description |
 |---------|------------|-------------|
 | `str` | `string` | String value |
 | `int` | `integer` | Integer value |
@@ -91,7 +91,7 @@ outcome: map{network_status: str, risk_level: str, risk_score: int, type: str}
 ### Complete Example
 
 ```
-@doclean v0.1
+@lap v0.1
 @api Stripe Charges API
 @base https://api.stripe.com
 @version 2024-12-18
@@ -124,17 +124,17 @@ outcome: map{network_status: str, risk_level: str, risk_score: int, type: str}
 | Level | Name | Content | Use Case |
 |-------|------|---------|----------|
 | L0 | Markdown | Human-readable docs | Documentation sites |
-| L1 | DocLean Standard | Typed contract + descriptions | Development, debugging |
-| L2 | DocLean Lean | Typed contract, no descriptions | Production agents |
+| L1 | LAP Standard | Typed contract + descriptions | Development, debugging |
+| L2 | LAP Lean | Typed contract, no descriptions | Production agents |
 | L3 | SHA-256 Reference | Content-addressable hash | Registry lookups, caching |
 
 ### Content Negotiation
 
-DocLean supports MIME-type content negotiation:
+LAP supports MIME-type content negotiation:
 
 ```
-Accept: application/doclean; level=2; q=1.0,
-        application/doclean; level=1; q=0.8,
+Accept: application/lap; level=2; q=1.0,
+        application/lap; level=1; q=0.8,
         application/openapi+yaml; q=0.5
 ```
 
@@ -142,7 +142,7 @@ Accept: application/doclean; level=2; q=1.0,
 
 ```ebnf
 document     = header, { endpoint_block } ;
-header       = "@doclean", version, { header_dir } ;
+header       = "@lap", version, { header_dir } ;
 header_dir   = "@api" | "@base" | "@version" | "@auth" ;
 endpoint_block = "@endpoint", method, path, { endpoint_dir } ;
 endpoint_dir = "@desc" | "@required" | "@optional" | "@body"

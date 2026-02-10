@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Test MCP tool compression via ToolLean format.
+Test MCP tool compression via LAP format.
 
 Loads real MCP tool manifests from test fixtures, compiles them through
-ToolLean format with compression, and measures compression ratios.
+LAP format with compression, and measures compression ratios.
 """
 
 import json
@@ -15,7 +15,7 @@ from typing import Dict, List, Any
 project_root = Path(__file__).resolve().parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from core.compilers.toollean import compile_mcp_tool, compile_mcp_manifest
+from core.compilers.lap_tools import compile_mcp_tool, compile_mcp_manifest
 from integrations.mcp.compress import (
     compress_mcp_tool,
     compress_mcp_manifest,
@@ -162,8 +162,8 @@ def print_compression_table(results: List[Dict[str, Any]]) -> None:
     print()
 
 
-def test_toollean_compilation(fixture_path: Path) -> None:
-    """Test that ToolLean compilation works for a fixture."""
+def test_lap_compilation(fixture_path: Path) -> None:
+    """Test that LAP compilation works for a fixture."""
     manifest = json.loads(fixture_path.read_text())
     
     # Test single tool compilation
@@ -172,19 +172,19 @@ def test_toollean_compilation(fixture_path: Path) -> None:
         spec = compile_mcp_tool(tool)
         assert spec.name, "Compiled tool must have a name"
         
-        # Convert to ToolLean format
-        toollean_str = spec.to_toollean(lean=False)
-        assert '@tool' in toollean_str, "ToolLean output must contain @tool directive"
-        assert '@in' in toollean_str or len(spec.inputs) == 0, "ToolLean must contain @in for tools with inputs"
+        # Convert to LAP format
+        lap_str = spec.to_lap(lean=False)
+        assert '@tool' in lap_str, "LAP output must contain @tool directive"
+        assert '@in' in lap_str or len(spec.inputs) == 0, "LAP must contain @in for tools with inputs"
     
     # Test full manifest compilation
     bundle = compile_mcp_manifest(manifest)
     assert bundle.name == manifest.get('name', ''), "Bundle name should match manifest"
     assert len(bundle.tools) == len(manifest.get('tools', [])), "All tools should be compiled"
     
-    # Convert bundle to ToolLean
-    bundle_str = bundle.to_toollean(lean=True)  # Test lean mode
-    assert bundle_str, "Bundle ToolLean output should not be empty"
+    # Convert bundle to LAP
+    bundle_str = bundle.to_lap(lean=True)  # Test lean mode
+    assert bundle_str, "Bundle LAP output should not be empty"
 
 
 def main():
@@ -211,9 +211,9 @@ def main():
         try:
             print(f"\n📦 Testing: {fixture_path.name}")
             
-            # Test ToolLean compilation
-            test_toollean_compilation(fixture_path)
-            print("  ✓ ToolLean compilation passed")
+            # Test LAP compilation
+            test_lap_compilation(fixture_path)
+            print("  ✓ LAP compilation passed")
             
             # Test compression
             result = test_fixture_compression(fixture_path)

@@ -6,7 +6,7 @@ _Token counting: tiktoken cl100k_base_
 
 _Sessions analyzed: 50 (from 1513 total)_
 
-## 1. API Doc Token Consumption: OpenAPI vs DocLean
+## 1. API Doc Token Consumption: OpenAPI vs LAP
 
 ### Per-Spec Comparison
 
@@ -106,7 +106,7 @@ Assuming a typical session includes 1 API spec as context:
 
 - **Token counting:** tiktoken cl100k_base encoding (used by GPT-4, Claude approximation)
 - **Spec files:** Real OpenAPI YAML specs from `/data/workspace/lap-poc/specs/`
-- **DocLean output:** Real DocLean-processed specs from `/data/workspace/lap-poc/output/`
+- **LAP output:** Real LAP-processed specs from `/data/workspace/lap-poc/output/`
 - **Session data:** Real OpenClaw JSONL session transcripts from `/data/agents/main/sessions/`
 - **A2A messages:** Example messages from `src/a2a_lean.py` compiled to A2A-Lean format
 - **Cost estimate:** $0.005/1K input tokens (approximate Claude/GPT-4 blended rate)

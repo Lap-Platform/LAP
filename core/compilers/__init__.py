@@ -1,4 +1,4 @@
-"""LAP compilers -- OpenAPI, GraphQL, AsyncAPI, Protobuf, Postman, ToolLean.
+"""LAP compilers -- OpenAPI, GraphQL, AsyncAPI, Protobuf, Postman, LAP.
 
 Unified compile() and detect_format() for the CLI.
 """
@@ -89,7 +89,7 @@ def detect_format(spec_path: str) -> str:
 
 
 def compile(spec_path: str, format: str = None):
-    """Compile an API spec to DocLean.
+    """Compile an API spec to LAP.
 
     Args:
         spec_path: Path to the spec file or directory.
@@ -97,7 +97,7 @@ def compile(spec_path: str, format: str = None):
                 Auto-detected if None.
 
     Returns:
-        DocLeanSpec, or list[DocLeanSpec] for protobuf directories.
+        LAPSpec, or list[LAPSpec] for protobuf directories.
     """
     if format is None:
         format = detect_format(spec_path)

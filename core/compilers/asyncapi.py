@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-AsyncAPI → DocLean Compiler
+AsyncAPI → LAP Compiler
 
-Compiles AsyncAPI 2.x and 3.x specifications into DocLean format.
+Compiles AsyncAPI 2.x and 3.x specifications into LAP format.
 Channels map to endpoints with pub/sub methods.
 """
 
@@ -12,8 +12,8 @@ from typing import Optional
 
 import yaml
 
-from core.formats.doclean import (
-    DocLeanSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema
+from core.formats.lap import (
+    LAPSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema
 )
 
 
@@ -186,10 +186,10 @@ def _compile_message(msg: dict, spec: dict) -> tuple:
     return payload_params, header_params, summary, response_fields
 
 
-def _compile_v2(spec: dict) -> DocLeanSpec:
+def _compile_v2(spec: dict) -> LAPSpec:
     """Compile AsyncAPI 2.x spec."""
     info = spec.get("info", {})
-    doclean = DocLeanSpec(
+    lap = LAPSpec(
         api_name=info.get("title", "AsyncAPI"),
         base_url=_get_servers_url(spec),
         version=info.get("version", ""),
@@ -266,15 +266,15 @@ def _compile_v2(spec: dict) -> DocLeanSpec:
                     optional_params=optional,
                     response_schemas=response_schemas,
                 )
-                doclean.endpoints.append(endpoint)
+                lap.endpoints.append(endpoint)
 
-    return doclean
+    return lap
 
 
-def _compile_v3(spec: dict) -> DocLeanSpec:
+def _compile_v3(spec: dict) -> LAPSpec:
     """Compile AsyncAPI 3.x spec."""
     info = spec.get("info", {})
-    doclean = DocLeanSpec(
+    lap = LAPSpec(
         api_name=info.get("title", "AsyncAPI"),
         base_url=_get_servers_url(spec),
         version=info.get("version", ""),
@@ -358,7 +358,7 @@ def _compile_v3(spec: dict) -> DocLeanSpec:
                     optional_params=optional,
                     response_schemas=response_schemas,
                 )
-                doclean.endpoints.append(endpoint)
+                lap.endpoints.append(endpoint)
     else:
         # Fallback: v3 without operations block, just channels
         for channel_name, channel_def in channels.items():
@@ -388,13 +388,13 @@ def _compile_v3(spec: dict) -> DocLeanSpec:
                     optional_params=optional,
                     response_schemas=response_schemas,
                 )
-                doclean.endpoints.append(endpoint)
+                lap.endpoints.append(endpoint)
 
-    return doclean
+    return lap
 
 
-def compile_asyncapi(spec_path: str) -> DocLeanSpec:
-    """Compile an AsyncAPI spec to DocLean format."""
+def compile_asyncapi(spec_path: str) -> LAPSpec:
+    """Compile an AsyncAPI spec to LAP format."""
     path = Path(spec_path)
     file_size = path.stat().st_size
     if file_size > 50 * 1024 * 1024:
@@ -418,14 +418,14 @@ def compile_asyncapi(spec_path: str) -> DocLeanSpec:
 
 def main():
     import argparse
-    parser = argparse.ArgumentParser(description="Compile AsyncAPI spec to DocLean format")
+    parser = argparse.ArgumentParser(description="Compile AsyncAPI spec to LAP format")
     parser.add_argument("spec", help="Path to AsyncAPI spec (YAML/JSON)")
     parser.add_argument("-o", "--output", help="Output file (default: stdout)")
     parser.add_argument("--lean", action="store_true", help="Strip descriptions for max compression")
     args = parser.parse_args()
 
-    doclean = compile_asyncapi(args.spec)
-    result = doclean.to_doclean(lean=args.lean)
+    lap = compile_asyncapi(args.spec)
+    result = lap.to_lap(lean=args.lean)
 
     if args.output:
         Path(args.output).write_text(result)

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Semantic Validity Checker — Ensures DocLean output preserves all essential information.
+Semantic Validity Checker — Ensures LAP output preserves all essential information.
 
 Three validation layers:
-1. Schema completeness — every field from source exists in DocLean
+1. Schema completeness — every field from source exists in LAP
 2. Round-trip extraction — structured data survives compression
 3. Agent task comparison — LLM produces equivalent output with both formats
 
@@ -22,7 +22,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import yaml
 
 from core.compilers.openapi import compile_openapi, resolve_ref
-from core.parser import parse_doclean
+from core.parser import parse_lap
 from core.differ import diff_specs
 
 # ── Multi-format compiler registry ──────────────────────────────────
@@ -49,7 +49,7 @@ for _fmt in ("graphql", "asyncapi", "protobuf", "postman"):
 def validate_schema_completeness(spec_path: str) -> dict:
     """
     Layer 1: Verify every endpoint, parameter, and type from the OpenAPI spec
-    is present in the DocLean output.
+    is present in the LAP output.
     """
     path = Path(spec_path)
     raw = path.read_text()
@@ -61,12 +61,12 @@ def validate_schema_completeness(spec_path: str) -> dict:
     if not isinstance(spec, dict):
         raise ValueError("Invalid OpenAPI spec: expected a YAML mapping")
 
-    doclean = compile_openapi(spec_path)
-    doclean_text = doclean.to_doclean()
+    lap = compile_openapi(spec_path)
+    lap_text = lap.to_lap()
 
     results = {
         "total_endpoints": 0,
-        "compiled_endpoints": len(doclean.endpoints),
+        "compiled_endpoints": len(lap.endpoints),
         "missing_endpoints": [],
         "total_params": 0,
         "captured_params": 0,
@@ -84,7 +84,7 @@ def validate_schema_completeness(spec_path: str) -> dict:
                 results["total_endpoints"] += 1
                 found = any(
                     e.path == path_str and e.method == method
-                    for e in doclean.endpoints
+                    for e in lap.endpoints
                 )
                 if not found:
                     results["missing_endpoints"].append(f"{method.upper()} {path_str}")
@@ -114,19 +114,19 @@ def validate_schema_completeness(spec_path: str) -> dict:
 
             results["total_params"] += len(source_params)
 
-            # Check which params made it to DocLean
+            # Check which params made it to LAP
             ep = next(
-                (e for e in doclean.endpoints if e.path == path_str and e.method == method),
+                (e for e in lap.endpoints if e.path == path_str and e.method == method),
                 None,
             )
             if ep:
-                doclean_params = set()
+                lap_params = set()
                 for p in ep.required_params + ep.optional_params + ep.request_body:
-                    doclean_params.add(p.name)
+                    lap_params.add(p.name)
 
-                captured = source_params & doclean_params
+                captured = source_params & lap_params
                 results["captured_params"] += len(captured)
-                missing = source_params - doclean_params
+                missing = source_params - lap_params
                 for m in missing:
                     results["missing_params"].append(f"{method.upper()} {path_str} → {m}")
 
@@ -155,7 +155,7 @@ def validate_schema_completeness(spec_path: str) -> dict:
 
 def validate_agent_task(spec_path: str, task: str = None) -> dict:
     """
-    Layer 3: Give an LLM the same task with full docs vs DocLean,
+    Layer 3: Give an LLM the same task with full docs vs LAP,
     compare outputs for functional equivalence.
 
     Requires OPENAI_API_KEY env var.
@@ -170,16 +170,16 @@ def validate_agent_task(spec_path: str, task: str = None) -> dict:
     if not api_key:
         return {"error": "OPENAI_API_KEY not set. Skipping agent validation."}
 
-    doclean = compile_openapi(spec_path)
-    verbose = doclean.to_original_text()
-    lean = doclean.to_doclean()
+    lap = compile_openapi(spec_path)
+    verbose = lap.to_original_text()
+    lean = lap.to_lap()
 
     if not task:
         # Generate a task based on the first endpoint
-        if doclean.endpoints:
-            ep = doclean.endpoints[0]
+        if lap.endpoints:
+            ep = lap.endpoints[0]
             task = (
-                f"Using the {doclean.api_name} API, write a curl command to call "
+                f"Using the {lap.api_name} API, write a curl command to call "
                 f"{ep.method.upper()} {ep.path} with all required parameters. "
                 f"Include authentication headers."
             )
@@ -198,7 +198,7 @@ def validate_agent_task(spec_path: str, task: str = None) -> dict:
         temperature=0,
     )
 
-    # Run with DocLean docs
+    # Run with LAP docs
     lean_resp = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
@@ -247,7 +247,7 @@ def validate_agent_task(spec_path: str, task: str = None) -> dict:
 def print_results(results: dict):
     """Pretty print validation results."""
     print("=" * 60)
-    print("✅ LAP DocLean Semantic Validation")
+    print("✅ LAP LAP Semantic Validation")
     print("=" * 60)
 
     # Endpoints
@@ -292,28 +292,28 @@ def print_results(results: dict):
 
 def validate_roundtrip(spec_path: str) -> dict:
     """
-    Layer 2: Round-trip validation (OpenAPI → DocLean → parse → diff).
+    Layer 2: Round-trip validation (OpenAPI → LAP → parse → diff).
     Ensures no breaking changes survive the round-trip.
     """
-    from core.converter import doclean_to_openapi
+    from core.converter import lap_to_openapi
 
-    doclean_spec = compile_openapi(spec_path)
-    doclean_text = doclean_spec.to_doclean()
+    lap_spec = compile_openapi(spec_path)
+    lap_text = lap_spec.to_lap()
 
     # Parse back
-    parsed_spec = parse_doclean(doclean_text)
+    parsed_spec = parse_lap(lap_text)
 
     # Structural checks
-    original_eps = {f"{ep.method.upper()} {ep.path}" for ep in doclean_spec.endpoints}
+    original_eps = {f"{ep.method.upper()} {ep.path}" for ep in lap_spec.endpoints}
     parsed_eps = {f"{ep.method.upper()} {ep.path}" for ep in parsed_spec.endpoints}
     lost_endpoints = original_eps - parsed_eps
 
     # Semantic diff — should have zero breaking changes
-    diff_result = diff_specs(doclean_spec, parsed_spec)
+    diff_result = diff_specs(lap_spec, parsed_spec)
     breaking = diff_result.breaking_changes
 
     # Full round-trip back to OpenAPI
-    roundtrip_openapi = doclean_to_openapi(parsed_spec)
+    roundtrip_openapi = lap_to_openapi(parsed_spec)
     rt_eps = set()
     for p, methods in roundtrip_openapi.get("paths", {}).items():
         for m in methods:
@@ -337,7 +337,7 @@ def validate_generic_format(spec_path: str, fmt: str) -> dict:
     """
     Validate a non-OpenAPI format by compiling and parsing back.
     Since no round-trip converter exists yet, we check:
-    - DocLean output parses cleanly
+    - LAP output parses cleanly
     - All endpoints survive the parse
     - Param counts match
     """
@@ -346,16 +346,16 @@ def validate_generic_format(spec_path: str, fmt: str) -> dict:
         return {"spec": Path(spec_path).name, "format": fmt, "error": f"No compiler for {fmt}"}
 
     try:
-        doclean_spec = compiler(spec_path)
-        doclean_text = doclean_spec.to_doclean()
-        parsed_spec = parse_doclean(doclean_text)
+        lap_spec = compiler(spec_path)
+        lap_text = lap_spec.to_lap()
+        parsed_spec = parse_lap(lap_text)
 
-        original_eps = {f"{ep.method.upper()} {ep.path}" for ep in doclean_spec.endpoints}
+        original_eps = {f"{ep.method.upper()} {ep.path}" for ep in lap_spec.endpoints}
         parsed_eps = {f"{ep.method.upper()} {ep.path}" for ep in parsed_spec.endpoints}
         lost = original_eps - parsed_eps
 
         # Param count check
-        orig_params = sum(len(ep.required_params) + len(ep.optional_params) + len(ep.request_body) for ep in doclean_spec.endpoints)
+        orig_params = sum(len(ep.required_params) + len(ep.optional_params) + len(ep.request_body) for ep in lap_spec.endpoints)
         parsed_params = sum(len(ep.required_params) + len(ep.optional_params) + len(ep.request_body) for ep in parsed_spec.endpoints)
 
         return {
@@ -446,7 +446,7 @@ def print_all_results(all_results: dict):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Validate DocLean semantic completeness")
+    parser = argparse.ArgumentParser(description="Validate LAP semantic completeness")
     parser.add_argument("spec", nargs="?", help="Path to OpenAPI spec (or omit for --all)")
     parser.add_argument("--all", action="store_true", help="Validate all specs across all formats")
     parser.add_argument("--format", choices=list(_SPEC_EXTENSIONS.keys()), help="Filter to one format")
@@ -484,7 +484,7 @@ def main():
         else:
             print(f"   Task: {agent_results['task']}")
             print(f"   Verbose tokens: {agent_results['verbose_tokens_used']}")
-            print(f"   DocLean tokens: {agent_results['lean_tokens_used']}")
+            print(f"   LAP tokens: {agent_results['lean_tokens_used']}")
             print(f"   Token savings:  {agent_results['token_savings']}")
             print(f"   Judge verdict:  {agent_results['judge_verdict']}")
 

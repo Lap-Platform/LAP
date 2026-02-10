@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-LAP MCP Proxy — Transparent ToolLean compression for MCP tool discovery.
+LAP MCP Proxy — Transparent LAP compression for MCP tool discovery.
 
 Sits between MCP server and LLM host:
-1. Intercepts tools/list response → compiles to ToolLean (saves ~35-50% tokens)
-2. LLM sees compact ToolLean format instead of verbose JSON Schema
+1. Intercepts tools/list response → compiles to LAP (saves ~35-50% tokens)
+2. LLM sees compact LAP format instead of verbose JSON Schema
 3. For tools/call, reconstructs JSON Schema params (transparent to server)
 """
 
@@ -15,8 +15,8 @@ from typing import Optional
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from core.compilers.toollean import compile_mcp_manifest, compile_mcp_tool
-from core.formats.toollean import ToolLeanSpec, ToolLeanBundle
+from core.compilers.lap_tools import compile_mcp_manifest, compile_mcp_tool
+from core.formats.lap_tools import LAPToolSpec, LAPToolBundle
 
 # ── Type reverse mapping ────────────────────────────────────────────
 
@@ -34,7 +34,7 @@ _LEAN_TO_JSON = {
 
 
 def _reverse_type(lean_type: str) -> dict:
-    """Convert ToolLean type back to JSON Schema."""
+    """Convert LAP type back to JSON Schema."""
     # Handle list types like [str]
     if lean_type.startswith("[") and lean_type.endswith("]"):
         inner = lean_type[1:-1]
@@ -42,8 +42,8 @@ def _reverse_type(lean_type: str) -> dict:
     return {"type": _LEAN_TO_JSON.get(lean_type, lean_type)}
 
 
-def spec_to_json_schema(spec: ToolLeanSpec) -> dict:
-    """Reconstruct MCP tool JSON from a ToolLeanSpec."""
+def spec_to_json_schema(spec: LAPToolSpec) -> dict:
+    """Reconstruct MCP tool JSON from a LAPToolSpec."""
     properties = {}
     required = []
     for p in spec.inputs:
@@ -69,8 +69,8 @@ def spec_to_json_schema(spec: ToolLeanSpec) -> dict:
     }
 
 
-def bundle_to_manifest(bundle: ToolLeanBundle) -> dict:
-    """Reconstruct full MCP manifest from a ToolLeanBundle."""
+def bundle_to_manifest(bundle: LAPToolBundle) -> dict:
+    """Reconstruct full MCP manifest from a LAPToolBundle."""
     return {
         "name": bundle.name,
         "description": bundle.description,
@@ -79,19 +79,19 @@ def bundle_to_manifest(bundle: ToolLeanBundle) -> dict:
 
 
 class LapMcpProxy:
-    """Proxy that compresses MCP tool discovery via ToolLean."""
+    """Proxy that compresses MCP tool discovery via LAP."""
     
     def __init__(self):
-        self._bundles: dict[str, ToolLeanBundle] = {}  # server_name -> bundle
+        self._bundles: dict[str, LAPToolBundle] = {}  # server_name -> bundle
     
     def compress_tools_list(self, manifest: dict) -> str:
-        """Compress a tools/list response to ToolLean format."""
+        """Compress a tools/list response to LAP format."""
         bundle = compile_mcp_manifest(manifest)
         self._bundles[bundle.name] = bundle
-        return bundle.to_toollean()
+        return bundle.to_lap()
     
     def reconstruct_manifest(self, server_name: str) -> Optional[dict]:
-        """Reconstruct JSON Schema manifest from stored ToolLean."""
+        """Reconstruct JSON Schema manifest from stored LAP."""
         bundle = self._bundles.get(server_name)
         if not bundle:
             return None
@@ -163,7 +163,7 @@ if __name__ == "__main__":
             continue
         
         # Compress
-        toollean = proxy.compress_tools_list(data)
+        lap = proxy.compress_tools_list(data)
         
         # Reconstruct
         reconstructed = proxy.reconstruct_manifest(data.get("name", f.stem))

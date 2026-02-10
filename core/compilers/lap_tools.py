@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-ToolLean Compiler — Various tool manifest formats → ToolLean
+LAP Compiler — Various tool manifest formats → LAP
 
 Supports:
   - MCP tool manifests (JSON)
@@ -13,7 +13,7 @@ import re
 from pathlib import Path
 from typing import Optional
 
-from core.formats.toollean import ToolLeanSpec, ToolLeanBundle, ToolParam, ToolOutput, ToolExample
+from core.formats.lap_tools import LAPToolSpec, LAPToolBundle, ToolParam, ToolOutput, ToolExample
 
 
 # ── Type Mapping ────────────────────────────────────────────────────
@@ -30,7 +30,7 @@ _JSON_TYPE_MAP = {
 
 
 def _map_type(json_type: str, fmt: str = "", items: Optional[dict] = None) -> str:
-    """Map JSON Schema type to ToolLean compact type."""
+    """Map JSON Schema type to LAP compact type."""
     base = _JSON_TYPE_MAP.get(json_type, json_type or "any")
     if fmt:
         base = f"{base}({fmt})"
@@ -42,8 +42,8 @@ def _map_type(json_type: str, fmt: str = "", items: Optional[dict] = None) -> st
 
 # ── MCP Compiler ────────────────────────────────────────────────────
 
-def compile_mcp_tool(tool: dict) -> ToolLeanSpec:
-    """Compile a single MCP tool definition to ToolLean."""
+def compile_mcp_tool(tool: dict) -> LAPToolSpec:
+    """Compile a single MCP tool definition to LAP."""
     name = tool.get("name", "unknown")
     desc = tool.get("description", "")
     schema = tool.get("inputSchema") or tool.get("input_schema", {})
@@ -67,33 +67,33 @@ def compile_mcp_tool(tool: dict) -> ToolLeanSpec:
             default=str(pschema["default"]) if "default" in pschema else None,
         ))
 
-    return ToolLeanSpec(name=name, description=desc, inputs=inputs)
+    return LAPToolSpec(name=name, description=desc, inputs=inputs)
 
 
-def compile_mcp_manifest(manifest: dict) -> ToolLeanBundle:
-    """Compile a full MCP server manifest (with multiple tools) to ToolLean."""
+def compile_mcp_manifest(manifest: dict) -> LAPToolBundle:
+    """Compile a full MCP server manifest (with multiple tools) to LAP."""
     server_name = manifest.get("name", manifest.get("server", {}).get("name", ""))
     server_desc = manifest.get("description", manifest.get("server", {}).get("description", ""))
     tools_list = manifest.get("tools", [])
 
     tools = [compile_mcp_tool(t) for t in tools_list]
-    return ToolLeanBundle(name=server_name, description=server_desc, tools=tools)
+    return LAPToolBundle(name=server_name, description=server_desc, tools=tools)
 
 
-def compile_mcp_file(path: str) -> ToolLeanBundle:
+def compile_mcp_file(path: str) -> LAPToolBundle:
     """Compile an MCP manifest JSON file."""
     data = json.loads(Path(path).read_text())
     if isinstance(data, list):
         # Raw list of tools
         tools = [compile_mcp_tool(t) for t in data]
-        return ToolLeanBundle(name=Path(path).stem, tools=tools)
+        return LAPToolBundle(name=Path(path).stem, tools=tools)
     return compile_mcp_manifest(data)
 
 
 # ── OpenClaw SKILL.md Compiler ──────────────────────────────────────
 
-def compile_skill_md(text: str, source: str = "") -> ToolLeanSpec:
-    """Compile an OpenClaw SKILL.md file to ToolLean."""
+def compile_skill_md(text: str, source: str = "") -> LAPToolSpec:
+    """Compile an OpenClaw SKILL.md file to LAP."""
     name = ""
     desc = ""
     tags = []
@@ -208,7 +208,7 @@ def compile_skill_md(text: str, source: str = "") -> ToolLeanSpec:
             if snippet and len(snippet) < 300:
                 examples.append(ToolExample(input_text=snippet.split("\n")[0]))
 
-    return ToolLeanSpec(
+    return LAPToolSpec(
         name=name or "unknown",
         description=desc,
         auth=auth,
@@ -220,7 +220,7 @@ def compile_skill_md(text: str, source: str = "") -> ToolLeanSpec:
     )
 
 
-def compile_skill_file(path: str) -> ToolLeanSpec:
+def compile_skill_file(path: str) -> LAPToolSpec:
     """Compile an OpenClaw SKILL.md file from disk."""
     text = Path(path).read_text()
     return compile_skill_md(text, source=path)
@@ -228,8 +228,8 @@ def compile_skill_file(path: str) -> ToolLeanSpec:
 
 # ── Generic JSON Tool Compiler ──────────────────────────────────────
 
-def compile_generic_json(tool: dict) -> ToolLeanSpec:
-    """Compile a generic JSON tool definition to ToolLean.
+def compile_generic_json(tool: dict) -> LAPToolSpec:
+    """Compile a generic JSON tool definition to LAP.
     
     Expects a dict with keys like: name, description, parameters/inputs,
     returns/outputs, auth, tags, etc.
@@ -293,7 +293,7 @@ def compile_generic_json(tool: dict) -> ToolLeanSpec:
             elif isinstance(fdef, str):
                 outputs.append(ToolOutput(name=fname, type=fdef))
 
-    return ToolLeanSpec(
+    return LAPToolSpec(
         name=name,
         description=desc,
         auth=auth,
@@ -305,7 +305,7 @@ def compile_generic_json(tool: dict) -> ToolLeanSpec:
     )
 
 
-def compile_generic_file(path: str) -> ToolLeanSpec:
+def compile_generic_file(path: str) -> LAPToolSpec:
     """Compile a generic JSON tool definition file."""
     data = json.loads(Path(path).read_text())
     return compile_generic_json(data)

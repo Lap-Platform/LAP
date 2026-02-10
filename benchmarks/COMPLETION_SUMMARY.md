@@ -15,7 +15,7 @@ Successfully built a comprehensive benchmark harness for the LAP project with **
 
 ### 2. Prompt Files (20 total)
 - **Location:** `/data/workspace/lap-poc/benchmarks/big_benchmark/`
-- **Files:** 10 verbose + 10 DocLean versions
+- **Files:** 10 verbose + 10 LAP versions
 - **Format:** Standardized prompt template with API docs + 5 tasks per spec
 
 ### 3. Documentation
@@ -34,7 +34,7 @@ Successfully built a comprehensive benchmark harness for the LAP project with **
 | **Tasks Validated** | 50/50 (100%) ✅ |
 | **Prompt Files** | 20 |
 | **Total Verbose Size** | 4,213,370 chars (~4.2 MB) |
-| **Total DocLean Size** | 481,203 chars (~481 KB) |
+| **Total LAP Size** | 481,203 chars (~481 KB) |
 | **Overall Compression** | **8.76x** |
 
 ---
@@ -42,14 +42,14 @@ Successfully built a comprehensive benchmark harness for the LAP project with **
 ## 📋 Specs by Tier
 
 ### Small Tier (3 specs)
-| Spec | Endpoints | Verbose | DocLean | Ratio | Valid |
+| Spec | Endpoints | Verbose | LAP | Ratio | Valid |
 |------|-----------|---------|---------|-------|-------|
 | stripe-charges | 5 | 11,160 | 4,291 | 2.60x | 5/5 ✅ |
 | github-core | 6 | 12,002 | 3,703 | 3.24x | 5/5 ✅ |
 | discord | 4 | 4,854 | 1,437 | 3.38x | 5/5 ✅ |
 
 ### Medium Tier (4 specs)
-| Spec | Endpoints | Verbose | DocLean | Ratio | Valid |
+| Spec | Endpoints | Verbose | LAP | Ratio | Valid |
 |------|-----------|---------|---------|-------|-------|
 | twitter | 80 | 286,307 | 62,661 | 4.57x | 5/5 ✅ |
 | resend | 70 | 107,738 | 21,262 | 5.07x | 5/5 ✅ |
@@ -57,7 +57,7 @@ Successfully built a comprehensive benchmark harness for the LAP project with **
 | petstore | 19 | 22,105 | 5,670 | 3.90x | 5/5 ✅ |
 
 ### Large Tier (3 specs)
-| Spec | Endpoints | Verbose | DocLean | Ratio | Valid |
+| Spec | Endpoints | Verbose | LAP | Ratio | Valid |
 |------|-----------|---------|---------|-------|-------|
 | snyk | 103 | 1,014,341 | 38,506 | 26.34x | 5/5 ✅ |
 | hetzner | 144 | 1,127,652 | 78,736 | 14.32x | 5/5 ✅ |
@@ -88,7 +88,7 @@ benchmarks/
 └── big_benchmark/
     ├── README.md                     # Usage guide
     ├── verbose_*.txt (×10)           # Full OpenAPI specs
-    └── doclean_*.txt (×10)           # Compiled DocLean
+    └── lap_*.txt (×10)           # Compiled LAP
 ```
 
 ---
@@ -100,9 +100,9 @@ benchmarks/
 - Parsed YAML and extracted all endpoints (734 total)
 - Created 5 validated tasks per spec (50 total)
 
-### Step 2: DocLean Compilation ✅
+### Step 2: LAP Compilation ✅
 - Compiled all 10 specs using LAP's OpenAPI compiler
-- Generated DocLean format with `lean=False`
+- Generated LAP format with `lean=False`
 - Verified compression ratios (2.55x to 26.34x)
 
 ### Step 3: Benchmark Config ✅
@@ -111,7 +111,7 @@ benchmarks/
 - Documented compression statistics
 
 ### Step 4: Prompt File Generation ✅
-- Created 20 prompt files (verbose + DocLean)
+- Created 20 prompt files (verbose + LAP)
 - Applied standardized template
 - Embedded tasks and documentation
 
@@ -129,17 +129,17 @@ benchmarks/
    cd /data/workspace/lap-poc/benchmarks/big_benchmark
    # Test with your LLM
    cat verbose_stripe-charges.txt | llm-cli
-   cat doclean_stripe-charges.txt | llm-cli
+   cat lap_stripe-charges.txt | llm-cli
    ```
 
 2. **Collect Metrics**
    - Accuracy (correct endpoint identification)
-   - Token usage (verbose vs DocLean)
+   - Token usage (verbose vs LAP)
    - Latency and cost
 
 3. **Analyze Results**
    - Compare performance across tiers
-   - Identify strengths/weaknesses of DocLean
+   - Identify strengths/weaknesses of LAP
    - Iterate on format
 
 4. **Scale**

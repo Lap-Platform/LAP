@@ -31,7 +31,7 @@ TASK 5: <curl command>
 
 summary = []
 for spec in SPECS:
-    for variant in ["verbose", "doclean"]:
+    for variant in ["verbose", "lap"]:
         prompt_file = os.path.join(BENCH_DIR, f"{variant}_{spec}.txt")
         if not os.path.exists(prompt_file):
             print(f"SKIP: {prompt_file} not found")

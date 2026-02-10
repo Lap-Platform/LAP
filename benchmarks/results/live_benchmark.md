@@ -73,7 +73,7 @@ Note: The amount is 5000 because Stripe uses cents (50 dollars × 100 = 5000 cen
 ```
 [negotiation]: @lap negotiate {supported: [L0, L1, L2], preferred: L2}
 [negotiation_response]: @lap accept L2
-[context]: [LAP DocLean spec: 384 tokens]
+[context]: [LAP LAP spec: 384 tokens]
 [agent_a]: create|resource=charge|amount=5000|currency=usd|customer=cus_123
 [agent_b]: {"status":"ok","endpoint":"POST /v1/charges","params":{"amount":5000,"currency":"usd","customer":"cus_123"},"response_schema":{"id":"str","amount":"int","currency":"str","status":"str"}}
 ```
@@ -125,7 +125,7 @@ Sort the results by `stargazers_count` in descending order and take the first on
 ```
 [negotiation]: @lap negotiate {supported: [L0, L1, L2], preferred: L2}
 [negotiation_response]: @lap accept L2
-[context]: [LAP DocLean spec: 429 tokens]
+[context]: [LAP LAP spec: 429 tokens]
 [agent_a]: list|resource=repos|username=octocat|sort=stargazers_count|direction=desc
 [agent_a]: execute|action=star|owner=octocat|repo={top_result}
 [agent_b]: {"steps":[{"endpoint":"GET /users/octocat/repos","params":{"sort":"full_name","per_page":100}},{"endpoint":"PUT /user/starred/octocat/{max_stars.name}","params":{}}],"note":"client sorts by stargazers_count desc, stars first result"}
@@ -196,7 +196,7 @@ Sends a message to a channel.
 ```
 [negotiation]: @lap negotiate {supported: [L0, L1, L2], preferred: L2}
 [negotiation_response]: @lap accept L2
-[context]: [LAP DocLean spec: 194 tokens]
+[context]: [LAP LAP spec: 194 tokens]
 [agent_a]: notify|target=#general|message=deploy complete
 [agent_b]: {"endpoint":"POST /chat.postMessage","params":{"channel":"#general","text":"deploy complete"},"returns":{"ok":"bool","ts":"str"}}
 ```
@@ -211,7 +211,7 @@ Simulates an agent looking up API documentation to construct a call.
 ### Create Stripe Payment Intent
 **Question:** How do I create a payment intent with Stripe?
 
-| Metric | Full Docs | LAP (DocLean) |
+| Metric | Full Docs | LAP (LAP) |
 |--------|-----------|---------------|
 | Doc size (bytes) | 5,864 | 1,243 |
 | Doc tokens | 1,349 | 384 |
@@ -225,7 +225,7 @@ Simulates an agent looking up API documentation to construct a call.
 ### Create GitHub Pull Request
 **Question:** How do I create a GitHub pull request?
 
-| Metric | Full Docs | LAP (DocLean) |
+| Metric | Full Docs | LAP (LAP) |
 |--------|-----------|---------------|
 | Doc size (bytes) | 5,858 | 1,330 |
 | Doc tokens | 1,541 | 429 |
@@ -239,7 +239,7 @@ Simulates an agent looking up API documentation to construct a call.
 ### Send Twilio Message
 **Question:** How do I send a message with Twilio?
 
-| Metric | Full Docs | LAP (DocLean) |
+| Metric | Full Docs | LAP (LAP) |
 |--------|-----------|---------------|
 | Doc size (bytes) | 4,664 | 746 |
 | Doc tokens | 1,211 | 245 |
@@ -256,7 +256,7 @@ Simulates an agent looking up API documentation to construct a call.
 
 - **Tokenizer:** OpenAI cl100k_base (tiktoken) — same tokenizer used by GPT-4, Claude counts are similar
 - **Without LAP:** Agents exchange full natural language with complete API documentation inline
-- **With LAP:** Agents use A2A-Lean protocol with DocLean compressed specs
+- **With LAP:** Agents use A2A-Lean protocol with LAP compressed specs
 - **Token counts are exact** — measured from the actual conversation content
 - Conversations are realistic simulations of what agents would exchange
 - Both versions produce correct, actionable API call structures
@@ -264,6 +264,6 @@ Simulates an agent looking up API documentation to construct a call.
 ## Key Findings
 
 1. **A2A Communication:** LAP reduces tokens by **71.6%** across agent conversations
-2. **Doc Lookup:** DocLean specs reduce tokens by **72.6%** vs full documentation
+2. **Doc Lookup:** LAP specs reduce tokens by **72.6%** vs full documentation
 3. **Combined:** Overall **72.1%** reduction — 6,917 tokens saved across all scenarios
 4. Both approaches produce correct API calls — LAP maintains correctness while dramatically reducing context size
