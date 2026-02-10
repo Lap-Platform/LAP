@@ -555,7 +555,7 @@ class TestIsLikelyOptional:
 class TestCLI:
     def test_postman_subcommand(self):
         result = subprocess.run(
-            [sys.executable, CLI, 'postman', str(SPECS_DIR / 'crud-api.json')],
+            [sys.executable, CLI, 'compile', str(SPECS_DIR / 'crud-api.json')],
             capture_output=True, text=True, timeout=30,
         )
         assert result.returncode == 0
@@ -565,7 +565,7 @@ class TestCLI:
 
     def test_postman_lean(self):
         result = subprocess.run(
-            [sys.executable, CLI, 'postman', '--lean', str(SPECS_DIR / 'crud-api.json')],
+            [sys.executable, CLI, 'compile', '--lean', str(SPECS_DIR / 'crud-api.json')],
             capture_output=True, text=True, timeout=30,
         )
         assert result.returncode == 0
@@ -574,7 +574,7 @@ class TestCLI:
     def test_postman_output_file(self, tmp_path):
         out = tmp_path / 'out.doclean'
         result = subprocess.run(
-            [sys.executable, CLI, 'postman', str(SPECS_DIR / 'crud-api.json'), '-o', str(out)],
+            [sys.executable, CLI, 'compile', str(SPECS_DIR / 'crud-api.json'), '-o', str(out)],
             capture_output=True, text=True, timeout=30,
         )
         assert result.returncode == 0

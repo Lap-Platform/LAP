@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-LAP CLI — LeanAgent Protocol command-line tool.
+LAP CLI -- LeanAgent Protocol command-line tool.
 
 Compile, validate, benchmark, inspect, and convert DocLean API specifications.
 """
@@ -58,62 +58,34 @@ def heading(msg):
 
 # ── Commands ─────────────────────────────────────────────────────────
 
-def cmd_asyncapi(args):
-    """Compile AsyncAPI spec to DocLean format."""
-    from core.compilers.asyncapi import compile_asyncapi
-
-    spec_path = args.spec
-    if not Path(spec_path).exists():
-        error(f"File not found: {spec_path}")
-
-    doclean = compile_asyncapi(spec_path)
-    result = doclean.to_doclean(lean=args.lean)
-
-    if args.output:
-        Path(args.output).parent.mkdir(parents=True, exist_ok=True)
-        Path(args.output).write_text(result)
-        info(f"Compiled {Path(spec_path).name} → {args.output}")
-        info(f"{len(doclean.endpoints)} channels | {len(result):,} chars | {'lean' if args.lean else 'standard'} mode")
-    else:
-        print(result)
-
-
-def cmd_postman(args):
-    """Compile Postman Collection to DocLean format."""
-    from core.compilers.postman import compile_postman
-
-    spec_path = args.spec
-    if not Path(spec_path).exists():
-        error(f"File not found: {spec_path}")
-
-    doclean = compile_postman(spec_path)
-    result = doclean.to_doclean(lean=args.lean)
-
-    if args.output:
-        Path(args.output).parent.mkdir(parents=True, exist_ok=True)
-        Path(args.output).write_text(result)
-        info(f"Compiled Postman {Path(spec_path).name} → {args.output}")
-        info(f"{len(doclean.endpoints)} endpoints | {len(result):,} chars | {'lean' if args.lean else 'standard'} mode")
-    else:
-        print(result)
-
-
 def cmd_compile(args):
-    """Compile OpenAPI spec to DocLean format."""
-    from core.compilers.openapi import compile_openapi
+    """Compile any API spec to DocLean format (auto-detects format)."""
+    from core.compilers import compile as compile_spec
 
     spec_path = args.spec
     if not Path(spec_path).exists():
-        error(f"File not found: {spec_path}")
+        error(f"File/directory not found: {spec_path}")
 
-    doclean = compile_openapi(spec_path)
-    result = doclean.to_doclean(lean=args.lean)
+    fmt = getattr(args, "format", None)
+    try:
+        result_obj = compile_spec(spec_path, format=fmt)
+    except ValueError as e:
+        error(str(e))
+
+    # Protobuf directories return a list
+    if isinstance(result_obj, list):
+        result = "\n---\n\n".join(s.to_doclean(lean=args.lean) for s in result_obj)
+        total_eps = sum(len(s.endpoints) for s in result_obj)
+        label = f"{len(result_obj)} specs, {total_eps} endpoints"
+    else:
+        result = result_obj.to_doclean(lean=args.lean)
+        label = f"{len(result_obj.endpoints)} endpoints"
 
     if args.output:
         Path(args.output).parent.mkdir(parents=True, exist_ok=True)
         Path(args.output).write_text(result)
-        info(f"Compiled {Path(spec_path).name} → {args.output}")
-        info(f"{len(doclean.endpoints)} endpoints | {len(result):,} chars | {'lean' if args.lean else 'standard'} mode")
+        info(f"Compiled {Path(spec_path).name} -> {args.output}")
+        info(f"{label} | {len(result):,} chars | {'lean' if args.lean else 'standard'} mode")
     else:
         print(result)
 
@@ -153,9 +125,9 @@ def cmd_validate(args):
         console.print(table)
 
         if ep_pct == 100 and p_pct == 100:
-            console.print("\n[bold green]PASS[/] — Zero information loss!")
+            console.print("\n[bold green]PASS[/] -- Zero information loss!")
         else:
-            console.print("\n[bold yellow]PARTIAL[/] — Some data not captured")
+            console.print("\n[bold yellow]PARTIAL[/] -- Some data not captured")
             for m in results["missing_params"][:5]:
                 console.print(f"  [red]Missing:[/] {m}")
     else:
@@ -291,7 +263,7 @@ def cmd_inspect(args):
             if ep.response_schemas:
                 for rs in ep.response_schemas:
                     n = len(rs.fields)
-                    console.print(f"  [green]→ {rs.status_code}[/] {rs.description or ''} ({n} fields)")
+                    console.print(f"  [green]-> {rs.status_code}[/] {rs.description or ''} ({n} fields)")
 
             if ep.error_schemas:
                 codes = ", ".join(e.code for e in ep.error_schemas)
@@ -309,26 +281,6 @@ def cmd_inspect(args):
                 print(f"    [opt] {p.name}: {p.type}")
 
 
-def cmd_graphql(args):
-    """Compile GraphQL SDL to DocLean format."""
-    from core.compilers.graphql import compile_graphql
-
-    spec_path = args.spec
-    if not Path(spec_path).exists():
-        error(f"File not found: {spec_path}")
-
-    doclean = compile_graphql(spec_path)
-    result = doclean.to_doclean(lean=args.lean)
-
-    if args.output:
-        Path(args.output).parent.mkdir(parents=True, exist_ok=True)
-        Path(args.output).write_text(result)
-        info(f"Compiled {Path(spec_path).name} → {args.output}")
-        info(f"{len(doclean.endpoints)} endpoints | {len(result):,} chars | {'lean' if args.lean else 'standard'} mode")
-    else:
-        print(result)
-
-
 def cmd_convert(args):
     """Convert DocLean back to OpenAPI YAML."""
     from core.converter import convert_file
@@ -339,7 +291,7 @@ def cmd_convert(args):
 
     if args.output:
         convert_file(str(path), args.output)
-        info(f"Converted {path.name} → {args.output} (OpenAPI 3.0)")
+        info(f"Converted {path.name} -> {args.output} (OpenAPI 3.0)")
     else:
         result = convert_file(str(path))
         print(result)
@@ -368,7 +320,7 @@ def cmd_diff(args):
 
     if HAS_RICH:
         status = "[bold red]BREAKING[/]" if compat.severity == "MAJOR" else "[bold green]COMPATIBLE[/]"
-        console.print(f"\nSemver: [bold]{compat.severity}[/] — {status}\n")
+        console.print(f"\nSemver: [bold]{compat.severity}[/] -- {status}\n")
 
         if diff.breaking_changes:
             console.print("[bold red]Breaking Changes:[/]")
@@ -394,138 +346,24 @@ def cmd_diff(args):
             print("No changes detected.")
 
 
-def cmd_protobuf(args):
-    """Compile Protobuf/gRPC spec to DocLean format."""
-    from core.compilers.protobuf import compile_proto, compile_proto_dir
-
-    spec_path = Path(args.spec)
-    if not spec_path.exists():
-        error(f"File/directory not found: {args.spec}")
-
-    if spec_path.is_dir():
-        specs = compile_proto_dir(str(spec_path))
-        result = "\n---\n\n".join(s.to_doclean(lean=args.lean) for s in specs)
-        total_eps = sum(len(s.endpoints) for s in specs)
-        label = f"{len(specs)} proto files, {total_eps} RPCs"
-    else:
-        spec = compile_proto(str(spec_path))
-        result = spec.to_doclean(lean=args.lean)
-        label = f"{len(spec.endpoints)} RPCs"
-
-    if args.output:
-        Path(args.output).parent.mkdir(parents=True, exist_ok=True)
-        Path(args.output).write_text(result)
-        info(f"Compiled {spec_path.name} → {args.output}")
-        info(f"{label} | {len(result):,} chars | {'lean' if args.lean else 'standard'} mode")
-    else:
-        print(result)
-
-
-def cmd_registry_list(args):
-    """List all DocLean files in a directory."""
-    from core.parser import parse_doclean
-
-    dir_path = Path(args.directory)
-    if not dir_path.is_dir():
-        error(f"Not a directory: {args.directory}")
-
-    files = sorted(dir_path.glob("*.doclean"))
-    if not files:
-        warn(f"No .doclean files in {args.directory}")
-        return
-
-    if HAS_RICH:
-        table = Table(title="DocLean Registry", box=box.SIMPLE_HEAVY)
-        table.add_column("File", style="cyan")
-        table.add_column("API", style="bold")
-        table.add_column("Version")
-        table.add_column("Endpoints", justify="right")
-        table.add_column("Size", justify="right")
-
-        for f in files:
-            text = f.read_text()
-            spec = parse_doclean(text)
-            table.add_row(
-                f.name, spec.api_name, spec.version or "-",
-                str(len(spec.endpoints)), f"{len(text):,} chars"
-            )
-        console.print(table)
-    else:
-        print(f"\n{'File':<40} {'API':<25} {'EPs':>5} {'Size':>10}")
-        print("-" * 82)
-        for f in files:
-            text = f.read_text()
-            spec = parse_doclean(text)
-            print(f"{f.name:<40} {spec.api_name:<25} {len(spec.endpoints):>5} {len(text):>9,}")
-
-
-def cmd_registry_search(args):
-    """Search DocLean files for a query."""
-    from core.parser import parse_doclean
-
-    dir_path = Path(args.directory)
-    if not dir_path.is_dir():
-        error(f"Not a directory: {args.directory}")
-
-    query = args.query.lower()
-    files = sorted(dir_path.glob("*.doclean"))
-    matches = []
-
-    for f in files:
-        text = f.read_text()
-        spec = parse_doclean(text)
-        for ep in spec.endpoints:
-            searchable = f"{ep.method} {ep.path} {ep.summary}".lower()
-            if query in searchable:
-                matches.append((f.name, spec.api_name, ep))
-
-    if not matches:
-        warn(f'No endpoints matching "{args.query}"')
-        return
-
-    if HAS_RICH:
-        console.print(f"\n[bold]Found {len(matches)} endpoints matching[/] [cyan]\"{args.query}\"[/]\n")
-        for fname, api, ep in matches:
-            console.print(f"  [dim]{api}[/] [bold cyan]{ep.method.upper()} {ep.path}[/]  {ep.summary or ''}")
-    else:
-        print(f'\nFound {len(matches)} endpoints matching "{args.query}"\n')
-        for fname, api, ep in matches:
-            print(f"  [{api}] {ep.method.upper()} {ep.path}  {ep.summary or ''}")
-
-
 # ── Main ─────────────────────────────────────────────────────────────
 
 def main():
     parser = argparse.ArgumentParser(
         prog="lap",
-        description="LAP — LeanAgent Protocol CLI",
+        description="LAP -- LeanAgent Protocol CLI",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="Run 'lap <command> --help' for more info on a command.",
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
-    # asyncapi
-    p = sub.add_parser("asyncapi", help="Compile AsyncAPI spec to DocLean")
-    p.add_argument("spec", help="Path to AsyncAPI spec (YAML/JSON)")
+    # compile (unified -- auto-detects format)
+    p = sub.add_parser("compile", help="Compile API spec to DocLean (auto-detects format)")
+    p.add_argument("spec", help="Path to API spec file or directory")
     p.add_argument("-o", "--output", help="Output file path")
-    p.add_argument("--lean", action="store_true", help="Maximum compression (strip descriptions)")
-
-    # postman
-    p = sub.add_parser("postman", help="Compile Postman Collection to DocLean")
-    p.add_argument("spec", help="Path to Postman Collection JSON")
-    p.add_argument("-o", "--output", help="Output file path")
-    p.add_argument("--lean", action="store_true", help="Maximum compression (strip descriptions)")
-
-    # compile
-    p = sub.add_parser("compile", help="Compile OpenAPI spec to DocLean")
-    p.add_argument("spec", help="Path to OpenAPI spec (YAML/JSON)")
-    p.add_argument("-o", "--output", help="Output file path")
-    p.add_argument("--lean", action="store_true", help="Maximum compression (strip descriptions)")
-
-    # graphql
-    p = sub.add_parser("graphql", help="Compile GraphQL SDL to DocLean")
-    p.add_argument("spec", help="Path to GraphQL SDL file (.graphql/.gql)")
-    p.add_argument("-o", "--output", help="Output file path")
+    p.add_argument("-f", "--format",
+                   choices=["openapi", "graphql", "asyncapi", "protobuf", "postman"],
+                   help="Force spec format (auto-detected if omitted)")
     p.add_argument("--lean", action="store_true", help="Maximum compression (strip descriptions)")
 
     # validate
@@ -558,46 +396,19 @@ def main():
     p.add_argument("--format", choices=["summary", "changelog"], default="summary", help="Output format")
     p.add_argument("--version", help="Version label for changelog")
 
-    # protobuf
-    p = sub.add_parser("protobuf", help="Compile Protobuf/gRPC spec to DocLean")
-    p.add_argument("spec", help="Path to .proto file or directory")
-    p.add_argument("-o", "--output", help="Output file path")
-    p.add_argument("--lean", action="store_true", help="Maximum compression (strip descriptions)")
-
-    # registry
-    p = sub.add_parser("registry", help="Registry operations")
-    rsub = p.add_subparsers(dest="registry_command", required=True)
-
-    rp = rsub.add_parser("list", help="List DocLean files")
-    rp.add_argument("directory", help="Directory to scan")
-
-    rp = rsub.add_parser("search", help="Search endpoints")
-    rp.add_argument("directory", help="Directory to scan")
-    rp.add_argument("query", help="Search query")
-
     args = parser.parse_args()
 
     commands = {
-        "asyncapi": cmd_asyncapi,
         "compile": cmd_compile,
-        "postman": cmd_postman,
-        "graphql": cmd_graphql,
         "validate": cmd_validate,
         "benchmark": cmd_benchmark,
         "benchmark-all": cmd_benchmark_all,
         "inspect": cmd_inspect,
         "convert": cmd_convert,
         "diff": cmd_diff,
-        "protobuf": cmd_protobuf,
     }
 
-    if args.command == "registry":
-        if args.registry_command == "list":
-            cmd_registry_list(args)
-        elif args.registry_command == "search":
-            cmd_registry_search(args)
-    else:
-        commands[args.command](args)
+    commands[args.command](args)
 
 
 if __name__ == "__main__":

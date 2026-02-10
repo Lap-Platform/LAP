@@ -422,7 +422,7 @@ class TestCLI:
         out = tmp_path / "health.doclean"
 
         result = subprocess.run(
-            [sys.executable, str(cli_path), "protobuf", str(proto_path), "-o", str(out)],
+            [sys.executable, str(cli_path), "compile", str(proto_path), "-o", str(out)],
             capture_output=True, text=True, timeout=10,
         )
         assert result.returncode == 0, result.stderr
@@ -438,7 +438,7 @@ class TestCLI:
         out = tmp_path / "all.doclean"
 
         result = subprocess.run(
-            [sys.executable, str(cli_path), "protobuf", str(SPECS_DIR), "-o", str(out)],
+            [sys.executable, str(cli_path), "compile", str(SPECS_DIR), "-o", str(out)],
             capture_output=True, text=True, timeout=10,
         )
         assert result.returncode == 0, result.stderr
@@ -455,11 +455,11 @@ class TestCLI:
         out_lean = tmp_path / "lean.doclean"
 
         subprocess.run(
-            [sys.executable, str(cli_path), "protobuf", str(proto_path), "-o", str(out_std)],
+            [sys.executable, str(cli_path), "compile", str(proto_path), "-o", str(out_std)],
             capture_output=True, text=True, timeout=10,
         )
         subprocess.run(
-            [sys.executable, str(cli_path), "protobuf", str(proto_path), "--lean", "-o", str(out_lean)],
+            [sys.executable, str(cli_path), "compile", str(proto_path), "--lean", "-o", str(out_lean)],
             capture_output=True, text=True, timeout=10,
         )
         assert out_lean.stat().st_size <= out_std.stat().st_size
