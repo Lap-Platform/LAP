@@ -8,9 +8,9 @@
 
 ## 1. Eliminated Duplicate Parser in SDK
 
-**Before:** `sdk/python/lap/client.py` had its own `_parse_doclean()`, `_parse_params()`, `_parse_returns()`, and `_parse_errors()` — a naive reimplementation that broke on blank lines within endpoints and couldn't handle multi-line braced content.
+**Before:** `sdk/python/lap/client.py` had its own `_parse_lap()`, `_parse_params()`, `_parse_returns()`, and `_parse_errors()` — a naive reimplementation that broke on blank lines within endpoints and couldn't handle multi-line braced content.
 
-**After:** Removed all duplicate parsing functions from the SDK client. `client.py` now imports `parse_doclean` from `src/parser.py` directly. The SDK test (`test_sdk.py`) was updated to import `parse_doclean` from the canonical source.
+**After:** Removed all duplicate parsing functions from the SDK client. `client.py` now imports `parse_lap` from `src/parser.py` directly. The SDK test (`test_sdk.py`) was updated to import `parse_lap` from the canonical source.
 
 **Files changed:** `sdk/python/lap/client.py`, `sdk/python/tests/test_sdk.py`
 
@@ -63,9 +63,9 @@ Updated all consumers: `benchmarks/benchmark.py`, `benchmarks/benchmark_all.py`,
 
 ## 5. Deduplicated CLI Convert Logic
 
-**Before:** `cli.py`'s `cmd_convert()` had ~80 lines of hand-rolled OpenAPI generation (using version "3.0.3") that duplicated `converter.py`'s `doclean_to_openapi()` (version "3.0.0"). Different logic, different OpenAPI versions, different behavior.
+**Before:** `cli.py`'s `cmd_convert()` had ~80 lines of hand-rolled OpenAPI generation (using version "3.0.3") that duplicated `converter.py`'s `lap_to_openapi()` (version "3.0.0"). Different logic, different OpenAPI versions, different behavior.
 
-**After:** `cmd_convert()` is now a 10-line thin wrapper that calls `converter.convert_file()`. Also removed the standalone `_doclean_type_to_openapi()` helper that was only used by the old duplicate code. CLI `cmd_benchmark_all` also updated to use `utils.count_tokens` instead of inline tiktoken.
+**After:** `cmd_convert()` is now a 10-line thin wrapper that calls `converter.convert_file()`. Also removed the standalone `_lap_type_to_openapi()` helper that was only used by the old duplicate code. CLI `cmd_benchmark_all` also updated to use `utils.count_tokens` instead of inline tiktoken.
 
 **Files changed:** `cli.py`
 
@@ -77,4 +77,4 @@ Updated all consumers: `benchmarks/benchmark.py`, `benchmarks/benchmark_all.py`,
 320 passed in 5.45s
 ```
 
-All existing tests pass with zero modifications to test assertions. The only test file change was `sdk/python/tests/test_sdk.py` where `_parse_doclean` import was redirected to the canonical parser.
+All existing tests pass with zero modifications to test assertions. The only test file change was `sdk/python/tests/test_sdk.py` where `_parse_lap` import was redirected to the canonical parser.

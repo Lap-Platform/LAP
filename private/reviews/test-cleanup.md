@@ -30,7 +30,7 @@
 
 **Removed (30 duplicate/trivial tests):**
 - `test_lean_smaller_than_standard[x10]` (10) — trivially true by construction
-- `test_doclean_header_always_present[x10]` (10) — tests hardcoded string literal
+- `test_lap_header_always_present[x10]` (10) — tests hardcoded string literal
 - `test_every_endpoint_has_method_and_path[x10]` (10) — tests dataclass invariants
 
 **Consolidated edge cases:** Merged split test pairs (e.g., `test_no_params_endpoint` + `test_no_params_round_trip`) into single round-trip tests that check both.

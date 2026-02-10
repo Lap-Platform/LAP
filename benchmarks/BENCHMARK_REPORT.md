@@ -37,7 +37,7 @@ Successfully built a comprehensive benchmark harness for evaluating LAP (Lean AP
 
 ## Compression Results
 
-| Spec | Tier | Endpoints | Verbose Size | DocLean Size | Compression Ratio |
+| Spec | Tier | Endpoints | Verbose Size | LAP Size | Compression Ratio |
 |------|------|-----------|--------------|--------------|-------------------|
 | stripe-charges | small | 5 | 11,160 chars | 4,291 chars | **2.60x** |
 | github-core | small | 6 | 12,002 chars | 3,703 chars | **3.24x** |
@@ -68,11 +68,11 @@ Successfully built a comprehensive benchmark harness for evaluating LAP (Lean AP
 For each of the 10 specs, two prompt files were generated:
 
 1. **verbose_{spec}.txt** - Full raw OpenAPI YAML specification + tasks
-2. **doclean_{spec}.txt** - Compiled DocLean format + tasks
+2. **lap_{spec}.txt** - Compiled LAP format + tasks
 
 Each file contains:
 - Prompt template for API integration assistant
-- Complete API documentation (verbose or DocLean)
+- Complete API documentation (verbose or LAP)
 - 5 task descriptions with expected endpoints
 
 ## Task Validation
@@ -130,8 +130,8 @@ Each prompt file can be used to evaluate LLM performance on API integration task
 # Example: Evaluate with verbose documentation
 cat benchmarks/big_benchmark/verbose_stripe-charges.txt | llm-eval
 
-# Example: Evaluate with DocLean documentation  
-cat benchmarks/big_benchmark/doclean_stripe-charges.txt | llm-eval
+# Example: Evaluate with LAP documentation  
+cat benchmarks/big_benchmark/lap_stripe-charges.txt | llm-eval
 ```
 
 ### Expected Output Format
@@ -152,11 +152,11 @@ TASK 2: curl https://api.stripe.com/v1/charges/ch_abc123 \
 
 ### Evaluation Metrics
 
-Compare performance between verbose and DocLean prompts:
+Compare performance between verbose and LAP prompts:
 
 - **Accuracy:** Does the curl command match the expected endpoint?
 - **Completeness:** Are all required parameters included?
-- **Token Usage:** How many tokens for verbose vs. DocLean?
+- **Token Usage:** How many tokens for verbose vs. LAP?
 - **Latency:** Response time comparison
 - **Cost:** API cost per evaluation
 
@@ -169,40 +169,40 @@ Compare performance between verbose and DocLean prompts:
 ├── BENCHMARK_REPORT.md               # This file
 └── big_benchmark/
     ├── verbose_stripe-charges.txt
-    ├── doclean_stripe-charges.txt
+    ├── lap_stripe-charges.txt
     ├── verbose_github-core.txt
-    ├── doclean_github-core.txt
+    ├── lap_github-core.txt
     ├── verbose_discord.txt
-    ├── doclean_discord.txt
+    ├── lap_discord.txt
     ├── verbose_twitter.txt
-    ├── doclean_twitter.txt
+    ├── lap_twitter.txt
     ├── verbose_resend.txt
-    ├── doclean_resend.txt
+    ├── lap_resend.txt
     ├── verbose_launchdarkly.txt
-    ├── doclean_launchdarkly.txt
+    ├── lap_launchdarkly.txt
     ├── verbose_petstore.txt
-    ├── doclean_petstore.txt
+    ├── lap_petstore.txt
     ├── verbose_snyk.txt
-    ├── doclean_snyk.txt
+    ├── lap_snyk.txt
     ├── verbose_hetzner.txt
-    ├── doclean_hetzner.txt
+    ├── lap_hetzner.txt
     ├── verbose_plaid.txt
-    └── doclean_plaid.txt
+    └── lap_plaid.txt
 ```
 
 ## Next Steps
 
 1. **Run Evaluations:** Test LLM performance across all 20 prompt files
 2. **Collect Metrics:** Track accuracy, token usage, latency, cost
-3. **Analyze Results:** Compare verbose vs. DocLean effectiveness
-4. **Iterate:** Refine DocLean format based on findings
+3. **Analyze Results:** Compare verbose vs. LAP effectiveness
+4. **Iterate:** Refine LAP format based on findings
 5. **Scale:** Add more specs or vary task complexity
 
 ## Build Details
 
 - **Build Tool:** Python 3 with LAP core compiler
 - **Validation:** All tasks verified against actual OpenAPI endpoints
-- **Compression:** DocLean compiled with `lean=False` for maximum readability
+- **Compression:** LAP compiled with `lean=False` for maximum readability
 - **Format:** All prompts use standardized template for consistency
 
 ---

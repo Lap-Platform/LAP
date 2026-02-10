@@ -1,22 +1,22 @@
 # Schema Diffing Guide
 
-LAP can diff two DocLean files to detect API changes — added/removed endpoints, parameter changes, and breaking changes.
+LAP can diff two LAP files to detect API changes — added/removed endpoints, parameter changes, and breaking changes.
 
 ## Schema Diffing Basics
 
 ```bash
-lap diff old-api.doclean new-api.doclean
+lap diff old-api.lap new-api.lap
 ```
 
-Compare any two DocLean files to see what changed:
+Compare any two LAP files to see what changed:
 
 ```bash
 # Compile two versions
-lap compile specs/stripe-charges-v1.yaml -o v1.doclean
-lap compile specs/stripe-charges-v2.yaml -o v2.doclean
+lap compile specs/stripe-charges-v1.yaml -o v1.lap
+lap compile specs/stripe-charges-v2.yaml -o v2.lap
 
 # Diff them
-lap diff v1.doclean v2.doclean
+lap diff v1.lap v2.lap
 ```
 
 The diff detects:
@@ -47,7 +47,7 @@ A breaking change is anything that could cause existing agent integrations to fa
 Use the `--format changelog` flag for a structured changelog:
 
 ```bash
-lap diff v1.doclean v2.doclean --format changelog --version "2.0.0"
+lap diff v1.lap v2.lap --format changelog --version "2.0.0"
 ```
 
 Output:
@@ -93,14 +93,14 @@ jobs:
       - name: Compile current and previous specs
         run: |
           # Current version
-          python3 cli.py compile specs/my-api.yaml -o new.doclean
+          python3 cli.py compile specs/my-api.yaml -o new.lap
           # Previous version (from main branch)
           git show main:specs/my-api.yaml > /tmp/old-spec.yaml
-          python3 cli.py compile /tmp/old-spec.yaml -o old.doclean
+          python3 cli.py compile /tmp/old-spec.yaml -o old.lap
 
       - name: Check for breaking changes
         run: |
-          output=$(python3 cli.py diff old.doclean new.doclean --format changelog)
+          output=$(python3 cli.py diff old.lap new.lap --format changelog)
           if echo "$output" | grep -q "Breaking Changes"; then
             echo "⚠️ Breaking API changes detected!"
             echo "$output"
@@ -117,9 +117,9 @@ jobs:
 
 for spec in specs/*.yaml; do
   name=$(basename "$spec" .yaml)
-  if [ -f "output/${name}.doclean" ]; then
-    python3 cli.py compile "$spec" -o "/tmp/${name}-new.doclean"
-    diff_output=$(python3 cli.py diff "output/${name}.doclean" "/tmp/${name}-new.doclean" 2>&1)
+  if [ -f "output/${name}.lap" ]; then
+    python3 cli.py compile "$spec" -o "/tmp/${name}-new.lap"
+    diff_output=$(python3 cli.py diff "output/${name}.lap" "/tmp/${name}-new.lap" 2>&1)
     if echo "$diff_output" | grep -q "REMOVED"; then
       echo "⚠️  Breaking change in ${name}:"
       echo "$diff_output"
@@ -139,14 +139,14 @@ Monitor third-party APIs for changes by periodically recompiling and diffing:
 
 for spec in specs/*.yaml; do
   name=$(basename "$spec" .yaml)
-  cp "output/${name}.doclean" "/tmp/${name}-prev.doclean" 2>/dev/null
+  cp "output/${name}.lap" "/tmp/${name}-prev.lap" 2>/dev/null
 
   # Recompile
-  python3 cli.py compile "$spec" -o "output/${name}.doclean"
+  python3 cli.py compile "$spec" -o "output/${name}.lap"
 
   # Diff against previous
-  if [ -f "/tmp/${name}-prev.doclean" ]; then
-    changes=$(python3 cli.py diff "/tmp/${name}-prev.doclean" "output/${name}.doclean" --format summary)
+  if [ -f "/tmp/${name}-prev.lap" ]; then
+    changes=$(python3 cli.py diff "/tmp/${name}-prev.lap" "output/${name}.lap" --format summary)
     if [ -n "$changes" ]; then
       echo "Changes detected in ${name}:"
       echo "$changes"

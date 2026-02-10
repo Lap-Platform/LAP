@@ -1,5 +1,5 @@
-"""LangChain integration for LAP DocLean format."""
+"""LangChain integration for LAP LAP format."""
 try:
-    from .lap_loader import DocLeanLoader, DocLeanRetriever
+    from .lap_loader import LAPLoader, LAPRetriever
 except ImportError:
     pass

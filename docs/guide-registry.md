@@ -1,6 +1,6 @@
 # Registry Guide
 
-The LAP registry is a lightweight server for discovering, searching, and serving DocLean specs over HTTP.
+The LAP registry is a lightweight server for discovering, searching, and serving LAP specs over HTTP.
 
 ## Running the Registry Server
 
@@ -8,8 +8,8 @@ The LAP registry is a lightweight server for discovering, searching, and serving
 
 ```bash
 # Compile some specs first
-lap compile specs/stripe-charges.yaml -o output/stripe-charges.doclean
-lap compile specs/github-core.yaml -o output/github-core.doclean
+lap compile specs/stripe-charges.yaml -o output/stripe-charges.lap
+lap compile specs/github-core.yaml -o output/github-core.lap
 
 # Start the registry server
 python3 registry/server.py
@@ -22,14 +22,14 @@ The server starts on port 8420 by default (configurable via `DOCLEAN_PORT` env v
 | Env Variable | Default | Purpose |
 |---|---|---|
 | `DOCLEAN_PORT` | `8420` | Server port |
-| `DOCLEAN_OUTPUT` | `./output` | Directory containing `.doclean` files |
+| `DOCLEAN_OUTPUT` | `./output` | Directory containing `.lap` files |
 
 ### API Endpoints
 
 | Method | Path | Description |
 |--------|------|-------------|
 | `GET /specs` | | List all available specs |
-| `GET /specs/{name}` | | Get a specific spec (raw DocLean text) |
+| `GET /specs/{name}` | | Get a specific spec (raw LAP text) |
 | `GET /specs/{name}?format=lean` | | Get lean version |
 | `GET /specs/{name}/meta` | | Get metadata (endpoints, version, etc.) |
 | `GET /search?q=...` | | Search across all specs |
@@ -108,8 +108,8 @@ console.log(spec.apiName);  // "Stripe Charges API"
 2. **Compile it**
 
    ```bash
-   lap compile specs/my-api.yaml -o output/my-api.doclean
-   lap compile specs/my-api.yaml -o output/my-api.lean.doclean --lean
+   lap compile specs/my-api.yaml -o output/my-api.lap
+   lap compile specs/my-api.yaml -o output/my-api.lean.lap --lean
    ```
 
 3. **Validate**

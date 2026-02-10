@@ -12,7 +12,7 @@
 
 Running `pytest tests/test_parser.py tests/test_differ.py tests/test_a2a.py` produces **3 failures**:
 
-1. **`TestSplitTopLevel::test_simple`** — `_split_top_level('a, b, c')` returns `['a, b, c']` instead of `['a', 'b', 'c']`. The `_looks_like_field_start` heuristic prevents splitting on commas that aren't followed by `name: type` patterns. The test expects generic CSV splitting, but the implementation is DocLean-specific. Either the test is wrong or the function name/docstring is misleading.  
+1. **`TestSplitTopLevel::test_simple`** — `_split_top_level('a, b, c')` returns `['a, b, c']` instead of `['a', 'b', 'c']`. The `_looks_like_field_start` heuristic prevents splitting on commas that aren't followed by `name: type` patterns. The test expects generic CSV splitting, but the implementation is LAP-specific. Either the test is wrong or the function name/docstring is misleading.  
    - `src/parser.py:17` — `_split_top_level` docstring says "Split string by separator" but actually only splits at field boundaries.  
    - `tests/test_parser.py:28`
 
@@ -22,7 +22,7 @@ Running `pytest tests/test_parser.py tests/test_differ.py tests/test_a2a.py` pro
 3. **`TestParseErrors::test_codes_only`** — `_parse_errors('@errors {400, 401, 404}')` returns 1 error. Same issue.  
    - `tests/test_parser.py:133-136`
 
-**Impact:** The `_parse_errors` function is **broken** for multi-error blocks. This means parsing any DocLean file with `@errors {400, 401, 404}` will produce incorrect results. This is a core feature bug.
+**Impact:** The `_parse_errors` function is **broken** for multi-error blocks. This means parsing any LAP file with `@errors {400, 401, 404}` will produce incorrect results. This is a core feature bug.
 
 ### 🟡 Mutable Default Argument
 
@@ -42,7 +42,7 @@ Running `pytest tests/test_parser.py tests/test_differ.py tests/test_a2a.py` pro
 
 ### 🟢 Generally Clean
 
-The core modules (compiler, parser, differ, converter, doclean_format) are well-structured with clear dataclasses, good separation of concerns, and reasonable error handling. The differ module is particularly solid.
+The core modules (compiler, parser, differ, converter, lap_format) are well-structured with clear dataclasses, good separation of concerns, and reasonable error handling. The differ module is particularly solid.
 
 ---
 
@@ -51,7 +51,7 @@ The core modules (compiler, parser, differ, converter, doclean_format) are well-
 ### What's Tested
 - Parser primitives (params, fields, returns) — good unit coverage
 - Full document parsing — basic coverage
-- Round-trip (OpenAPI → DocLean → parse) — excellent, runs against real specs
+- Round-trip (OpenAPI → LAP → parse) — excellent, runs against real specs
 - Differ — thorough coverage of all change types
 - A2A-Lean compiler/decompiler — good coverage
 - Integration tests with CLI subprocess calls
@@ -60,9 +60,9 @@ The core modules (compiler, parser, differ, converter, doclean_format) are well-
 ### What's NOT Tested
 - **`src/converter.py`** — Only tested via integration round-trip. No unit tests for `_type_to_openapi`, `_param_to_openapi`, `_field_to_openapi`. Edge cases (unknown types, malformed input) untested.
 - **`src/utils.py`** — Zero tests. `count_tokens`, `read_file_safe`, `MODEL_COSTS` are all untested.
-- **`src/toollean.py`**, **`src/toollean_parser.py`**, **`src/toollean_compiler.py`**, **`src/toollean_format.py`** — Zero tests. These are entire modules with no test coverage.
+- **`src/lap.py`**, **`src/lap_parser.py`**, **`src/lap_compiler.py`**, **`src/lap_format.py`** — Zero tests. These are entire modules with no test coverage.
 - **`cli.py`** — The `cmd_diff` function is tested via integration but `cmd_registry_list` and `cmd_registry_search` have no tests.
-- **`src/doclean_format.py`** — Serialization (`to_doclean`) is tested indirectly via round-trip, but `to_original_text()` has no tests.
+- **`src/lap_format.py`** — Serialization (`to_lap`) is tested indirectly via round-trip, but `to_original_text()` has no tests.
 - **Error paths** — `ParseError` raising, file-too-large guards in compiler.py:153 and converter.py:168 — untested.
 - **`sdk/`** — `sdk/python/tests/test_sdk.py` exists but wasn't run as part of the main test suite.
 - **`integrations/test_integrations.py`** — Exists but not in main test suite.
@@ -70,7 +70,7 @@ The core modules (compiler, parser, differ, converter, doclean_format) are well-
 
 ### Critical Untested Paths
 1. The 3 failing tests above — error parsing is fundamentally broken
-2. ToolLean (4 files, 0 tests) — if this ships, it ships untested
+2. LAP (4 files, 0 tests) — if this ships, it ships untested
 3. Security guards (file size limits) — never exercised
 
 ---
@@ -83,12 +83,12 @@ The core modules (compiler, parser, differ, converter, doclean_format) are well-
 
 ### 🟡 Makefile References Old Filenames
 
-- `Makefile:7-9` — `lint` target references `doclean_compiler.py` and `doclean_parser.py` which don't exist (they're in `src/compiler.py` and `src/parser.py`). Running `make lint` will fail.
+- `Makefile:7-9` — `lint` target references `lap_compiler.py` and `lap_parser.py` which don't exist (they're in `src/compiler.py` and `src/parser.py`). Running `make lint` will fail.
 
 ### 🟡 CI Workflow Issues
 
 - `.github/workflows/ci.yml:18` — Runs `python benchmark_all.py` but that file is at `benchmarks/benchmark_all.py`. Will fail.
-- `.github/workflows/ci.yml:20` — `python cli.py validate /tmp/openai.doclean` — validate expects an OpenAPI spec, not a .doclean file. The CLI validate command compiles from OpenAPI. This would fail.
+- `.github/workflows/ci.yml:20` — `python cli.py validate /tmp/openai.lap` — validate expects an OpenAPI spec, not a .lap file. The CLI validate command compiles from OpenAPI. This would fail.
 - CI triggers on `main` branch but git shows `master` branch.
 
 ### 🟢 Docs Are Generally Good
@@ -113,7 +113,7 @@ The reference-cli.md is thorough with real examples. The getting-started.md and 
 - **Benchmark numbers** — The table shows specific token counts but `test_integration.py` tests confirm these only against partial API specs (3-8 endpoints). The limitation section mentions this but the table doesn't carry a caveat.
 
 ### 🟡 Minor Issues
-- README mentions "A2A-Lean" and "ToolLean" nowhere — these are significant features in the codebase that are invisible to users.
+- README mentions "A2A-Lean" and "LAP" nowhere — these are significant features in the codebase that are invisible to users.
 - Roadmap shows `[ ] MCP server integration` but `integrations/mcp/` already exists with code.
 - Roadmap shows `[ ] Agent framework adapters (LangChain, CrewAI, AutoGen)` but `integrations/crewai/` exists.
 
@@ -150,7 +150,7 @@ These should be in `.gitignore` and removed from tracking.
 
 ### 🟡 `output/` Directory
 
-60+ compiled .doclean files and a `agent_results.json` are in the repo. These are generated artifacts. Should they be committed? They're useful as examples but bloat the repo. Consider a `make compile-all` step in CI instead.
+60+ compiled .lap files and a `agent_results.json` are in the repo. These are generated artifacts. Should they be committed? They're useful as examples but bloat the repo. Consider a `make compile-all` step in CI instead.
 
 ### 🟡 TypeScript SDK Has `dist/` and `node_modules/`
 
@@ -168,7 +168,7 @@ The project has Python files at multiple levels:
 - `sdk/python/` — SDK
 - `integrations/` — framework adapters
 
-This isn't a standard Python package layout. `pyproject.toml` points entry to `cli:main` which implies `cli.py` at repo root, but `src/` modules use bare imports like `from doclean_format import ...` which require `src/` to be in `sys.path`. This is why tests do `sys.path.insert(0, ...)` hacks.
+This isn't a standard Python package layout. `pyproject.toml` points entry to `cli:main` which implies `cli.py` at repo root, but `src/` modules use bare imports like `from lap_format import ...` which require `src/` to be in `sys.path`. This is why tests do `sys.path.insert(0, ...)` hacks.
 
 ---
 
@@ -214,16 +214,16 @@ modified:   src/parser.py
 ```
 These are the core modules. Whatever changes are in the working tree vs HEAD are not committed. This is concerning — are the failing tests due to uncommitted changes?
 
-### 🔴 Untracked ToolLean Files
+### 🔴 Untracked LAP Files
 ```
-docs/guide-toollean.md
+docs/guide-lap.md
 specs/tools/
-src/toollean.py
-src/toollean_compiler.py
-src/toollean_format.py
-src/toollean_parser.py
+src/lap.py
+src/lap_compiler.py
+src/lap_format.py
+src/lap_parser.py
 ```
-Four entire source files and a doc are untracked. These are significant feature additions (ToolLean) that have zero tests and aren't committed. Either commit them or remove them before launch.
+Four entire source files and a doc are untracked. These are significant feature additions (LAP) that have zero tests and aren't committed. Either commit them or remove them before launch.
 
 ### 🟡 Only 2 Commits
 The repo has only 2 commits. Consider a cleaner history if this is going public.
@@ -236,7 +236,7 @@ The repo has only 2 commits. Consider a cleaner history if this is going public.
 |---|----------|-------|
 | 1 | 🔴 | 3 failing tests — `_split_top_level` / `_parse_errors` broken for error blocks |
 | 2 | 🔴 | Uncommitted changes to core files (parser.py, compiler.py) |
-| 3 | 🔴 | Untracked ToolLean files — commit or remove |
+| 3 | 🔴 | Untracked LAP files — commit or remove |
 | 4 | 🔴 | `__pycache__` and `node_modules` in repo |
 | 5 | 🔴 | Fake GitHub URL in README (`github.com/anthropics/lap`) |
 | 6 | 🔴 | CI workflow broken (wrong paths, wrong branch name) |

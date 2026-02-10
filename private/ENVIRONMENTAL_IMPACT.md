@@ -4,7 +4,7 @@
 
 ## Executive Summary
 
-LAP's DocLean format compresses API documentation by **3.6× on average**, eliminating tokens that LLMs must process but gain nothing from. At scale, this translates to measurable reductions in energy consumption, carbon emissions, and compute infrastructure demand.
+LAP's LAP format compresses API documentation by **3.6× on average**, eliminating tokens that LLMs must process but gain nothing from. At scale, this translates to measurable reductions in energy consumption, carbon emissions, and compute infrastructure demand.
 
 This document quantifies that impact using the best available data as of early 2025.
 
@@ -44,7 +44,7 @@ For our calculations, we use **0.0004 Wh/token** (0.4 mWh/token) — a middle es
 |---|---|
 | APIs benchmarked | 28 |
 | Total OpenAPI tokens | 2,100,000 |
-| Total DocLean tokens | 161,000 |
+| Total LAP tokens | 161,000 |
 | **Tokens eliminated** | **1,970,000** |
 | **Compression ratio** | **3.6× (lean mode)** |
 | Information loss | **0%** (validated) |
@@ -152,7 +152,7 @@ Even with aggressive caching, the *first* load of every API doc in every new age
 | KV-cache optimization | 10–30% memory | Inference-specific |
 | Prompt compression (LLMLingua etc.) | 30–60% tokens | Lossy — meaning can be lost |
 | Hardware upgrades (A100→H100) | ~2–3× perf/watt | Requires $25K+ per GPU |
-| **LAP DocLean** | **72% token reduction** | **Lossless — zero information loss** |
+| **LAP LAP** | **72% token reduction** | **Lossless — zero information loss** |
 
 LAP is unique: it achieves **72% reduction with zero information loss**. Most compression techniques trade accuracy for efficiency. LAP eliminates only what was never needed — prose, redundancy, and formatting overhead that humans need but agents don't.
 
@@ -179,8 +179,8 @@ The AI industry is focused on making models faster, cheaper, and more capable. F
 
 LAP addresses this gap:
 
-- **Every API publisher** that ships DocLean alongside their docs reduces global compute waste
-- **Every agent framework** that defaults to DocLean over raw docs compounds the savings
+- **Every API publisher** that ships LAP alongside their docs reduces global compute waste
+- **Every agent framework** that defaults to LAP over raw docs compounds the savings
 - **Every token not processed** is energy not consumed, heat not generated, carbon not emitted
 
 ### The efficient communication principle

@@ -2,7 +2,7 @@
 """
 LAP CLI -- LeanAgent Protocol command-line tool.
 
-Compile, validate, benchmark, inspect, and convert DocLean API specifications.
+Compile, validate, benchmark, inspect, and convert LAP API specifications.
 """
 
 import argparse
@@ -59,7 +59,7 @@ def heading(msg):
 # ── Commands ─────────────────────────────────────────────────────────
 
 def cmd_compile(args):
-    """Compile any API spec to DocLean format (auto-detects format)."""
+    """Compile any API spec to LAP format (auto-detects format)."""
     from core.compilers import compile as compile_spec
 
     spec_path = args.spec
@@ -74,11 +74,11 @@ def cmd_compile(args):
 
     # Protobuf directories return a list
     if isinstance(result_obj, list):
-        result = "\n---\n\n".join(s.to_doclean(lean=args.lean) for s in result_obj)
+        result = "\n---\n\n".join(s.to_lap(lean=args.lean) for s in result_obj)
         total_eps = sum(len(s.endpoints) for s in result_obj)
         label = f"{len(result_obj)} specs, {total_eps} endpoints"
     else:
-        result = result_obj.to_doclean(lean=args.lean)
+        result = result_obj.to_lap(lean=args.lean)
         label = f"{len(result_obj.endpoints)} endpoints"
 
     if args.output:
@@ -91,14 +91,14 @@ def cmd_compile(args):
 
 
 def cmd_validate(args):
-    """Validate DocLean output for information loss."""
+    """Validate LAP output for information loss."""
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "benchmarks"))
     from validate import validate_schema_completeness, print_results
 
     if not Path(args.spec).exists():
         error(f"File not found: {args.spec}")
 
-    heading("DocLean Semantic Validation")
+    heading("LAP Semantic Validation")
     results = validate_schema_completeness(args.spec)
 
     if HAS_RICH:
@@ -168,11 +168,11 @@ def cmd_benchmark_all(args):
     heading(f"Multi-API Benchmark ({len(spec_files)} specs)")
 
     if HAS_RICH:
-        table = Table(title="DocLean Compression Results", box=box.SIMPLE_HEAVY)
+        table = Table(title="LAP Compression Results", box=box.SIMPLE_HEAVY)
         table.add_column("API", style="cyan", min_width=18)
         table.add_column("Endpoints", justify="right")
         table.add_column("OpenAPI", justify="right")
-        table.add_column("DocLean", justify="right", style="green")
+        table.add_column("LAP", justify="right", style="green")
         table.add_column("Lean", justify="right", style="bold green")
         table.add_column("vs OpenAPI", justify="right", style="yellow")
         table.add_column("vs OpenAPI (Lean)", justify="right", style="bold yellow")
@@ -182,8 +182,8 @@ def cmd_benchmark_all(args):
             name = Path(spec_path).stem
             raw = Path(spec_path).read_text()
             ds = compile_openapi(spec_path)
-            dl = ds.to_doclean(lean=False)
-            ln = ds.to_doclean(lean=True)
+            dl = ds.to_lap(lean=False)
+            ln = ds.to_lap(lean=True)
             oa_t = count(raw)
             dl_t = count(dl)
             ln_t = count(ln)
@@ -211,15 +211,15 @@ def cmd_benchmark_all(args):
 
 
 def cmd_inspect(args):
-    """Parse and inspect a DocLean file."""
-    from core.parser import parse_doclean
+    """Parse and inspect a LAP file."""
+    from core.parser import parse_lap
 
     path = Path(args.file)
     if not path.exists():
         error(f"File not found: {args.file}")
 
     text = path.read_text()
-    spec = parse_doclean(text)
+    spec = parse_lap(text)
 
     if args.endpoint:
         # Filter to a specific endpoint
@@ -239,7 +239,7 @@ def cmd_inspect(args):
             f"Base: {spec.base_url}\n"
             f"Auth: {spec.auth_scheme}\n"
             f"Endpoints: {len(spec.endpoints)}",
-            title="DocLean Spec", box=box.ROUNDED
+            title="LAP Spec", box=box.ROUNDED
         ))
 
         for ep in endpoints:
@@ -282,7 +282,7 @@ def cmd_inspect(args):
 
 
 def cmd_convert(args):
-    """Convert DocLean back to OpenAPI YAML."""
+    """Convert LAP back to OpenAPI YAML."""
     from core.converter import convert_file
 
     path = Path(args.file)
@@ -298,8 +298,8 @@ def cmd_convert(args):
 
 
 def cmd_diff(args):
-    """Diff two DocLean files."""
-    from core.parser import parse_doclean
+    """Diff two LAP files."""
+    from core.parser import parse_lap
     from core.differ import diff_specs, generate_changelog, check_compatibility
 
     old_path, new_path = Path(args.old), Path(args.new)
@@ -308,8 +308,8 @@ def cmd_diff(args):
     if not new_path.exists():
         error(f"File not found: {args.new}")
 
-    old_spec = parse_doclean(old_path.read_text())
-    new_spec = parse_doclean(new_path.read_text())
+    old_spec = parse_lap(old_path.read_text())
+    new_spec = parse_lap(new_path.read_text())
 
     if args.format == "changelog":
         print(generate_changelog(old_spec, new_spec, version=args.version or "0.0.0"))
@@ -358,7 +358,7 @@ def main():
     sub = parser.add_subparsers(dest="command", required=True)
 
     # compile (unified -- auto-detects format)
-    p = sub.add_parser("compile", help="Compile API spec to DocLean (auto-detects format)")
+    p = sub.add_parser("compile", help="Compile API spec to LAP (auto-detects format)")
     p.add_argument("spec", help="Path to API spec file or directory")
     p.add_argument("-o", "--output", help="Output file path")
     p.add_argument("-f", "--format",
@@ -367,7 +367,7 @@ def main():
     p.add_argument("--lean", action="store_true", help="Maximum compression (strip descriptions)")
 
     # validate
-    p = sub.add_parser("validate", help="Validate DocLean for zero info loss")
+    p = sub.add_parser("validate", help="Validate LAP for zero info loss")
     p.add_argument("spec", help="Path to OpenAPI spec")
 
     # benchmark
@@ -379,20 +379,20 @@ def main():
     p.add_argument("directory", help="Directory containing spec files")
 
     # inspect
-    p = sub.add_parser("inspect", help="Parse and inspect a DocLean file")
-    p.add_argument("file", help="Path to .doclean file")
+    p = sub.add_parser("inspect", help="Parse and inspect a LAP file")
+    p.add_argument("file", help="Path to .lap file")
     p.add_argument("--endpoint", "-e", help='Filter endpoint, e.g. "POST /v1/charges"')
 
     # convert
-    p = sub.add_parser("convert", help="Convert DocLean back to OpenAPI")
-    p.add_argument("file", help="Path to .doclean file")
+    p = sub.add_parser("convert", help="Convert LAP back to OpenAPI")
+    p.add_argument("file", help="Path to .lap file")
     p.add_argument("-f", "--format", default="openapi", help="Output format (default: openapi)")
     p.add_argument("-o", "--output", help="Output file path")
 
     # diff
-    p = sub.add_parser("diff", help="Diff two DocLean files")
-    p.add_argument("old", help="Path to old .doclean file")
-    p.add_argument("new", help="Path to new .doclean file")
+    p = sub.add_parser("diff", help="Diff two LAP files")
+    p.add_argument("old", help="Path to old .lap file")
+    p.add_argument("new", help="Path to new .lap file")
     p.add_argument("--format", choices=["summary", "changelog"], default="summary", help="Output format")
     p.add_argument("--version", help="Version label for changelog")
 

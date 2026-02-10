@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-DocLean Compiler — Protobuf/gRPC → DocLean format
+LAP Compiler — Protobuf/gRPC → LAP format
 
 Parses .proto files (text-based, no protoc needed) and compiles
-service RPCs into DocLean endpoints and message types into schemas.
+service RPCs into LAP endpoints and message types into schemas.
 """
 
 import re
@@ -11,9 +11,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
-from core.formats.doclean import (
-    DocLeanSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema,
-    DOCLEAN_VERSION,
+from core.formats.lap import (
+    LAPSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema,
+    LAP_VERSION,
 )
 
 
@@ -394,7 +394,7 @@ def _parse_top_level(text: str, pf: ProtoFile):
 
 
 # ---------------------------------------------------------------------------
-# Compiler: Proto AST → DocLean
+# Compiler: Proto AST → LAP
 # ---------------------------------------------------------------------------
 
 # Well-known type mappings
@@ -470,7 +470,7 @@ def _strip_enum_prefix(values: list) -> list:
 
 
 def _resolve_type(type_name: str, type_index: dict) -> str:
-    """Resolve a proto type to a DocLean type string."""
+    """Resolve a proto type to a LAP type string."""
     if type_name in _WKT_MAP:
         return _WKT_MAP[type_name]
     if type_name in _SCALAR_MAP:
@@ -543,7 +543,7 @@ def _message_to_params(msg: ProtoMessage, type_index: dict) -> list:
 
 
 def _rpc_to_endpoint(rpc: ProtoRPC, service: ProtoService, type_index: dict, package: str, defined_types: set = None) -> Endpoint:
-    """Convert a single RPC to a DocLean Endpoint."""
+    """Convert a single RPC to a LAP Endpoint."""
     # Path: /ServiceName/RPCName (package is in @base)
     path = f"/{service.name}/{rpc.name}"
 
@@ -721,8 +721,8 @@ def _inject_well_known_types(type_index: dict) -> None:
             type_index[short] = msg
 
 
-def compile_proto(spec_path: str) -> DocLeanSpec:
-    """Compile a .proto file to DocLean format."""
+def compile_proto(spec_path: str) -> LAPSpec:
+    """Compile a .proto file to LAP format."""
     path = Path(spec_path)
     text = path.read_text()
     pf = parse_proto(text)
@@ -743,7 +743,7 @@ def compile_proto(spec_path: str) -> DocLeanSpec:
                 type_index[fqn_with_pkg] = msg
 
     api_name = pf.package or path.stem
-    doclean = DocLeanSpec(
+    lap = LAPSpec(
         api_name=api_name,
         version=pf.syntax,
         base_url=f"grpc://{pf.package}" if pf.package else "",
@@ -754,19 +754,19 @@ def compile_proto(spec_path: str) -> DocLeanSpec:
     reused_types = {name for name, count in ref_counts.items() if count > 1}
     
     # Store type definitions for the spec
-    doclean._type_defs = {}  # name → field string
-    doclean._reused_types = reused_types
+    lap._type_defs = {}  # name → field string
+    lap._reused_types = reused_types
     for name in reused_types:
         defn = type_index.get(name)
         if isinstance(defn, ProtoMessage) and defn.fields:
-            doclean._type_defs[name] = _message_to_type_str(defn, type_index, reused_types)
+            lap._type_defs[name] = _message_to_type_str(defn, type_index, reused_types)
 
     for svc in pf.services:
         for rpc in svc.rpcs:
             endpoint = _rpc_to_endpoint(rpc, svc, type_index, pf.package, reused_types)
-            doclean.endpoints.append(endpoint)
+            lap.endpoints.append(endpoint)
 
-    return doclean
+    return lap
 
 
 # Alias for auto-detection in benchmark suite
@@ -784,7 +784,7 @@ def compile_proto_dir(dir_path: str) -> list:
 
 def main():
     import argparse
-    parser = argparse.ArgumentParser(description="Compile Protobuf/gRPC spec to DocLean format")
+    parser = argparse.ArgumentParser(description="Compile Protobuf/gRPC spec to LAP format")
     parser.add_argument("spec", help="Path to .proto file or directory")
     parser.add_argument("-o", "--output", help="Output file (default: stdout)")
     parser.add_argument("--lean", action="store_true", help="Strip descriptions for max compression")
@@ -793,10 +793,10 @@ def main():
     p = Path(args.spec)
     if p.is_dir():
         specs = compile_proto_dir(args.spec)
-        result = "\n---\n\n".join(s.to_doclean(lean=args.lean) for s in specs)
+        result = "\n---\n\n".join(s.to_lap(lean=args.lean) for s in specs)
     else:
         spec = compile_proto(args.spec)
-        result = spec.to_doclean(lean=args.lean)
+        result = spec.to_lap(lean=args.lean)
 
     if args.output:
         Path(args.output).write_text(result)

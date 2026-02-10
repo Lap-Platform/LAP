@@ -1,4 +1,4 @@
-@doclean v0.1
+@lap v0.1
 @api Github
 @base /graphql
 

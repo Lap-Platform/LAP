@@ -1,12 +1,12 @@
-# ToolLean — Compressed AI Tool Manifests
+# LAP — Compressed AI Tool Manifests
 
 **Part of the LAP (Lean Agent Protocol)**
 
-ToolLean is a compact, structured format for describing AI tools and skills. Think of it as DocLean for tool manifests — optimized for LLM agent discovery, understanding, and invocation.
+LAP is a compact, structured format for describing AI tools and skills. Think of it as LAP for tool manifests — optimized for LLM agent discovery, understanding, and invocation.
 
-## Why ToolLean?
+## Why LAP?
 
-AI agents discover tools from many sources: MCP servers, OpenClaw skills, Claude tools, custom APIs. Each has its own format. ToolLean provides a universal compressed representation that:
+AI agents discover tools from many sources: MCP servers, OpenClaw skills, Claude tools, custom APIs. Each has its own format. LAP provides a universal compressed representation that:
 
 - **Saves tokens** — compact syntax vs verbose JSON schemas
 - **Is parseable** — round-trips cleanly to/from structured data
@@ -18,10 +18,10 @@ AI agents discover tools from many sources: MCP servers, OpenClaw skills, Claude
 ### Header
 
 ```
-@toollean v0.1
+@lap v0.1
 ```
 
-Every ToolLean document starts with a version header.
+Every LAP document starts with a version header.
 
 ### Directives
 
@@ -41,7 +41,7 @@ Every ToolLean document starts with a version header.
 
 Compact type system matching JSON Schema:
 
-| ToolLean | JSON Schema | Notes |
+| LAP | JSON Schema | Notes |
 |----------|-------------|-------|
 | `str` | `string` | |
 | `int` | `integer` | |
@@ -72,7 +72,7 @@ Compact type system matching JSON Schema:
 ## Complete Example
 
 ```
-@toollean v0.1
+@lap v0.1
 @tool brave_web_search
 @desc Search the web using Brave Search API
 @auth apikey
@@ -85,30 +85,30 @@ Compact type system matching JSON Schema:
   > {"query": "rust async runtime", "count": 5}
 ```
 
-## Compiling to ToolLean
+## Compiling to LAP
 
 ### From MCP Tool Manifest
 
 ```python
-from toollean_compiler import compile_mcp_file
+from lap_compiler import compile_mcp_file
 
 bundle = compile_mcp_file("mcp-server-tools.json")
-print(bundle.to_toollean())
+print(bundle.to_lap())
 ```
 
 ### From OpenClaw SKILL.md
 
 ```python
-from toollean_compiler import compile_skill_file
+from lap_compiler import compile_skill_file
 
 spec = compile_skill_file("SKILL.md")
-print(spec.to_toollean())
+print(spec.to_lap())
 ```
 
 ### From Generic JSON
 
 ```python
-from toollean_compiler import compile_generic_json
+from lap_compiler import compile_generic_json
 
 spec = compile_generic_json({
     "name": "my_tool",
@@ -120,16 +120,16 @@ spec = compile_generic_json({
         "required": ["input"]
     }
 })
-print(spec.to_toollean())
+print(spec.to_lap())
 ```
 
-## Parsing ToolLean
+## Parsing LAP
 
 ```python
-from toollean_parser import parse_toollean, parse_single_tool
+from lap_parser import parse_lap_tools, parse_single_tool
 
 # Parse a file with multiple tools
-bundle = parse_toollean(open("tools.toollean").read())
+bundle = parse_lap_tools(open("tools.lap").read())
 for tool in bundle.tools:
     print(f"{tool.name}: {len(tool.inputs)} params")
 
@@ -141,16 +141,16 @@ tool = parse_single_tool(text)
 
 ```bash
 # Compile from various sources
-python toollean.py compile-mcp manifest.json -o tools.toollean
-python toollean.py compile-skill SKILL.md -o skill.toollean
-python toollean.py compile-json tool.json -o tool.toollean
+python lap.py compile-mcp manifest.json -o tools.lap
+python lap.py compile-skill SKILL.md -o skill.lap
+python lap.py compile-json tool.json -o tool.lap
 
 # Parse and inspect
-python toollean.py parse tools.toollean
-python toollean.py stats tools.toollean
+python lap.py parse tools.lap
+python lap.py stats tools.lap
 
 # Maximum compression (strip descriptions)
-python toollean.py compile-mcp manifest.json --lean
+python lap.py compile-mcp manifest.json --lean
 ```
 
 ## Multi-Tool Bundles
@@ -161,36 +161,36 @@ Multiple tools in one file (e.g., an MCP server with many tools):
 # Filesystem Server
 # File operations for the local filesystem
 
-@toollean v0.1
+@lap v0.1
 @tool read_file
 @desc Read complete contents of a file
 @in path:str File path to read
 
-@toollean v0.1
+@lap v0.1
 @tool write_file
 @desc Create or overwrite a file
 @in path:str File path to write
 @in content:str Content to write
 ```
 
-## Comparison: JSON vs ToolLean
+## Comparison: JSON vs LAP
 
 **MCP JSON (267 bytes):**
 ```json
 {"name":"read_file","description":"Read complete contents of a file from the filesystem","inputSchema":{"type":"object","properties":{"path":{"type":"string","description":"The path of the file to read"}},"required":["path"]}}
 ```
 
-**ToolLean (120 bytes, 55% smaller):**
+**LAP (120 bytes, 55% smaller):**
 ```
-@toollean v0.1
+@lap v0.1
 @tool read_file
 @desc Read complete contents of a file from the filesystem
 @in path:str The path of the file to read
 ```
 
-## Relationship to DocLean
+## Relationship to LAP
 
-DocLean compresses **API documentation** (endpoints, request/response schemas).
-ToolLean compresses **tool manifests** (what a tool does, its inputs/outputs).
+LAP compresses **API documentation** (endpoints, request/response schemas).
+LAP compresses **tool manifests** (what a tool does, its inputs/outputs).
 
-They're complementary: a tool might use DocLean for its underlying API docs, and ToolLean for its agent-facing manifest.
+They're complementary: a tool might use LAP for its underlying API docs, and LAP for its agent-facing manifest.

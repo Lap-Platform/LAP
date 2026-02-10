@@ -26,8 +26,8 @@
 
 | Mutation | Description | Tests Failed | Kill Rate |
 |----------|-------------|-------------|-----------|
-| **M1:** `@endpoint` → `@ep` in doclean_format.py | Breaks serialization | 57/320 (17.8%) | ✅ Caught |
-| **M2:** `parse_doclean` returns empty | Breaks parser entirely | 71/320 (22.2%) | ✅ Caught |
+| **M1:** `@endpoint` → `@ep` in lap_format.py | Breaks serialization | 57/320 (17.8%) | ✅ Caught |
+| **M2:** `parse_lap` returns empty | Breaks parser entirely | 71/320 (22.2%) | ✅ Caught |
 | **M3:** `compile_nl` returns intent="unknown" | Breaks A2A layer | 64/320 (20.0%) | ✅ Caught |
 
 All 3 mutations were caught. The kill rates are reasonable — each mutation affects its layer and downstream consumers. The 249 tests that survived M2 (parser broken) are tests that don't touch the parser (A2A tests, CLI tests that only check return codes, etc.), which is expected.
@@ -69,7 +69,7 @@ The NL compiler tests (test_search_with_summary, test_create_issue, etc.) are ex
 |----------|-------|-------|
 | Real | 113 | Pipeline round-trips (40 = 4×10 specs), edge cases (23), CLI tests (9 — actually run subprocess), A2A intent tests (24), A2A intent-preserved tests (24), format invariant idempotent tests (10) |
 | Fake | 48 | test_decompile_produces_text[msg0-23] (24 — just `assert len > 0`), test_compact_smaller_than_nl[msg0-23] (24 — `assert len < len*2`, nearly impossible to fail) |
-| Trivial | 8 | test_doclean_header_always_present[x10] (trivially true — tests serialization outputs `@doclean`), some edge case existence checks |
+| Trivial | 8 | test_lap_header_always_present[x10] (trivially true — tests serialization outputs `@lap`), some edge case existence checks |
 | Duplicate | 68 | test_json_format_valid[msg0-23] (24 — duplicates test_a2a.py's to_json check), test_compact_format_valid[msg0-23] (24 — duplicates compact format checks), test_every_endpoint_has_method_and_path[x10] (10 — tests dataclass invariants, not code logic), test_lean_smaller_than_standard[x10] (trivially true by construction) |
 | Fragile | 10 | lean_round_trip tests assert no descriptions survive (fragile if lean format changes), CLI tests depend on subprocess and file paths |
 
@@ -103,7 +103,7 @@ Note: `test_get_endpoint_not_found` and `test_get_missing` are borderline trivia
 
 4. **`test_compact_format_valid[msg0-23]`** (24 tests) — Checks `|` in string and first segment is intent. Trivial format check, already tested elsewhere.
 
-5. **`test_doclean_header_always_present[x10]`** (10 tests) — Tests that `to_doclean()` starts with `@doclean`. This is testing that a hardcoded string literal is present.
+5. **`test_lap_header_always_present[x10]`** (10 tests) — Tests that `to_lap()` starts with `@lap`. This is testing that a hardcoded string literal is present.
 
 6. **`test_every_endpoint_has_method_and_path[x10]`** (10 tests) — Tests dataclass invariants that are enforced by construction, not by code logic.
 
@@ -115,7 +115,7 @@ Note: `test_get_endpoint_not_found` and `test_get_missing` are borderline trivia
 
 2. **Duplicate coverage across files:** test_integration.py re-tests everything in test_parser.py and test_a2a.py with minor variations. The round-trip pipeline tests in integration are valuable; the A2A parameterized tests largely aren't.
 
-3. **No negative testing:** Zero tests for malformed input, invalid DocLean syntax, error handling paths, or boundary conditions in the parser (e.g., unclosed braces, missing required directives).
+3. **No negative testing:** Zero tests for malformed input, invalid LAP syntax, error handling paths, or boundary conditions in the parser (e.g., unclosed braces, missing required directives).
 
 4. **No mocking:** Everything tests against real files. Good for integration, but means unit test isolation is poor.
 

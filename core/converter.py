@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-DocLean → OpenAPI Converter
+LAP → OpenAPI Converter
 
-Parses DocLean text and outputs valid OpenAPI 3.0 YAML.
+Parses LAP text and outputs valid OpenAPI 3.0 YAML.
 Proves zero information loss in a machine-verifiable way.
 """
 
@@ -12,12 +12,12 @@ from pathlib import Path
 
 import yaml
 
-from core.parser import parse_doclean
-from core.formats.doclean import DocLeanSpec, Endpoint, Param, ResponseField
+from core.parser import parse_lap
+from core.formats.lap import LAPSpec, Endpoint, Param, ResponseField
 
 
 def _type_to_openapi(type_str: str) -> dict:
-    """Convert DocLean type string to OpenAPI schema."""
+    """Convert LAP type string to OpenAPI schema."""
     # Array type: [inner]
     if type_str.startswith('[') and type_str.endswith(']'):
         return {'type': 'array', 'items': _type_to_openapi(type_str[1:-1])}
@@ -76,8 +76,8 @@ def _field_to_openapi(f: ResponseField) -> dict:
     return schema
 
 
-def doclean_to_openapi(spec: DocLeanSpec) -> dict:
-    """Convert a DocLeanSpec to an OpenAPI 3.0 dict."""
+def lap_to_openapi(spec: LAPSpec) -> dict:
+    """Convert a LAPSpec to an OpenAPI 3.0 dict."""
     openapi = {
         'openapi': '3.0.0',
         'info': {
@@ -234,13 +234,13 @@ def doclean_to_openapi(spec: DocLeanSpec) -> dict:
 
 
 def convert_file(input_path: str, output_path: str = None) -> str:
-    """Convert a DocLean file to OpenAPI YAML."""
+    """Convert a LAP file to OpenAPI YAML."""
     file_size = Path(input_path).stat().st_size
     if file_size > 10 * 1024 * 1024:
-        raise ValueError(f"DocLean file too large: {file_size} bytes (max 10MB)")
+        raise ValueError(f"LAP file too large: {file_size} bytes (max 10MB)")
     text = Path(input_path).read_text()
-    spec = parse_doclean(text)
-    openapi = doclean_to_openapi(spec)
+    spec = parse_lap(text)
+    openapi = lap_to_openapi(spec)
     result = yaml.dump(openapi, sort_keys=False, default_flow_style=False)
     if output_path:
         Path(output_path).write_text(result)
@@ -249,8 +249,8 @@ def convert_file(input_path: str, output_path: str = None) -> str:
 
 def main():
     import argparse
-    p = argparse.ArgumentParser(description='Convert DocLean to OpenAPI YAML')
-    p.add_argument('input', help='DocLean file')
+    p = argparse.ArgumentParser(description='Convert LAP to OpenAPI YAML')
+    p.add_argument('input', help='LAP file')
     p.add_argument('-o', '--output', help='Output YAML file')
     args = p.parse_args()
 

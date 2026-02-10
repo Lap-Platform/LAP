@@ -30,7 +30,7 @@ Let me be blunt: **there is no moat here.**
 - Google could add a `--compact` flag to their API discovery format and it'd be over.
 
 **What stops a YC company?**
-- The core compiler is ~500 lines of Python. The spec is 11 pages. A good engineer clones the value proposition in a weekend. The DocLean format itself has zero network effects until there's an ecosystem.
+- The core compiler is ~500 lines of Python. The spec is 11 pages. A good engineer clones the value proposition in a weekend. The LAP format itself has zero network effects until there's an ecosystem.
 
 **"But we'll be the standard!"** — HTTP became a standard because Tim Berners-Lee was at CERN and the W3C backed it. Protocol standards require institutional weight, massive adoption pressure, or being first by years. You have none of these. A2A from Google already exists. MCP from Anthropic already exists. You're proposing a THIRD protocol in a space that already has two from $100B+ companies.
 
@@ -43,7 +43,7 @@ Let me be blunt: **there is no moat here.**
 The pitch says "compile top 50 APIs." Let's get concrete:
 
 **Who does the work?**
-- Each real-world API spec needs manual curation. Stripe's full spec went from 55K tokens to 153K in DocLean (a **2.8x INCREASE** — see your own REPORT.md). The small demo specs work because they're cherry-picked subsets. Real APIs are messy, nested, and huge.
+- Each real-world API spec needs manual curation. Stripe's full spec went from 55K tokens to 153K in LAP (a **2.8x INCREASE** — see your own REPORT.md). The small demo specs work because they're cherry-picked subsets. Real APIs are messy, nested, and huge.
 - You need 1-2 engineers spending weeks on each major API to get quality compilations. That's 50-100 engineer-weeks for the top 50.
 
 **Who's the first paying customer?**
@@ -113,12 +113,12 @@ Your own REPORT.md tells a different story:
 
 | Comparison | What it actually shows |
 |---|---|
-| DocLean Standard vs Verbose | **-164.6%** — DocLean is BIGGER. Not a typo. Standard mode INCREASES tokens. |
-| DocLean Lean vs Verbose | **-99.5%** — Lean mode is STILL BIGGER than verbose human-readable docs. |
-| Stripe Full Spec | 55K verbose → 153K DocLean Standard → 117K Lean. **DocLean is 2-3x LARGER.** |
+| LAP Standard vs Verbose | **-164.6%** — LAP is BIGGER. Not a typo. Standard mode INCREASES tokens. |
+| LAP Lean vs Verbose | **-99.5%** — Lean mode is STILL BIGGER than verbose human-readable docs. |
+| Stripe Full Spec | 55K verbose → 153K LAP Standard → 117K Lean. **LAP is 2-3x LARGER.** |
 | Spotify | Standard mode is **51.8% larger** than verbose. Even lean is **14.5% larger.** |
 
-The 3.6x number comes from comparing Lean mode against raw OpenAPI YAML on **small, cherry-picked spec subsets**. Against actual human-readable documentation (what agents currently consume), DocLean often **increases** token count.
+The 3.6x number comes from comparing Lean mode against raw OpenAPI YAML on **small, cherry-picked spec subsets**. Against actual human-readable documentation (what agents currently consume), LAP often **increases** token count.
 
 **This is a fundamental technical problem.** The format adds structural overhead (@directives, type annotations, braces) that exceeds the savings from removing prose — especially for smaller or well-written APIs.
 
@@ -153,18 +153,18 @@ Despite everything above, I'd reconsider if you hit these milestones — because
 - Prove the Stripe-full problem is solvable (55K→153K is a dealbreaker)
 
 ### Gate 2: Prove Agent Performance (Month 1-3)
-- Run 1,000 real agent tasks comparing DocLean vs raw docs vs function-calling schemas
-- Show that agents are **more accurate** with DocLean, not just cheaper. Accuracy is a value prop that survives token deflation. Cost savings isn't.
-- If DocLean makes agents 5% more reliable at API calls, THAT is the pitch — not compression.
+- Run 1,000 real agent tasks comparing LAP vs raw docs vs function-calling schemas
+- Show that agents are **more accurate** with LAP, not just cheaper. Accuracy is a value prop that survives token deflation. Cost savings isn't.
+- If LAP makes agents 5% more reliable at API calls, THAT is the pitch — not compression.
 
 ### Gate 3: Get One Real Customer (Month 3-6)
-- One company processing >1M agent API calls/month using DocLean in production
+- One company processing >1M agent API calls/month using LAP in production
 - Real cost data, real reliability data, real testimonial
 - This is worth more than any spec document
 
 ### Gate 4: Protocol Adoption Signal (Month 6-12)
 - Integration into at least one major framework (LangChain or CrewAI)
-- At least 5 API providers publishing official DocLean specs
+- At least 5 API providers publishing official LAP specs
 - Community contributions (others writing compilers, not just you)
 
 **If you hit all four gates, come back.** The round would be $1.5-2M seed at $8-10M post, with 18 months of runway and a clear path to Series A metrics.
@@ -185,6 +185,6 @@ Despite everything above, I'd reconsider if you hit these milestones — because
 | Technical | 🔴 Concerning | Benchmarks don't support the headline claims |
 | Kill Risk | 🔴 High | >90% cumulative probability within 24 months |
 
-**Bottom line:** The engineering is solid, the spec is well-designed, and the problem identification is correct. But you're building a toll booth on a road that's about to become free. The pivot — if there is one — is **agent reliability**, not compression. If DocLean makes agents provably more accurate at API consumption, you have a different (and better) company. But that's not what the benchmarks show today.
+**Bottom line:** The engineering is solid, the spec is well-designed, and the problem identification is correct. But you're building a toll booth on a road that's about to become free. The pivot — if there is one — is **agent reliability**, not compression. If LAP makes agents provably more accurate at API consumption, you have a different (and better) company. But that's not what the benchmarks show today.
 
 *— The partner who funded exactly zero "protocol" companies last year, and regrets none of them.*

@@ -1,14 +1,14 @@
 """
-CrewAI Tool for DocLean API lookup.
+CrewAI Tool for LAP API lookup.
 
 Provides a CrewAI-compatible tool that agents can use to search and retrieve
-API documentation in DocLean format — compressed and agent-optimized.
+API documentation in LAP format — compressed and agent-optimized.
 
 Example usage:
     >>> from crewai import Agent, Task, Crew
-    >>> from integrations.crewai.lap_tool import DocLeanLookup
+    >>> from integrations.crewai.lap_tool import LAPLookup
     >>>
-    >>> tool = DocLeanLookup(specs_dir="examples/doclean/openapi/")
+    >>> tool = LAPLookup(specs_dir="examples/lap/openapi/")
     >>> agent = Agent(
     ...     role="API Developer",
     ...     tools=[tool],
@@ -16,7 +16,7 @@ Example usage:
     ... )
 
 Without CrewAI installed (standalone):
-    >>> tool = DocLeanLookup(specs_dir="examples/doclean/openapi/")
+    >>> tool = LAPLookup(specs_dir="examples/lap/openapi/")
     >>> result = tool._run("github", endpoint="repos")
     >>> print(result)
 """
@@ -31,8 +31,8 @@ _src = str(Path(__file__).resolve().parent.parent.parent / "src")
 if _src not in sys.path:
     sys.path.insert(0, _src)
 
-from core.formats.doclean import DocLeanSpec
-from core.parser import parse_doclean
+from core.formats.lap import LAPSpec
+from core.parser import parse_lap
 from core.utils import read_file_safe
 
 # Graceful degradation
@@ -62,48 +62,48 @@ except ImportError:
     _HAS_CREWAI = False
 
 
-class DocLeanLookupInput(BaseModel):
-    """Input schema for DocLeanLookup tool."""
+class LAPLookupInput(BaseModel):
+    """Input schema for LAPLookup tool."""
     api_name: str
     endpoint: Optional[str] = None
 
 
-class DocLeanLookup(BaseTool):
-    """Look up API documentation in DocLean format.
+class LAPLookup(BaseTool):
+    """Look up API documentation in LAP format.
 
-    Searches loaded DocLean specs by API name and optionally filters
+    Searches loaded LAP specs by API name and optionally filters
     by endpoint path. Returns compressed API documentation optimized
     for LLM consumption.
     """
 
     name: str = "api_lookup"
     description: str = (
-        "Look up API documentation in DocLean format. "
+        "Look up API documentation in LAP format. "
         "Provide an api_name to get the full spec, or also provide "
         "an endpoint keyword to filter specific endpoints."
     )
 
-    def __init__(self, specs_dir: str = None, specs: dict[str, DocLeanSpec] = None, **kwargs):
+    def __init__(self, specs_dir: str = None, specs: dict[str, LAPSpec] = None, **kwargs):
         if _HAS_CREWAI:
             super().__init__(**kwargs)
-        self._specs: dict[str, DocLeanSpec] = specs or {}
+        self._specs: dict[str, LAPSpec] = specs or {}
         if specs_dir:
             self._load_specs_dir(specs_dir)
 
     def _load_specs_dir(self, specs_dir: str) -> None:
-        """Load all .doclean files from a directory."""
+        """Load all .lap files from a directory."""
         p = Path(specs_dir)
         if not p.exists():
             return
-        for f in p.glob("*.doclean"):
+        for f in p.glob("*.lap"):
             text = read_file_safe(str(f))
             if text:
-                spec = parse_doclean(text)
+                spec = parse_lap(text)
                 key = spec.api_name.lower().replace(" ", "-") if spec.api_name else f.stem
                 self._specs[key] = spec
 
-    def add_spec(self, name: str, spec: DocLeanSpec) -> None:
-        """Register a DocLeanSpec by name."""
+    def add_spec(self, name: str, spec: LAPSpec) -> None:
+        """Register a LAPSpec by name."""
         self._specs[name.lower()] = spec
 
     def _run(self, api_name: str, endpoint: str = None) -> str:
@@ -114,7 +114,7 @@ class DocLeanLookup(BaseTool):
             endpoint: Optional endpoint keyword to filter (e.g., "repos", "issues")
 
         Returns:
-            DocLean formatted documentation string
+            LAP formatted documentation string
         """
         api_key = api_name.lower().strip()
 
@@ -150,8 +150,8 @@ class DocLeanLookup(BaseTool):
             # Build filtered output
             lines = [f"@api {spec.api_name}", f"@base {spec.base_url}", ""]
             for ep in matching:
-                lines.append(ep.to_doclean())
+                lines.append(ep.to_lap())
                 lines.append("")
             return "\n".join(lines)
 
-        return spec.to_doclean()
+        return spec.to_lap()

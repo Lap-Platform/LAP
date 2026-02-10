@@ -4,9 +4,9 @@
 
 ## Summary
 
-Compression ratio = DocLean tokens / Raw tokens (lower = better compression)
+Compression ratio = LAP tokens / Raw tokens (lower = better compression)
 
-### Standard DocLean Compression
+### Standard LAP Compression
 
 | Format | Specs | Median | Mean | Min | Max | P25 | P75 |
 |--------|-------|--------|------|-----|-----|-----|-----|
@@ -16,7 +16,7 @@ Compression ratio = DocLean tokens / Raw tokens (lower = better compression)
 | protobuf | 35 | 0.6563 | 0.5563 | 0.0126 | 0.8917 | 0.4686 | 0.7136 |
 | postman | 36 | 0.2882 | 0.2711 | 0.1038 | 0.3693 | 0.2690 | 0.3044 |
 
-### Lean DocLean Compression
+### Lean LAP Compression
 
 | Format | Specs | Median | Mean | Min | Max | P25 | P75 |
 |--------|-------|--------|------|-----|-----|-----|-----|

@@ -41,4 +41,4 @@
 - Added 50MB file size check before reading OpenAPI specs. Raises `ValueError` if exceeded.
 
 ### `src/converter.py`
-- Added 10MB file size check before reading DocLean files. Raises `ValueError` if exceeded.
+- Added 10MB file size check before reading LAP files. Raises `ValueError` if exceeded.

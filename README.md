@@ -9,7 +9,7 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 
-LAP compiles API specs into **DocLean** — a typed, token-efficient format built for AI agents.  
+LAP compiles API specs into **LAP** — a typed, token-efficient format built for AI agents.  
 OpenAPI, GraphQL, AsyncAPI, Protobuf, Postman → one compact format.
 
 </div>
@@ -29,7 +29,7 @@ LLMs waste thousands of tokens parsing bloated API specs. Stripe's OpenAPI spec 
 
 ```bash
 pip install lap
-lap compile api.yaml -o api.doclean
+lap compile api.yaml -o api.lap
 ```
 
 ## Before / After
@@ -55,7 +55,7 @@ paths:
                   type: string
 ```
 
-**DocLean (2 lines):**
+**LAP (2 lines):**
 ```
 ## POST /v1/charges — Create a charge
 @required {amount: int # in cents, currency: str(ISO4217)}
@@ -89,15 +89,15 @@ paths:
 4. **Redundancy elimination** — Deduplicate error schemas, shared params, common fields (~20%)
 5. **Description stripping** (lean mode) — LLMs infer meaning from param names (~15%)
 
-## DocLean Format Conventions
+## LAP Format Conventions
 
-DocLean uses `@directives` — a flat, line-oriented grammar designed for LLM parsing.
+LAP uses `@directives` — a flat, line-oriented grammar designed for LLM parsing.
 
 ### Header Directives
 
 | Directive | Purpose | Example |
 |-----------|---------|---------|
-| `@doclean` | Format version | `@doclean v0.3` |
+| `@lap` | Format version | `@lap v0.3` |
 | `@api` | API name | `@api Stripe Charges API` |
 | `@base` | Base URL | `@base https://api.stripe.com` |
 | `@version` | API version | `@version 2024-12-18` |
@@ -147,7 +147,7 @@ DocLean uses `@directives` — a flat, line-oriented grammar designed for LLM pa
 ### Example (Lean)
 
 ```
-@doclean v0.3
+@lap v0.3
 @api Stripe Charges API
 @base https://api.stripe.com
 @auth Bearer bearer
@@ -186,7 +186,7 @@ for ep in doc.endpoints:
     print(f"{ep.method} {ep.path}")
 ```
 
-## Also: ToolLean
+## Also: LAP
 
 Companion format for **tool manifests** (MCP servers, function definitions). Same philosophy: typed, compact, zero ambiguity.
 

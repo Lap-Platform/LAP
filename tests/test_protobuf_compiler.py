@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for the Protobuf/gRPC → DocLean compiler."""
+"""Tests for the Protobuf/gRPC → LAP compiler."""
 
 import sys
 from pathlib import Path
@@ -219,7 +219,7 @@ class TestCompileHealth:
         assert len(ep.response_schemas) == 1
         # HealthCheckResponse is a reused type, so it's defined via @type
         # and referenced by name in the response
-        output = spec.to_doclean()
+        output = spec.to_lap()
         assert "SERVING" in output
 
 
@@ -238,23 +238,23 @@ class TestCompileUser:
 
     def test_map_field_in_params(self, spec):
         # Map field should be present either inline or in a @type definition
-        output = spec.to_doclean()
+        output = spec.to_lap()
         assert "map<str,str>" in output
 
     def test_oneof_in_response(self, spec):
         # Oneof fields should be present in the @type definition or inline
-        output = spec.to_doclean()
+        output = spec.to_lap()
         assert "avatar_url: str?" in output
         assert "avatar_data: bytes?" in output
 
     def test_nested_message_in_response(self, spec):
         # Address fields should be present in a @type or inline
-        output = spec.to_doclean()
+        output = spec.to_lap()
         assert "street: str" in output
         assert "city: str" in output
 
     def test_wkt_timestamp(self, spec):
-        output = spec.to_doclean()
+        output = spec.to_lap()
         assert "timestamp" in output
 
     def test_empty_response(self, spec):
@@ -277,7 +277,7 @@ class TestCompilePayments:
         assert len(pm_params) == 1
 
     def test_enum_types(self, spec):
-        output = spec.to_doclean()
+        output = spec.to_lap()
         assert "PAYMENT_STATUS_PENDING" in output or "enum(" in output
 
 
@@ -314,28 +314,28 @@ class TestCompileMLServing:
 
     def test_map_inputs(self, spec):
         # Map fields should be present in the output (inline or @type)
-        output = spec.to_doclean()
+        output = spec.to_lap()
         assert "map<str," in output
 
 
-# ── DocLean Output Tests ─────────────────────────────────────────────
+# ── LAP Output Tests ─────────────────────────────────────────────
 
-class TestDocLeanOutput:
-    def test_doclean_header(self):
+class TestLAPOutput:
+    def test_lap_header(self):
         spec = compile_proto(str(SPECS_DIR / "health.proto"))
-        output = spec.to_doclean()
-        assert "@doclean" in output
+        output = spec.to_lap()
+        assert "@lap" in output
         assert "@api grpc.health.v1" in output
 
     def test_lean_mode_shorter(self):
         spec = compile_proto(str(SPECS_DIR / "user.proto"))
-        normal = spec.to_doclean(lean=False)
-        lean = spec.to_doclean(lean=True)
+        normal = spec.to_lap(lean=False)
+        lean = spec.to_lap(lean=True)
         assert len(lean) <= len(normal)
 
     def test_endpoint_format(self):
         spec = compile_proto(str(SPECS_DIR / "health.proto"))
-        output = spec.to_doclean()
+        output = spec.to_lap()
         assert "@endpoint UNARY" in output
         assert "@endpoint SERVER-STREAM" in output
 
@@ -343,9 +343,9 @@ class TestDocLeanOutput:
         """All 5 proto files compile without errors."""
         for proto_file in SPECS_DIR.glob("*.proto"):
             spec = compile_proto(str(proto_file))
-            output = spec.to_doclean()
+            output = spec.to_lap()
             assert len(output) > 50
-            assert "@doclean" in output
+            assert "@lap" in output
 
     def test_compile_directory(self):
         specs = compile_proto_dir(str(SPECS_DIR))
@@ -355,7 +355,7 @@ class TestDocLeanOutput:
 # ── Token Benchmark ──────────────────────────────────────────────────
 
 class TestTokenBenchmark:
-    """Verify DocLean achieves meaningful compression vs raw proto."""
+    """Verify LAP achieves meaningful compression vs raw proto."""
 
     @staticmethod
     def _approx_tokens(text: str) -> int:
@@ -363,26 +363,26 @@ class TestTokenBenchmark:
         return len(text) // 4
 
     def test_compression_ratio(self):
-        """DocLean should be more compact than raw proto for all specs."""
+        """LAP should be more compact than raw proto for all specs."""
         for proto_file in SPECS_DIR.glob("*.proto"):
             raw = proto_file.read_text()
             spec = compile_proto(str(proto_file))
-            doclean = spec.to_doclean(lean=True)
+            lap = spec.to_lap(lean=True)
 
             raw_tokens = self._approx_tokens(raw)
-            dl_tokens = self._approx_tokens(doclean)
+            dl_tokens = self._approx_tokens(lap)
 
-            # DocLean should be within 2x of raw (it restructures, doesn't inflate)
+            # LAP should be within 2x of raw (it restructures, doesn't inflate)
             assert dl_tokens < raw_tokens * 2, (
-                f"{proto_file.name}: DocLean ({dl_tokens}) > 2x raw ({raw_tokens})"
+                f"{proto_file.name}: LAP ({dl_tokens}) > 2x raw ({raw_tokens})"
             )
 
     def test_lean_vs_standard(self):
         """Lean mode should always be <= standard mode."""
         for proto_file in SPECS_DIR.glob("*.proto"):
             spec = compile_proto(str(proto_file))
-            standard = spec.to_doclean(lean=False)
-            lean = spec.to_doclean(lean=True)
+            standard = spec.to_lap(lean=False)
+            lean = spec.to_lap(lean=True)
             assert len(lean) <= len(standard), f"{proto_file.name}: lean > standard"
 
     def test_aggregate_stats(self):
@@ -393,8 +393,8 @@ class TestTokenBenchmark:
         for proto_file in sorted(SPECS_DIR.glob("*.proto")):
             raw = proto_file.read_text()
             spec = compile_proto(str(proto_file))
-            dl = spec.to_doclean(lean=False)
-            lean = spec.to_doclean(lean=True)
+            dl = spec.to_lap(lean=False)
+            lean = spec.to_lap(lean=True)
 
             raw_t = self._approx_tokens(raw)
             dl_t = self._approx_tokens(dl)
@@ -419,7 +419,7 @@ class TestCLI:
         import subprocess
         cli_path = Path(__file__).resolve().parent.parent / "cli" / "main.py"
         proto_path = SPECS_DIR / "health.proto"
-        out = tmp_path / "health.doclean"
+        out = tmp_path / "health.lap"
 
         result = subprocess.run(
             [sys.executable, str(cli_path), "compile", str(proto_path), "-o", str(out)],
@@ -428,14 +428,14 @@ class TestCLI:
         assert result.returncode == 0, result.stderr
         assert out.exists()
         content = out.read_text()
-        assert "@doclean" in content
+        assert "@lap" in content
         assert "Health/Check" in content
 
     def test_cli_protobuf_directory(self, tmp_path):
         """CLI protobuf subcommand works with directory."""
         import subprocess
         cli_path = Path(__file__).resolve().parent.parent / "cli" / "main.py"
-        out = tmp_path / "all.doclean"
+        out = tmp_path / "all.lap"
 
         result = subprocess.run(
             [sys.executable, str(cli_path), "compile", str(SPECS_DIR), "-o", str(out)],
@@ -444,15 +444,15 @@ class TestCLI:
         assert result.returncode == 0, result.stderr
         assert out.exists()
         content = out.read_text()
-        assert content.count("@doclean") >= 5
+        assert content.count("@lap") >= 5
 
     def test_cli_protobuf_lean(self, tmp_path):
         """CLI protobuf --lean flag works."""
         import subprocess
         cli_path = Path(__file__).resolve().parent.parent / "cli" / "main.py"
         proto_path = SPECS_DIR / "user.proto"
-        out_std = tmp_path / "std.doclean"
-        out_lean = tmp_path / "lean.doclean"
+        out_std = tmp_path / "std.lap"
+        out_lean = tmp_path / "lean.lap"
 
         subprocess.run(
             [sys.executable, str(cli_path), "compile", str(proto_path), "-o", str(out_std)],

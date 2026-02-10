@@ -52,21 +52,21 @@ python3 cli.py --help
 ### 1. Compile an OpenAPI spec
 
 ```bash
-python3 cli.py compile specs/stripe-charges.yaml -o stripe.doclean
+python3 cli.py compile specs/stripe-charges.yaml -o stripe.lap
 ```
 
 Output:
 ```
-✓ Compiled stripe-charges.yaml → stripe.doclean
+✓ Compiled stripe-charges.yaml → stripe.lap
 ✓ 5 endpoints | 4,291 chars | standard mode
 ```
 
 ### 2. See the result
 
-The compiled DocLean file:
+The compiled LAP file:
 
 ```
-@doclean v0.1
+@lap v0.1
 @api Stripe Charges API
 @base https://api.stripe.com
 @version 2024-12-18
@@ -88,7 +88,7 @@ python3 cli.py compile specs/stripe-charges.yaml --lean
 
 Output (lean mode strips descriptions):
 ```
-@doclean v0.1
+@lap v0.1
 @api Stripe Charges API
 @base https://api.stripe.com
 @version 2024-12-18
@@ -119,15 +119,15 @@ PASS — Zero information loss!
 
 ---
 
-## Understanding DocLean Output
+## Understanding LAP Output
 
-DocLean is a structured, typed format for API documentation. Here's what each directive means:
+LAP is a structured, typed format for API documentation. Here's what each directive means:
 
 ### Header Directives
 
 | Directive | Purpose | Example |
 |-----------|---------|---------|
-| `@doclean` | Format version | `@doclean v0.1` |
+| `@lap` | Format version | `@lap v0.1` |
 | `@api` | API name | `@api Stripe Charges API` |
 | `@base` | Base URL | `@base https://api.stripe.com` |
 | `@version` | API version | `@version 2024-12-18` |

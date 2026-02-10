@@ -27,15 +27,15 @@
 
 **Severity: CRITICAL**
 
-There are **two completely independent DocLean parsers**:
-- `src/parser.py` → `parse_doclean()` — the "real" parser
-- `sdk/python/lap/client.py` → `_parse_doclean()` — a dumbed-down reimplementation
+There are **two completely independent LAP parsers**:
+- `src/parser.py` → `parse_lap()` — the "real" parser
+- `sdk/python/lap/client.py` → `_parse_lap()` — a dumbed-down reimplementation
 
 They use different algorithms, handle different edge cases, and will diverge over time.
 
 ```python
 # src/parser.py — handles multi-line joining, brace depth, comment-aware splitting
-def parse_doclean(text: str) -> DocLeanSpec:
+def parse_lap(text: str) -> LAPSpec:
     joined_lines = []
     brace_depth = 0
     for raw_line in text.split('\n'):
@@ -44,7 +44,7 @@ def parse_doclean(text: str) -> DocLeanSpec:
         ...
 
 # sdk/python/lap/client.py — naive line-by-line, no multi-line support
-def _parse_doclean(text: str) -> DocLeanSpec:
+def _parse_lap(text: str) -> LAPSpec:
     for line in text.splitlines():
         line = line.strip()
         if not line:
@@ -96,7 +96,7 @@ There is no `__init__.py` in `src/`, no `pyproject.toml` at the root, and the pr
 
 ### 1.4 Converter Duplicated in CLI
 
-`cli.py`'s `cmd_convert()` reimplements OpenAPI generation from DocLean instead of using `converter.py`'s `doclean_to_openapi()`:
+`cli.py`'s `cmd_convert()` reimplements OpenAPI generation from LAP instead of using `converter.py`'s `lap_to_openapi()`:
 
 ```python
 # cli.py — cmd_convert() — 60 lines of hand-rolled OpenAPI generation
@@ -109,7 +109,7 @@ def cmd_convert(args):
     # Manually builds paths, parameters, request bodies...
 
 # converter.py — already does this
-def doclean_to_openapi(spec: DocLeanSpec) -> dict:
+def lap_to_openapi(spec: LAPSpec) -> dict:
     openapi = {
         'openapi': '3.0.0',
         ...
@@ -118,7 +118,7 @@ def doclean_to_openapi(spec: DocLeanSpec) -> dict:
 
 Two different OpenAPI generators, two different OpenAPI versions (`3.0.0` vs `3.0.3`), different logic.
 
-**Fix:** `cmd_convert` should call `doclean_to_openapi()` from `converter.py`.
+**Fix:** `cmd_convert` should call `lap_to_openapi()` from `converter.py`.
 
 ### 1.5 God Module: `a2a_lean.py`
 
@@ -279,7 +279,7 @@ The A2A-Lean patterns are compiled once at import time (good), but the module-le
 ### 3.4 `compile_openapi` Reads File from Disk Every Time
 
 ```python
-def compile_openapi(spec_path: str) -> DocLeanSpec:
+def compile_openapi(spec_path: str) -> LAPSpec:
     path = Path(spec_path)
     raw = path.read_text()
     ...
@@ -290,7 +290,7 @@ def compile_openapi(spec_path: str) -> DocLeanSpec:
 ```python
 # benchmark_all.py
 raw_text = Path(spec_path).read_text()    # Read #1
-doclean_spec = compile_openapi(spec_path)  # Read #2 (inside)
+lap_spec = compile_openapi(spec_path)  # Read #2 (inside)
 ```
 
 Every spec is read from disk twice.
@@ -300,8 +300,8 @@ Every spec is read from disk twice.
 ### 3.5 Registry `search()` Loads Every File
 
 ```python
-def search(self, query: str) -> List[DocLeanDoc]:
-    for p in sorted(self._dir.glob("*.doclean")):
+def search(self, query: str) -> List[LAPDoc]:
+    for p in sorted(self._dir.glob("*.lap")):
         if query in p.stem.lower():
             results.append(self._client.load(str(p)))  # Full parse
             continue
@@ -310,7 +310,7 @@ def search(self, query: str) -> List[DocLeanDoc]:
             results.append(self._client.load(str(p)))  # Full parse again
 ```
 
-For every search, every `.doclean` file is either fully parsed or partially read. No index, no caching.
+For every search, every `.lap` file is either fully parsed or partially read. No index, no caching.
 
 **Fix:** Build an in-memory index on first access. Cache parsed specs.
 
@@ -321,7 +321,7 @@ For every search, every `.doclean` file is either fully parsed or partially read
 ### 4.1 Parser Never Validates Version
 
 ```python
-if stripped.startswith('@doclean '):
+if stripped.startswith('@lap '):
     # version info, skip
     continue
 ```
@@ -372,7 +372,7 @@ Unmatched braces → silent partial extraction. This will produce wrong parse re
 ### 4.4 Compiler Doesn't Handle Missing `info` or `paths`
 
 ```python
-def compile_openapi(spec_path: str) -> DocLeanSpec:
+def compile_openapi(spec_path: str) -> LAPSpec:
     ...
     info = spec.get("info", {})
     servers = spec.get("servers", [])
@@ -417,7 +417,7 @@ Any param that doesn't match this regex (e.g., `billing_details: map{name: str?,
 
 ### 4.8 No Line Numbers in Any Error Messages
 
-Neither parser reports which line caused a problem. For a 1000-line DocLean file, debugging parse failures would be painful.
+Neither parser reports which line caused a problem. For a 1000-line LAP file, debugging parse failures would be painful.
 
 ---
 
@@ -426,18 +426,18 @@ Neither parser reports which line caused a problem. For a 1000-line DocLean file
 ### 5.1 `compile_openapi` Returns a Spec, Not a Result
 
 ```python
-def compile_openapi(spec_path: str) -> DocLeanSpec:
+def compile_openapi(spec_path: str) -> LAPSpec:
 ```
 
 No way to get warnings, skipped endpoints, or compilation statistics. The function either succeeds silently or crashes. There's no "compilation report."
 
 **Fix:** Return a `CompilationResult` with `.spec`, `.warnings`, `.stats`.
 
-### 5.2 `Param.to_doclean()` Enum Format Doesn't Match Spec
+### 5.2 `Param.to_lap()` Enum Format Doesn't Match Spec
 
 ```python
-# doclean_format.py
-def to_doclean(self, lean: bool = False) -> str:
+# lap_format.py
+def to_lap(self, lean: bool = False) -> str:
     parts = [f"{self.name}: {self.type}"]
     if self.enum:
         parts[0] += f"({'/'.join(str(e) for e in self.enum)})"
@@ -447,9 +447,9 @@ This appends enum to the type: `str(active/inactive)`. But the type might alread
 
 ### 5.3 Inconsistent Return Types
 
-- `parse_doclean()` returns `DocLeanSpec`
-- `compile_openapi()` returns `DocLeanSpec`  
-- `doclean_to_openapi()` returns `dict`
+- `parse_lap()` returns `LAPSpec`
+- `compile_openapi()` returns `LAPSpec`  
+- `lap_to_openapi()` returns `dict`
 - `convert_file()` returns `str` (YAML text)
 
 The converter returns a raw dict while everything else returns typed objects. No `OpenAPISpec` wrapper.
@@ -459,7 +459,7 @@ The converter returns a raw dict while everything else returns typed objects. No
 The compiler populates `request_body` with body params AND also populates `required_params` with query/path params. But the serializer merges them:
 
 ```python
-# doclean_format.py Endpoint.to_doclean()
+# lap_format.py Endpoint.to_lap()
 if self.required_params or self.request_body:
     req = self.required_params + [p for p in self.request_body if p.required]
 ```
@@ -468,7 +468,7 @@ The parser, however, puts everything into `required_params` and `optional_params
 
 **Fix:** Either merge body params into required/optional during compilation, or parse them back into `request_body` during parsing. Pick one model.
 
-### 5.5 `DocLeanDoc.token_count()` Fallback is Wildly Inaccurate
+### 5.5 `LAPDoc.token_count()` Fallback is Wildly Inaccurate
 
 ```python
 def token_count(self, lean: bool = False) -> int:
@@ -478,7 +478,7 @@ def token_count(self, lean: bool = False) -> int:
     return len(text) // 4  # ~4 chars per token
 ```
 
-The 4-chars-per-token heuristic is notoriously inaccurate for structured text with lots of punctuation (DocLean is ~2.5 chars/token). This will undercount by ~40%.
+The 4-chars-per-token heuristic is notoriously inaccurate for structured text with lots of punctuation (LAP is ~2.5 chars/token). This will undercount by ~40%.
 
 ---
 
@@ -488,22 +488,22 @@ The 4-chars-per-token heuristic is notoriously inaccurate for structured text wi
 
 Not a single test checks:
 - What happens when `compile_openapi` gets a non-existent file
-- What happens when `parse_doclean` gets invalid syntax
+- What happens when `parse_lap` gets invalid syntax
 - What happens with circular `$ref` in OpenAPI specs
 - What happens with empty/null values in fields
 - What `_extract_braced` does with unmatched braces
 
 ### 6.2 No Tests for `converter.py` Standalone
 
-The converter module's `convert_file()` and `main()` functions have zero dedicated tests. `doclean_to_openapi()` is tested only via round-trip.
+The converter module's `convert_file()` and `main()` functions have zero dedicated tests. `lap_to_openapi()` is tested only via round-trip.
 
 ### 6.3 SDK Parser Not Tested Against Real Parser
 
-The SDK's `_parse_doclean` is tested minimally (one `test_parse_minimal` case). It's not tested against the same inputs as `src/parser.py` to verify they produce identical results.
+The SDK's `_parse_lap` is tested minimally (one `test_parse_minimal` case). It's not tested against the same inputs as `src/parser.py` to verify they produce identical results.
 
 ### 6.4 No Fuzz Testing
 
-Given the complexity of the parser (brace matching, comment detection, nested types), there should be fuzz tests with randomly generated DocLean-like input. A single malformed line could crash the parser.
+Given the complexity of the parser (brace matching, comment detection, nested types), there should be fuzz tests with randomly generated LAP-like input. A single malformed line could crash the parser.
 
 ### 6.5 `demo.py` Is Untested
 
@@ -513,7 +513,7 @@ The demo reads files, calls APIs, and produces output — but is never tested. I
 
 No test for:
 - `lap compile nonexistent.yaml`
-- `lap inspect nonexistent.doclean`
+- `lap inspect nonexistent.lap`
 - `lap validate bad-spec.yaml`
 - `lap registry list empty-dir/`
 
@@ -609,7 +609,7 @@ for raw_line in text.split('\n'):
     brace_depth += raw_line.count('{') - raw_line.count('}')
 ```
 
-For a 1MB DocLean file (~20,000 lines), this creates a list of joined strings via repeated string concatenation (`+=`). In Python, this is O(n²) for joined lines because strings are immutable.
+For a 1MB LAP file (~20,000 lines), this creates a list of joined strings via repeated string concatenation (`+=`). In Python, this is O(n²) for joined lines because strings are immutable.
 
 **Fix:** Use a list and `''.join()` for accumulation.
 
@@ -630,8 +630,8 @@ For a field set with 100 fields averaging 30 chars each (3000 chars), this is fi
 
 ```python
 class Registry:
-    def search(self, query: str) -> List[DocLeanDoc]:
-        for p in sorted(self._dir.glob("*.doclean")):
+    def search(self, query: str) -> List[LAPDoc]:
+        for p in sorted(self._dir.glob("*.lap")):
             ...
 ```
 
@@ -644,7 +644,7 @@ With 10,000 API specs, every search reads and parses every file. O(n) per search
 ```python
 for spec_path in spec_files:
     raw_text = Path(spec_path).read_text()
-    doclean_spec = compile_openapi(spec_path)  # Parses YAML, resolves refs, extracts everything
+    lap_spec = compile_openapi(spec_path)  # Parses YAML, resolves refs, extracts everything
 ```
 
 No caching between CLI commands or runs. If you run `lap benchmark-all` then `lap validate` then `lap benchmark`, each command re-reads and re-parses everything from scratch.

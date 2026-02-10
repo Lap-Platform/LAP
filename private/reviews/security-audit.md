@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-The LAP project is a **read-only data transformation pipeline** (OpenAPI ↔ DocLean ↔ structured data). It has no network servers, no authentication handling, no database, and no user-facing web interface. The attack surface is therefore **relatively narrow** — primarily limited to malicious input files and path manipulation.
+The LAP project is a **read-only data transformation pipeline** (OpenAPI ↔ LAP ↔ structured data). It has no network servers, no authentication handling, no database, and no user-facing web interface. The attack surface is therefore **relatively narrow** — primarily limited to malicious input files and path manipulation.
 
 **Critical issues found: 0**  
 **High issues found: 2**  
@@ -48,7 +48,7 @@ The `cmd_compile` function creates parent directories for output: `Path(args.out
 **Severity:** HIGH  
 **Files:** `src/parser.py`, `src/compiler.py`
 
-**Description:** Several attack vectors via malicious DocLean or OpenAPI input:
+**Description:** Several attack vectors via malicious LAP or OpenAPI input:
 
 1. **`_split_top_level` in parser.py** — O(n²) behavior on deeply nested braces. A string with thousands of nested `{{{...}}}` will cause excessive CPU usage.
 
@@ -64,7 +64,7 @@ The `cmd_compile` function creates parent directories for output: `Path(args.out
          $ref: '#/components/schemas/A'
    ```
 
-4. **Brace joining in `parse_doclean`** — The line-joining loop that tracks `brace_depth` will concatenate an entire file into one line if braces never balance, causing memory issues.
+4. **Brace joining in `parse_lap`** — The line-joining loop that tracks `brace_depth` will concatenate an entire file into one line if braces never balance, causing memory issues.
 
 **Recommendation:**
 - Add cycle detection to `resolve_ref` (track visited refs)
@@ -223,14 +223,14 @@ error(f"File not found: {spec_path}")
 
 ---
 
-### LOW-5: No Integrity Verification of DocLean Files
+### LOW-5: No Integrity Verification of LAP Files
 
 **Severity:** LOW  
 **Files:** `sdk/python/lap/client.py`, `src/parser.py`
 
-**Description:** DocLean files are loaded and parsed without any integrity verification (checksums, signatures). A tampered DocLean file could provide incorrect API documentation to agents, causing them to make wrong API calls (parameter injection, wrong endpoints, etc.).
+**Description:** LAP files are loaded and parsed without any integrity verification (checksums, signatures). A tampered LAP file could provide incorrect API documentation to agents, causing them to make wrong API calls (parameter injection, wrong endpoints, etc.).
 
-**Recommendation:** Consider adding an optional `@checksum` directive to DocLean format for integrity verification.
+**Recommendation:** Consider adding an optional `@checksum` directive to LAP format for integrity verification.
 
 ---
 
@@ -273,7 +273,7 @@ error(f"File not found: {spec_path}")
 | LOW-2 | LOW | DoS | No file size limits |
 | LOW-3 | LOW | DoS | Regex complexity in NL patterns |
 | LOW-4 | LOW | Info Leakage | File paths in error messages |
-| LOW-5 | LOW | Integrity | No DocLean file verification |
+| LOW-5 | LOW | Integrity | No LAP file verification |
 | LOW-6 | LOW | Data Quality | Hardcoded pricing |
 
 ---

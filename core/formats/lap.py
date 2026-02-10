@@ -1,7 +1,7 @@
 """
-DocLean Format Spec & Serializer
+LAP Format Spec & Serializer
 
-DocLean is a compressed, structured representation of API documentation
+LAP is a compressed, structured representation of API documentation
 optimized for LLM agent consumption.
 """
 
@@ -10,7 +10,7 @@ from collections import OrderedDict
 from dataclasses import dataclass, field
 from typing import Optional
 
-DOCLEAN_VERSION = "v0.3"
+LAP_VERSION = "v0.3"
 
 
 @dataclass
@@ -22,7 +22,7 @@ class Param:
     enum: list = field(default_factory=list)
     default: Optional[str] = None
 
-    def to_doclean(self, lean: bool = False) -> str:
+    def to_lap(self, lean: bool = False) -> str:
         parts = [f"{self.name}: {self.type}"]
         if self.enum and len(self.enum) > 1:
             parts[0] += f"({'/'.join(str(e) for e in self.enum)})"
@@ -41,10 +41,10 @@ class ResponseField:
     nullable: bool = False
     children: list = field(default_factory=list)
 
-    def to_doclean(self, lean: bool = False, depth: int = 0) -> str:
+    def to_lap(self, lean: bool = False, depth: int = 0) -> str:
         nullable = "?" if self.nullable else ""
         if self.children:
-            child_str = ", ".join(c.to_doclean(lean=lean, depth=depth + 1) for c in self.children)
+            child_str = ", ".join(c.to_lap(lean=lean, depth=depth + 1) for c in self.children)
             return f"{self.name}: {self.type}{nullable}{{{child_str}}}"
         return f"{self.name}: {self.type}{nullable}"
 
@@ -56,14 +56,14 @@ class ResponseSchema:
     description: str = ""
     fields: list = field(default_factory=list)
 
-    def to_doclean(self, lean: bool = False) -> str:
+    def to_lap(self, lean: bool = False) -> str:
         if not self.fields:
             if lean and not self.description.startswith("→"):
                 return f"@returns({self.status_code})"
             if self.description:
                 return f"@returns({self.status_code}) {self.description}"
             return f"@returns({self.status_code})"
-        fields_str = ", ".join(f.to_doclean(lean=lean) for f in self.fields)
+        fields_str = ", ".join(f.to_lap(lean=lean) for f in self.fields)
         line = f"@returns({self.status_code}) {{{fields_str}}}"
         if self.description and not lean:
             line += f" # {self.description}"
@@ -77,7 +77,7 @@ class ErrorSchema:
     type: str = ""
     description: str = ""
 
-    def to_doclean(self, lean: bool = False) -> str:
+    def to_lap(self, lean: bool = False) -> str:
         parts = [self.code]
         if self.type:
             parts[0] += f":{self.type}"
@@ -101,7 +101,7 @@ class Endpoint:
     errors: dict = field(default_factory=dict)
     example_request: str = ""
 
-    def to_doclean(self, lean: bool = False) -> str:
+    def to_lap(self, lean: bool = False) -> str:
         lines = [f"@endpoint {self.method.upper()} {self.path}"]
         if self.summary and not lean:
             lines.append(f"@desc {self.summary}")
@@ -116,17 +116,17 @@ class Endpoint:
             if self.required_params or self.request_body:
                 req = self.required_params + [p for p in self.request_body if p.required]
                 if req:
-                    fields = ", ".join(p.to_doclean(lean=lean) for p in req)
+                    fields = ", ".join(p.to_lap(lean=lean) for p in req)
                     lines.append(f"@required {{{fields}}}")
 
             opt = self.optional_params + [p for p in self.request_body if not p.required]
             if opt:
-                fields = ", ".join(p.to_doclean(lean=lean) for p in opt)
+                fields = ", ".join(p.to_lap(lean=lean) for p in opt)
                 lines.append(f"@optional {{{fields}}}")
 
         if self.response_schemas:
             for rs in self.response_schemas:
-                lines.append(rs.to_doclean(lean=lean))
+                lines.append(rs.to_lap(lean=lean))
         elif self.responses:
             for code, desc in self.responses.items():
                 if lean:
@@ -135,7 +135,7 @@ class Endpoint:
                     lines.append(f"@returns({code}) {desc}")
 
         if self.error_schemas:
-            err_str = ", ".join(e.to_doclean(lean=lean) for e in self.error_schemas)
+            err_str = ", ".join(e.to_lap(lean=lean) for e in self.error_schemas)
             lines.append(f"@errors {{{err_str}}}")
         elif self.errors:
             if lean:
@@ -162,8 +162,8 @@ def _group_name(path: str) -> str:
 
 
 @dataclass
-class DocLeanSpec:
-    """A complete DocLean document for an API."""
+class LAPSpec:
+    """A complete LAP document for an API."""
     api_name: str
     base_url: str = ""
     version: str = ""
@@ -171,8 +171,8 @@ class DocLeanSpec:
     endpoints: list = field(default_factory=list)
     common_fields: list = field(default_factory=list)
 
-    def to_doclean(self, lean: bool = False) -> str:
-        lines = [f"@doclean {DOCLEAN_VERSION}"]
+    def to_lap(self, lean: bool = False) -> str:
+        lines = [f"@lap {LAP_VERSION}"]
         # Self-describing preamble so WebFetch summarizers pass content through faithfully
         lines.append("# Machine-readable API spec. Each @endpoint block is one API call.")
         lines.append(f"@api {self.api_name}")
@@ -185,7 +185,7 @@ class DocLeanSpec:
 
         # Common fields -- params that repeat across nearly all endpoints
         if self.common_fields:
-            fields = ", ".join(p.to_doclean(lean=lean) for p in self.common_fields)
+            fields = ", ".join(p.to_lap(lean=lean) for p in self.common_fields)
             lines.append(f"@common_fields {{{fields}}}")
 
         # Completeness header: endpoint count
@@ -230,7 +230,7 @@ class DocLeanSpec:
                     lines.append("")
                 lines.append(f"@group {gname}")
                 current_group = gname
-            lines.append(ep.to_doclean(lean=lean))
+            lines.append(ep.to_lap(lean=lean))
             lines.append("")
         if use_groups and current_group is not None:
             lines.append(f"@endgroup")

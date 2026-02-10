@@ -1,4 +1,4 @@
-"""Snyk API Python SDK - built from DocLean spec."""
+"""Snyk API Python SDK - built from LAP spec."""
 
 from typing import Any, Dict, List, Optional
 import requests

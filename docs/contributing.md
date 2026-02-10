@@ -14,8 +14,8 @@
 
 3. **Compile and validate**:
    ```bash
-   python3 cli.py compile specs/my-api.yaml -o output/my-api.doclean
-   python3 cli.py compile specs/my-api.yaml -o output/my-api.lean.doclean --lean
+   python3 cli.py compile specs/my-api.yaml -o output/my-api.lap
+   python3 cli.py compile specs/my-api.yaml -o output/my-api.lean.lap --lean
    python3 cli.py validate specs/my-api.yaml
    ```
 
@@ -32,16 +32,16 @@ The compiler lives in `src/` and consists of:
 
 | File | Purpose |
 |------|---------|
-| `src/compiler.py` | OpenAPI → DocLean compilation |
-| `src/parser.py` | DocLean text → AST parsing |
-| `src/doclean_format.py` | DocLean data structures and serialization |
-| `src/converter.py` | DocLean → OpenAPI conversion |
-| `src/differ.py` | DocLean diff engine |
+| `src/compiler.py` | OpenAPI → LAP compilation |
+| `src/parser.py` | LAP text → AST parsing |
+| `src/lap_format.py` | LAP data structures and serialization |
+| `src/converter.py` | LAP → OpenAPI conversion |
+| `src/differ.py` | LAP diff engine |
 | `src/utils.py` | Token counting, file I/O |
 
 ### Common improvements:
 
-- **Better type inference** — improve how OpenAPI schemas map to DocLean types
+- **Better type inference** — improve how OpenAPI schemas map to LAP types
 - **Handle edge cases** — polymorphic schemas (`oneOf`/`anyOf`), deeply nested objects
 - **Parser robustness** — handle malformed input gracefully
 - **New directives** — propose new `@directive` syntax for missing features
@@ -96,7 +96,7 @@ _src = str(Path(__file__).resolve().parent.parent.parent / "src")
 if _src not in sys.path:
     sys.path.insert(0, _src)
 
-from parser import parse_doclean
+from parser import parse_lap
 from utils import read_file_safe
 
 # Graceful degradation
@@ -108,14 +108,14 @@ except ImportError:
     class SomeBase:
         pass
 
-class DocLean<Framework>Tool(SomeBase):
-    """DocLean tool for <Framework>."""
+class LAP<Framework>Tool(SomeBase):
+    """LAP tool for <Framework>."""
 
     def __init__(self, specs_dir: str):
         self.specs_dir = Path(specs_dir)
 
     def _run(self, api_name: str, **kwargs) -> str:
-        # Load and return DocLean content
+        # Load and return LAP content
         ...
 ```
 

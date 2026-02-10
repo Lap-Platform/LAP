@@ -69,12 +69,12 @@ amount: int | required | unit=cents | min=1 | currency_smallest_unit=true
 
 ## 4. The Solution
 
-### **DocLean** — Compiled, typed API contracts
+### **LAP** — Compiled, typed API contracts
 
 Strip the prose. Keep the semantics. Output machine-perfect contracts.
 
 ```yaml
-# DocLean format — Stripe's charge endpoint
+# LAP format — Stripe's charge endpoint
 endpoint: POST /v1/charges
 params:
   amount:
@@ -102,7 +102,7 @@ When Agent A asks Agent B to do something, they exchange typed contracts — not
 
 No ambiguity. No re-parsing. No wasted tokens.
 
-> **Key takeaway:** DocLean is the compiler. A2A-Lean is the protocol. Together: 10x cheaper agent operations.
+> **Key takeaway:** LAP is the compiler. A2A-Lean is the protocol. Together: 10x cheaper agent operations.
 
 ---
 
@@ -110,7 +110,7 @@ No ambiguity. No re-parsing. No wasted tokens.
 
 ### 28 APIs compiled. 2,635 endpoints. One night.
 
-| API | Original Tokens | DocLean Tokens | Compression |
+| API | Original Tokens | LAP Tokens | Compression |
 |-----|---------------:|---------------:|------------:|
 | AWS | 410,292 | 31,234 | 13.1x |
 | Stripe | 189,847 | 12,103 | 15.7x |
@@ -172,7 +172,7 @@ LAP sits at the intersection of all three.
 
 | Revenue Stream | Model | Description |
 |---------------|-------|-------------|
-| **DocLean Registry** | SaaS | Maintained catalog of compiled API contracts. Always current. |
+| **LAP Registry** | SaaS | Maintained catalog of compiled API contracts. Always current. |
 | **Compression Relay** | Usage-based | Managed proxy — agents hit our relay, get lean contracts. Pay per call. |
 | **Enterprise** | License | Private compilations, on-prem deployment, custom APIs. |
 | **Framework Integrations** | Adoption driver | Free plugins for LangChain, CrewAI, OpenAI → funnel to registry. |

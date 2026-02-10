@@ -1,19 +1,19 @@
 """
-MCP (Model Context Protocol) server for DocLean specs.
+MCP (Model Context Protocol) server for LAP specs.
 
-Serves DocLean endpoints as MCP tools, demonstrating how LAP complements
+Serves LAP endpoints as MCP tools, demonstrating how LAP complements
 MCP rather than competing with it. LAP compresses the documentation that
 MCP tools expose.
 
 Example usage (with MCP SDK):
     >>> import asyncio
-    >>> from integrations.mcp.lap_mcp_server import DocLeanMCPServer
-    >>> server = DocLeanMCPServer("examples/doclean/openapi/")
+    >>> from integrations.mcp.lap_mcp_server import LAPMCPServer
+    >>> server = LAPMCPServer("examples/lap/openapi/")
     >>> asyncio.run(server.run())
 
 Standalone (without MCP SDK):
-    >>> server = DocLeanMCPServer()
-    >>> server.load_spec("examples/doclean/openapi/petstore.doclean")
+    >>> server = LAPMCPServer()
+    >>> server.load_spec("examples/lap/openapi/petstore.lap")
     >>> tools = server.list_tools()
     >>> print(tools[0])
     {'name': 'github_get_repos_owner_repo', 'description': '...', 'inputSchema': {...}}
@@ -31,8 +31,8 @@ _src = str(Path(__file__).resolve().parent.parent.parent / "src")
 if _src not in sys.path:
     sys.path.insert(0, _src)
 
-from core.formats.doclean import DocLeanSpec, Endpoint, Param
-from core.parser import parse_doclean
+from core.formats.lap import LAPSpec, Endpoint, Param
+from core.parser import parse_lap
 from core.utils import read_file_safe
 
 # Type map for MCP input schemas (JSON Schema)
@@ -47,7 +47,7 @@ _TYPE_MAP = {
 
 
 def _type_to_json_schema(type_str: str) -> dict[str, Any]:
-    """Convert DocLean type to JSON Schema for MCP input."""
+    """Convert LAP type to JSON Schema for MCP input."""
     if type_str.startswith("[") and type_str.endswith("]"):
         return {"type": "array", "items": _type_to_json_schema(type_str[1:-1])}
     m = re.match(r"^(\w+)\(([^)]+)\)$", type_str)
@@ -71,7 +71,7 @@ def _endpoint_to_tool_name(endpoint: Endpoint, api_prefix: str = "") -> str:
 
 
 def endpoint_to_mcp_tool(endpoint: Endpoint, api_name: str = "") -> dict[str, Any]:
-    """Convert a DocLean endpoint to an MCP tool definition.
+    """Convert a LAP endpoint to an MCP tool definition.
 
     Returns a dict matching the MCP Tool schema:
     {name, description, inputSchema: {type: 'object', properties: {...}, required: [...]}}
@@ -106,8 +106,8 @@ def endpoint_to_mcp_tool(endpoint: Endpoint, api_name: str = "") -> dict[str, An
     }
 
 
-class DocLeanMCPServer:
-    """MCP server that exposes DocLean API specs as MCP tools.
+class LAPMCPServer:
+    """MCP server that exposes LAP API specs as MCP tools.
 
     Each endpoint in loaded specs becomes an MCP tool with typed parameters.
     This demonstrates LAP complementing MCP: LAP provides the compressed
@@ -115,26 +115,26 @@ class DocLeanMCPServer:
     """
 
     def __init__(self, specs_dir: str = None):
-        self._specs: dict[str, DocLeanSpec] = {}
+        self._specs: dict[str, LAPSpec] = {}
         self._tools: list[dict[str, Any]] = []
-        self._tool_map: dict[str, tuple[DocLeanSpec, Endpoint]] = {}
+        self._tool_map: dict[str, tuple[LAPSpec, Endpoint]] = {}
         if specs_dir:
             self._load_dir(specs_dir)
 
     def _load_dir(self, specs_dir: str) -> None:
-        for f in Path(specs_dir).glob("*.doclean"):
+        for f in Path(specs_dir).glob("*.lap"):
             self.load_spec(str(f))
 
     def load_spec(self, path: str) -> None:
-        """Load a DocLean spec file and register its endpoints as tools."""
+        """Load a LAP spec file and register its endpoints as tools."""
         text = read_file_safe(path)
         if not text:
             return
-        spec = parse_doclean(text)
+        spec = parse_lap(text)
         self.add_spec(spec)
 
-    def add_spec(self, spec: DocLeanSpec) -> None:
-        """Register a parsed DocLeanSpec."""
+    def add_spec(self, spec: LAPSpec) -> None:
+        """Register a parsed LAPSpec."""
         key = spec.api_name.lower().replace(" ", "-")
         self._specs[key] = spec
         for ep in spec.endpoints:
@@ -150,7 +150,7 @@ class DocLeanMCPServer:
         """Handle an MCP tool call.
 
         In a real implementation, this would make the actual API call.
-        Here we return the DocLean documentation for the endpoint,
+        Here we return the LAP documentation for the endpoint,
         showing what the agent would need to make the call.
         """
         if name not in self._tool_map:
@@ -160,7 +160,7 @@ class DocLeanMCPServer:
             }
 
         spec, endpoint = self._tool_map[name]
-        doc = endpoint.to_doclean()
+        doc = endpoint.to_lap()
         info = {
             "api": spec.api_name,
             "base_url": spec.base_url,
@@ -174,9 +174,9 @@ class DocLeanMCPServer:
     def to_mcp_manifest(self) -> dict[str, Any]:
         """Generate a complete MCP server manifest."""
         return {
-            "name": "lap-doclean-server",
+            "name": "lap-lap-server",
             "version": "0.1.0",
-            "description": "Serves API documentation via DocLean compressed format",
+            "description": "Serves API documentation via LAP compressed format",
             "tools": self._tools,
         }
 
@@ -195,7 +195,7 @@ class DocLeanMCPServer:
             print(json.dumps(self.to_mcp_manifest(), indent=2))
             return
 
-        server = Server("lap-doclean")
+        server = Server("lap-lap")
 
         @server.list_tools()
         async def handle_list_tools():

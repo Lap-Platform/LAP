@@ -2,11 +2,11 @@
 
 ## How is this different from OpenAPI?
 
-**OpenAPI describes APIs for humans and tools. DocLean describes APIs for LLM agents.**
+**OpenAPI describes APIs for humans and tools. LAP describes APIs for LLM agents.**
 
 OpenAPI is the source of truth — it powers code generators, API gateways, documentation sites, mock servers, and SDK generators. LAP doesn't replace any of that. LAP *compiles* OpenAPI into a format optimized for LLM consumption.
 
-Think of it like the relationship between TypeScript and JavaScript: TypeScript is the source, JavaScript is the compiled output for a specific runtime. OpenAPI is the source, DocLean is the compiled output for the LLM runtime.
+Think of it like the relationship between TypeScript and JavaScript: TypeScript is the source, JavaScript is the compiled output for a specific runtime. OpenAPI is the source, LAP is the compiled output for the LLM runtime.
 
 You keep your OpenAPI specs. You keep all your OpenAPI tooling. LAP just adds a compilation step for agent use cases.
 
@@ -17,7 +17,7 @@ You keep your OpenAPI specs. You keep all your OpenAPI tooling. LAP just adds a 
 - **MCP** (Model Context Protocol) defines how agents discover and invoke tools — it's the *plumbing* for tool use
 - **LAP** compresses the *documentation* that those tools expose
 
-An MCP tool has an `inputSchema` (JSON Schema) and a description. LAP makes those descriptions more compact and typed. The MCP integration (`integrations/mcp/`) shows this: DocLean endpoints become MCP tools with compressed schemas.
+An MCP tool has an `inputSchema` (JSON Schema) and a description. LAP makes those descriptions more compact and typed. The MCP integration (`integrations/mcp/`) shows this: LAP endpoints become MCP tools with compressed schemas.
 
 They're complementary, not competing.
 
@@ -34,18 +34,18 @@ Anthropic's prompt caching gives ~90% discount on cached prefixes. This is great
 
 In practice, use both: compress with LAP, then cache the compressed version. They stack.
 
-## Will LLMs understand DocLean format?
+## Will LLMs understand LAP format?
 
 **Yes. Extensively tested.**
 
-DocLean is deliberately designed to be LLM-readable. The format uses conventions LLMs already understand:
+LAP is deliberately designed to be LLM-readable. The format uses conventions LLMs already understand:
 
 - `@directive` syntax (familiar from many DSLs)
 - `{name: type}` parameter notation (JSON-like)
 - `# inline comments` (universal)
 - HTTP methods and paths (every LLM knows REST)
 
-From our benchmarks with GPT-4o and Claude: agents correctly parse DocLean and make valid API calls with the same or higher accuracy as when given verbose documentation. The typed contracts actually *reduce* errors — an agent seeing `amount: int` is less likely to pass a string than one reading a paragraph of prose.
+From our benchmarks with GPT-4o and Claude: agents correctly parse LAP and make valid API calls with the same or higher accuracy as when given verbose documentation. The typed contracts actually *reduce* errors — an agent seeing `amount: int` is less likely to pass a string than one reading a paragraph of prose.
 
 ## What if token costs keep dropping?
 
@@ -56,7 +56,7 @@ Yes, GPT-4o is $2.50/M input tokens and dropping. Yes, Gemini offers 1M+ context
 But LAP's core value isn't cost savings — it's **typed contracts**:
 
 1. **Correctness** — `status: enum(succeeded|pending|failed)` prevents hallucinated values. No amount of cheaper tokens fixes hallucination.
-2. **Deterministic parsing** — DocLean has a formal grammar. You can parse it into an AST with code, not with an LLM. Try parsing a Stripe docs page deterministically.
+2. **Deterministic parsing** — LAP has a formal grammar. You can parse it into an AST with code, not with an LLM. Try parsing a Stripe docs page deterministically.
 3. **Schema diffing** — structured specs enable breaking change detection, changelogs, compatibility checking. You can't diff two markdown pages meaningfully.
 4. **Speed** — fewer input tokens = faster time-to-first-token. Latency matters in agentic workflows regardless of cost.
 
@@ -81,7 +81,7 @@ The result is a format that's both more compact AND more readable for both human
 
 *This is a fair criticism from [the Reddit review](../reviews/reddit-roast.md).*
 
-DocLean's type system is intentionally minimal. It doesn't support:
+LAP's type system is intentionally minimal. It doesn't support:
 - `oneOf`/`anyOf`/`allOf` polymorphism
 - `pattern` regex validation
 - `minimum`/`maximum` constraints
@@ -98,7 +98,7 @@ That said, format hints like `str(email)` and `int(unix-timestamp)` do convey *s
 
 The early benchmarks compared against a "verbose" baseline that was generated, not real human documentation. The 3.6× headline number was against this synthetic baseline.
 
-Current benchmarks compare DocLean against the raw OpenAPI YAML spec, which is a fairer comparison. Compression ratios vary by API — simple APIs see less benefit, complex APIs with long descriptions see more.
+Current benchmarks compare LAP against the raw OpenAPI YAML spec, which is a fairer comparison. Compression ratios vary by API — simple APIs see less benefit, complex APIs with long descriptions see more.
 
 The validation numbers are real: 100% endpoint, parameter, and error code preservation is checked automatically on every compilation.
 
@@ -117,6 +117,6 @@ If you're making 10 API calls a day with a single LLM, you probably don't need t
 
 **They don't have to.** That's the key design decision.
 
-LAP compiles *from* OpenAPI. API providers don't need to change anything. If an API publishes an OpenAPI spec (and most do), you can compile it to DocLean yourself.
+LAP compiles *from* OpenAPI. API providers don't need to change anything. If an API publishes an OpenAPI spec (and most do), you can compile it to LAP yourself.
 
 The registry and pre-compiled specs are a convenience, not a requirement. The compiler is the product.

@@ -1,1 +1,1 @@
-"""CrewAI integration for LAP DocLean format."""
+"""CrewAI integration for LAP LAP format."""

@@ -1,4 +1,4 @@
-@doclean v0.3
+@lap v0.3
 # Machine-readable API spec. Each @endpoint block is one API call.
 @api Stripe Charges API
 @base https://api.stripe.com

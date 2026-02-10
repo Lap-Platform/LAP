@@ -1,7 +1,7 @@
 """
-ToolLean Format Spec & Serializer
+LAP Format Spec & Serializer
 
-ToolLean is a compressed, structured representation of AI tool/skill manifests
+LAP is a compressed, structured representation of AI tool/skill manifests
 optimized for LLM agent discovery and invocation. Part of the LAP protocol.
 
 Supports: MCP servers, OpenClaw/ClawHub skills, Claude skills, generic agent tools.
@@ -10,7 +10,7 @@ Supports: MCP servers, OpenClaw/ClawHub skills, Claude skills, generic agent too
 from dataclasses import dataclass, field
 from typing import Optional
 
-TOOLLEAN_VERSION = "v0.1"
+LAP_TOOL_VERSION = "v0.1"
 
 
 @dataclass
@@ -23,7 +23,7 @@ class ToolParam:
     enum: list = field(default_factory=list)
     default: Optional[str] = None
 
-    def to_toollean(self, lean: bool = False) -> str:
+    def to_lap(self, lean: bool = False) -> str:
         opt = "" if self.required else "?"
         parts = [f"{self.name}:{self.type}{opt}"]
         if self.enum:
@@ -43,9 +43,9 @@ class ToolOutput:
     description: str = ""
     children: list = field(default_factory=list)
 
-    def to_toollean(self, lean: bool = False, depth: int = 0) -> str:
+    def to_lap(self, lean: bool = False, depth: int = 0) -> str:
         if self.children:
-            child_str = ", ".join(c.to_toollean(lean=lean, depth=depth + 1) for c in self.children)
+            child_str = ", ".join(c.to_lap(lean=lean, depth=depth + 1) for c in self.children)
             base = f"{self.name}:{self.type}{{{child_str}}}"
         else:
             base = f"{self.name}:{self.type}"
@@ -61,7 +61,7 @@ class ToolExample:
     output_text: str = ""
     description: str = ""
 
-    def to_toollean(self, lean: bool = False) -> str:
+    def to_lap(self, lean: bool = False) -> str:
         lines = ["@example"]
         if self.description and not lean:
             lines[0] += f" {self.description}"
@@ -73,8 +73,8 @@ class ToolExample:
 
 
 @dataclass
-class ToolLeanSpec:
-    """A complete ToolLean document for a tool or skill."""
+class LAPToolSpec:
+    """A complete LAP document for a tool or skill."""
     name: str
     description: str = ""
     auth: str = "none"  # none/apikey/oauth/token
@@ -85,8 +85,8 @@ class ToolLeanSpec:
     requires: list = field(default_factory=list)
     source: str = ""
 
-    def to_toollean(self, lean: bool = False) -> str:
-        lines = [f"@toollean {TOOLLEAN_VERSION}"]
+    def to_lap(self, lean: bool = False) -> str:
+        lines = [f"@lap {LAP_TOOL_VERSION}"]
         lines.append(f"@tool {self.name}")
         if self.description:
             lines.append(f"@desc {self.description}")
@@ -101,27 +101,27 @@ class ToolLeanSpec:
 
         if self.inputs:
             for p in self.inputs:
-                lines.append(f"@in {p.to_toollean(lean=lean)}")
+                lines.append(f"@in {p.to_lap(lean=lean)}")
 
         if self.outputs:
             for o in self.outputs:
-                lines.append(f"@out {o.to_toollean(lean=lean)}")
+                lines.append(f"@out {o.to_lap(lean=lean)}")
 
         for ex in self.examples:
-            lines.append(ex.to_toollean(lean=lean))
+            lines.append(ex.to_lap(lean=lean))
 
         return "\n".join(lines)
 
 
 @dataclass
-class ToolLeanBundle:
+class LAPToolBundle:
     """A bundle of multiple tools (e.g., from an MCP server)."""
     name: str = ""
     description: str = ""
     source: str = ""
     tools: list = field(default_factory=list)
 
-    def to_toollean(self, lean: bool = False) -> str:
+    def to_lap(self, lean: bool = False) -> str:
         parts = []
         if self.name:
             parts.append(f"# {self.name}")
@@ -129,6 +129,6 @@ class ToolLeanBundle:
                 parts.append(f"# {self.description}")
             parts.append("")
         for tool in self.tools:
-            parts.append(tool.to_toollean(lean=lean))
+            parts.append(tool.to_lap(lean=lean))
             parts.append("")
         return "\n".join(parts)

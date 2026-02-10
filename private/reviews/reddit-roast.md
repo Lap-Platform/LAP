@@ -59,8 +59,8 @@ Now some rando on GitHub says "hey, convert all that to my custom DSL that only 
 Your response: *closes tab*
 
 **The chicken-and-egg problem is fatal.** For LAP to be useful:
-1. API providers need to publish `.doclean` files
-2. Agent frameworks need to consume `.doclean` files  
+1. API providers need to publish `.lap` files
+2. Agent frameworks need to consume `.lap` files  
 3. Neither will move first
 
 OpenAPI won by having Swagger UI. What's LAP's killer app? A CLI that saves tokens? My CFO doesn't know what a token is.
@@ -78,7 +78,7 @@ So your business model is... hosting text files. Riveting. Let me check — yep,
 The Cloudflare analogy (I'm guessing from the pitch deck that inevitably exists): Cloudflare works because DNS/CDN provides *latency* benefits that compound on every request. Your registry provides... what? A cached SHA-256 hash so you don't send 500 tokens? The L3 compression level saves maybe $0.0001 per call. Your CDN bill will exceed the savings.
 
 **Who is the customer?**
-- API providers? They already publish OpenAPI specs for free. Why would they pay to also publish `.doclean`?
+- API providers? They already publish OpenAPI specs for free. Why would they pay to also publish `.lap`?
 - Agent developers? They can run your open-source compiler themselves.
 - Enterprises? They have private APIs that won't go in any public registry.
 
@@ -103,8 +103,8 @@ By the time LAP achieves any adoption (optimistically: 2027), context windows wi
 Four compression levels. FOUR.
 
 - L0: Markdown (just... docs)
-- L1: DocLean Standard (with descriptions)
-- L2: DocLean Lean (without descriptions)  
+- L1: LAP Standard (with descriptions)
+- L2: LAP Lean (without descriptions)  
 - L3: SHA-256 hash reference
 
 You built a content negotiation system with MIME types and quality values for what is *fundamentally a text preprocessing step*. There are HTTP `Accept` headers in your spec. For a format that... replaces HTTP API documentation. The irony is physically painful.
@@ -144,9 +144,9 @@ Look. I'm not a monster. Here's what I'll grudgingly concede:
 
 **The core insight is correct.** API documentation IS ridiculously bloated for machine consumption. An LLM doesn't need "The `amount` parameter specifies the charge amount in the smallest currency unit (e.g., cents for USD)." It needs `amount: int`. This is a real observation and the project demonstrates it clearly.
 
-**The compression is real.** Even if the benchmarks are inflated, 2-3× compression on structured API docs is achievable and the DocLean format does achieve it. For high-volume agent systems TODAY (not 2027), this saves real money.
+**The compression is real.** Even if the benchmarks are inflated, 2-3× compression on structured API docs is achievable and the LAP format does achieve it. For high-volume agent systems TODAY (not 2027), this saves real money.
 
-**The format is actually pretty clean.** I trash-talked the over-engineering, but honestly? `@endpoint POST /v1/charges` / `@required {amount: int, currency: str}` is *extremely* readable. If I had to debug an agent's API understanding, I'd rather read DocLean than raw OpenAPI YAML. It's a genuinely nice notation.
+**The format is actually pretty clean.** I trash-talked the over-engineering, but honestly? `@endpoint POST /v1/charges` / `@required {amount: int, currency: str}` is *extremely* readable. If I had to debug an agent's API understanding, I'd rather read LAP than raw OpenAPI YAML. It's a genuinely nice notation.
 
 **The validation story is solid.** Round-trip compilation with 100% endpoint/parameter/error preservation is the right thing to care about. Most "compression" approaches are lossy and nobody checks. These folks check.
 

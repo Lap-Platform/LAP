@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for ToolLean format, compiler, and parser."""
+"""Tests for LAP format, compiler, and parser."""
 
 import sys
 import os
@@ -8,15 +8,15 @@ import json
 import pytest
 from pathlib import Path
 
-from core.formats.toollean import (
-    ToolParam, ToolOutput, ToolExample, ToolLeanSpec, ToolLeanBundle, TOOLLEAN_VERSION,
+from core.formats.lap_tools import (
+    ToolParam, ToolOutput, ToolExample, LAPToolSpec, LAPToolBundle, LAP_TOOL_VERSION,
 )
-from core.compilers.toollean import (
+from core.compilers.lap_tools import (
     compile_mcp_tool, compile_mcp_manifest, compile_skill_md,
     compile_generic_json, _map_type,
 )
-from core.compilers.toollean_parser import (
-    parse_toollean, parse_single_tool, _parse_param_line, _parse_output_line, ParseError,
+from core.compilers.lap_tools_parser import (
+    parse_lap_tools, parse_single_tool, _parse_param_line, _parse_output_line, ParseError,
 )
 
 
@@ -27,31 +27,31 @@ from core.compilers.toollean_parser import (
 class TestToolParam:
     def test_basic(self):
         p = ToolParam(name="query", type="str")
-        assert p.to_toollean() == "query:str"
+        assert p.to_lap() == "query:str"
 
     def test_optional(self):
         p = ToolParam(name="limit", type="int", required=False)
-        assert p.to_toollean() == "limit:int?"
+        assert p.to_lap() == "limit:int?"
 
     def test_with_description(self):
         p = ToolParam(name="q", type="str", description="Search query")
-        assert p.to_toollean() == "q:str Search query"
+        assert p.to_lap() == "q:str Search query"
 
     def test_lean_strips_description(self):
         p = ToolParam(name="q", type="str", description="Search query")
-        assert p.to_toollean(lean=True) == "q:str"
+        assert p.to_lap(lean=True) == "q:str"
 
     def test_enum(self):
         p = ToolParam(name="mode", type="str", enum=["fast", "slow"])
-        assert p.to_toollean() == "mode:str(fast/slow)"
+        assert p.to_lap() == "mode:str(fast/slow)"
 
     def test_default(self):
         p = ToolParam(name="n", type="int", default="10")
-        assert p.to_toollean() == "n:int=10"
+        assert p.to_lap() == "n:int=10"
 
     def test_optional_enum_default_desc(self):
         p = ToolParam(name="fmt", type="str", required=False, enum=["json", "xml"], default="json", description="Output format")
-        result = p.to_toollean()
+        result = p.to_lap()
         assert "fmt:str?" in result
         assert "(json/xml)" in result
         assert "=json" in result
@@ -61,52 +61,52 @@ class TestToolParam:
 class TestToolOutput:
     def test_basic(self):
         o = ToolOutput(name="result", type="str")
-        assert o.to_toollean() == "result:str"
+        assert o.to_lap() == "result:str"
 
     def test_with_description(self):
         o = ToolOutput(name="result", type="str", description="The result")
-        assert o.to_toollean() == "result:str The result"
+        assert o.to_lap() == "result:str The result"
 
     def test_nested_children(self):
         child = ToolOutput(name="id", type="int")
         o = ToolOutput(name="items", type="list", children=[child])
-        assert o.to_toollean() == "items:list{id:int}"
+        assert o.to_lap() == "items:list{id:int}"
 
     def test_lean_strips_desc(self):
         o = ToolOutput(name="r", type="str", description="desc")
-        assert o.to_toollean(lean=True) == "r:str"
+        assert o.to_lap(lean=True) == "r:str"
 
 
 class TestToolExample:
     def test_full(self):
         ex = ToolExample(input_text="search cats", output_text="Found 5 results", description="Basic search")
-        result = ex.to_toollean()
+        result = ex.to_lap()
         assert "@example Basic search" in result
         assert "> search cats" in result
         assert "< Found 5 results" in result
 
     def test_lean_strips_desc(self):
         ex = ToolExample(description="Test", input_text="hi")
-        result = ex.to_toollean(lean=True)
+        result = ex.to_lap(lean=True)
         assert "@example" in result
         assert "Test" not in result
 
     def test_input_only(self):
         ex = ToolExample(input_text="go")
-        result = ex.to_toollean()
+        result = ex.to_lap()
         assert "> go" in result
         assert "<" not in result
 
 
-class TestToolLeanSpec:
+class TestLAPToolSpec:
     def test_minimal(self):
-        spec = ToolLeanSpec(name="ping")
-        result = spec.to_toollean()
-        assert f"@toollean {TOOLLEAN_VERSION}" in result
+        spec = LAPToolSpec(name="ping")
+        result = spec.to_lap()
+        assert f"@lap {LAP_TOOL_VERSION}" in result
         assert "@tool ping" in result
 
     def test_full(self):
-        spec = ToolLeanSpec(
+        spec = LAPToolSpec(
             name="search",
             description="Search the web",
             auth="apikey",
@@ -117,7 +117,7 @@ class TestToolLeanSpec:
             outputs=[ToolOutput(name="results", type="list")],
             examples=[ToolExample(input_text="search cats")],
         )
-        result = spec.to_toollean()
+        result = spec.to_lap()
         assert "@desc Search the web" in result
         assert "@auth apikey" in result
         assert "@tags web,search" in result
@@ -128,31 +128,31 @@ class TestToolLeanSpec:
         assert "@example" in result
 
     def test_auth_none_omitted(self):
-        spec = ToolLeanSpec(name="t", auth="none")
-        assert "@auth" not in spec.to_toollean()
+        spec = LAPToolSpec(name="t", auth="none")
+        assert "@auth" not in spec.to_lap()
 
 
-class TestToolLeanBundle:
+class TestLAPToolBundle:
     def test_empty(self):
-        b = ToolLeanBundle(name="empty")
-        result = b.to_toollean()
+        b = LAPToolBundle(name="empty")
+        result = b.to_lap()
         assert "# empty" in result
 
     def test_multiple_tools(self):
-        b = ToolLeanBundle(
+        b = LAPToolBundle(
             name="MyServer",
             description="A test server",
-            tools=[ToolLeanSpec(name="a"), ToolLeanSpec(name="b")],
+            tools=[LAPToolSpec(name="a"), LAPToolSpec(name="b")],
         )
-        result = b.to_toollean()
+        result = b.to_lap()
         assert "# MyServer" in result
         assert "# A test server" in result
         assert "@tool a" in result
         assert "@tool b" in result
 
     def test_lean_omits_bundle_desc(self):
-        b = ToolLeanBundle(name="S", description="Desc", tools=[ToolLeanSpec(name="x")])
-        result = b.to_toollean(lean=True)
+        b = LAPToolBundle(name="S", description="Desc", tools=[LAPToolSpec(name="x")])
+        result = b.to_lap(lean=True)
         assert "# S" in result
         assert "Desc" not in result
 
@@ -419,23 +419,23 @@ class TestOutputParsing:
             o = _parse_output_line("broken")
 
 
-class TestParseToolLean:
+class TestParseLAP:
     def test_single_tool(self):
-        text = "@toollean v0.1\n@tool ping\n@desc Ping a host\n@in host:str Target host"
-        bundle = parse_toollean(text)
+        text = "@lap v0.1\n@tool ping\n@desc Ping a host\n@in host:str Target host"
+        bundle = parse_lap_tools(text)
         assert len(bundle.tools) == 1
         assert bundle.tools[0].name == "ping"
         assert bundle.tools[0].inputs[0].name == "host"
 
     def test_bundle(self):
-        text = "# MyBundle\n# Description\n\n@toollean v0.1\n@tool a\n@desc Tool A\n\n@toollean v0.1\n@tool b\n@desc Tool B"
-        bundle = parse_toollean(text)
+        text = "# MyBundle\n# Description\n\n@lap v0.1\n@tool a\n@desc Tool A\n\n@lap v0.1\n@tool b\n@desc Tool B"
+        bundle = parse_lap_tools(text)
         assert bundle.name == "MyBundle"
         assert bundle.description == "Description"
         assert len(bundle.tools) == 2
 
     def test_parse_single_tool(self):
-        text = "@toollean v0.1\n@tool test"
+        text = "@lap v0.1\n@tool test"
         spec = parse_single_tool(text)
         assert spec.name == "test"
 
@@ -444,7 +444,7 @@ class TestParseToolLean:
             parse_single_tool("")
 
     def test_auth_tags_source_requires(self):
-        text = "@toollean v0.1\n@tool t\n@auth apikey\n@tags web,api\n@source http://x\n@requires network"
+        text = "@lap v0.1\n@tool t\n@auth apikey\n@tags web,api\n@source http://x\n@requires network"
         spec = parse_single_tool(text)
         assert spec.auth == "apikey"
         assert spec.tags == ["web", "api"]
@@ -452,7 +452,7 @@ class TestParseToolLean:
         assert spec.requires == ["network"]
 
     def test_example_parsing(self):
-        text = "@toollean v0.1\n@tool t\n@example Basic\n  > input here\n  < output here"
+        text = "@lap v0.1\n@tool t\n@example Basic\n  > input here\n  < output here"
         spec = parse_single_tool(text)
         assert len(spec.examples) == 1
         assert spec.examples[0].description == "Basic"
@@ -467,7 +467,7 @@ class TestParseToolLean:
 class TestRoundTrip:
     def test_mcp_roundtrip(self):
         spec = compile_mcp_tool(MCP_TOOL_FIXTURE)
-        rendered = spec.to_toollean()
+        rendered = spec.to_lap()
         parsed = parse_single_tool(rendered)
         assert parsed.name == spec.name
         assert parsed.description == spec.description
@@ -479,8 +479,8 @@ class TestRoundTrip:
 
     def test_bundle_roundtrip(self):
         bundle = compile_mcp_manifest(MCP_MANIFEST_FIXTURE)
-        rendered = bundle.to_toollean()
-        parsed = parse_toollean(rendered)
+        rendered = bundle.to_lap()
+        parsed = parse_lap_tools(rendered)
         assert parsed.name == bundle.name
         assert len(parsed.tools) == len(bundle.tools)
         for orig, back in zip(bundle.tools, parsed.tools):
@@ -496,7 +496,7 @@ class TestRoundTrip:
             "returns": {"result": {"type": "number"}},
         }
         spec = compile_generic_json(tool)
-        rendered = spec.to_toollean()
+        rendered = spec.to_lap()
         parsed = parse_single_tool(rendered)
         assert parsed.name == "calc"
         assert parsed.tags == ["math"]
@@ -504,7 +504,7 @@ class TestRoundTrip:
         assert len(parsed.outputs) == 1
 
     def test_full_spec_roundtrip(self):
-        spec = ToolLeanSpec(
+        spec = LAPToolSpec(
             name="advanced",
             description="An advanced tool",
             auth="oauth",
@@ -518,7 +518,7 @@ class TestRoundTrip:
             outputs=[ToolOutput(name="data", type="list")],
             examples=[ToolExample(input_text="search x", output_text="found 3", description="Demo")],
         )
-        rendered = spec.to_toollean()
+        rendered = spec.to_lap()
         parsed = parse_single_tool(rendered)
         assert parsed.name == spec.name
         assert parsed.description == spec.description
@@ -539,28 +539,28 @@ class TestRoundTrip:
 
 class TestEdgeCases:
     def test_special_characters_in_description(self):
-        spec = ToolLeanSpec(name="t", description="Uses <html> & \"quotes\" = fun!")
-        rendered = spec.to_toollean()
+        spec = LAPToolSpec(name="t", description="Uses <html> & \"quotes\" = fun!")
+        rendered = spec.to_lap()
         parsed = parse_single_tool(rendered)
         assert parsed.description == spec.description
 
     def test_empty_bundle(self):
-        b = ToolLeanBundle(name="empty", tools=[])
-        rendered = b.to_toollean()
-        parsed = parse_toollean(rendered)
+        b = LAPToolBundle(name="empty", tools=[])
+        rendered = b.to_lap()
+        parsed = parse_lap_tools(rendered)
         assert len(parsed.tools) == 0
 
     def test_tool_no_inputs(self):
-        spec = ToolLeanSpec(name="noop")
-        rendered = spec.to_toollean()
+        spec = LAPToolSpec(name="noop")
+        rendered = spec.to_lap()
         parsed = parse_single_tool(rendered)
         assert parsed.inputs == []
 
     def test_many_tools_in_bundle(self):
-        tools = [ToolLeanSpec(name=f"tool_{i}") for i in range(20)]
-        b = ToolLeanBundle(name="big", tools=tools)
-        rendered = b.to_toollean()
-        parsed = parse_toollean(rendered)
+        tools = [LAPToolSpec(name=f"tool_{i}") for i in range(20)]
+        b = LAPToolBundle(name="big", tools=tools)
+        rendered = b.to_lap()
+        parsed = parse_lap_tools(rendered)
         assert len(parsed.tools) == 20
 
     def test_missing_description(self):
@@ -578,7 +578,7 @@ class TestEdgeCases:
 
 class TestStats:
     def test_lean_is_shorter(self):
-        spec = ToolLeanSpec(
+        spec = LAPToolSpec(
             name="verbose",
             description="A tool with lots of descriptions",
             inputs=[
@@ -588,22 +588,22 @@ class TestStats:
             outputs=[ToolOutput(name="r", type="str", description="Result with description")],
             examples=[ToolExample(description="An example", input_text="test", output_text="ok")],
         )
-        full = spec.to_toollean(lean=False)
-        lean = spec.to_toollean(lean=True)
+        full = spec.to_lap(lean=False)
+        lean = spec.to_lap(lean=True)
         assert len(lean) < len(full)
 
     def test_bundle_token_estimate(self):
         bundle = compile_mcp_manifest(MCP_MANIFEST_FIXTURE)
-        full = bundle.to_toollean(lean=False)
-        lean = bundle.to_toollean(lean=True)
+        full = bundle.to_lap(lean=False)
+        lean = bundle.to_lap(lean=True)
         # Rough token estimate: chars / 4
         full_tokens = len(full) / 4
         lean_tokens = len(lean) / 4
         assert lean_tokens < full_tokens
 
-    def test_mcp_vs_toollean_size(self):
-        """ToolLean should be more compact than raw JSON."""
+    def test_mcp_vs_lap_size(self):
+        """LAP should be more compact than raw JSON."""
         raw_json = json.dumps(MCP_MANIFEST_FIXTURE)
         bundle = compile_mcp_manifest(MCP_MANIFEST_FIXTURE)
-        toollean = bundle.to_toollean()
-        assert len(toollean) < len(raw_json)
+        lap = bundle.to_lap()
+        assert len(lap) < len(raw_json)

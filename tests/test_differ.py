@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
-"""Tests for the DocLean schema diff engine."""
+"""Tests for the LAP schema diff engine."""
 
 import sys
 from pathlib import Path
 
 
 import pytest
-from core.formats.doclean import (
-    DocLeanSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema,
+from core.formats.lap import (
+    LAPSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema,
 )
 from core.differ import diff_specs, check_compatibility, generate_changelog, Change
 
 
 # ── Fixtures ─────────────────────────────────────────────────────────
 
-def _make_spec_v1() -> DocLeanSpec:
-    return DocLeanSpec(
+def _make_spec_v1() -> LAPSpec:
+    return LAPSpec(
         api_name="TestAPI", base_url="https://api.test.com", version="1.0.0",
         endpoints=[
             Endpoint(
@@ -52,8 +52,8 @@ def _make_spec_v1() -> DocLeanSpec:
     )
 
 
-def _make_spec_v2() -> DocLeanSpec:
-    return DocLeanSpec(
+def _make_spec_v2() -> LAPSpec:
+    return LAPSpec(
         api_name="TestAPI", base_url="https://api.test.com", version="2.0.0",
         endpoints=[
             Endpoint(
@@ -187,11 +187,11 @@ class TestCompatibility:
 
     def test_minor_change(self):
         """Adding only an optional param → MINOR."""
-        old = DocLeanSpec(api_name="T", endpoints=[
+        old = LAPSpec(api_name="T", endpoints=[
             Endpoint(method="get", path="/x", required_params=[], optional_params=[],
                      request_body=[], response_schemas=[], error_schemas=[]),
         ])
-        new = DocLeanSpec(api_name="T", endpoints=[
+        new = LAPSpec(api_name="T", endpoints=[
             Endpoint(method="get", path="/x", required_params=[],
                      optional_params=[Param("foo", "str")],
                      request_body=[], response_schemas=[], error_schemas=[]),

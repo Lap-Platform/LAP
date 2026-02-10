@@ -2,7 +2,7 @@
 
 **Date:** 2026-02-09  
 **Status:** Complete  
-**Task:** Collect real MCP tool manifests and build ToolLean compression compiler
+**Task:** Collect real MCP tool manifests and build LAP compression compiler
 
 ## Summary
 
@@ -42,7 +42,7 @@ Successfully collected tool manifests from **7 MCP servers** (54 tools total) an
 
 ---
 
-## 2. ToolLean Compiler Enhancement
+## 2. LAP Compiler Enhancement
 
 ### Files Created/Modified
 
@@ -53,7 +53,7 @@ Successfully collected tool manifests from **7 MCP servers** (54 tools total) an
 - `/data/workspace/lap-poc/integrations/mcp/test_fixtures/*.json` - 7 MCP server manifests
 
 **Enhanced Existing:**
-- `/data/workspace/lap-poc/core/compilers/toollean.py` - Already had `compile_mcp_tool()` function
+- `/data/workspace/lap-poc/core/compilers/lap.py` - Already had `compile_mcp_tool()` function
 
 ### Compression Functions
 
@@ -76,7 +76,7 @@ Recursively compresses descriptions within JSON Schema:
 Compresses a full MCP tools/list response:
 - Processes all tools in manifest
 - Preserves JSON Schema validity
-- Returns compressed manifest ready for ToolLean compilation
+- Returns compressed manifest ready for LAP compilation
 
 ---
 
@@ -148,7 +148,7 @@ Key changes:
 
 ### Test Coverage
 - ✅ Load all fixture files
-- ✅ Compile through ToolLean format
+- ✅ Compile through LAP format
 - ✅ Apply compression rules
 - ✅ Measure compression ratios
 - ✅ Verify descriptions aren't empty
@@ -170,7 +170,7 @@ python3 integrations/mcp/tests/test_compression.py
 
 ## 6. Integration with Existing LAP Components
 
-### ToolLean Compiler Flow
+### LAP Compiler Flow
 ```
 MCP Tool Manifest (JSON)
   ↓
@@ -180,16 +180,16 @@ Compressed Manifest
   ↓
 compile_mcp_tool()  ← EXISTING
   ↓
-ToolLeanSpec
+LAPToolSpec
   ↓
-.to_toollean()
+.to_lap()
   ↓
-ToolLean Format String
+LAP Format String
 ```
 
-### Example ToolLean Output
+### Example LAP Output
 ```
-@toollean v0.1
+@lap v0.1
 @tool github_create_repository
 @desc Create a new GitHub repo in your account or organization
 @in name:str Repository name
@@ -247,7 +247,7 @@ Based on MCP_SOLUTION.md architecture:
 
 4. **Auto-discovery**
    - MCP server registry integration
-   - Dynamic ToolLean compilation from live MCP servers
+   - Dynamic LAP compilation from live MCP servers
    - Caching layer for compiled manifests
 
 ---
@@ -286,7 +286,7 @@ The compression system is conservative (preserves meaning) but effective on verb
 - ✅ Real MCP tool manifests (7 servers, 54 tools)
 - ✅ Compression module (`compress.py`)
 - ✅ Test suite with metrics (`test_compression.py`)
-- ✅ Integration with existing ToolLean compiler
+- ✅ Integration with existing LAP compiler
 - ✅ Documented compression results
 
 **Token Savings Potential:**  
