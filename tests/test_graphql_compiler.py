@@ -9,7 +9,7 @@ import pytest
 from core.compilers.graphql import compile_graphql, _unwrap, _type_string
 from core.formats.doclean import DocLeanSpec
 
-SPECS_DIR = Path(__file__).parent.parent / "examples" / "graphql"
+SPECS_DIR = Path(__file__).parent.parent / "examples" / "verbose" / "graphql"
 
 
 # ── Basic compilation tests ──────────────────────────────────────────

@@ -28,7 +28,7 @@ from core.compilers.postman import (
     _fields_from_dict,
 )
 
-SPECS_DIR = Path(__file__).parent.parent / 'examples' / 'postman'
+SPECS_DIR = Path(__file__).parent.parent / 'examples' / 'verbose' / 'postman'
 PROJECT_DIR = Path(__file__).parent.parent
 CLI = str(PROJECT_DIR / 'cli/main.py')
 

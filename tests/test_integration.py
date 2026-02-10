@@ -23,7 +23,7 @@ from core.parser import parse_doclean
 from core.compilers.openapi import compile_openapi
 from core.converter import doclean_to_openapi
 
-SPECS_DIR = Path(__file__).parent.parent / 'examples'
+SPECS_DIR = Path(__file__).parent.parent / 'examples' / 'verbose' / 'openapi'
 FIXTURES_DIR = Path(__file__).parent / 'fixtures'
 PROJECT_DIR = Path(__file__).parent.parent
 CLI = str(PROJECT_DIR / 'cli/main.py')

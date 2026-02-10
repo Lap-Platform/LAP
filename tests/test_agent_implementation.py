@@ -44,7 +44,7 @@ except ImportError:
     compile_protobuf = None
 
 
-SPECS_DIR = Path(__file__).parent.parent / 'examples'
+SPECS_DIR = Path(__file__).parent.parent / 'examples' / 'verbose'
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -56,7 +56,7 @@ class TestAgentOpenAPIUsage:
 
     def test_extract_endpoint_basics(self):
         """Agent can extract endpoint method, path, and description."""
-        spec_path = SPECS_DIR / 'stripe-charges.yaml'
+        spec_path = SPECS_DIR / 'openapi' / 'stripe-charges.yaml'
         if not spec_path.exists():
             pytest.skip(f"Spec not found: {spec_path}")
 
@@ -79,7 +79,7 @@ class TestAgentOpenAPIUsage:
 
     def test_extract_required_vs_optional_params(self):
         """Agent can distinguish required vs optional parameters."""
-        spec_path = SPECS_DIR / 'stripe-charges.yaml'
+        spec_path = SPECS_DIR / 'openapi' / 'stripe-charges.yaml'
         if not spec_path.exists():
             pytest.skip(f"Spec not found: {spec_path}")
 
@@ -112,7 +112,7 @@ class TestAgentOpenAPIUsage:
 
     def test_extract_parameter_types(self):
         """Agent can extract and understand parameter types."""
-        spec_path = SPECS_DIR / 'github-core.yaml'
+        spec_path = SPECS_DIR / 'openapi' / 'github-core.yaml'
         if not spec_path.exists():
             pytest.skip(f"Spec not found: {spec_path}")
 
@@ -137,7 +137,7 @@ class TestAgentOpenAPIUsage:
 
     def test_extract_enum_values(self):
         """Agent can extract enum constraint values."""
-        spec_path = SPECS_DIR / 'github-core.yaml'
+        spec_path = SPECS_DIR / 'openapi' / 'github-core.yaml'
         if not spec_path.exists():
             pytest.skip(f"Spec not found: {spec_path}")
 
@@ -164,7 +164,7 @@ class TestAgentOpenAPIUsage:
 
     def test_extract_response_schema(self):
         """Agent can extract response schemas and status codes."""
-        spec_path = SPECS_DIR / 'openai-core.yaml'
+        spec_path = SPECS_DIR / 'openapi' / 'openai-core.yaml'
         if not spec_path.exists():
             pytest.skip(f"Spec not found: {spec_path}")
 
@@ -188,7 +188,7 @@ class TestAgentOpenAPIUsage:
 
     def test_extract_nested_response_objects(self):
         """Agent can extract nested object structures from responses."""
-        spec_path = SPECS_DIR / 'stripe-charges.yaml'
+        spec_path = SPECS_DIR / 'openapi' / 'stripe-charges.yaml'
         if not spec_path.exists():
             pytest.skip(f"Spec not found: {spec_path}")
 
@@ -215,7 +215,7 @@ class TestAgentOpenAPIUsage:
 
     def test_extract_error_responses(self):
         """Agent can extract error response information."""
-        spec_path = SPECS_DIR / 'stripe-charges.yaml'
+        spec_path = SPECS_DIR / 'openapi' / 'stripe-charges.yaml'
         if not spec_path.exists():
             pytest.skip(f"Spec not found: {spec_path}")
 
@@ -237,7 +237,7 @@ class TestAgentOpenAPIUsage:
 
     def test_round_trip_information_preservation(self):
         """Verify original spec → DocLean → parse preserves key information."""
-        spec_path = SPECS_DIR / 'github-core.yaml'
+        spec_path = SPECS_DIR / 'openapi' / 'github-core.yaml'
         if not spec_path.exists():
             pytest.skip(f"Spec not found: {spec_path}")
 
@@ -543,7 +543,7 @@ class TestAgentCrossProtocol:
         protocols_tested = 0
 
         # OpenAPI
-        openapi_path = SPECS_DIR / 'github-core.yaml'
+        openapi_path = SPECS_DIR / 'openapi' / 'github-core.yaml'
         if openapi_path.exists():
             doclean = compile_openapi(str(openapi_path))
             parsed = parse_doclean(doclean.to_doclean())
@@ -594,7 +594,7 @@ class TestAgentCrossProtocol:
     def test_consistent_endpoint_structure(self):
         """All protocol types produce consistent endpoint structures."""
         test_files = [
-            (SPECS_DIR / 'openai-core.yaml', compile_openapi),
+            (SPECS_DIR / 'openapi' / 'openai-core.yaml', compile_openapi),
         ]
 
         if compile_graphql:
@@ -628,7 +628,7 @@ class TestAgentDecisionMaking:
 
     def test_agent_knows_required_params_for_call(self):
         """Agent can determine which parameters are required for a successful API call."""
-        spec_path = SPECS_DIR / 'stripe-charges.yaml'
+        spec_path = SPECS_DIR / 'openapi' / 'stripe-charges.yaml'
         if not spec_path.exists():
             pytest.skip(f"Spec not found: {spec_path}")
 
@@ -654,7 +654,7 @@ class TestAgentDecisionMaking:
 
     def test_agent_knows_valid_enum_values(self):
         """Agent knows which enum values are valid for a parameter."""
-        spec_path = SPECS_DIR / 'github-core.yaml'
+        spec_path = SPECS_DIR / 'openapi' / 'github-core.yaml'
         if not spec_path.exists():
             pytest.skip(f"Spec not found: {spec_path}")
 
@@ -679,7 +679,7 @@ class TestAgentDecisionMaking:
 
     def test_agent_knows_response_structure(self):
         """Agent knows what to expect in API response."""
-        spec_path = SPECS_DIR / 'openai-core.yaml'
+        spec_path = SPECS_DIR / 'openapi' / 'openai-core.yaml'
         if not spec_path.exists():
             pytest.skip(f"Spec not found: {spec_path}")
 
@@ -703,7 +703,7 @@ class TestAgentDecisionMaking:
 
     def test_agent_can_build_correct_api_call(self):
         """Agent has all info needed to construct a correct API call."""
-        spec_path = SPECS_DIR / 'stripe-charges.yaml'
+        spec_path = SPECS_DIR / 'openapi' / 'stripe-charges.yaml'
         if not spec_path.exists():
             pytest.skip(f"Spec not found: {spec_path}")
 

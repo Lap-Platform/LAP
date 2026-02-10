@@ -68,19 +68,19 @@ from core.compilers.postman import compile_postman
 formats = {}
 
 print("=== OpenAPI ===", flush=True)
-formats['OpenAPI'] = run_format('OpenAPI', compile_openapi, 'examples/*.yaml', skip={'jira.yaml'}, timeout_sec=300)
+formats['OpenAPI'] = run_format('OpenAPI', compile_openapi, 'examples/verbose/openapi/*.yaml', skip={'jira.yaml'}, timeout_sec=300)
 
 print("=== GraphQL ===", flush=True)
-formats['GraphQL'] = run_format('GraphQL', compile_graphql, 'examples/graphql/*.graphql')
+formats['GraphQL'] = run_format('GraphQL', compile_graphql, 'examples/verbose/graphql/*.graphql')
 
 print("=== AsyncAPI ===", flush=True)
-formats['AsyncAPI'] = run_format('AsyncAPI', compile_asyncapi, 'examples/asyncapi/*.yaml')
+formats['AsyncAPI'] = run_format('AsyncAPI', compile_asyncapi, 'examples/verbose/asyncapi/*.yaml')
 
 print("=== Protobuf ===", flush=True)
-formats['Protobuf'] = run_format('Protobuf', compile_protobuf, 'examples/protobuf/*.proto')
+formats['Protobuf'] = run_format('Protobuf', compile_protobuf, 'examples/verbose/protobuf/*.proto')
 
 print("=== Postman ===", flush=True)
-formats['Postman'] = run_format('Postman', compile_postman, 'examples/postman/*.json')
+formats['Postman'] = run_format('Postman', compile_postman, 'examples/verbose/postman/*.json')
 
 # Compute stats
 def compute_stats(results):
