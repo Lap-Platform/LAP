@@ -47,7 +47,7 @@ results = {}
 # OpenAPI
 print("=== OpenAPI ===")
 specs = []
-for f in sorted(glob.glob("examples/*.yaml")):
+for f in sorted(glob.glob("examples/verbose/openapi/*.yaml")):
     if "jira.yaml" in f:
         continue
     name = Path(f).stem
@@ -60,7 +60,7 @@ results["openapi"] = specs
 # GraphQL
 print("\n=== GraphQL ===")
 specs = []
-for f in sorted(glob.glob("examples/graphql/*.graphql")):
+for f in sorted(glob.glob("examples/verbose/graphql/*.graphql")):
     name = Path(f).stem
     raw = open(f).read()
     r = process_spec(name, raw, compile_graphql, f)
@@ -72,7 +72,7 @@ results["graphql"] = specs
 # AsyncAPI
 print("\n=== AsyncAPI ===")
 specs = []
-for f in sorted(glob.glob("examples/asyncapi/*.yaml")):
+for f in sorted(glob.glob("examples/verbose/asyncapi/*.yaml")):
     name = Path(f).stem
     raw = open(f).read()
     r = process_spec(name, raw, compile_asyncapi, f)
@@ -84,7 +84,7 @@ results["asyncapi"] = specs
 # Protobuf
 print("\n=== Protobuf ===")
 specs = []
-for f in sorted(glob.glob("examples/protobuf/*.proto")):
+for f in sorted(glob.glob("examples/verbose/protobuf/*.proto")):
     name = Path(f).stem
     raw = open(f).read()
     r = process_spec(name, raw, compile_protobuf, f)
@@ -96,7 +96,7 @@ results["protobuf"] = specs
 # Postman
 print("\n=== Postman ===")
 specs = []
-for f in sorted(glob.glob("examples/postman/*.json")):
+for f in sorted(glob.glob("examples/verbose/postman/*.json")):
     name = Path(f).stem
     raw = open(f).read()
     r = process_spec(name, raw, compile_postman, f)

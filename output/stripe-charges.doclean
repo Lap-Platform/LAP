@@ -1,11 +1,11 @@
-@doclean v0.2
+@doclean v0.3
 # Machine-readable API spec. Each @endpoint block is one API call.
 @api Stripe Charges API
 @base https://api.stripe.com
 @version 2024-12-18
 @auth Bearer bearer
 @endpoints 5
-@toc Create a charge, List all charges, Retrieve a charge, Update a charge, Capture a charge
+@toc charges(5)
 
 @endpoint POST /v1/charges
 @desc Create a charge
@@ -41,4 +41,3 @@
 @errors {400: Charge has already been captured or is not capturable.}
 
 @end
-

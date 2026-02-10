@@ -8,12 +8,12 @@ MCP tools expose.
 Example usage (with MCP SDK):
     >>> import asyncio
     >>> from integrations.mcp.lap_mcp_server import DocLeanMCPServer
-    >>> server = DocLeanMCPServer("examples/")
+    >>> server = DocLeanMCPServer("examples/doclean/openapi/")
     >>> asyncio.run(server.run())
 
 Standalone (without MCP SDK):
     >>> server = DocLeanMCPServer()
-    >>> server.load_spec("examples/github.doclean")
+    >>> server.load_spec("examples/doclean/openapi/petstore.doclean")
     >>> tools = server.list_tools()
     >>> print(tools[0])
     {'name': 'github_get_repos_owner_repo', 'description': '...', 'inputSchema': {...}}

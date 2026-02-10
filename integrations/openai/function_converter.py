@@ -8,7 +8,7 @@ Example usage:
     >>> from integrations.openai.function_converter import doclean_to_functions
     >>> from src.parser import parse_doclean
     >>>
-    >>> spec = parse_doclean(open("examples/github.doclean").read())
+    >>> spec = parse_doclean(open("examples/doclean/openapi/petstore.doclean").read())
     >>> functions = doclean_to_functions(spec)
     >>> print(functions[0])
     {

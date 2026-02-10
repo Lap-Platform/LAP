@@ -8,7 +8,7 @@ Example usage:
     >>> from crewai import Agent, Task, Crew
     >>> from integrations.crewai.lap_tool import DocLeanLookup
     >>>
-    >>> tool = DocLeanLookup(specs_dir="examples/")
+    >>> tool = DocLeanLookup(specs_dir="examples/doclean/openapi/")
     >>> agent = Agent(
     ...     role="API Developer",
     ...     tools=[tool],
@@ -16,7 +16,7 @@ Example usage:
     ... )
 
 Without CrewAI installed (standalone):
-    >>> tool = DocLeanLookup(specs_dir="examples/")
+    >>> tool = DocLeanLookup(specs_dir="examples/doclean/openapi/")
     >>> result = tool._run("github", endpoint="repos")
     >>> print(result)
 """

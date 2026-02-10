@@ -1,4 +1,0 @@
-@toollean v0.1
-@tool camsnap
-@desc Capture frames or clips from RTSP/ONVIF cameras.
-@source /app/skills/camsnap/SKILL.md

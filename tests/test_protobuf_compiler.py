@@ -9,7 +9,7 @@ import pytest
 
 from core.compilers.protobuf import parse_proto, compile_proto, compile_proto_dir, ProtoFile
 
-SPECS_DIR = Path(__file__).resolve().parent.parent / "examples" / "protobuf"
+SPECS_DIR = Path(__file__).resolve().parent.parent / "examples" / "verbose" / "protobuf"
 
 
 # ── Parser Tests ─────────────────────────────────────────────────────

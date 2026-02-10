@@ -6,7 +6,7 @@ enabling RAG pipelines over API documentation with massive token savings.
 
 Example usage:
     >>> from integrations.langchain.lap_loader import DocLeanLoader
-    >>> loader = DocLeanLoader("examples/github.doclean")
+    >>> loader = DocLeanLoader("examples/doclean/openapi/petstore.doclean")
     >>> docs = loader.load()
     >>> print(docs[0].page_content)
     '@endpoint GET /repos/{owner}/{repo}\\n@desc Get a repository...'
@@ -14,7 +14,7 @@ Example usage:
     {'api': 'GitHub', 'method': 'GET', 'path': '/repos/{owner}/{repo}', 'params_count': 3}
 
     # Retriever usage:
-    >>> retriever = DocLeanRetriever("examples/github.doclean")
+    >>> retriever = DocLeanRetriever("examples/doclean/openapi/petstore.doclean")
     >>> results = retriever.get_relevant_documents("list repositories")
 """
 
@@ -125,7 +125,7 @@ class DocLeanRetriever:
     For production use, wrap with a proper vector store retriever.
 
     Example:
-        >>> retriever = DocLeanRetriever("examples/github.doclean")
+        >>> retriever = DocLeanRetriever("examples/doclean/openapi/petstore.doclean")
         >>> docs = retriever.get_relevant_documents("create issue")
         >>> print(docs[0].metadata['path'])
         '/repos/{owner}/{repo}/issues'

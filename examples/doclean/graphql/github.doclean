@@ -1,0 +1,29 @@
+@doclean v0.1
+@api Github
+@base /graphql
+
+input CreateIssueInput{repositoryId:id!,title:str!,body:str,labelIds:[id!]}
+type Issue:Node{id:id!,number:int!,title:str!,body:str,state:IssueState!,author:User!,labels:[Label!]!,createdAt:str!,updatedAt:str!}
+type IssueConnection{nodes:[Issue!]!,pageInfo:PageInfo!,totalCount:int!}
+enum IssueState=OPEN|CLOSED
+type Label{name:str!,color:str!}
+iface Node{id:id!}
+type PageInfo{hasNextPage:bool!,endCursor:str}
+type PullRequest:Node{id:id!,number:int!,title:str!,body:str,state:PullRequestState!,author:User!,mergeable:bool,additions:int!,deletions:int!}
+type PullRequestConnection{nodes:[PullRequest!]!,pageInfo:PageInfo!,totalCount:int!}
+enum PullRequestState=OPEN|CLOSED|MERGED
+type Repository:Node{id:id!,name:str!,fullName:str!,description:str,owner:User!,isPrivate:bool!,stargazerCount:int!,forkCount:int!,issues(first:int,after:str,states:[IssueState!]):IssueConnection!,pullRequests(first:int,after:str,states:[PullRequestState!]):PullRequestConnection!}
+type RepositoryConnection{nodes:[Repository!]!,pageInfo:PageInfo!,totalCount:int!}
+input UpdateIssueInput{id:id!,title:str,body:str,state:IssueState}
+type User:Node{id:id!,login:str!,name:str,email:str,bio:str,avatarUrl:str,repositories(first:int,after:str):RepositoryConnection!}
+
+Q user(login:str!)->User # Look up a user by login
+Q repository(owner:str!,name:str!)->Repository # Look up a repository by owner and name
+Q searchRepositories(query:str!,first:int=10,after:str)->RepositoryConnection! # Search repositories
+Q viewer->User! # Get the currently authenticated user
+M createIssue(input:CreateIssueInput!)->Issue! # Create a new issue
+M updateIssue(input:UpdateIssueInput!)->Issue! # Update an existing issue
+M addStar(repositoryId:id!)->Repository! # Star a repository
+M removeStar(repositoryId:id!)->Repository! # Remove star from a repository
+S issueCreated(repositoryId:id!)->Issue! # Watch for new issues on a repository
+S pullRequestUpdated(repositoryId:id!)->PullRequest! # Watch for pull request updates

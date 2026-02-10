@@ -10,7 +10,7 @@ import pytest
 from core.compilers.asyncapi import compile_asyncapi, resolve_ref, extract_type, _detect_version
 
 
-SPECS_DIR = Path(__file__).parent.parent / "examples" / "asyncapi"
+SPECS_DIR = Path(__file__).parent.parent / "examples" / "verbose" / "asyncapi"
 
 
 # ── Helpers ──────────────────────────────────────────────────────────

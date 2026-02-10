@@ -1,0 +1,29 @@
+@doclean v0.3
+# Machine-readable API spec. Each @endpoint block is one API call.
+@api Streetlights MQTT API
+@version 1.0.0
+@auth mqtt
+@endpoints 4
+@toc smartylighting(4)
+
+@endpoint SUB smartylighting/streetlights/1/0/event/{streetlightId}/lighting/measured
+@desc Inform about environmental lighting conditions of a particular streetlight.
+@optional {lumens: int # Light intensity measured in lumens., sentAt: str(date-time) # Date and time when the message was sent.}
+@returns(SUB) {lumens: int, sentAt: str(date-time)} # message payload
+
+@endpoint PUB smartylighting/streetlights/1/0/action/{streetlightId}/turn/on
+@desc Command a particular streetlight to turn the lights on or off.
+@optional {command: str(on/off) # Whether to turn on or off the light., sentAt: str(date-time) # Date and time when the message was sent.}
+@returns(PUB) {command: str, sentAt: str(date-time)} # message payload
+
+@endpoint PUB smartylighting/streetlights/1/0/action/{streetlightId}/turn/off
+@desc Command a particular streetlight to turn the lights on or off.
+@optional {command: str(on/off) # Whether to turn on or off the light., sentAt: str(date-time) # Date and time when the message was sent.}
+@returns(PUB) {command: str, sentAt: str(date-time)} # message payload
+
+@endpoint PUB smartylighting/streetlights/1/0/action/{streetlightId}/dim
+@desc Command a particular streetlight to dim the lights.
+@optional {percentage: int # Percentage to which the light should be dimmed to., sentAt: str(date-time) # Date and time when the message was sent.}
+@returns(PUB) {percentage: int, sentAt: str(date-time)} # message payload
+
+@end
