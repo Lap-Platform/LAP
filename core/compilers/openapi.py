@@ -310,7 +310,14 @@ def compile_openapi(spec_path: str) -> LAPSpec:
     raw = path.read_text()
 
     if path.suffix in (".yaml", ".yml"):
-        spec = yaml.safe_load(raw)
+        # Use a custom loader that handles non-standard YAML tags gracefully
+        class _SafeLoaderIgnoreUnknown(yaml.SafeLoader):
+            pass
+        _SafeLoaderIgnoreUnknown.add_constructor(None, lambda loader, node: loader.construct_mapping(node) if isinstance(node, yaml.MappingNode) else loader.construct_sequence(node) if isinstance(node, yaml.SequenceNode) else loader.construct_scalar(node))
+        try:
+            spec = yaml.load(raw, Loader=_SafeLoaderIgnoreUnknown)
+        except yaml.YAMLError:
+            spec = yaml.safe_load(raw)
     else:
         spec = json.loads(raw)
 
