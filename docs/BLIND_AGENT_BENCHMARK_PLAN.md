@@ -2,6 +2,30 @@
 
 > Goal: Prove that agents perform **equally well or better** with LAP-compiled specs vs raw OpenAPI, across multiple models and APIs.
 
+## Baseline Comparison: LAP vs Simple Alternatives
+
+Before running the blind test, we established that LAP isn't just beating raw YAML — it beats every simple minification approach:
+
+| API | Raw YAML | JSON Minified | YAML No-Desc | LAP Lean | LAP vs JSON | LAP vs No-Desc |
+|-----|----------|--------------|-------------|----------|------------|---------------|
+| petstore | 4,656 | 3,923 | 2,936 | 1,216 | **3.2x** | **2.4x** |
+| github-core | 2,190 | 1,870 | 1,352 | 530 | **3.5x** | **2.6x** |
+| snyk | 201,205 | 187,505 | 35,399 | 5,192 | **36.1x** | **6.8x** |
+| notion | 68,587 | 64,302 | 10,170 | 1,732 | **37.1x** | **5.9x** |
+| hetzner | 167,308 | 142,811 | 56,485 | 14,241 | **10.0x** | **4.0x** |
+| discord | 909 | 789 | 642 | 307 | **2.6x** | **2.1x** |
+| slack | 762 | 655 | 564 | 315 | **2.1x** | **1.8x** |
+| vonage | 1,889 | 1,638 | 1,199 | 411 | **4.0x** | **2.9x** |
+| circleci | 5,725 | 4,934 | 4,142 | 1,463 | **3.4x** | **2.8x** |
+| resend | 21,890 | 18,951 | 11,403 | 3,775 | **5.0x** | **3.0x** |
+
+**Key takeaway:** Even against the best simple alternative (YAML with descriptions stripped), LAP Lean is still **1.8-6.8x better**. The compression comes from structural transformation, not just stripping text.
+
+Baselines tested:
+- **JSON Minified**: `json.dumps(spec, separators=(',',':'))` — no whitespace
+- **YAML No-Desc**: Strip all `description`, `summary`, `example` fields, then compact YAML
+- **LAP Lean**: Full DocLean compilation with description stripping
+
 ## Why This Matters
 
 Token compression means nothing if agents produce worse results. This benchmark answers the question: **"Does DocLean actually work in practice?"**
@@ -9,11 +33,13 @@ Token compression means nothing if agents produce worse results. This benchmark 
 ## Test Design
 
 ### Variables
-- **Input format**: Raw OpenAPI YAML vs LAP Standard vs LAP Lean
+- **Input format**: Raw YAML/JSON vs JSON Minified vs YAML No-Desc vs LAP Standard vs LAP Lean
 - **Model**: Claude Sonnet 4, GPT-4o, Gemini 2.0 Flash (minimum 3 models)
 - **API**: 5 real-world APIs of varying complexity
 
 ### APIs to Test
+
+#### OpenAPI / REST (7 APIs)
 
 | API | Complexity | Why |
 |-----|-----------|-----|
@@ -22,6 +48,16 @@ Token compression means nothing if agents produce worse results. This benchmark 
 | Plaid (Transactions) | Medium-High | Financial API, strict params, auth complexity |
 | Hetzner (Servers) | High | Infrastructure API, nested objects, multi-step workflows |
 | Notion (Pages+Databases) | High | Complex nested schemas, unusual patterns |
+| Snyk (Projects) | High | Highest compression ratio — stress test for lean mode |
+| Twilio (SMS) | Simple | Short spec, tests whether LAP helps on small APIs too |
+
+#### Non-OpenAPI Formats (3 APIs)
+
+| API | Format | Why |
+|-----|--------|-----|
+| GitHub GraphQL | GraphQL | Test where LAP compression is weakest (1.3x) |
+| Stripe Webhooks | AsyncAPI | Event-driven pattern, different from REST |
+| gRPC Health Check | Protobuf | Compact source format, tests format unification value |
 
 ### Tasks Per API (3 tasks each = 15 total)
 
@@ -144,13 +180,13 @@ Produce:
 ## Timeline
 
 - Day 1: Prepare all spec files and task prompts
-- Day 2: Run all 135 tests (5 APIs × 3 tasks × 3 formats × 3 models)
+- Day 2: Run all tests (10 APIs × 3 tasks × 5 formats × 3 models = 450 tests)
 - Day 3: Score and analyze results
 - Day 4: Write report
 
 ## Cost Estimate
 
-~135 API calls across 3 models
+~450 API calls across 3 models
 - Average ~5K input tokens (raw), ~2K (LAP) per call
 - Average ~1K output tokens per call
-- Estimated total: ~$15-25 in API costs
+- Estimated total: ~$50-80 in API costs
