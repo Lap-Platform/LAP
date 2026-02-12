@@ -77,6 +77,13 @@ def detect_format(spec_path: str) -> str:
                 if isinstance(schema, str) and "postman" in schema.lower():
                     return "postman"
 
+        # GraphQL introspection JSON
+        if "__schema" in data:
+            return "graphql"
+        inner = data.get("data")
+        if isinstance(inner, dict) and "__schema" in inner:
+            return "graphql"
+
         raise ValueError(
             f"Cannot detect format of '{spec_path}'. "
             "Use -f FORMAT (openapi, graphql, asyncapi, protobuf, postman)."
