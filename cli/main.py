@@ -83,7 +83,7 @@ def cmd_compile(args):
 
     if args.output:
         Path(args.output).parent.mkdir(parents=True, exist_ok=True)
-        Path(args.output).write_text(result)
+        Path(args.output).write_text(result, encoding='utf-8')
         info(f"Compiled {Path(spec_path).name} -> {args.output}")
         info(f"{label} | {len(result):,} chars | {'lean' if args.lean else 'standard'} mode")
     else:
@@ -297,6 +297,133 @@ def cmd_convert(args):
         print(result)
 
 
+def cmd_login(args):
+    """Authenticate with the LAP registry via GitHub OAuth."""
+    from cli.auth import (
+        api_request, save_credentials, load_credentials,
+        poll_sse_stream, get_registry_url,
+    )
+    import webbrowser
+
+    creds = load_credentials()
+    if creds:
+        info(f"Already logged in as {creds['username']}. Run 'lap logout' first to switch accounts.")
+        return
+
+    print(f"Authenticating with {get_registry_url()}...")
+
+    # Create CLI session (pass optional token name)
+    body = {}
+    if getattr(args, "token_name", None):
+        body["name"] = args.token_name
+    result = api_request("POST", "/auth/cli/session", body=body if body else None)
+    session_id = result["session_id"]
+    auth_url = result["auth_url"]
+
+    # Open browser
+    print(f"Opening browser for GitHub authorization...")
+    webbrowser.open(auth_url)
+    print("Waiting for authentication (press Ctrl+C to cancel)...")
+
+    # Poll SSE stream
+    token, username = poll_sse_stream(session_id)
+    save_credentials(token, username)
+    info(f"Logged in as {username}")
+
+
+def cmd_logout(args):
+    """Log out and revoke the current API token."""
+    from cli.auth import get_token, clear_credentials, api_request
+
+    token = get_token()
+    if not token:
+        info("Not logged in.")
+        return
+
+    # Revoke token on server
+    try:
+        api_request("DELETE", "/auth/cli/token", token=token)
+    except SystemExit:
+        pass  # Server error is OK -- still clear local creds
+
+    clear_credentials()
+    info("Logged out.")
+
+
+def cmd_whoami(args):
+    """Show the currently authenticated user."""
+    from cli.auth import get_token, api_request
+
+    token = get_token()
+    if not token:
+        print("Not logged in. Run 'lap login' to authenticate.")
+        return
+
+    result = api_request("GET", "/auth/me", token=token)
+    user = result.get("user", {})
+    info(f"Logged in as {user.get('username', 'unknown')}")
+
+
+def cmd_publish(args):
+    """Compile and publish a spec to the registry."""
+    from cli.auth import get_token, api_request
+    from core.compilers import compile as compile_spec
+
+    token = get_token()
+    if not token:
+        error("Not logged in. Run 'lap login' first.")
+
+    spec_path = args.spec
+    if not Path(spec_path).exists():
+        error(f"File not found: {spec_path}")
+
+    # Determine spec name
+    name = args.name
+    if not name:
+        # Try to extract from spec
+        try:
+            result_obj = compile_spec(spec_path)
+            if isinstance(result_obj, list):
+                error("Protobuf directories produce multiple specs. Use --name to specify which to publish.")
+            name = result_obj.api_name.lower().replace(" ", "-").replace("_", "-")
+            # Strip non-alphanumeric except hyphens
+            name = "".join(c for c in name if c.isalnum() or c == "-").strip("-")
+        except Exception as e:
+            error(f"Could not auto-detect spec name: {e}. Use --name to specify.")
+
+    if not name:
+        error("Could not determine spec name. Use --name to specify.")
+
+    # Compile spec
+    print(f"Compiling {Path(spec_path).name}...")
+    try:
+        result_obj = compile_spec(spec_path)
+    except ValueError as e:
+        error(str(e))
+
+    if isinstance(result_obj, list):
+        error("Protobuf directories produce multiple specs. Publish each individually.")
+
+    spec_text = result_obj.to_lap(lean=False)
+    lean_text = result_obj.to_lap(lean=True)
+
+    source_url = args.source_url or ""
+    source_size = Path(spec_path).stat().st_size
+
+    body = {
+        "spec": spec_text,
+        "lean_spec": lean_text,
+        "provider": args.provider,
+        "source_url": source_url,
+        "source_size": source_size,
+    }
+
+    from urllib.parse import quote
+    print(f"Publishing {name} to provider {args.provider}...")
+    result = api_request("POST", f"/v1/apis/{quote(name, safe='')}", body=body, token=token)
+    info(f"Published {name} v{result.get('version', '?')} (provider: {result.get('provider', args.provider)})")
+
+
 def cmd_diff(args):
     """Diff two LAP files."""
     from core.parser import parse_lap
@@ -362,7 +489,7 @@ def main():
     p.add_argument("spec", help="Path to API spec file or directory")
     p.add_argument("-o", "--output", help="Output file path")
     p.add_argument("-f", "--format",
-                   choices=["openapi", "graphql", "asyncapi", "protobuf", "postman"],
+                   choices=["openapi", "graphql", "asyncapi", "protobuf", "postman", "smithy"],
                    help="Force spec format (auto-detected if omitted)")
     p.add_argument("--lean", action="store_true", help="Maximum compression (strip descriptions)")
 
@@ -396,6 +523,23 @@ def main():
     p.add_argument("--format", choices=["summary", "changelog"], default="summary", help="Output format")
     p.add_argument("--version", help="Version label for changelog")
 
+    # login
+    p = sub.add_parser("login", help="Authenticate with the LAP registry via GitHub")
+    p.add_argument("--name", dest="token_name", help="Token name for identification (e.g. ci-github-actions)")
+
+    # logout
+    p = sub.add_parser("logout", help="Log out and revoke API token")
+
+    # whoami
+    p = sub.add_parser("whoami", help="Show current authenticated user")
+
+    # publish
+    p = sub.add_parser("publish", help="Compile and publish a spec to the registry")
+    p.add_argument("spec", help="Path to API spec file")
+    p.add_argument("--provider", required=True, help="Provider slug (e.g. stripe)")
+    p.add_argument("--name", help="Override spec name (auto-detected if omitted)")
+    p.add_argument("--source-url", help="Upstream spec URL")
+
     args = parser.parse_args()
 
     commands = {
@@ -406,6 +550,10 @@ def main():
         "inspect": cmd_inspect,
         "convert": cmd_convert,
         "diff": cmd_diff,
+        "login": cmd_login,
+        "logout": cmd_logout,
+        "whoami": cmd_whoami,
+        "publish": cmd_publish,
     }
 
     commands[args.command](args)

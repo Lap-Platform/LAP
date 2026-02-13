@@ -1,0 +1,45 @@
+@lap v0.3
+# Machine-readable API spec. Each @endpoint block is one API call.
+@api Weather
+@version 2006-03-01
+@auth AWS SigV4
+@endpoints 4
+@toc cities(1), current-time(1), forecast(1), reports(1)
+
+@group cities
+@endpoint GET /cities/{cityId}
+@desc Gets city information by ID
+@required {cityId: str # City identifier}
+@returns(200) {name: str, coordinates: CityCoordinates{latitude: num(f32), longitude: num(f32)}}
+@errors {404:NoSuchResource: Resource not found}
+
+@endgroup
+
+@group current-time
+@endpoint GET /current-time
+@desc Gets current time
+@returns(200) {time: str(timestamp)}
+
+@endgroup
+
+@group forecast
+@endpoint GET /forecast
+@desc Gets weather forecast
+@required {city: str # City ID to get forecast for}
+@optional {days: int # Number of days (optional, defaults to 7), units: enum(celsius/fahrenheit)}
+@returns(200) {forecasts: [Forecast]}
+@errors {404:NoSuchResource: Resource not found}
+
+@endgroup
+
+@group reports
+@endpoint POST /reports
+@desc Creates a new weather report
+@required {cityId: str # City to report on, temperature: num(f32), conditions: str}
+@optional {reportedBy: str}
+@returns(201) {reportId: str, status: str}
+@errors {400:InvalidInput: Invalid input provided}
+
+@endgroup
+
+@end
