@@ -4,7 +4,7 @@ build-backend = "setuptools.backends._legacy:_Backend"
 
 [project]
 name = "lap-protocol"
-version = "0.1.0"
+version = "0.2.0"
 description = "LeanAgent Protocol — Typed API contracts for AI agents"
 requires-python = ">=3.10"
 dependencies = ["pyyaml>=6.0", "tiktoken>=0.5.0"]
