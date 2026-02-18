@@ -19,13 +19,13 @@ import json
 import sys
 from pathlib import Path
 
-from core.formats.lap_tools import LAPToolSpec, LAPToolBundle
-from core.compilers.lap_tools import (
+from lap.core.formats.lap_tools import LAPToolSpec, LAPToolBundle
+from lap.core.compilers.lap_tools import (
     compile_mcp_file, compile_mcp_tool, compile_mcp_manifest,
     compile_skill_file, compile_skill_md,
     compile_generic_file, compile_generic_json,
 )
-from core.compilers.lap_tools_parser import parse_lap_tools, parse_single_tool
+from lap.core.compilers.lap_tools_parser import parse_lap_tools, parse_single_tool
 
 
 def cmd_compile_mcp(args):
@@ -47,7 +47,7 @@ def cmd_compile_json(args):
 
 
 def cmd_parse(args):
-    text = Path(args.input).read_text()
+    text = Path(args.input).read_text(encoding='utf-8')
     bundle = parse_lap_tools(text)
     for tool in bundle.tools:
         print(f"Tool: {tool.name}")
@@ -65,7 +65,7 @@ def cmd_parse(args):
 
 
 def cmd_stats(args):
-    text = Path(args.input).read_text()
+    text = Path(args.input).read_text(encoding='utf-8')
     bundle = parse_lap_tools(text)
     original_size = Path(args.input).stat().st_size
     print(f"File: {args.input}")

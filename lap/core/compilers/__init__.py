@@ -119,29 +119,29 @@ def compile(spec_path: str, format: str = None):
         format = detect_format(spec_path)
 
     if format == "openapi":
-        from core.compilers.openapi import compile_openapi
+        from lap.core.compilers.openapi import compile_openapi
         return compile_openapi(spec_path)
 
     if format == "graphql":
-        from core.compilers.graphql import compile_graphql
+        from lap.core.compilers.graphql import compile_graphql
         return compile_graphql(spec_path)
 
     if format == "asyncapi":
-        from core.compilers.asyncapi import compile_asyncapi
+        from lap.core.compilers.asyncapi import compile_asyncapi
         return compile_asyncapi(spec_path)
 
     if format == "protobuf":
-        from core.compilers.protobuf import compile_proto, compile_proto_dir
+        from lap.core.compilers.protobuf import compile_proto, compile_proto_dir
         if Path(spec_path).is_dir():
             return compile_proto_dir(spec_path)
         return compile_proto(spec_path)
 
     if format == "postman":
-        from core.compilers.postman import compile_postman
+        from lap.core.compilers.postman import compile_postman
         return compile_postman(spec_path)
 
     if format == "smithy":
-        from core.compilers.smithy import compile_smithy
+        from lap.core.compilers.smithy import compile_smithy
         return compile_smithy(spec_path)
 
     raise ValueError(f"Unknown format: {format}")

@@ -32,7 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Maintains backward compatibility with all existing formats
 - Compression ratio: ~2.3x (standard), ~2.9x (lean) for Smithy specs
 
-## [0.1.0] - 2025-XX-XX
+## [0.1.0] - 2025-01-15
 
 ### Added
 - Initial release of LAP (Lean Agent Protocol)

@@ -8,14 +8,14 @@ import json
 import pytest
 from pathlib import Path
 
-from core.formats.lap_tools import (
+from lap.core.formats.lap_tools import (
     ToolParam, ToolOutput, ToolExample, LAPToolSpec, LAPToolBundle, LAP_TOOL_VERSION,
 )
-from core.compilers.lap_tools import (
+from lap.core.compilers.lap_tools import (
     compile_mcp_tool, compile_mcp_manifest, compile_skill_md,
     compile_generic_json, _map_type,
 )
-from core.compilers.lap_tools_parser import (
+from lap.core.compilers.lap_tools_parser import (
     parse_lap_tools, parse_single_tool, _parse_param_line, _parse_output_line, ParseError,
 )
 

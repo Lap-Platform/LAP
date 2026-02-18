@@ -13,11 +13,11 @@ enc = tiktoken.get_encoding("o200k_base")
 def count_tokens(text):
     return len(enc.encode(text))
 
-from core.compilers.openapi import compile_openapi
-from core.compilers.graphql import compile_graphql
-from core.compilers.asyncapi import compile_asyncapi
-from core.compilers.protobuf import compile_protobuf
-from core.compilers.postman import compile_postman
+from lap.core.compilers.openapi import compile_openapi
+from lap.core.compilers.graphql import compile_graphql
+from lap.core.compilers.asyncapi import compile_asyncapi
+from lap.core.compilers.protobuf import compile_protobuf
+from lap.core.compilers.postman import compile_postman
 
 def process_spec(name, raw_text, compile_fn, filepath):
     try:

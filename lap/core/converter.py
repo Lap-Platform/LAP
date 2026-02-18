@@ -12,8 +12,8 @@ from pathlib import Path
 
 import yaml
 
-from core.parser import parse_lap
-from core.formats.lap import LAPSpec, Endpoint, Param, ResponseField
+from lap.core.parser import parse_lap
+from lap.core.formats.lap import LAPSpec, Endpoint, Param, ResponseField
 
 
 def _type_to_openapi(type_str: str) -> dict:
@@ -238,7 +238,7 @@ def convert_file(input_path: str, output_path: str = None) -> str:
     file_size = Path(input_path).stat().st_size
     if file_size > 10 * 1024 * 1024:
         raise ValueError(f"LAP file too large: {file_size} bytes (max 10MB)")
-    text = Path(input_path).read_text()
+    text = Path(input_path).read_text(encoding='utf-8')
     spec = parse_lap(text)
     openapi = lap_to_openapi(spec)
     result = yaml.dump(openapi, sort_keys=False, default_flow_style=False)

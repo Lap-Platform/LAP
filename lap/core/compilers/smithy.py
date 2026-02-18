@@ -23,7 +23,7 @@ import shutil
 from pathlib import Path
 from typing import Optional, Any
 
-from core.formats.lap import (
+from lap.core.formats.lap import (
     LAPSpec,
     Endpoint,
     Param,
@@ -31,7 +31,7 @@ from core.formats.lap import (
     ResponseField,
     ErrorSchema,
 )
-from core.utils import read_file_safe
+from lap.core.utils import read_file_safe
 
 
 # Smithy scalar types → LAP types

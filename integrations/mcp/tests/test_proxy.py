@@ -26,8 +26,8 @@ from integrations.mcp.lap_mcp_proxy import (
     measure_fidelity,
     _reverse_type,
 )
-from core.compilers.lap_tools import compile_mcp_manifest, compile_mcp_tool
-from core.formats.lap_tools import LAPToolSpec, LAPToolBundle, ToolParam
+from lap.core.compilers.lap_tools import compile_mcp_manifest, compile_mcp_tool
+from lap.core.formats.lap_tools import LAPToolSpec, LAPToolBundle, ToolParam
 
 FIXTURES = Path(__file__).resolve().parent.parent / "test_fixtures"
 FIXTURE_FILES = sorted(FIXTURES.glob("*.json"))

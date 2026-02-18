@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 
-from core.compilers.protobuf import parse_proto, compile_proto, compile_proto_dir, ProtoFile
+from lap.core.compilers.protobuf import parse_proto, compile_proto, compile_proto_dir, ProtoFile
 
 SPECS_DIR = Path(__file__).resolve().parent.parent / "examples" / "verbose" / "protobuf"
 
@@ -365,7 +365,7 @@ class TestTokenBenchmark:
     def test_compression_ratio(self):
         """LAP should be more compact than raw proto for all specs."""
         for proto_file in SPECS_DIR.glob("*.proto"):
-            raw = proto_file.read_text()
+            raw = proto_file.read_text(encoding='utf-8')
             spec = compile_proto(str(proto_file))
             lap = spec.to_lap(lean=True)
 
@@ -391,7 +391,7 @@ class TestTokenBenchmark:
         total_dl = 0
         total_lean = 0
         for proto_file in sorted(SPECS_DIR.glob("*.proto")):
-            raw = proto_file.read_text()
+            raw = proto_file.read_text(encoding='utf-8')
             spec = compile_proto(str(proto_file))
             dl = spec.to_lap(lean=False)
             lean = spec.to_lap(lean=True)
@@ -417,7 +417,7 @@ class TestCLI:
     def test_cli_protobuf_subcommand(self, tmp_path):
         """CLI protobuf subcommand works."""
         import subprocess
-        cli_path = Path(__file__).resolve().parent.parent / "cli" / "main.py"
+        cli_path = Path(__file__).resolve().parent.parent / "lap" / "cli" / "main.py"
         proto_path = SPECS_DIR / "health.proto"
         out = tmp_path / "health.lap"
 
@@ -427,14 +427,14 @@ class TestCLI:
         )
         assert result.returncode == 0, result.stderr
         assert out.exists()
-        content = out.read_text()
+        content = out.read_text(encoding='utf-8')
         assert "@lap" in content
         assert "Health/Check" in content
 
     def test_cli_protobuf_directory(self, tmp_path):
         """CLI protobuf subcommand works with directory."""
         import subprocess
-        cli_path = Path(__file__).resolve().parent.parent / "cli" / "main.py"
+        cli_path = Path(__file__).resolve().parent.parent / "lap" / "cli" / "main.py"
         out = tmp_path / "all.lap"
 
         result = subprocess.run(
@@ -443,13 +443,13 @@ class TestCLI:
         )
         assert result.returncode == 0, result.stderr
         assert out.exists()
-        content = out.read_text()
+        content = out.read_text(encoding='utf-8')
         assert content.count("@lap") >= 5
 
     def test_cli_protobuf_lean(self, tmp_path):
         """CLI protobuf --lean flag works."""
         import subprocess
-        cli_path = Path(__file__).resolve().parent.parent / "cli" / "main.py"
+        cli_path = Path(__file__).resolve().parent.parent / "lap" / "cli" / "main.py"
         proto_path = SPECS_DIR / "user.proto"
         out_std = tmp_path / "std.lap"
         out_lean = tmp_path / "lean.lap"

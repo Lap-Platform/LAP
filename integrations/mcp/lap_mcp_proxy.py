@@ -15,8 +15,8 @@ from typing import Optional
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from core.compilers.lap_tools import compile_mcp_manifest, compile_mcp_tool
-from core.formats.lap_tools import LAPToolSpec, LAPToolBundle
+from lap.core.compilers.lap_tools import compile_mcp_manifest, compile_mcp_tool
+from lap.core.formats.lap_tools import LAPToolSpec, LAPToolBundle
 
 # ── Type reverse mapping ────────────────────────────────────────────
 

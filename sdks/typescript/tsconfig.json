@@ -10,8 +10,7 @@
     "declaration": true,
     "sourceMap": true,
     "resolveJsonModule": true,
-    "skipLibCheck": true,
-    "typeRoots": ["/tmp/node_modules/@types"]
+    "skipLibCheck": true
   },
   "include": ["src/**/*", "tests/**/*"]
 }

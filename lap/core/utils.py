@@ -57,4 +57,4 @@ def read_file_safe(path: str, max_size: int = 50 * 1024 * 1024) -> Optional[str]
     if p.stat().st_size > max_size:
         warnings.warn(f"File too large ({p.stat().st_size} bytes, max {max_size}): {path}")
         return None
-    return p.read_text()
+    return p.read_text(encoding='utf-8')

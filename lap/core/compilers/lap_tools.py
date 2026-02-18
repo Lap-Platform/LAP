@@ -13,7 +13,7 @@ import re
 from pathlib import Path
 from typing import Optional
 
-from core.formats.lap_tools import LAPToolSpec, LAPToolBundle, ToolParam, ToolOutput, ToolExample
+from lap.core.formats.lap_tools import LAPToolSpec, LAPToolBundle, ToolParam, ToolOutput, ToolExample
 
 
 # ── Type Mapping ────────────────────────────────────────────────────
@@ -82,7 +82,7 @@ def compile_mcp_manifest(manifest: dict) -> LAPToolBundle:
 
 def compile_mcp_file(path: str) -> LAPToolBundle:
     """Compile an MCP manifest JSON file."""
-    data = json.loads(Path(path).read_text())
+    data = json.loads(Path(path).read_text(encoding='utf-8'))
     if isinstance(data, list):
         # Raw list of tools
         tools = [compile_mcp_tool(t) for t in data]
@@ -222,7 +222,7 @@ def compile_skill_md(text: str, source: str = "") -> LAPToolSpec:
 
 def compile_skill_file(path: str) -> LAPToolSpec:
     """Compile an OpenClaw SKILL.md file from disk."""
-    text = Path(path).read_text()
+    text = Path(path).read_text(encoding='utf-8')
     return compile_skill_md(text, source=path)
 
 
@@ -307,5 +307,5 @@ def compile_generic_json(tool: dict) -> LAPToolSpec:
 
 def compile_generic_file(path: str) -> LAPToolSpec:
     """Compile a generic JSON tool definition file."""
-    data = json.loads(Path(path).read_text())
+    data = json.loads(Path(path).read_text(encoding='utf-8'))
     return compile_generic_json(data)

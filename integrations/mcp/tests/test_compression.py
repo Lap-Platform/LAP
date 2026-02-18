@@ -15,7 +15,7 @@ from typing import Dict, List, Any
 project_root = Path(__file__).resolve().parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from core.compilers.lap_tools import compile_mcp_tool, compile_mcp_manifest
+from lap.core.compilers.lap_tools import compile_mcp_tool, compile_mcp_manifest
 from integrations.mcp.compress import (
     compress_mcp_tool,
     compress_mcp_manifest,

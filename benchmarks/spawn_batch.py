@@ -17,7 +17,7 @@ elif "--prompt" in sys.argv:
     name = sys.argv[idx]
     path = prompts_dir / f"{name}.txt"
     if path.exists():
-        print(path.read_text())
+        print(path.read_text(encoding='utf-8'))
     else:
         print(f"Not found: {path}", file=sys.stderr)
         sys.exit(1)

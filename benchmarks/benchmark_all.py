@@ -17,8 +17,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from core.compilers.openapi import compile_openapi
-from core.utils import count_tokens
+from lap.core.compilers.openapi import compile_openapi
+from lap.core.utils import count_tokens
 
 # ── Multi-format compiler registry ──────────────────────────────────
 
@@ -71,7 +71,7 @@ def get_real_docs_tokens(api_name: str) -> tuple:
     real_docs_dir = Path(__file__).parent.parent / "examples" / "real-docs"
     real_doc = real_docs_dir / f"{api_name}.md"
     if real_doc.exists():
-        return count_tokens(real_doc.read_text()), True
+        return count_tokens(real_doc.read_text(encoding='utf-8')), True
     return None, False
 
 
@@ -99,14 +99,14 @@ def run_all(output_md: bool = False, formats: list[str] = None):
 
         for spec_path in spec_files:
             name = Path(spec_path).stem
-            raw_text = Path(spec_path).read_text()
+            raw_text = Path(spec_path).read_text(encoding='utf-8')
 
             # Use cached output if available (faster for large specs)
             cached_lap = output_dir / f"{name}.lap"
             cached_lean = output_dir / f"{name}.lean.lap"
             if fmt == "openapi" and cached_lap.exists() and cached_lean.exists():
-                lap_text = cached_lap.read_text()
-                lean_text = cached_lean.read_text()
+                lap_text = cached_lap.read_text(encoding='utf-8')
+                lean_text = cached_lean.read_text(encoding='utf-8')
                 endpoint_count = sum(1 for l in lap_text.split("\n") if l.startswith("@endpoint "))
                 compile_ms = 0
             else:

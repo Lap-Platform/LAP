@@ -6,10 +6,10 @@ from pathlib import Path
 
 
 import pytest
-from core.formats.lap import (
+from lap.core.formats.lap import (
     LAPSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema,
 )
-from core.differ import diff_specs, check_compatibility, generate_changelog, Change
+from lap.core.differ import diff_specs, check_compatibility, generate_changelog, Change
 
 
 # ── Fixtures ─────────────────────────────────────────────────────────

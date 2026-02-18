@@ -18,15 +18,15 @@ import pytest
 import yaml
 from pathlib import Path
 
-from core.formats.lap import LAPSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema
-from core.parser import parse_lap
-from core.compilers.openapi import compile_openapi
-from core.converter import lap_to_openapi
+from lap.core.formats.lap import LAPSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema
+from lap.core.parser import parse_lap
+from lap.core.compilers.openapi import compile_openapi
+from lap.core.converter import lap_to_openapi
 
 SPECS_DIR = Path(__file__).parent.parent / 'examples' / 'verbose' / 'openapi'
 FIXTURES_DIR = Path(__file__).parent / 'fixtures'
 PROJECT_DIR = Path(__file__).parent.parent
-CLI = str(PROJECT_DIR / 'cli/main.py')
+CLI = str(PROJECT_DIR / 'lap/cli/main.py')
 OUTPUT_DIR = PROJECT_DIR / 'output'
 
 
@@ -100,7 +100,7 @@ class TestFullPipelineRoundTrip:
 
     def test_convert_back_to_openapi(self, spec_file):
         """OpenAPI → LAP → parse → OpenAPI: same paths and methods."""
-        original_yaml = yaml.safe_load(Path(spec_file).read_text())
+        original_yaml = yaml.safe_load(Path(spec_file).read_text(encoding='utf-8'))
         compiled = compile_openapi(spec_file)
         text = compiled.to_lap(lean=False)
         parsed = parse_lap(text)
@@ -300,7 +300,7 @@ class TestCLICompile:
         )
         assert result.returncode == 0
         assert out.exists()
-        content = out.read_text()
+        content = out.read_text(encoding='utf-8')
         assert '@lap' in content
 
 
@@ -388,7 +388,7 @@ class TestCLIConvert:
         )
         assert result.returncode == 0
         assert out.exists()
-        parsed = yaml.safe_load(out.read_text())
+        parsed = yaml.safe_load(out.read_text(encoding='utf-8'))
         assert 'paths' in parsed
 
 

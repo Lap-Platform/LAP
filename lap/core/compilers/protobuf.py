@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
-from core.formats.lap import (
+from lap.core.formats.lap import (
     LAPSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema,
     LAP_VERSION,
 )
@@ -675,7 +675,7 @@ def _resolve_imports(pf: ProtoFile, spec_dir: Path, visited: set = None) -> None
             continue
 
         try:
-            imp_text = imp_path.read_text()
+            imp_text = imp_path.read_text(encoding='utf-8')
             imp_pf = parse_proto(imp_text)
             # Recursively resolve imports
             _resolve_imports(imp_pf, spec_dir, visited)
@@ -724,7 +724,7 @@ def _inject_well_known_types(type_index: dict) -> None:
 def compile_proto(spec_path: str) -> LAPSpec:
     """Compile a .proto file to LAP format."""
     path = Path(spec_path)
-    text = path.read_text()
+    text = path.read_text(encoding='utf-8')
     pf = parse_proto(text)
 
     # Resolve imports

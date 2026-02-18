@@ -59,11 +59,11 @@ def run_format(name, compiler_fn, pattern, skip=None, timeout_sec=120):
             print("SKIP (timeout/error)", flush=True)
     return results
 
-from core.compilers.openapi import compile_openapi
-from core.compilers.graphql import compile_graphql
-from core.compilers.asyncapi import compile_asyncapi
-from core.compilers.protobuf import compile_protobuf
-from core.compilers.postman import compile_postman
+from lap.core.compilers.openapi import compile_openapi
+from lap.core.compilers.graphql import compile_graphql
+from lap.core.compilers.asyncapi import compile_asyncapi
+from lap.core.compilers.protobuf import compile_protobuf
+from lap.core.compilers.postman import compile_postman
 
 formats = {}
 

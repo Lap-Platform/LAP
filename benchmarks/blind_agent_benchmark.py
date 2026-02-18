@@ -26,7 +26,7 @@ import yaml
 
 # LAP compilation imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from core.compilers.openapi import compile_openapi
+from lap.core.compilers.openapi import compile_openapi
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -103,7 +103,7 @@ def load_raw_yaml(api: str) -> str:
     path = SPEC_DIR / f"{spec_name}.yaml"
     if not path.exists():
         raise FileNotFoundError(f"Spec not found: {path}")
-    return path.read_text()
+    return path.read_text(encoding='utf-8')
 
 
 def strip_descriptions(obj):
@@ -271,7 +271,7 @@ def load_all_results() -> list[dict]:
         return results
     for f in RESULTS_DIR.rglob("*.json"):
         try:
-            results.append(json.loads(f.read_text()))
+            results.append(json.loads(f.read_text(encoding='utf-8')))
         except json.JSONDecodeError:
             continue
     return results

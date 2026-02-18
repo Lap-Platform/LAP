@@ -12,7 +12,7 @@ import re
 from pathlib import Path
 from typing import Optional
 
-from core.formats.lap import (
+from lap.core.formats.lap import (
     LAPSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema
 )
 
@@ -352,7 +352,7 @@ def compile_postman(spec_path: str) -> LAPSpec:
     if file_size > 50 * 1024 * 1024:
         raise ValueError(f"Collection too large: {file_size} bytes (max 50MB)")
 
-    raw = path.read_text()
+    raw = path.read_text(encoding='utf-8')
     collection_wrapper = json.loads(raw)
     
     # Handle both wrapped {"collection": {...}} and direct format

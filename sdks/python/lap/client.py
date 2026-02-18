@@ -6,14 +6,14 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List, Optional
 
-# Allow importing from the existing src/ modules
-_src_path = str(Path(__file__).resolve().parents[3] / "src")
-if _src_path not in sys.path:
-    sys.path.insert(0, _src_path)
+# Add project root to path so lap.* imports work when SDK is used from source
+_project_root = str(Path(__file__).resolve().parents[3])
+if _project_root not in sys.path:
+    sys.path.insert(0, _project_root)
 
-from core.formats.lap import LAPSpec, Endpoint, Param, ResponseSchema, ErrorSchema, ResponseField
-from core.parser import parse_lap
-from core.utils import count_tokens as _count_tokens, get_tiktoken_encoding
+from lap.core.formats.lap import LAPSpec, Endpoint, Param, ResponseSchema, ErrorSchema, ResponseField
+from lap.core.parser import parse_lap
+from lap.core.utils import count_tokens as _count_tokens, get_tiktoken_encoding
 
 
 @dataclass

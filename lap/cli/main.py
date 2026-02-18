@@ -12,8 +12,8 @@ import os
 import sys
 from pathlib import Path
 
-# Add project root to path so `core.*` imports work when run as script
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+# Add project root to path so `lap.*` imports work when run as script
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 try:
     from rich.console import Console
@@ -60,7 +60,7 @@ def heading(msg):
 
 def cmd_compile(args):
     """Compile any API spec to LAP format (auto-detects format)."""
-    from core.compilers import compile as compile_spec
+    from lap.core.compilers import compile as compile_spec
 
     spec_path = args.spec
     if not Path(spec_path).exists():
@@ -92,7 +92,7 @@ def cmd_compile(args):
 
 def cmd_validate(args):
     """Validate LAP output for information loss."""
-    sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "benchmarks"))
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "benchmarks"))
     from validate import validate_schema_completeness, print_results
 
     if not Path(args.spec).exists():
@@ -136,7 +136,7 @@ def cmd_validate(args):
 
 def cmd_benchmark(args):
     """Benchmark token usage for an API spec."""
-    sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "benchmarks"))
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "benchmarks"))
     from benchmark import run_benchmark
 
     if not Path(args.spec).exists():
@@ -148,8 +148,8 @@ def cmd_benchmark(args):
 
 def cmd_benchmark_all(args):
     """Benchmark all specs in a directory."""
-    from core.compilers.openapi import compile_openapi
-    from core.utils import count_tokens as count
+    from lap.core.compilers.openapi import compile_openapi
+    from lap.core.utils import count_tokens as count
 
     specs_dir = Path(args.directory)
     if not specs_dir.is_dir():
@@ -180,7 +180,7 @@ def cmd_benchmark_all(args):
         totals = {"oa": 0, "dl": 0, "ln": 0}
         for spec_path in spec_files:
             name = Path(spec_path).stem
-            raw = Path(spec_path).read_text()
+            raw = Path(spec_path).read_text(encoding='utf-8')
             ds = compile_openapi(spec_path)
             dl = ds.to_lap(lean=False)
             ln = ds.to_lap(lean=True)
@@ -205,20 +205,20 @@ def cmd_benchmark_all(args):
         )
         console.print(table)
     else:
-        sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "benchmarks"))
+        sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "benchmarks"))
         from benchmark_all import run_all
         run_all()
 
 
 def cmd_inspect(args):
     """Parse and inspect a LAP file."""
-    from core.parser import parse_lap
+    from lap.core.parser import parse_lap
 
     path = Path(args.file)
     if not path.exists():
         error(f"File not found: {args.file}")
 
-    text = path.read_text()
+    text = path.read_text(encoding='utf-8')
     spec = parse_lap(text)
 
     if args.endpoint:
@@ -283,7 +283,7 @@ def cmd_inspect(args):
 
 def cmd_convert(args):
     """Convert LAP back to OpenAPI YAML."""
-    from core.converter import convert_file
+    from lap.core.converter import convert_file
 
     path = Path(args.file)
     if not path.exists():
@@ -299,7 +299,7 @@ def cmd_convert(args):
 
 def cmd_login(args):
     """Authenticate with the LAP registry via GitHub OAuth."""
-    from cli.auth import (
+    from lap.cli.auth import (
         api_request, save_credentials, load_credentials,
         poll_sse_stream, get_registry_url,
     )
@@ -333,7 +333,7 @@ def cmd_login(args):
 
 def cmd_logout(args):
     """Log out and revoke the current API token."""
-    from cli.auth import get_token, clear_credentials, api_request
+    from lap.cli.auth import get_token, clear_credentials, api_request
 
     token = get_token()
     if not token:
@@ -352,7 +352,7 @@ def cmd_logout(args):
 
 def cmd_whoami(args):
     """Show the currently authenticated user."""
-    from cli.auth import get_token, api_request
+    from lap.cli.auth import get_token, api_request
 
     token = get_token()
     if not token:
@@ -366,8 +366,8 @@ def cmd_whoami(args):
 
 def cmd_publish(args):
     """Compile and publish a spec to the registry."""
-    from cli.auth import get_token, api_request
-    from core.compilers import compile as compile_spec
+    from lap.cli.auth import get_token, api_request
+    from lap.core.compilers import compile as compile_spec
 
     token = get_token()
     if not token:
@@ -426,8 +426,8 @@ def cmd_publish(args):
 
 def cmd_diff(args):
     """Diff two LAP files."""
-    from core.parser import parse_lap
-    from core.differ import diff_specs, generate_changelog, check_compatibility
+    from lap.core.parser import parse_lap
+    from lap.core.differ import diff_specs, generate_changelog, check_compatibility
 
     old_path, new_path = Path(args.old), Path(args.new)
     if not old_path.exists():
@@ -435,8 +435,8 @@ def cmd_diff(args):
     if not new_path.exists():
         error(f"File not found: {args.new}")
 
-    old_spec = parse_lap(old_path.read_text())
-    new_spec = parse_lap(new_path.read_text())
+    old_spec = parse_lap(old_path.read_text(encoding='utf-8'))
+    new_spec = parse_lap(new_path.read_text(encoding='utf-8'))
 
     if args.format == "changelog":
         print(generate_changelog(old_spec, new_spec, version=args.version or "0.0.0"))
