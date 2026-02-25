@@ -2,7 +2,7 @@
 """
 LAP — Compressed AI tool/skill manifests for the LAP protocol
 
-Part of LAP (Lean Agent Protocol). LAP provides a compact, structured
+Part of LAP (Lean API Platform). LAP provides a compact, structured
 representation for AI tool definitions from any source: MCP servers,
 OpenClaw/ClawHub skills, Claude skills, or generic agent tools.
 

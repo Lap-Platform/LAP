@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Integration tests for LAP (LeanAgent Protocol).
+Integration tests for LAP (Lean API Platform).
 
 Covers:
 1. Full pipeline round-trip for every spec (compile → parse → convert)

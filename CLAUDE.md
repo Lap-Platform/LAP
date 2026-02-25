@@ -1,4 +1,4 @@
-# LAP - Lean Agent Protocol
+# LAP - Lean API Platform
 
 ## What This Is
 
@@ -19,7 +19,7 @@ lap compile examples/verbose/openapi/petstore.yaml -o petstore.lap
 
 ## Project Structure
 
-- `lap/` -- Top-level Python package (installed as `lap-protocol`)
+- `lap/` -- Top-level Python package (installed as `lap-platform`)
   - `lap/core/compilers/` -- Format-specific compilers (openapi, graphql, asyncapi, protobuf, postman, lap)
   - `lap/core/formats/` -- Data models (LAP v0.2, LAP v0.1)
   - `lap/core/parser.py` -- LAP text to Python objects (proves losslessness)
@@ -29,7 +29,7 @@ lap compile examples/verbose/openapi/petstore.yaml -o petstore.lap
   - `lap/cli/main.py` -- CLI with 15+ subcommands
 - `integrations/` -- LangChain, CrewAI, OpenAI, MCP bridges
 - `sdks/python/` -- Python SDK (thin wrapper around lap.core)
-- `sdks/typescript/` -- TypeScript/npm SDK (@lap-protocol/sdk)
+- `sdks/typescript/` -- TypeScript/npm SDK (@lap-platform/sdk)
 - `tests/` -- pytest suite (11 test files)
 - `benchmarks/` -- Compression validation
 - `examples/verbose/` -- 162 real-world API specs (36MB corpus), organized by format

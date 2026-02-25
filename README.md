@@ -1,6 +1,6 @@
 <div align="center">
 
-# LAP — Lean Agent Protocol
+# LAP — Lean API Platform
 
 **Cut API spec tokens by 10×. Same information. Fraction of the cost.**
 

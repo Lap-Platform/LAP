@@ -1,6 +1,6 @@
 # LAP — Compressed AI Tool Manifests
 
-**Part of the LAP (Lean Agent Protocol)**
+**Part of the LAP (Lean API Platform)**
 
 LAP is a compact, structured format for describing AI tools and skills. Think of it as LAP for tool manifests — optimized for LLM agent discovery, understanding, and invocation.
 

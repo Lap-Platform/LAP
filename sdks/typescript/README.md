@@ -1,17 +1,17 @@
-# @lap-protocol/sdk -- TypeScript SDK for LAP
+# @lap-platform/sdk -- TypeScript SDK for LAP
 
-Parse and work with LAP (Lean Agent Protocol) API specifications in TypeScript/JavaScript.
+Parse and work with LAP (Lean API Platform) API specifications in TypeScript/JavaScript.
 
 ## Install
 
 ```bash
-npm install @lap-protocol/sdk
+npm install @lap-platform/sdk
 ```
 
 ## Quick Start
 
 ```typescript
-import { LAPClient, toContext } from '@lap-protocol/sdk';
+import { LAPClient, toContext } from '@lap-platform/sdk';
 
 const client = new LAPClient();
 const spec = client.loadFile('./stripe-charges.lap');
