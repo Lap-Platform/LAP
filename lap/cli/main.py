@@ -10,6 +10,7 @@ import glob
 import json
 import os
 import sys
+from contextlib import contextmanager
 from pathlib import Path
 
 # Add project root to path so `lap.*` imports work when run as script
@@ -54,6 +55,38 @@ def heading(msg):
         console.print(Panel(msg, style="bold cyan", box=box.ROUNDED))
     else:
         print(f"\n{'='*60}\n  {msg}\n{'='*60}")
+
+
+@contextmanager
+def _spinner(msg):
+    if HAS_RICH:
+        with console.status(f"[bold cyan]{msg}[/]"):
+            yield
+    else:
+        print(msg)
+        yield
+
+
+def _resolve_ai(args, ai_attr="ai", layer_attr="layer"):
+    """Resolve whether to use AI enhancement.
+
+    Returns 2 (AI) or 1 (no AI).
+    - --ai flag: force AI enhancement
+    - --no-ai flag: skip AI
+    - --layer (deprecated): mapped to 1 or 2
+    - Default: auto-detect (AI if claude CLI on PATH, else skip)
+    """
+    ai = getattr(args, ai_attr, None)
+    if ai is True:
+        return 2
+    if ai is False:
+        return 1
+    layer = getattr(args, layer_attr, None)
+    if layer is not None:
+        warn("--layer is deprecated, use --ai or --no-ai")
+        return layer
+    import shutil
+    return 2 if shutil.which("claude") else 1
 
 
 def _collect_spec_files(directory):
@@ -312,7 +345,7 @@ def cmd_login(args):
 
     creds = load_credentials()
     if creds:
-        info(f"Already logged in as {creds['username']}. Run 'lap logout' first to switch accounts.")
+        info(f"Already logged in as {creds['username']}. Run 'lapsh logout' first to switch accounts.")
         return
 
     print(f"Authenticating with {get_registry_url()}...")
@@ -361,7 +394,7 @@ def cmd_whoami(args):
 
     token = get_token()
     if not token:
-        print("Not logged in. Run 'lap login' to authenticate.")
+        print("Not logged in. Run 'lapsh login' to authenticate.")
         return
 
     result = api_request("GET", "/auth/me", token=token)
@@ -376,7 +409,7 @@ def cmd_publish(args):
 
     token = get_token()
     if not token:
-        error("Not logged in. Run 'lap login' first.")
+        error("Not logged in. Run 'lapsh login' first.")
 
     spec_path = args.spec
     if not Path(spec_path).exists():
@@ -426,20 +459,21 @@ def cmd_publish(args):
     # Generate and include skill if --skill flag is set
     if getattr(args, "skill", False):
         from lap.core.compilers.skill import generate_skill, SkillOptions
-        skill_layer = getattr(args, "skill_layer", 1) or 1
+        skill_layer = _resolve_ai(args, ai_attr="skill_ai", layer_attr="skill_layer")
         skill_opts = SkillOptions(layer=skill_layer, lean=True)
         skill = generate_skill(result_obj, skill_opts)
 
         if skill_layer == 2:
             try:
                 from lap.core.compilers.skill_llm import enhance_skill
-                print("Enhancing skill with LLM (Layer 2)...")
+                print("Enhancing skill with AI...")
                 skill = enhance_skill(result_obj, skill)
             except ImportError:
-                warn("claude CLI or anthropic package not available, falling back to Layer 1 skill.")
+                if getattr(args, "skill_ai", None) is True or getattr(args, "skill_layer", None) == 2:
+                    warn("claude CLI not available, skipping AI enhancement.")
             except RuntimeError as e:
-                warn(f"Layer 2 enhancement failed: {e}")
-                warn("Falling back to Layer 1 skill.")
+                if getattr(args, "skill_ai", None) is True or getattr(args, "skill_layer", None) == 2:
+                    warn(f"AI enhancement failed: {e}")
 
         body["skill_md"] = skill.file_map["SKILL.md"]
         body["skill_refs"] = {
@@ -463,58 +497,66 @@ def cmd_skill(args):
     if not Path(spec_path).exists():
         error(f"File not found: {spec_path}")
 
+    # Count source tokens for compression stats
+    raw_tokens = count_tokens(Path(spec_path).read_text(encoding="utf-8"))
+
+    filename = Path(spec_path).name
     fmt = getattr(args, "format", None)
-    try:
-        result_obj = compile_spec(spec_path, format=fmt)
-    except ValueError as e:
-        error(str(e))
+    with _spinner(f"Compiling {filename}..."):
+        try:
+            result_obj = compile_spec(spec_path, format=fmt)
+        except ValueError as e:
+            error(str(e))
 
     if isinstance(result_obj, list):
         error("Protobuf directories produce multiple specs. Generate skills individually.")
 
+    layer = _resolve_ai(args)
     options = SkillOptions(
-        layer=args.layer,
+        layer=layer,
         lean=not getattr(args, "full_spec", False),
+        version=getattr(args, "skill_version", "1.0.0"),
     )
 
-    skill = generate_skill(result_obj, options)
+    with _spinner("Generating skill..."):
+        skill = generate_skill(result_obj, options)
 
-    # Layer 2 enhancement
-    if args.layer == 2:
+    # AI enhancement
+    if layer == 2:
         try:
             from lap.core.compilers.skill_llm import enhance_skill
-            print("Enhancing skill with LLM (Layer 2)...")
-            skill = enhance_skill(result_obj, skill)
+            with _spinner("Enhancing with AI..."):
+                skill = enhance_skill(result_obj, skill)
         except ImportError:
-            warn("claude CLI or anthropic package not available, falling back to Layer 1 skill.")
+            if getattr(args, "ai", None) is True or getattr(args, "layer", None) == 2:
+                warn("claude CLI not available, skipping AI enhancement.")
         except RuntimeError as e:
-            warn(f"Layer 2 enhancement failed: {e}")
-            warn("Falling back to Layer 1 skill.")
+            if getattr(args, "ai", None) is True or getattr(args, "layer", None) == 2:
+                warn(f"AI enhancement failed: {e}")
+                warn("Using standard generation.")
 
-    # Install to ~/.claude/skills/
+    # --stdout: print to stdout (old default behavior)
+    if getattr(args, "stdout", False):
+        print(skill.file_map["SKILL.md"])
+        return
+
+    # Determine output directory
     if getattr(args, "install", False):
-        skill_dir = Path.home() / ".claude" / "skills" / skill.name
-        for rel_path, content in skill.file_map.items():
-            out = skill_dir / rel_path
-            out.parent.mkdir(parents=True, exist_ok=True)
-            out.write_text(content, encoding='utf-8')
-        info(f"Installed skill to {skill_dir}")
-        info(f"{skill.endpoint_count} endpoints | {skill.token_count:,} tokens")
-        return
-
-    # Write to output directory
-    if args.output:
+        out_dir = Path.home() / ".claude" / "skills" / skill.name
+    elif args.output:
         out_dir = Path(args.output) / skill.name
-        for rel_path, content in skill.file_map.items():
-            out = out_dir / rel_path
-            out.parent.mkdir(parents=True, exist_ok=True)
-            out.write_text(content, encoding='utf-8')
-        info(f"Generated skill: {out_dir}")
-        info(f"{skill.endpoint_count} endpoints | {skill.token_count:,} tokens | {len(skill.file_map)} files")
-        return
+    else:
+        out_dir = Path(spec_path).parent / skill.name
 
-    # Default: print SKILL.md to stdout
-    print(skill.file_map["SKILL.md"])
+    # Write skill files
+    for rel_path, content in skill.file_map.items():
+        out = out_dir / rel_path
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(content, encoding='utf-8')
+
+    reduction = int((1 - skill.token_count / raw_tokens) * 100) if raw_tokens else 0
+    info(f"Skill written to {out_dir}")
+    info(f"{skill.endpoint_count} endpoints | {skill.token_count:,} tokens | {reduction}% smaller than source")
 
 
 def cmd_skill_batch(args):
@@ -534,7 +576,8 @@ def cmd_skill_batch(args):
     out_dir = Path(args.output)
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    options = SkillOptions(layer=args.layer, lean=True)
+    layer = _resolve_ai(args)
+    options = SkillOptions(layer=layer, lean=True)
     success, failed, skipped = 0, 0, 0
 
     heading(f"Generating skills for {len(spec_files)} specs")
@@ -549,13 +592,13 @@ def cmd_skill_batch(args):
                 continue
             skill = generate_skill(result_obj, options)
 
-            if args.layer == 2:
+            if layer == 2:
                 try:
                     from lap.core.compilers.skill_llm import enhance_skill
                     skill = enhance_skill(result_obj, skill)
                 except (ImportError, RuntimeError) as e:
                     if getattr(args, "verbose", False):
-                        warn(f"Layer 2 failed for {name}: {e}")
+                        warn(f"AI enhancement failed for {name}: {e}")
 
             skill_dir = out_dir / skill.name
             for rel_path, content in skill.file_map.items():
@@ -754,10 +797,10 @@ def cmd_diff(args):
 
 def main():
     parser = argparse.ArgumentParser(
-        prog="lap",
+        prog="lapsh",
         description="LAP -- Lean API Platform CLI",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="Run 'lap <command> --help' for more info on a command.",
+        epilog="Run 'lapsh <command> --help' for more info on a command.",
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -817,24 +860,43 @@ def main():
     p.add_argument("--name", help="Override spec name (auto-detected if omitted)")
     p.add_argument("--source-url", help="Upstream spec URL")
     p.add_argument("--skill", action="store_true", help="Generate and include a Claude Code skill")
-    p.add_argument("--skill-layer", type=int, default=1, choices=[1, 2], help="Skill generation layer (default: 1)")
+    p.add_argument("--skill-ai", action="store_true", default=None,
+                   help="Force AI enhancement for skill (requires claude CLI)")
+    p.add_argument("--no-skill-ai", dest="skill_ai", action="store_false",
+                   help="Skip AI enhancement for skill")
+    p.add_argument("--skill-layer", type=int, default=None, choices=[1, 2],
+                   help=argparse.SUPPRESS)  # deprecated
 
     # skill
     p = sub.add_parser("skill", help="Generate a Claude Code skill from an API spec")
     p.add_argument("spec", help="Path to API spec file")
-    p.add_argument("-o", "--output", help="Output directory (default: stdout)")
+    p.add_argument("-o", "--output", help="Output parent directory (default: same directory as spec)")
     p.add_argument("-f", "--format",
                    choices=["openapi", "graphql", "asyncapi", "protobuf", "postman", "smithy"],
                    help="Force spec format (auto-detected if omitted)")
-    p.add_argument("--layer", type=int, default=1, choices=[1, 2], help="Generation layer (1=mechanical, 2=LLM)")
+    p.add_argument("--ai", action="store_true", default=None,
+                   help="Force AI enhancement (requires claude CLI)")
+    p.add_argument("--no-ai", dest="ai", action="store_false",
+                   help="Skip AI enhancement")
+    p.add_argument("--stdout", action="store_true",
+                   help="Print to stdout instead of writing files")
+    p.add_argument("--layer", type=int, default=None, choices=[1, 2],
+                   help=argparse.SUPPRESS)  # deprecated
     p.add_argument("--full-spec", action="store_true", help="Include full spec (not lean)")
     p.add_argument("--install", action="store_true", help="Install skill to ~/.claude/skills/")
+    p.add_argument("--version", dest="skill_version", default="1.0.0",
+                   help="Skill version (default: 1.0.0)")
 
     # skill-batch
     p = sub.add_parser("skill-batch", help="Generate skills for all specs in a directory")
     p.add_argument("directory", help="Directory containing spec files")
     p.add_argument("-o", "--output", required=True, help="Output directory")
-    p.add_argument("--layer", type=int, default=1, choices=[1, 2], help="Generation layer (default: 1)")
+    p.add_argument("--ai", action="store_true", default=None,
+                   help="Force AI enhancement (requires claude CLI)")
+    p.add_argument("--no-ai", dest="ai", action="store_false",
+                   help="Skip AI enhancement")
+    p.add_argument("--layer", type=int, default=None, choices=[1, 2],
+                   help=argparse.SUPPRESS)  # deprecated
     p.add_argument("--verbose", "-v", action="store_true", help="Print full tracebacks on failure")
 
     # skill-install
