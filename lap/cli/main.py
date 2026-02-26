@@ -2,7 +2,7 @@
 """
 LAP CLI -- Lean API Platform command-line tool.
 
-Compile, validate, benchmark, inspect, and convert LAP API specifications.
+Compile, inspect, and convert LAP API specifications.
 """
 
 import argparse
@@ -33,21 +33,21 @@ except ImportError:
 
 def info(msg):
     if HAS_RICH:
-        console.print(f"[bold green]✓[/] {msg}")
+        console.print(f"[bold green][OK][/] {msg}")
     else:
-        print(f"✓ {msg}")
+        print(f"[OK] {msg}")
 
 def warn(msg):
     if HAS_RICH:
-        console.print(f"[bold yellow]⚠[/] {msg}")
+        console.print(f"[bold yellow][WARN][/] {msg}")
     else:
-        print(f"⚠ {msg}")
+        print(f"[WARN] {msg}")
 
 def error(msg):
     if HAS_RICH:
-        console.print(f"[bold red]✗[/] {msg}")
+        console.print(f"[bold red][ERR][/] {msg}")
     else:
-        print(f"✗ {msg}")
+        print(f"[ERR] {msg}")
     sys.exit(1)
 
 def heading(msg):
@@ -132,61 +132,6 @@ def cmd_compile(args):
     else:
         print(result)
 
-
-def cmd_validate(args):
-    """Validate LAP output for information loss."""
-    sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "benchmarks"))
-    from validate import validate_schema_completeness, print_results
-
-    if not Path(args.spec).exists():
-        error(f"File not found: {args.spec}")
-
-    heading("LAP Semantic Validation")
-    results = validate_schema_completeness(args.spec)
-
-    if HAS_RICH:
-        table = Table(title="Validation Results", box=box.SIMPLE_HEAVY)
-        table.add_column("Check", style="cyan")
-        table.add_column("Result", justify="right")
-        table.add_column("Status", justify="center")
-
-        total_ep = results["total_endpoints"]
-        comp_ep = results["compiled_endpoints"]
-        ep_pct = (comp_ep / total_ep * 100) if total_ep else 100
-        table.add_row("Endpoints", f"{comp_ep}/{total_ep} ({ep_pct:.0f}%)", "✅" if ep_pct == 100 else "⚠️")
-
-        total_p = results["total_params"]
-        cap_p = results["captured_params"]
-        p_pct = (cap_p / total_p * 100) if total_p else 100
-        table.add_row("Parameters", f"{cap_p}/{total_p} ({p_pct:.0f}%)", "✅" if p_pct == 100 else "⚠️")
-
-        total_e = results["total_error_codes"]
-        cap_e = results["captured_error_codes"]
-        e_pct = (cap_e / total_e * 100) if total_e else 100
-        table.add_row("Error Codes", f"{cap_e}/{total_e} ({e_pct:.0f}%)", "✅" if e_pct == 100 else "⚠️")
-
-        console.print(table)
-
-        if ep_pct == 100 and p_pct == 100:
-            console.print("\n[bold green]PASS[/] -- Zero information loss!")
-        else:
-            console.print("\n[bold yellow]PARTIAL[/] -- Some data not captured")
-            for m in results["missing_params"][:5]:
-                console.print(f"  [red]Missing:[/] {m}")
-    else:
-        print_results(results)
-
-
-def cmd_benchmark(args):
-    """Benchmark token usage for an API spec."""
-    sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "benchmarks"))
-    from benchmark import run_benchmark
-
-    if not Path(args.spec).exists():
-        error(f"File not found: {args.spec}")
-
-    heading(f"Token Benchmark: {Path(args.spec).name}")
-    run_benchmark(args.spec)
 
 
 def cmd_benchmark_all(args):
@@ -813,14 +758,6 @@ def main():
                    help="Force spec format (auto-detected if omitted)")
     p.add_argument("--lean", action="store_true", help="Maximum compression (strip descriptions)")
 
-    # validate
-    p = sub.add_parser("validate", help="Validate LAP for zero info loss")
-    p.add_argument("spec", help="Path to OpenAPI spec")
-
-    # benchmark
-    p = sub.add_parser("benchmark", help="Benchmark token usage for a spec")
-    p.add_argument("spec", help="Path to OpenAPI spec")
-
     # benchmark-all
     p = sub.add_parser("benchmark-all", help="Benchmark all specs in a directory")
     p.add_argument("directory", help="Directory containing spec files")
@@ -916,8 +853,6 @@ def main():
 
     commands = {
         "compile": cmd_compile,
-        "validate": cmd_validate,
-        "benchmark": cmd_benchmark,
         "benchmark-all": cmd_benchmark_all,
         "inspect": cmd_inspect,
         "convert": cmd_convert,

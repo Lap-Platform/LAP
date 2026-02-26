@@ -1,5 +1,5 @@
 {
-  "name": "@lap-platform/sdk",
+  "name": "@lap-platform/lapsh",
   "version": "0.1.0",
   "description": "TypeScript SDK for LAP (Lean API Platform) -- Parse and work with LAP API specifications",
   "main": "dist/src/index.js",
@@ -10,26 +10,50 @@
     "dist/src/**/*.js.map",
     "README.md"
   ],
+  "bin": {
+    "lapsh": "dist/src/cli.js"
+  },
   "scripts": {
     "build": "tsc",
-    "test": "tsc && node dist/tests/parser.test.js"
+    "test": "tsc && node dist/tests/parser.test.js && node dist/tests/serializer.test.js && node dist/tests/skill.test.js && node dist/tests/openapi.test.js && node dist/tests/skill_llm.test.js"
   },
-  "keywords": ["api", "openapi", "ai", "llm", "agents", "compression", "lap"],
+  "keywords": [
+    "api",
+    "openapi",
+    "ai",
+    "llm",
+    "agents",
+    "compression",
+    "lap"
+  ],
   "author": "LAP Contributors",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Lean-Agent-Protocol/lap.git",
+    "url": "https://github.com/Lap-Platform/lap.git",
     "directory": "sdks/typescript"
   },
-  "homepage": "https://github.com/Lean-Agent-Protocol/lap",
+  "homepage": "https://github.com/Lap-Platform/lap",
   "bugs": {
-    "url": "https://github.com/Lean-Agent-Protocol/lap/issues"
+    "url": "https://github.com/Lap-Platform/lap/issues"
   },
   "engines": {
     "node": ">=16"
   },
   "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^20.0.0",
     "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.1"
+  },
+  "peerDependencies": {
+    "@anthropic-ai/sdk": ">=0.20.0"
+  },
+  "peerDependenciesMeta": {
+    "@anthropic-ai/sdk": {
+      "optional": true
+    }
   }
 }

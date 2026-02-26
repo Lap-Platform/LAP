@@ -122,22 +122,22 @@ Successfully implemented AWS Smithy IDL support for the LAP compiler, enabling c
 
 ```bash
 # Auto-detect format (JSON AST)
-lap compile examples/verbose/smithy/weather.json
+lapsh compile examples/verbose/smithy/weather.json
 
 # Explicit format
-lap compile -f smithy examples/verbose/smithy/weather.json
+lapsh compile -f smithy examples/verbose/smithy/weather.json
 
 # Output to file
-lap compile examples/verbose/smithy/weather.json -o weather.lap
+lapsh compile examples/verbose/smithy/weather.json -o weather.lap
 
 # Lean mode (strip descriptions)
-lap compile examples/verbose/smithy/weather.json --lean
+lapsh compile examples/verbose/smithy/weather.json --lean
 
 # Smithy IDL file (requires Smithy CLI)
-lap compile examples/verbose/smithy/weather.smithy
+lapsh compile examples/verbose/smithy/weather.smithy
 
 # Smithy project directory
-lap compile path/to/smithy-project/
+lapsh compile path/to/smithy-project/
 ```
 
 ## Edge Cases Handled

@@ -7,11 +7,11 @@ representation for AI tool definitions from any source: MCP servers,
 OpenClaw/ClawHub skills, Claude skills, or generic agent tools.
 
 Usage:
-    python lap.py compile-mcp <manifest.json> [-o output.lap]
-    python lap.py compile-skill <SKILL.md> [-o output.lap]
-    python lap.py compile-json <tool.json> [-o output.lap]
-    python lap.py parse <file.lap>
-    python lap.py stats <file.lap>
+    python -m lap.core.compilers.lap_tools_advanced compile-mcp <manifest.json> [-o output.lap]
+    python -m lap.core.compilers.lap_tools_advanced compile-skill <SKILL.md> [-o output.lap]
+    python -m lap.core.compilers.lap_tools_advanced compile-json <tool.json> [-o output.lap]
+    python -m lap.core.compilers.lap_tools_advanced parse <file.lap>
+    python -m lap.core.compilers.lap_tools_advanced stats <file.lap>
 """
 
 import argparse

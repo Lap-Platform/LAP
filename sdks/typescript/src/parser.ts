@@ -11,14 +11,15 @@ export interface ResponseField {
 }
 
 export interface ResponseSchema {
-  statusCode: number;
+  statusCode: string;
   description?: string;
   fields: ResponseField[];
 }
 
 export interface ErrorSchema {
-  statusCode: number;
+  statusCode: string;
   description?: string;
+  type?: string;
 }
 
 export interface Param {
@@ -38,11 +39,14 @@ export interface Endpoint {
   method: string;
   path: string;
   description?: string;
+  auth?: string;
   requiredParams: Param[];
   optionalParams: Param[];
   allParams: Param[];
+  requestBody?: Param[];
   responses: ResponseSchema[];
   errors: ErrorSchema[];
+  exampleRequest?: string;
 }
 
 export interface LAPSpec {
@@ -52,12 +56,11 @@ export interface LAPSpec {
   apiVersion?: string;
   auth?: string;
   endpoints: Endpoint[];
+  commonFields?: Param[];
+  typeDefs?: Array<{ name: string; fields: ResponseField[] }>;
 
   getEndpoint(method: string, path: string): Endpoint | undefined;
 }
-
-/** @deprecated Use LAPSpec instead */
-export type DocLeanSpec = LAPSpec;
 
 // ── Internal parsing helpers ──
 
@@ -249,9 +252,9 @@ function parseBraceContent(line: string): string | null {
 
 function parseReturns(line: string): ResponseSchema {
   // @returns(200) {fields} # description  OR  @returns(200) description text
-  const m = line.match(/^@returns\((\d+)\)\s*(.*)/);
-  if (!m) return { statusCode: 200, fields: [] };
-  const statusCode = parseInt(m[1]);
+  const m = line.match(/^@returns\(([^)]+)\)\s*(.*)/);
+  if (!m) return { statusCode: '200', fields: [] };
+  const statusCode = m[1];
   let rest = m[2].trim();
 
   let description: string | undefined;
@@ -279,11 +282,11 @@ function parseErrors(line: string): ErrorSchema[] {
     const colonIdx = item.indexOf(':');
     if (colonIdx !== -1) {
       return {
-        statusCode: parseInt(item.slice(0, colonIdx).trim()),
+        statusCode: item.slice(0, colonIdx).trim(),
         description: item.slice(colonIdx + 1).trim(),
       };
     }
-    return { statusCode: parseInt(item.trim()) };
+    return { statusCode: item.trim() };
   });
 }
 
@@ -307,8 +310,8 @@ export function parse(text: string): LAPSpec {
   }
 
   for (const line of lines) {
-    if (line.startsWith('@lap ') || line.startsWith('@doclean')) {
-      version = line.replace(/^@(?:lap|doclean)\s*/, '').trim();
+    if (line.startsWith('@lap ')) {
+      version = line.replace(/^@lap\s*/, '').trim();
     } else if (line.startsWith('@api ')) {
       apiName = line.slice(5).trim();
     } else if (line.startsWith('@base ')) {

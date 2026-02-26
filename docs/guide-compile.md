@@ -5,7 +5,7 @@
 Convert any OpenAPI 3.x YAML or JSON spec to LAP:
 
 ```bash
-lap compile specs/stripe-charges.yaml -o output/stripe.lap
+lapsh compile specs/stripe-charges.yaml -o output/stripe.lap
 ```
 
 ```
@@ -20,7 +20,7 @@ lap compile specs/stripe-charges.yaml -o output/stripe.lap
 Keeps descriptions and comments. Good for debugging and human review.
 
 ```bash
-lap compile specs/github-core.yaml -o github.lap
+lapsh compile specs/github-core.yaml -o github.lap
 ```
 
 ```
@@ -35,7 +35,7 @@ lap compile specs/github-core.yaml -o github.lap
 Strips all descriptions for maximum token compression. Use in production when agents already know the API semantics.
 
 ```bash
-lap compile specs/github-core.yaml -o github.lean.lap --lean
+lapsh compile specs/github-core.yaml -o github.lean.lap --lean
 ```
 
 ```
@@ -59,7 +59,7 @@ lap compile specs/github-core.yaml -o github.lean.lap --lean
 Large OpenAPI specs (1000+ endpoints) compile fine — the compiler processes endpoints sequentially:
 
 ```bash
-lap compile specs/stripe-full.yaml -o stripe-full.lap
+lapsh compile specs/stripe-full.yaml -o stripe-full.lap
 ```
 
 For very large specs, the output file may be substantial. Tips:
@@ -73,7 +73,7 @@ For very large specs, the output file may be substantial. Tips:
 Compile all specs in a directory:
 
 ```bash
-lap benchmark-all specs/
+lapsh benchmark-all specs/
 ```
 
 This processes every `.yaml` file in the directory and produces both standard and lean outputs in `output/`.
@@ -83,8 +83,8 @@ To compile individually with control over output:
 ```bash
 for spec in specs/*.yaml; do
   name=$(basename "$spec" .yaml)
-  lap compile "$spec" -o "output/${name}.lap"
-  lap compile "$spec" -o "output/${name}.lean.lap" --lean
+  lapsh compile "$spec" -o "output/${name}.lap"
+  lapsh compile "$spec" -o "output/${name}.lean.lap" --lean
 done
 ```
 
@@ -106,7 +106,7 @@ twitter      vercel       vonage       zoom
 Always validate that compilation preserved all information:
 
 ```bash
-lap validate specs/stripe-charges.yaml
+lapsh validate specs/stripe-charges.yaml
 ```
 
 ```
@@ -126,7 +126,7 @@ The validator round-trips: compiles to LAP, then checks that every endpoint, par
 LAP is not a one-way street. Convert back to OpenAPI:
 
 ```bash
-lap convert output/stripe-charges.lap -f openapi -o stripe-roundtrip.yaml
+lapsh convert output/stripe-charges.lap -f openapi -o stripe-roundtrip.yaml
 ```
 
 This is useful for:

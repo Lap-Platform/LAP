@@ -33,9 +33,10 @@ output/
 # Scratch/test files in root
 /test*.lap
 /analyze_common_fields.py
-/benchmark_doclean.py
-/benchmark_verbose.py
 /extract_kpis.py
+
+# Generated reports
+**/*_REPORT.html
 
 # TypeScript build artifacts
 *.tsbuildinfo

@@ -7,12 +7,12 @@ import { parse, LAPClient, toContext } from '../src/index';
 // When compiled, __dirname = sdk/typescript/dist/tests, so we need to go up to lap-poc/output
 const OUTPUT_DIR = path.resolve(__dirname, '../../../../output');
 
-describe('DocLean Parser', () => {
-  const files = fs.readdirSync(OUTPUT_DIR).filter(f => f.endsWith('.doclean'));
+describe('LAP Parser', () => {
+  const files = fs.readdirSync(OUTPUT_DIR).filter(f => f.endsWith('.lap'));
 
-  it('should find .doclean files', () => {
-    assert.ok(files.length > 0, 'No .doclean files found');
-    console.log(`Found ${files.length} .doclean files`);
+  it('should find .lap files', () => {
+    assert.ok(files.length > 0, 'No .lap files found');
+    console.log(`Found ${files.length} .lap files`);
   });
 
   for (const file of files) {
@@ -35,7 +35,7 @@ describe('DocLean Parser', () => {
 });
 
 describe('Stripe Charges - detailed', () => {
-  const text = fs.readFileSync(path.join(OUTPUT_DIR, 'stripe-charges.doclean'), 'utf-8');
+  const text = fs.readFileSync(path.join(OUTPUT_DIR, 'stripe-charges.lap'), 'utf-8');
   const spec = parse(text);
 
   it('should parse API metadata', () => {
@@ -59,7 +59,7 @@ describe('Stripe Charges - detailed', () => {
     const ep = spec.getEndpoint('POST', '/v1/charges')!;
     assert.ok(ep.responses.length > 0);
     const resp = ep.responses[0];
-    assert.strictEqual(resp.statusCode, 200);
+    assert.strictEqual(resp.statusCode, '200');
     assert.ok(resp.fields.length > 0);
 
     // Check nested map fields
@@ -75,7 +75,7 @@ describe('Stripe Charges - detailed', () => {
   it('should parse errors', () => {
     const ep = spec.getEndpoint('POST', '/v1/charges')!;
     assert.ok(ep.errors.length === 4);
-    assert.strictEqual(ep.errors[0].statusCode, 400);
+    assert.strictEqual(ep.errors[0].statusCode, '400');
     assert.ok(ep.errors[0].description);
   });
 
@@ -89,7 +89,7 @@ describe('Stripe Charges - detailed', () => {
 });
 
 describe('GitHub - enum and defaults', () => {
-  const text = fs.readFileSync(path.join(OUTPUT_DIR, 'github-core.doclean'), 'utf-8');
+  const text = fs.readFileSync(path.join(OUTPUT_DIR, 'github-core.lap'), 'utf-8');
   const spec = parse(text);
 
   it('should parse enums', () => {
@@ -104,14 +104,14 @@ describe('GitHub - enum and defaults', () => {
 describe('LAPClient', () => {
   it('should load file via client', () => {
     const client = new LAPClient();
-    const spec = client.loadFile(path.join(OUTPUT_DIR, 'stripe-charges.doclean'));
+    const spec = client.loadFile(path.join(OUTPUT_DIR, 'stripe-charges.lap'));
     assert.strictEqual(spec.apiName, 'Stripe Charges API');
     assert.ok(spec.endpoints.length > 0);
   });
 
   it('should generate context', () => {
     const client = new LAPClient();
-    const spec = client.loadFile(path.join(OUTPUT_DIR, 'stripe-charges.doclean'));
+    const spec = client.loadFile(path.join(OUTPUT_DIR, 'stripe-charges.lap'));
     const ctx = toContext(spec, { lean: true });
     assert.ok(ctx.includes('POST /v1/charges'));
     assert.ok(ctx.includes('amount'));

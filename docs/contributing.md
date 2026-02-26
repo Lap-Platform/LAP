@@ -14,9 +14,9 @@
 
 3. **Compile and validate**:
    ```bash
-   python3 cli.py compile specs/my-api.yaml -o output/my-api.lap
-   python3 cli.py compile specs/my-api.yaml -o output/my-api.lean.lap --lean
-   python3 cli.py validate specs/my-api.yaml
+   lapsh compile specs/my-api.yaml -o output/my-api.lap
+   lapsh compile specs/my-api.yaml -o output/my-api.lean.lap --lean
+   lapsh validate specs/my-api.yaml
    ```
 
 4. **Fix any warnings** — if the compiler emits warnings about malformed fields, the source spec may need cleanup or the compiler may need a fix.
@@ -28,16 +28,16 @@
 
 ## How to Improve the Compiler
 
-The compiler lives in `src/` and consists of:
+The compiler lives in `lap/core/` and consists of:
 
 | File | Purpose |
 |------|---------|
-| `src/compiler.py` | OpenAPI → LAP compilation |
-| `src/parser.py` | LAP text → AST parsing |
-| `src/lap_format.py` | LAP data structures and serialization |
-| `src/converter.py` | LAP → OpenAPI conversion |
-| `src/differ.py` | LAP diff engine |
-| `src/utils.py` | Token counting, file I/O |
+| `lap/core/compilers/openapi.py` | OpenAPI → LAP compilation |
+| `lap/core/parser.py` | LAP text → AST parsing |
+| `lap/core/formats/lap.py` | LAP data structures and serialization |
+| `lap/core/converter.py` | LAP → OpenAPI conversion |
+| `lap/core/differ.py` | LAP diff engine |
+| `lap/core/utils.py` | Token counting, file I/O |
 
 ### Common improvements:
 
@@ -50,23 +50,23 @@ The compiler lives in `src/` and consists of:
 
 ```bash
 # Run tests
-pytest sdk/python/tests/ -v
+pytest tests/ -v
 pytest integrations/test_integrations.py -v
 
 # Test compilation on all specs
-python3 cli.py benchmark-all specs/
+lapsh benchmark-all specs/
 
 # Validate a specific change
-python3 cli.py validate specs/stripe-charges.yaml
+lapsh validate specs/stripe-charges.yaml
 ```
 
 ## How to Add a Framework Integration
 
-Integrations live in `integrations/` and `sdk/python/lap/`:
+Integrations live in `integrations/`:
 
 | Path | Framework |
 |------|-----------|
-| `sdk/python/lap/middleware.py` | LangChain |
+| `integrations/langchain/` | LangChain |
 | `integrations/crewai/lap_tool.py` | CrewAI |
 | `integrations/mcp/lap_mcp_server.py` | MCP |
 
@@ -88,16 +88,8 @@ Integrations live in `integrations/` and `sdk/python/lap/`:
 ```python
 """<Framework> integration for LAP."""
 
-import sys
-from pathlib import Path
-
-# Allow importing LAP internals
-_src = str(Path(__file__).resolve().parent.parent.parent / "src")
-if _src not in sys.path:
-    sys.path.insert(0, _src)
-
-from parser import parse_lap
-from utils import read_file_safe
+from lap.core.parser import parse_lap
+from lap.core.utils import read_file_safe
 
 # Graceful degradation
 try:
@@ -132,10 +124,7 @@ class LAP<Framework>Tool(SomeBase):
 
 ```bash
 # All tests
-pytest -v
-
-# SDK tests
-pytest sdk/python/tests/test_sdk.py -v
+pytest tests/ -v
 
 # Integration tests
 pytest integrations/test_integrations.py -v
@@ -150,8 +139,8 @@ pytest integrations/test_integrations.py -v
 
 ### PR checklist:
 
-- [ ] Tests pass (`pytest -v`)
-- [ ] All specs still compile (`python3 cli.py benchmark-all specs/`)
+- [ ] Tests pass (`pytest tests/ -v`)
+- [ ] All specs still compile (`lapsh benchmark-all specs/`)
 - [ ] No new warnings on existing specs
 - [ ] Documentation updated if adding features
 - [ ] Type hints on public API

@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="lap-sdk",
+    name="lap-platform",
     version="0.1.0",
     description="Lean API Platform SDK -- compressed API docs for LLM agents",
     packages=find_packages(),

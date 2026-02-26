@@ -106,7 +106,9 @@ class TestFullPipelineRoundTrip:
         parsed = parse_lap(text)
         regenerated = lap_to_openapi(parsed)
 
-        orig_paths = set(original_yaml.get('paths', {}).keys())
+        http_methods = {'get', 'post', 'put', 'patch', 'delete'}
+        orig_paths = {p for p, v in original_yaml.get('paths', {}).items()
+                      if any(m in v for m in http_methods)}
         regen_paths = set(regenerated.get('paths', {}).keys())
         assert orig_paths == regen_paths
 
@@ -303,28 +305,6 @@ class TestCLICompile:
         content = out.read_text(encoding='utf-8')
         assert '@lap' in content
 
-
-class TestCLIValidate:
-    def test_validate_passes(self):
-        result = subprocess.run(
-            [sys.executable, CLI, 'validate', str(SPECS_DIR / 'stripe-charges.yaml')],
-            capture_output=True, text=True, cwd=str(PROJECT_DIR)
-        )
-        assert result.returncode == 0
-        output = result.stdout.lower()
-        assert 'pass' in output or 'endpoint' in output or '100%' in output
-
-
-class TestCLIBenchmark:
-    def test_benchmark_produces_numbers(self):
-        result = subprocess.run(
-            [sys.executable, CLI, 'benchmark', str(SPECS_DIR / 'stripe-charges.yaml')],
-            capture_output=True, text=True, cwd=str(PROJECT_DIR)
-        )
-        assert result.returncode == 0
-        import re
-        numbers = re.findall(r'\d{2,}', result.stdout)
-        assert len(numbers) > 0, 'Benchmark should produce numeric output'
 
 
 class TestCLIInspect:

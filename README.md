@@ -5,7 +5,7 @@
 **Cut API spec tokens by 10×. Same information. Fraction of the cost.**
 
 [![PyPI](https://img.shields.io/pypi/v/lap.svg)](https://pypi.org/project/lap/)
-[![CI](https://github.com/Lean-Agent-Protocol/lap/actions/workflows/ci.yml/badge.svg)](https://github.com/Lean-Agent-Protocol/lap/actions/workflows/ci.yml)
+[![CI](https://github.com/Lap-Platform/lap/actions/workflows/ci.yml/badge.svg)](https://github.com/Lap-Platform/lap/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 
@@ -23,13 +23,13 @@ LLMs waste thousands of tokens parsing bloated API specs. Stripe's OpenAPI spec 
 - **Zero information loss** — every endpoint, param, and type constraint preserved
 - **6 formats supported** — one CLI, one output format
 
-![Compression by Format](https://raw.githubusercontent.com/Lean-Agent-Protocol/lap/main/benchmarks/results/charts/format_comparison.png)
+![Compression by Format](https://raw.githubusercontent.com/Lap-Platform/lap/main/assets/format_comparison.png)
 
 ## Quick Start
 
 ```bash
-pip install lap
-lap compile api.yaml -o api.lap
+pip install lap-platform
+lapsh compile api.yaml -o api.lap
 ```
 
 ## Before / After
@@ -73,13 +73,13 @@ paths:
 | **Protobuf** | 35 | **1.8×** | 117.4× |
 | **GraphQL** | 30 | **1.4×** | 2.1× |
 
-![Compression Ratios](https://raw.githubusercontent.com/Lean-Agent-Protocol/lap/main/benchmarks/results/charts/compression_bar_chart.png)
+![Compression Ratios](https://raw.githubusercontent.com/Lap-Platform/lap/main/assets/compression_bar_chart.png)
 
 → [Full benchmark results](BENCHMARKS.md)
 
 ## How It Works
 
-![How LAP Works](https://raw.githubusercontent.com/Lean-Agent-Protocol/lap/main/benchmarks/results/charts/pipeline.png)
+![How LAP Works](https://raw.githubusercontent.com/Lap-Platform/lap/main/assets/pipeline.png)
 
 **Five compression stages:**
 
@@ -169,12 +169,12 @@ LAP uses `@directives` — a flat, line-oriented grammar designed for LLM parsin
 ## Supported Formats
 
 ```bash
-lap compile     api.yaml           # OpenAPI 3.x / Swagger
-lap graphql     schema.graphql     # GraphQL SDL
-lap asyncapi    events.yaml        # AsyncAPI
-lap protobuf    service.proto      # Protobuf / gRPC
-lap postman     collection.json    # Postman v2.1
-lap compile     model.json         # AWS Smithy (JSON AST or .smithy)
+lapsh compile     api.yaml           # OpenAPI 3.x / Swagger
+lapsh compile     schema.graphql     # GraphQL SDL
+lapsh compile     events.yaml        # AsyncAPI
+lapsh compile     service.proto      # Protobuf / gRPC
+lapsh compile     collection.json    # Postman v2.1
+lapsh compile     model.json         # AWS Smithy (JSON AST or .smithy)
 ```
 
 ## Python SDK

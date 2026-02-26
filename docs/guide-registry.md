@@ -8,21 +8,21 @@ The LAP registry is a lightweight server for discovering, searching, and serving
 
 ```bash
 # Compile some specs first
-lap compile specs/stripe-charges.yaml -o output/stripe-charges.lap
-lap compile specs/github-core.yaml -o output/github-core.lap
+lapsh compile specs/stripe-charges.yaml -o output/stripe-charges.lap
+lapsh compile specs/github-core.yaml -o output/github-core.lap
 
 # Start the registry server
 python3 registry/server.py
 ```
 
-The server starts on port 8420 by default (configurable via `DOCLEAN_PORT` env var).
+The server starts on port 8420 by default (configurable via `LAP_PORT` env var).
 
 ### Configuration
 
 | Env Variable | Default | Purpose |
 |---|---|---|
-| `DOCLEAN_PORT` | `8420` | Server port |
-| `DOCLEAN_OUTPUT` | `./output` | Directory containing `.lap` files |
+| `LAP_PORT` | `8420` | Server port |
+| `LAP_OUTPUT` | `./output` | Directory containing `.lap` files |
 
 ### API Endpoints
 
@@ -48,16 +48,6 @@ curl http://localhost:8420/specs/stripe-charges/meta
 ```
 
 ## Using the Registry Client
-
-### CLI
-
-```bash
-# List available specs
-lap registry list output/
-
-# Search for endpoints
-lap registry search output/ "create"
-```
 
 ### Python SDK
 
@@ -85,7 +75,7 @@ for doc in results:
 ### TypeScript SDK
 
 ```typescript
-import { LAPClient } from '@anthropic/lap-sdk';
+import { LAPClient } from '@lap-platform/sdk';
 
 const client = new LAPClient();
 
@@ -108,14 +98,14 @@ console.log(spec.apiName);  // "Stripe Charges API"
 2. **Compile it**
 
    ```bash
-   lap compile specs/my-api.yaml -o output/my-api.lap
-   lap compile specs/my-api.yaml -o output/my-api.lean.lap --lean
+   lapsh compile specs/my-api.yaml -o output/my-api.lap
+   lapsh compile specs/my-api.yaml -o output/my-api.lean.lap --lean
    ```
 
 3. **Validate**
 
    ```bash
-   lap validate specs/my-api.yaml
+   lapsh validate specs/my-api.yaml
    ```
 
 4. **Test with the registry**
