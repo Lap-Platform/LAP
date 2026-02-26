@@ -156,7 +156,7 @@ def _parse_field(text: str) -> ResponseField:
         inner = type_part[brace + 1:]
         if inner.endswith('}'):
             inner = inner[:-1]
-        child_parts = _split_top_level(inner)
+        child_parts = _split_top_level_simple(inner)
         children = [_parse_field(c) for c in child_parts if c]
         type_part = base_type
 

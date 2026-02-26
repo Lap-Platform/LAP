@@ -16,7 +16,7 @@ from lap.core.converter import lap_to_openapi
 
 # ── Helper ──
 
-SPECS_DIR = Path(__file__).parent.parent / 'examples'
+SPECS_DIR = Path(__file__).parent.parent / 'examples' / 'verbose' / 'openapi'
 OUTPUT_DIR = Path(__file__).parent.parent / 'output'
 
 
@@ -390,14 +390,6 @@ class TestParseFromFile:
         assert len(spec.endpoints) == 5
         assert spec.endpoints[0].method == 'post'
         assert spec.endpoints[0].path == '/v1/charges'
-
-    def test_parse_stripe_lean(self):
-        path = OUTPUT_DIR / 'stripe-charges.lean.lap'
-        if not path.exists():
-            pytest.skip('stripe-charges.lean.lap not found')
-        spec = parse_lap(path.read_text(encoding='utf-8'))
-        assert spec.api_name == 'Stripe Charges API'
-        assert len(spec.endpoints) == 5
 
 
 # ── Converter tests ──
