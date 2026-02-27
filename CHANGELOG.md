@@ -14,8 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Expanded README with concrete compression examples
 
 ### Changed
-- Rebranded from "Lean Agent Protocol" to "Lean API Platform"
-- CLI rebranded from `lap` to `lapsh`
+- CLI entry point renamed to `lapsh`
 - All package versions aligned to 0.3.0
 
 ### Fixed
