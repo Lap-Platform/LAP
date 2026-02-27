@@ -4,7 +4,7 @@
 
 **Cut API spec tokens by 10×. Same information. Fraction of the cost.**
 
-[![PyPI](https://img.shields.io/pypi/v/lap.svg)](https://pypi.org/project/lap/)
+[![PyPI](https://img.shields.io/pypi/v/lapsh.svg)](https://pypi.org/project/lapsh/)
 [![CI](https://github.com/Lap-Platform/lap/actions/workflows/ci.yml/badge.svg)](https://github.com/Lap-Platform/lap/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
@@ -28,8 +28,12 @@ LLMs waste thousands of tokens parsing bloated API specs. Stripe's OpenAPI spec 
 ## Quick Start
 
 ```bash
-pip install lap-platform
+# Python
+pip install lapsh
 lapsh compile api.yaml -o api.lap
+
+# Node.js (no install needed)
+npx @lap-platform/lapsh compile api.yaml -o api.lap
 ```
 
 ## Before / After
@@ -81,13 +85,69 @@ paths:
 
 ![How LAP Works](https://raw.githubusercontent.com/Lap-Platform/lap/main/assets/pipeline.png)
 
-**Five compression stages:**
+LAP compiles API specs through five stages. Here's each one applied to the Stripe charges example above:
 
-1. **Structural noise removal** — Strip YAML scaffolding, `$ref` resolution, empty fields (~30%)
-2. **Directive grammar** — Flat `@directives` replace 4-8 levels of nesting (~25%)
-3. **Type compression** — `str(uuid)` instead of `type: string, format: uuid` (~10%)
-4. **Redundancy elimination** — Deduplicate error schemas, shared params, common fields (~20%)
-5. **Description stripping** (lean mode) — LLMs infer meaning from param names (~15%)
+**1. Structural noise removal (~30%)**
+Strip YAML scaffolding -- nested `paths:`, `requestBody:`, `content:`, `application/json:`, `schema:` wrappers all vanish:
+
+```yaml
+# Before: 6 levels of nesting just to reach the schema
+paths:
+  /v1/charges:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties: ...
+
+# After: endpoint + params on flat lines
+## POST /v1/charges — Create a charge
+@required {amount: int, currency: str}
+```
+
+**2. Directive grammar (~25%)**
+`@directives` replace deeply nested YAML structures with single-line declarations:
+
+```yaml
+# Before                              # After
+responses:                             @returns(200) {id: str, amount: int, status: str}
+  '200':                               @errors {400, 401, 402}
+    content:
+      application/json:
+        schema:
+          properties:
+            id: {type: string}
+            amount: {type: integer}
+            status: {type: string}
+```
+
+**3. Type compression (~10%)**
+Verbose OpenAPI type declarations become inline type expressions:
+
+```
+type: string, format: uuid       ->  str(uuid)
+type: integer                    ->  int
+type: array, items: {type: str}  ->  [str]
+type: string, enum: [a, b, c]   ->  enum(a|b|c)
+```
+
+**4. Redundancy elimination (~20%)**
+Shared fields across endpoints are extracted once via `@common_fields` instead of repeated per-endpoint:
+
+```
+# Before: {id: str, created: int, object: str} repeated in every @returns
+# After:
+@common_fields {id: str, created: int(unix-timestamp), object: str}
+```
+
+**5. Description stripping -- lean mode (~15%)**
+LLMs infer meaning from parameter names. Strip descriptions for further savings:
+
+```
+# Standard: @required {amount: int # Amount in cents., currency: str # ISO 4217 code.}
+# Lean:     @required {amount: int, currency: str}
+```
 
 ## LAP Format Conventions
 

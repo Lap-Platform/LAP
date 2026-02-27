@@ -206,7 +206,7 @@ describe('Skill Generation', () => {
       const md = skill.fileMap['SKILL.md'];
       const fmMatch = md.match(/^---\n([\s\S]*?)\n---/);
       assert.ok(fmMatch, 'Should have frontmatter');
-      assert.ok(fmMatch[1].includes('generator: lap-platform'), 'Should include generator');
+      assert.ok(fmMatch[1].includes('generator: lapsh'), 'Should include generator');
     });
 
     it('clawhub option adds metadata.openclaw block for auth specs', () => {

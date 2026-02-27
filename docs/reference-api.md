@@ -154,7 +154,7 @@ full = loader.load_full()  # List[Document] — single document with full contex
 ### `LAPClient`
 
 ```typescript
-import { LAPClient } from '@lap-platform/sdk';
+import { LAPClient } from '@lap-platform/lapsh';
 
 const client = new LAPClient();
 ```
@@ -223,7 +223,7 @@ const spec = await client.fromRegistry('http://localhost:8420', 'stripe-charges'
 Format a spec for LLM context injection.
 
 ```typescript
-import { toContext } from '@lap-platform/sdk';
+import { toContext } from '@lap-platform/lapsh';
 
 const context = toContext(spec, { lean: true });
 const filtered = toContext(spec, {

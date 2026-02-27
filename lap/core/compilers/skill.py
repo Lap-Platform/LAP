@@ -108,7 +108,7 @@ def _generate_frontmatter(spec: LAPSpec, options: SkillOptions) -> str:
         f"name: {name}",
         f'description: "{desc_escaped}"',
         f"version: {options.version}",
-        "generator: lap-platform",
+        "generator: lapsh",
     ]
 
     if options.clawhub and spec.auth_scheme:

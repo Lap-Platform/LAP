@@ -5,6 +5,13 @@ Parse and work with LAP (Lean API Platform) API specifications in TypeScript/Jav
 ## Install
 
 ```bash
+# Use directly (no install)
+npx @lap-platform/lapsh compile api.yaml -o api.lap
+
+# Or install globally
+npm install -g @lap-platform/lapsh
+
+# Or add to a project
 npm install @lap-platform/lapsh
 ```
 

@@ -452,10 +452,10 @@ def test_frontmatter_has_version(minimal_spec):
 
 
 def test_frontmatter_has_generator(minimal_spec):
-    """Generated frontmatter includes generator: lap-platform"""
+    """Generated frontmatter includes generator: lapsh"""
     result = generate_skill(minimal_spec)
     skill_md = result.file_map["SKILL.md"]
-    assert "generator: lap-platform" in skill_md
+    assert "generator: lapsh" in skill_md
 
 
 def test_frontmatter_version_and_generator_in_frontmatter(minimal_spec):
@@ -465,7 +465,7 @@ def test_frontmatter_version_and_generator_in_frontmatter(minimal_spec):
     parts = skill_md.split("---", 2)
     frontmatter = parts[1]
     assert "version: 1.0.0" in frontmatter
-    assert "generator: lap-platform" in frontmatter
+    assert "generator: lapsh" in frontmatter
 
 
 def test_clawhub_metadata_with_auth():

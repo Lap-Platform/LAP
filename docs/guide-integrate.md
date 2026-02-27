@@ -9,7 +9,7 @@ LAP provides a LangChain-compatible `DocumentLoader` that loads LAP files as Lan
 ### Installation
 
 ```bash
-pip install lap-platform[langchain]
+pip install lapsh[langchain]
 ```
 
 ### Loading API docs
@@ -198,7 +198,7 @@ print(f"Optional: {[p.name for p in ep.optional_params]}")
 ### TypeScript
 
 ```typescript
-import { LAPClient, toContext } from '@lap-platform/sdk';
+import { LAPClient, toContext } from '@lap-platform/lapsh';
 
 const client = new LAPClient();
 const spec = client.loadFile('output/stripe-charges.lap');

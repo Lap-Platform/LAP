@@ -227,7 +227,7 @@ function generateFrontmatter(spec: LAPSpec, options?: SkillOptions): string {
   const descEscaped = desc.replace(/"/g, '\\"');
 
   const ver = options?.version ?? '1.0.0';
-  let fm = `---\nname: ${name}\ndescription: "${descEscaped}"\nversion: ${ver}\ngenerator: lap-platform`;
+  let fm = `---\nname: ${name}\ndescription: "${descEscaped}"\nversion: ${ver}\ngenerator: lapsh`;
 
   if (options?.clawhub && spec.auth) {
     const envVar = slugify(spec.apiName).toUpperCase().replace(/-/g, '_') + '_API_KEY';

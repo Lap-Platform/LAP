@@ -75,7 +75,7 @@ for doc in results:
 ### TypeScript SDK
 
 ```typescript
-import { LAPClient } from '@lap-platform/sdk';
+import { LAPClient } from '@lap-platform/lapsh';
 
 const client = new LAPClient();
 

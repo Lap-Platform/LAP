@@ -5,7 +5,7 @@
 ### Python SDK
 
 ```bash
-pip install lap-platform
+pip install lapsh
 
 # Or from source:
 git clone https://github.com/Lap-Platform/lap.git
@@ -17,21 +17,21 @@ Dependencies: `pyyaml`, `tiktoken`, `rich`
 
 Optional extras:
 ```bash
-pip install lap-platform[langchain]   # LangChain integration
-pip install lap-platform[tokens]      # Token counting with tiktoken
+pip install lapsh[langchain]   # LangChain integration
+pip install lapsh[tokens]      # Token counting with tiktoken
 ```
 
 ### TypeScript SDK
 
 ```bash
-npm install @lap-platform/sdk
-```
+# Use directly (no install)
+npx @lap-platform/lapsh compile api.yaml -o api.lap
 
-Or from source:
-```bash
-cd sdk/typescript
-npm install
-npm run build
+# Or install globally
+npm install -g @lap-platform/lapsh
+
+# Or add to a project
+npm install @lap-platform/lapsh
 ```
 
 ### CLI Only
