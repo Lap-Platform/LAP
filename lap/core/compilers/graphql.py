@@ -26,7 +26,7 @@ from graphql import (
     Undefined,
 )
 
-from core.formats.lap import LAPSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema
+from lap.core.formats.lap import LAPSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema
 
 
 # ── Type string helpers ──────────────────────────────────────────────

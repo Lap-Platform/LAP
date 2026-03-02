@@ -15,7 +15,7 @@ import json
 import pytest
 from pathlib import Path
 
-from core.compilers.smithy import (
+from lap.core.compilers.smithy import (
     compile_smithy,
     _load_json_ast,
     _build_shape_index,

@@ -12,7 +12,7 @@ from typing import Optional
 
 import yaml
 
-from core.formats.lap import (
+from lap.core.formats.lap import (
     LAPSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema
 )
 
@@ -399,7 +399,7 @@ def compile_asyncapi(spec_path: str) -> LAPSpec:
     file_size = path.stat().st_size
     if file_size > 50 * 1024 * 1024:
         raise ValueError(f"AsyncAPI spec too large: {file_size} bytes (max 50MB)")
-    raw = path.read_text()
+    raw = path.read_text(encoding='utf-8')
 
     if path.suffix in (".yaml", ".yml"):
         spec = yaml.safe_load(raw)

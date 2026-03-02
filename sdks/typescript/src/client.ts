@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as http from 'http';
 import * as https from 'https';
-import { parse, DocLeanSpec } from './parser';
+import { parse, LAPSpec } from './parser';
 
 export interface ToContextOptions {
   lean?: boolean;
@@ -9,16 +9,16 @@ export interface ToContextOptions {
 }
 
 export class LAPClient {
-  loadFile(filePath: string): DocLeanSpec {
+  loadFile(filePath: string): LAPSpec {
     const text = fs.readFileSync(filePath, 'utf-8');
     return parse(text);
   }
 
-  loadString(text: string): DocLeanSpec {
+  loadString(text: string): LAPSpec {
     return parse(text);
   }
 
-  async fromRegistry(registryUrl: string, apiName: string): Promise<DocLeanSpec> {
+  async fromRegistry(registryUrl: string, apiName: string): Promise<LAPSpec> {
     const url = `${registryUrl.replace(/\/$/, '')}/specs/${encodeURIComponent(apiName)}`;
     const text = await this._fetch(url);
     return parse(text);
@@ -42,7 +42,7 @@ export class LAPClient {
   }
 }
 
-export function toContext(spec: DocLeanSpec, opts: ToContextOptions = {}): string {
+export function toContext(spec: LAPSpec, opts: ToContextOptions = {}): string {
   const lines: string[] = [];
   lines.push(`API: ${spec.apiName}`);
   lines.push(`Base: ${spec.baseUrl}`);

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-LAP CLI -- LeanAgent Protocol command-line tool.
+LAP CLI -- Lean API Platform command-line tool.
 
 Compile, validate, benchmark, inspect, and convert LAP API specifications.
 """
@@ -12,8 +12,8 @@ import os
 import sys
 from pathlib import Path
 
-# Add project root to path so `core.*` imports work when run as script
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+# Add project root to path so `lap.*` imports work when run as script
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 try:
     from rich.console import Console
@@ -56,11 +56,21 @@ def heading(msg):
         print(f"\n{'='*60}\n  {msg}\n{'='*60}")
 
 
+def _collect_spec_files(directory):
+    """Collect spec files from a directory, excluding known oversized specs."""
+    spec_files = sorted(
+        glob.glob(str(Path(directory) / "*.yaml")) +
+        glob.glob(str(Path(directory) / "*.yml")) +
+        glob.glob(str(Path(directory) / "*.json"))
+    )
+    return [f for f in spec_files if "stripe-full" not in f]
+
+
 # ── Commands ─────────────────────────────────────────────────────────
 
 def cmd_compile(args):
     """Compile any API spec to LAP format (auto-detects format)."""
-    from core.compilers import compile as compile_spec
+    from lap.core.compilers import compile as compile_spec
 
     spec_path = args.spec
     if not Path(spec_path).exists():
@@ -92,7 +102,7 @@ def cmd_compile(args):
 
 def cmd_validate(args):
     """Validate LAP output for information loss."""
-    sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "benchmarks"))
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "benchmarks"))
     from validate import validate_schema_completeness, print_results
 
     if not Path(args.spec).exists():
@@ -136,7 +146,7 @@ def cmd_validate(args):
 
 def cmd_benchmark(args):
     """Benchmark token usage for an API spec."""
-    sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "benchmarks"))
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "benchmarks"))
     from benchmark import run_benchmark
 
     if not Path(args.spec).exists():
@@ -148,19 +158,14 @@ def cmd_benchmark(args):
 
 def cmd_benchmark_all(args):
     """Benchmark all specs in a directory."""
-    from core.compilers.openapi import compile_openapi
-    from core.utils import count_tokens as count
+    from lap.core.compilers.openapi import compile_openapi
+    from lap.core.utils import count_tokens as count
 
     specs_dir = Path(args.directory)
     if not specs_dir.is_dir():
         error(f"Not a directory: {args.directory}")
 
-    spec_files = sorted(
-        glob.glob(str(specs_dir / "*.yaml")) +
-        glob.glob(str(specs_dir / "*.yml")) +
-        glob.glob(str(specs_dir / "*.json"))
-    )
-    spec_files = [f for f in spec_files if "stripe-full" not in f]
+    spec_files = _collect_spec_files(args.directory)
 
     if not spec_files:
         error(f"No spec files found in {args.directory}")
@@ -180,7 +185,7 @@ def cmd_benchmark_all(args):
         totals = {"oa": 0, "dl": 0, "ln": 0}
         for spec_path in spec_files:
             name = Path(spec_path).stem
-            raw = Path(spec_path).read_text()
+            raw = Path(spec_path).read_text(encoding='utf-8')
             ds = compile_openapi(spec_path)
             dl = ds.to_lap(lean=False)
             ln = ds.to_lap(lean=True)
@@ -205,20 +210,20 @@ def cmd_benchmark_all(args):
         )
         console.print(table)
     else:
-        sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "benchmarks"))
+        sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "benchmarks"))
         from benchmark_all import run_all
         run_all()
 
 
 def cmd_inspect(args):
     """Parse and inspect a LAP file."""
-    from core.parser import parse_lap
+    from lap.core.parser import parse_lap
 
     path = Path(args.file)
     if not path.exists():
         error(f"File not found: {args.file}")
 
-    text = path.read_text()
+    text = path.read_text(encoding='utf-8')
     spec = parse_lap(text)
 
     if args.endpoint:
@@ -283,7 +288,7 @@ def cmd_inspect(args):
 
 def cmd_convert(args):
     """Convert LAP back to OpenAPI YAML."""
-    from core.converter import convert_file
+    from lap.core.converter import convert_file
 
     path = Path(args.file)
     if not path.exists():
@@ -299,7 +304,7 @@ def cmd_convert(args):
 
 def cmd_login(args):
     """Authenticate with the LAP registry via GitHub OAuth."""
-    from cli.auth import (
+    from lap.cli.auth import (
         api_request, save_credentials, load_credentials,
         poll_sse_stream, get_registry_url,
     )
@@ -333,7 +338,7 @@ def cmd_login(args):
 
 def cmd_logout(args):
     """Log out and revoke the current API token."""
-    from cli.auth import get_token, clear_credentials, api_request
+    from lap.cli.auth import get_token, clear_credentials, api_request
 
     token = get_token()
     if not token:
@@ -352,7 +357,7 @@ def cmd_logout(args):
 
 def cmd_whoami(args):
     """Show the currently authenticated user."""
-    from cli.auth import get_token, api_request
+    from lap.cli.auth import get_token, api_request
 
     token = get_token()
     if not token:
@@ -366,8 +371,8 @@ def cmd_whoami(args):
 
 def cmd_publish(args):
     """Compile and publish a spec to the registry."""
-    from cli.auth import get_token, api_request
-    from core.compilers import compile as compile_spec
+    from lap.cli.auth import get_token, api_request
+    from lap.core.compilers import compile as compile_spec
 
     token = get_token()
     if not token:
@@ -377,16 +382,15 @@ def cmd_publish(args):
     if not Path(spec_path).exists():
         error(f"File not found: {spec_path}")
 
-    # Determine spec name
+    # Determine spec name (and compile spec if needed)
     name = args.name
+    result_obj = None
     if not name:
-        # Try to extract from spec
         try:
             result_obj = compile_spec(spec_path)
             if isinstance(result_obj, list):
                 error("Protobuf directories produce multiple specs. Use --name to specify which to publish.")
             name = result_obj.api_name.lower().replace(" ", "-").replace("_", "-")
-            # Strip non-alphanumeric except hyphens
             name = "".join(c for c in name if c.isalnum() or c == "-").strip("-")
         except Exception as e:
             error(f"Could not auto-detect spec name: {e}. Use --name to specify.")
@@ -394,12 +398,13 @@ def cmd_publish(args):
     if not name:
         error("Could not determine spec name. Use --name to specify.")
 
-    # Compile spec
+    # Compile spec (reuse cached result if available)
     print(f"Compiling {Path(spec_path).name}...")
-    try:
-        result_obj = compile_spec(spec_path)
-    except ValueError as e:
-        error(str(e))
+    if result_obj is None:
+        try:
+            result_obj = compile_spec(spec_path)
+        except ValueError as e:
+            error(str(e))
 
     if isinstance(result_obj, list):
         error("Protobuf directories produce multiple specs. Publish each individually.")
@@ -418,16 +423,288 @@ def cmd_publish(args):
         "source_size": source_size,
     }
 
+    # Generate and include skill if --skill flag is set
+    if getattr(args, "skill", False):
+        from lap.core.compilers.skill import generate_skill, SkillOptions
+        skill_layer = getattr(args, "skill_layer", 1) or 1
+        skill_opts = SkillOptions(layer=skill_layer, lean=True)
+        skill = generate_skill(result_obj, skill_opts)
+
+        if skill_layer == 2:
+            try:
+                from lap.core.compilers.skill_llm import enhance_skill
+                print("Enhancing skill with LLM (Layer 2)...")
+                skill = enhance_skill(result_obj, skill)
+            except ImportError:
+                warn("claude CLI or anthropic package not available, falling back to Layer 1 skill.")
+            except RuntimeError as e:
+                warn(f"Layer 2 enhancement failed: {e}")
+                warn("Falling back to Layer 1 skill.")
+
+        body["skill_md"] = skill.file_map["SKILL.md"]
+        body["skill_refs"] = {
+            k: v for k, v in skill.file_map.items() if k != "SKILL.md"
+        }
+        print(f"Including skill ({skill.token_count:,} tokens)...")
+
     from urllib.parse import quote
     print(f"Publishing {name} to provider {args.provider}...")
     result = api_request("POST", f"/v1/apis/{quote(name, safe='')}", body=body, token=token)
     info(f"Published {name} v{result.get('version', '?')} (provider: {result.get('provider', args.provider)})")
 
 
+def cmd_skill(args):
+    """Generate a Claude Code skill from an API spec."""
+    from lap.core.compilers import compile as compile_spec
+    from lap.core.compilers.skill import generate_skill, SkillOptions
+    from lap.core.utils import count_tokens
+
+    spec_path = args.spec
+    if not Path(spec_path).exists():
+        error(f"File not found: {spec_path}")
+
+    fmt = getattr(args, "format", None)
+    try:
+        result_obj = compile_spec(spec_path, format=fmt)
+    except ValueError as e:
+        error(str(e))
+
+    if isinstance(result_obj, list):
+        error("Protobuf directories produce multiple specs. Generate skills individually.")
+
+    options = SkillOptions(
+        layer=args.layer,
+        lean=not getattr(args, "full_spec", False),
+    )
+
+    skill = generate_skill(result_obj, options)
+
+    # Layer 2 enhancement
+    if args.layer == 2:
+        try:
+            from lap.core.compilers.skill_llm import enhance_skill
+            print("Enhancing skill with LLM (Layer 2)...")
+            skill = enhance_skill(result_obj, skill)
+        except ImportError:
+            warn("claude CLI or anthropic package not available, falling back to Layer 1 skill.")
+        except RuntimeError as e:
+            warn(f"Layer 2 enhancement failed: {e}")
+            warn("Falling back to Layer 1 skill.")
+
+    # Install to ~/.claude/skills/
+    if getattr(args, "install", False):
+        skill_dir = Path.home() / ".claude" / "skills" / skill.name
+        for rel_path, content in skill.file_map.items():
+            out = skill_dir / rel_path
+            out.parent.mkdir(parents=True, exist_ok=True)
+            out.write_text(content, encoding='utf-8')
+        info(f"Installed skill to {skill_dir}")
+        info(f"{skill.endpoint_count} endpoints | {skill.token_count:,} tokens")
+        return
+
+    # Write to output directory
+    if args.output:
+        out_dir = Path(args.output) / skill.name
+        for rel_path, content in skill.file_map.items():
+            out = out_dir / rel_path
+            out.parent.mkdir(parents=True, exist_ok=True)
+            out.write_text(content, encoding='utf-8')
+        info(f"Generated skill: {out_dir}")
+        info(f"{skill.endpoint_count} endpoints | {skill.token_count:,} tokens | {len(skill.file_map)} files")
+        return
+
+    # Default: print SKILL.md to stdout
+    print(skill.file_map["SKILL.md"])
+
+
+def cmd_skill_batch(args):
+    """Generate skills for all specs in a directory."""
+    from lap.core.compilers import compile as compile_spec
+    from lap.core.compilers.skill import generate_skill, SkillOptions
+
+    specs_dir = Path(args.directory)
+    if not specs_dir.is_dir():
+        error(f"Not a directory: {args.directory}")
+
+    spec_files = _collect_spec_files(args.directory)
+
+    if not spec_files:
+        error(f"No spec files found in {args.directory}")
+
+    out_dir = Path(args.output)
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    options = SkillOptions(layer=args.layer, lean=True)
+    success, failed, skipped = 0, 0, 0
+
+    heading(f"Generating skills for {len(spec_files)} specs")
+
+    for spec_path in spec_files:
+        name = Path(spec_path).stem
+        try:
+            result_obj = compile_spec(spec_path)
+            if isinstance(result_obj, list):
+                warn(f"Skipping {name} (multi-spec)")
+                skipped += 1
+                continue
+            skill = generate_skill(result_obj, options)
+
+            if args.layer == 2:
+                try:
+                    from lap.core.compilers.skill_llm import enhance_skill
+                    skill = enhance_skill(result_obj, skill)
+                except (ImportError, RuntimeError) as e:
+                    if getattr(args, "verbose", False):
+                        warn(f"Layer 2 failed for {name}: {e}")
+
+            skill_dir = out_dir / skill.name
+            for rel_path, content in skill.file_map.items():
+                out = skill_dir / rel_path
+                out.parent.mkdir(parents=True, exist_ok=True)
+                out.write_text(content, encoding='utf-8')
+            success += 1
+            print(f"  {name} -> {skill.name} ({skill.token_count:,} tokens)")
+        except Exception as e:
+            failed += 1
+            warn(f"Failed {name}: {e}")
+            if getattr(args, "verbose", False):
+                import traceback
+                traceback.print_exc()
+
+    info(f"Generated {success} skills, {failed} failures, {skipped} skipped")
+
+
+def cmd_skill_install(args):
+    """Install a skill from the LAP registry."""
+    from lap.cli.auth import api_request, get_registry_url
+    from urllib.parse import quote
+    import json as json_mod
+
+    name = args.name
+    registry = get_registry_url()
+    print(f"Fetching skill bundle for {name}...")
+
+    try:
+        result = api_request("GET", f"/v1/apis/{quote(name, safe='')}/skill/bundle")
+    except SystemExit:
+        error(f"Failed to fetch skill from {registry}. Check that '{name}' exists and has a skill.")
+
+    files = result.get("files", {})
+    if not files:
+        error(f"No skill files found for '{name}'.")
+
+    install_dir = Path(getattr(args, "dir", None) or (Path.home() / ".claude" / "skills" / name))
+    for rel_path, content in files.items():
+        out = install_dir / rel_path
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(content, encoding='utf-8')
+
+    info(f"Installed {len(files)} files to {install_dir}")
+
+
+def cmd_benchmark_skill(args):
+    """Benchmark skill token usage for a spec."""
+    from lap.core.compilers import compile as compile_spec
+    from lap.core.compilers.skill import generate_skill
+    from lap.core.utils import count_tokens as count
+
+    spec_path = args.spec
+    if not Path(spec_path).exists():
+        error(f"File not found: {spec_path}")
+
+    try:
+        result_obj = compile_spec(spec_path)
+    except ValueError as e:
+        error(str(e))
+
+    if isinstance(result_obj, list):
+        error("Multi-spec not supported for skill benchmark.")
+
+    skill = generate_skill(result_obj)
+    raw = Path(spec_path).read_text(encoding='utf-8')
+    raw_tokens = count(raw)
+
+    heading(f"Skill Benchmark: {Path(spec_path).name}")
+    print(f"  API: {result_obj.api_name}")
+    print(f"  Endpoints: {len(result_obj.endpoints)}")
+    print(f"  Raw spec tokens: {raw_tokens:,}")
+    for file_path, content in skill.file_map.items():
+        print(f"  {file_path} tokens: {count(content):,}")
+    print(f"  Total skill tokens: {skill.token_count:,}")
+    ratio = raw_tokens / skill.token_count if skill.token_count else 0
+    print(f"  Compression ratio: {ratio:.1f}x")
+
+
+def cmd_benchmark_skill_all(args):
+    """Benchmark skills for all specs in a directory."""
+    from lap.core.compilers.openapi import compile_openapi
+    from lap.core.compilers.skill import generate_skill
+    from lap.core.utils import count_tokens as count
+
+    specs_dir = Path(args.directory)
+    if not specs_dir.is_dir():
+        error(f"Not a directory: {args.directory}")
+
+    spec_files = _collect_spec_files(args.directory)
+
+    if not spec_files:
+        error(f"No spec files found in {args.directory}")
+
+    heading(f"Skill Benchmark ({len(spec_files)} specs)")
+
+    totals = {"raw": 0, "skill_md": 0, "total": 0, "endpoints": 0}
+    results = []
+
+    for spec_path in spec_files:
+        name = Path(spec_path).stem
+        try:
+            raw = Path(spec_path).read_text(encoding='utf-8')
+            ds = compile_openapi(spec_path)
+            skill = generate_skill(ds)
+            raw_t = count(raw)
+            skill_md_t = count(skill.file_map["SKILL.md"])
+            total_t = skill.token_count
+            ratio = raw_t / total_t if total_t else 0
+            totals["raw"] += raw_t
+            totals["skill_md"] += skill_md_t
+            totals["total"] += total_t
+            totals["endpoints"] += len(ds.endpoints)
+            results.append((name, len(ds.endpoints), raw_t, skill_md_t, total_t, ratio))
+        except Exception as e:
+            warn(f"Failed {name}: {e}")
+
+    if HAS_RICH:
+        table = Table(title="Skill Token Benchmark", box=box.SIMPLE_HEAVY)
+        table.add_column("API", style="cyan", min_width=18)
+        table.add_column("Endpoints", justify="right")
+        table.add_column("Raw", justify="right")
+        table.add_column("SKILL.md", justify="right", style="green")
+        table.add_column("Total", justify="right", style="bold green")
+        table.add_column("Ratio", justify="right", style="yellow")
+
+        for name, eps, raw_t, skill_md_t, total_t, ratio in results:
+            table.add_row(name, str(eps), f"{raw_t:,}", f"{skill_md_t:,}", f"{total_t:,}", f"{ratio:.1f}x")
+
+        t = totals
+        table.add_section()
+        overall_ratio = t["raw"] / t["total"] if t["total"] else 0
+        table.add_row(
+            "[bold]TOTAL[/]", str(t["endpoints"]),
+            f"[bold]{t['raw']:,}[/]", f"[bold]{t['skill_md']:,}[/]",
+            f"[bold]{t['total']:,}[/]", f"[bold]{overall_ratio:.1f}x[/]",
+        )
+        console.print(table)
+    else:
+        for name, eps, raw_t, skill_md_t, total_t, ratio in results:
+            print(f"  {name}: {eps} eps, {total_t:,} total tokens, {ratio:.1f}x compression")
+        overall = totals["raw"] / totals["total"] if totals["total"] else 0
+        print(f"\nTotal: {len(results)} specs, {totals['total']:,} tokens, {overall:.1f}x compression")
+
+
 def cmd_diff(args):
     """Diff two LAP files."""
-    from core.parser import parse_lap
-    from core.differ import diff_specs, generate_changelog, check_compatibility
+    from lap.core.parser import parse_lap
+    from lap.core.differ import diff_specs, generate_changelog, check_compatibility
 
     old_path, new_path = Path(args.old), Path(args.new)
     if not old_path.exists():
@@ -435,8 +712,8 @@ def cmd_diff(args):
     if not new_path.exists():
         error(f"File not found: {args.new}")
 
-    old_spec = parse_lap(old_path.read_text())
-    new_spec = parse_lap(new_path.read_text())
+    old_spec = parse_lap(old_path.read_text(encoding='utf-8'))
+    new_spec = parse_lap(new_path.read_text(encoding='utf-8'))
 
     if args.format == "changelog":
         print(generate_changelog(old_spec, new_spec, version=args.version or "0.0.0"))
@@ -478,7 +755,7 @@ def cmd_diff(args):
 def main():
     parser = argparse.ArgumentParser(
         prog="lap",
-        description="LAP -- LeanAgent Protocol CLI",
+        description="LAP -- Lean API Platform CLI",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="Run 'lap <command> --help' for more info on a command.",
     )
@@ -539,6 +816,39 @@ def main():
     p.add_argument("--provider", required=True, help="Provider slug (e.g. stripe)")
     p.add_argument("--name", help="Override spec name (auto-detected if omitted)")
     p.add_argument("--source-url", help="Upstream spec URL")
+    p.add_argument("--skill", action="store_true", help="Generate and include a Claude Code skill")
+    p.add_argument("--skill-layer", type=int, default=1, choices=[1, 2], help="Skill generation layer (default: 1)")
+
+    # skill
+    p = sub.add_parser("skill", help="Generate a Claude Code skill from an API spec")
+    p.add_argument("spec", help="Path to API spec file")
+    p.add_argument("-o", "--output", help="Output directory (default: stdout)")
+    p.add_argument("-f", "--format",
+                   choices=["openapi", "graphql", "asyncapi", "protobuf", "postman", "smithy"],
+                   help="Force spec format (auto-detected if omitted)")
+    p.add_argument("--layer", type=int, default=1, choices=[1, 2], help="Generation layer (1=mechanical, 2=LLM)")
+    p.add_argument("--full-spec", action="store_true", help="Include full spec (not lean)")
+    p.add_argument("--install", action="store_true", help="Install skill to ~/.claude/skills/")
+
+    # skill-batch
+    p = sub.add_parser("skill-batch", help="Generate skills for all specs in a directory")
+    p.add_argument("directory", help="Directory containing spec files")
+    p.add_argument("-o", "--output", required=True, help="Output directory")
+    p.add_argument("--layer", type=int, default=1, choices=[1, 2], help="Generation layer (default: 1)")
+    p.add_argument("--verbose", "-v", action="store_true", help="Print full tracebacks on failure")
+
+    # skill-install
+    p = sub.add_parser("skill-install", help="Install a skill from the LAP registry")
+    p.add_argument("name", help="API name from the registry")
+    p.add_argument("--dir", help="Custom install directory (default: ~/.claude/skills/)")
+
+    # benchmark-skill
+    p = sub.add_parser("benchmark-skill", help="Benchmark skill token usage for a spec")
+    p.add_argument("spec", help="Path to API spec file")
+
+    # benchmark-skill-all
+    p = sub.add_parser("benchmark-skill-all", help="Benchmark skills for all specs in a directory")
+    p.add_argument("directory", help="Directory containing spec files")
 
     args = parser.parse_args()
 
@@ -554,6 +864,11 @@ def main():
         "logout": cmd_logout,
         "whoami": cmd_whoami,
         "publish": cmd_publish,
+        "skill": cmd_skill,
+        "skill-batch": cmd_skill_batch,
+        "skill-install": cmd_skill_install,
+        "benchmark-skill": cmd_benchmark_skill,
+        "benchmark-skill-all": cmd_benchmark_skill_all,
     }
 
     commands[args.command](args)

@@ -15,8 +15,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import yaml
 
-from core.compilers.openapi import compile_openapi
-from core.utils import count_tokens, MODEL_COSTS
+from lap.core.compilers.openapi import compile_openapi
+from lap.core.utils import count_tokens, MODEL_COSTS
 
 
 def run_benchmark(spec_path: str, lap_path: str = None):
@@ -27,11 +27,11 @@ def run_benchmark(spec_path: str, lap_path: str = None):
     verbose_text = lap_spec.to_original_text()
 
     # Also read raw source for comparison
-    raw_source = Path(spec_path).read_text()
+    raw_source = Path(spec_path).read_text(encoding='utf-8')
 
     # If a pre-compiled lap file is provided, use that
     if lap_path:
-        lap_text = Path(lap_path).read_text()
+        lap_text = Path(lap_path).read_text(encoding='utf-8')
 
     print("=" * 60)
     print("📊 LAP LAP Token Benchmark")

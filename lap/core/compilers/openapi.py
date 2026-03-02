@@ -14,7 +14,7 @@ from pathlib import Path
 
 import yaml
 
-from core.formats.lap import LAPSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema
+from lap.core.formats.lap import LAPSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema
 
 
 def resolve_ref(spec: dict, ref: str, _visited: set = None) -> dict:
@@ -307,7 +307,7 @@ def compile_openapi(spec_path: str) -> LAPSpec:
     file_size = path.stat().st_size
     if file_size > 50 * 1024 * 1024:
         raise ValueError(f"OpenAPI spec too large: {file_size} bytes (max 50MB)")
-    raw = path.read_text()
+    raw = path.read_text(encoding='utf-8')
 
     if path.suffix in (".yaml", ".yml"):
         # Use a custom loader that handles non-standard YAML tags gracefully

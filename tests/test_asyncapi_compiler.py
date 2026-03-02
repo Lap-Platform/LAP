@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 
-from core.compilers.asyncapi import compile_asyncapi, resolve_ref, extract_type, _detect_version
+from lap.core.compilers.asyncapi import compile_asyncapi, resolve_ref, extract_type, _detect_version
 
 
 SPECS_DIR = Path(__file__).parent.parent / "examples" / "verbose" / "asyncapi"
@@ -337,7 +337,7 @@ class TestTokenBenchmark:
 
     def test_compression_ratio(self, spec_name):
         spec_path = get_spec(spec_name)
-        raw_text = Path(spec_path).read_text()
+        raw_text = Path(spec_path).read_text(encoding='utf-8')
         lap = compile_asyncapi(spec_path)
         compiled = lap.to_lap(lean=False)
 

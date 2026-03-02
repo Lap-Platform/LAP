@@ -1,16 +1,43 @@
 [build-system]
 requires = ["setuptools>=68.0"]
-build-backend = "setuptools.backends._legacy:_Backend"
+build-backend = "setuptools.build_meta"
 
 [project]
-name = "lap-protocol"
+name = "lap-platform"
 version = "0.2.0"
-description = "LeanAgent Protocol — Typed API contracts for AI agents"
+description = "Lean API Platform -- Token-efficient API specs for AI agents"
+readme = "README.md"
+license = "Apache-2.0"
 requires-python = ">=3.10"
+authors = [
+    { name = "LAP Contributors" },
+]
+keywords = ["api", "openapi", "ai", "llm", "agents", "compression", "platform"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Documentation",
+]
 dependencies = ["pyyaml>=6.0", "tiktoken>=0.5.0"]
 
 [project.optional-dependencies]
-dev = ["pytest", "pytest-timeout", "rich", "graphql-core", "tiktoken"]
+dev = ["pytest", "pytest-timeout", "rich", "graphql-core", "tiktoken", "build", "twine"]
 
 [project.scripts]
-lap = "cli.main:main"
+lap = "lap.cli.main:main"
+
+[project.urls]
+Homepage = "https://github.com/Lean-Agent-Protocol/lap"
+Documentation = "https://github.com/Lean-Agent-Protocol/lap#readme"
+Repository = "https://github.com/Lean-Agent-Protocol/lap"
+Issues = "https://github.com/Lean-Agent-Protocol/lap/issues"
+Changelog = "https://github.com/Lean-Agent-Protocol/lap/blob/main/CHANGELOG.md"
+
+[tool.setuptools.packages.find]
+include = ["lap*"]

@@ -13,8 +13,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import yaml
 
-from core.compilers.openapi import compile_openapi
-from core.utils import count_tokens, MODEL_COSTS
+from lap.core.compilers.openapi import compile_openapi
+from lap.core.utils import count_tokens, MODEL_COSTS
 
 ROOT = Path(__file__).parent.parent
 OUTPUT = ROOT / "output"
@@ -42,7 +42,7 @@ def compile_all_specs():
 def load_agent_results():
     p = OUTPUT / "agent_results.json"
     if p.exists():
-        return json.loads(p.read_text())
+        return json.loads(p.read_text(encoding='utf-8'))
     return None
 
 

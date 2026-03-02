@@ -20,3 +20,22 @@ env/
 *.log
 *.bak
 .pytest_cache/
+
+# Confidential / internal
+private/
+
+# Claude Code local settings
+.claude/
+
+# Generated output
+output/
+
+# Scratch/test files in root
+/test*.lap
+/analyze_common_fields.py
+/benchmark_doclean.py
+/benchmark_verbose.py
+/extract_kpis.py
+
+# TypeScript build artifacts
+*.tsbuildinfo

@@ -1,15 +1,35 @@
 {
-  "name": "@lap/sdk",
+  "name": "@lap-platform/sdk",
   "version": "0.1.0",
-  "description": "TypeScript SDK for LAP (LLM API Protocol) - Parse and work with DocLean API specifications",
+  "description": "TypeScript SDK for LAP (Lean API Platform) -- Parse and work with LAP API specifications",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
+  "files": [
+    "dist/src/**/*.js",
+    "dist/src/**/*.d.ts",
+    "dist/src/**/*.js.map",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsc",
     "test": "tsc && node dist/tests/parser.test.js"
   },
+  "keywords": ["api", "openapi", "ai", "llm", "agents", "compression", "lap"],
+  "author": "LAP Contributors",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Lean-Agent-Protocol/lap.git",
+    "directory": "sdks/typescript"
+  },
+  "homepage": "https://github.com/Lean-Agent-Protocol/lap",
+  "bugs": {
+    "url": "https://github.com/Lean-Agent-Protocol/lap/issues"
+  },
+  "engines": {
+    "node": ">=16"
+  },
   "devDependencies": {
     "typescript": "^5.9.3"
-  },
-  "license": "MIT"
+  }
 }

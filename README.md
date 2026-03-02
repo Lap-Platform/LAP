@@ -1,6 +1,6 @@
 <div align="center">
 
-# LAP — Lean Agent Protocol
+# LAP — Lean API Platform
 
 **Cut API spec tokens by 10×. Same information. Fraction of the cost.**
 
@@ -23,7 +23,7 @@ LLMs waste thousands of tokens parsing bloated API specs. Stripe's OpenAPI spec 
 - **Zero information loss** — every endpoint, param, and type constraint preserved
 - **6 formats supported** — one CLI, one output format
 
-![Compression by Format](benchmarks/results/charts/format_comparison.png)
+![Compression by Format](https://raw.githubusercontent.com/Lean-Agent-Protocol/lap/main/benchmarks/results/charts/format_comparison.png)
 
 ## Quick Start
 
@@ -73,13 +73,13 @@ paths:
 | **Protobuf** | 35 | **1.8×** | 117.4× |
 | **GraphQL** | 30 | **1.4×** | 2.1× |
 
-![Compression Ratios](benchmarks/results/charts/compression_bar_chart.png)
+![Compression Ratios](https://raw.githubusercontent.com/Lean-Agent-Protocol/lap/main/benchmarks/results/charts/compression_bar_chart.png)
 
 → [Full benchmark results](BENCHMARKS.md)
 
 ## How It Works
 
-![How LAP Works](benchmarks/results/charts/pipeline.png)
+![How LAP Works](https://raw.githubusercontent.com/Lean-Agent-Protocol/lap/main/benchmarks/results/charts/pipeline.png)
 
 **Five compression stages:**
 

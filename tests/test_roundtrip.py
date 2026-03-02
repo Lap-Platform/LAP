@@ -12,8 +12,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from core.compilers.openapi import compile_openapi
-from core.parser import parse_lap
+from lap.core.compilers.openapi import compile_openapi
+from lap.core.parser import parse_lap
 
 SPEC_DIR = Path("examples/verbose/openapi")
 

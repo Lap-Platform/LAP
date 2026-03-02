@@ -1,5 +1,6 @@
 export {
   parse,
+  LAPSpec,
   DocLeanSpec,
   Endpoint,
   Param,

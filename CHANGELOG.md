@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to LAP (Lean Agent Protocol) will be documented in this file.
+All notable changes to LAP (Lean API Platform) will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -32,10 +32,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Maintains backward compatibility with all existing formats
 - Compression ratio: ~2.3x (standard), ~2.9x (lean) for Smithy specs
 
-## [0.1.0] - 2025-XX-XX
+## [0.1.0] - 2025-01-15
 
 ### Added
-- Initial release of LAP (Lean Agent Protocol)
+- Initial release of LAP (Lean API Platform)
 - Support for OpenAPI/Swagger specs
 - Support for GraphQL schemas (SDL and introspection JSON)
 - Support for AsyncAPI specs

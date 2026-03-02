@@ -8,9 +8,9 @@ from pathlib import Path
 
 import pytest
 from graphql import build_schema, introspection_from_schema
-from core.compilers.graphql import compile_graphql, _unwrap, _type_string
-from core.compilers import detect_format
-from core.formats.lap import LAPSpec
+from lap.core.compilers.graphql import compile_graphql, _unwrap, _type_string
+from lap.core.compilers import detect_format
+from lap.core.formats.lap import LAPSpec
 
 SPECS_DIR = Path(__file__).parent.parent / "examples" / "verbose" / "graphql"
 
@@ -237,7 +237,7 @@ class TestTokenBenchmark:
     def test_compression_ratio(self):
         """LAP output should be significantly smaller than raw SDL."""
         for schema in SPECS_DIR.glob("*.graphql"):
-            raw = schema.read_text()
+            raw = schema.read_text(encoding='utf-8')
             ds = compile_graphql(str(schema))
             lap = ds.to_lap(lean=True)
             raw_tokens = self._count_tokens_approx(raw)
@@ -252,7 +252,7 @@ class TestTokenBenchmark:
         total_dl = 0
         total_lean = 0
         for schema in sorted(SPECS_DIR.glob("*.graphql")):
-            raw = schema.read_text()
+            raw = schema.read_text(encoding='utf-8')
             ds = compile_graphql(str(schema))
             standard = ds.to_lap(lean=False)
             lean = ds.to_lap(lean=True)

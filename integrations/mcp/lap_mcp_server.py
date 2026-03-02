@@ -27,13 +27,13 @@ import sys
 from pathlib import Path
 from typing import Any, Optional
 
-_src = str(Path(__file__).resolve().parent.parent.parent / "src")
-if _src not in sys.path:
-    sys.path.insert(0, _src)
+_root = str(Path(__file__).resolve().parent.parent.parent)
+if _root not in sys.path:
+    sys.path.insert(0, _root)
 
-from core.formats.lap import LAPSpec, Endpoint, Param
-from core.parser import parse_lap
-from core.utils import read_file_safe
+from lap.core.formats.lap import LAPSpec, Endpoint, Param
+from lap.core.parser import parse_lap
+from lap.core.utils import read_file_safe
 
 # Type map for MCP input schemas (JSON Schema)
 _TYPE_MAP = {

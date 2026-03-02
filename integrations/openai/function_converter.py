@@ -6,7 +6,7 @@ enabling direct use with OpenAI's function calling API.
 
 Example usage:
     >>> from integrations.openai.function_converter import lap_to_functions
-    >>> from src.parser import parse_lap
+    >>> from lap.core.parser import parse_lap
     >>>
     >>> spec = parse_lap(open("examples/lap/openapi/petstore.lap").read())
     >>> functions = lap_to_functions(spec)
@@ -43,11 +43,11 @@ import sys
 from pathlib import Path
 from typing import Any
 
-_src = str(Path(__file__).resolve().parent.parent.parent / "src")
-if _src not in sys.path:
-    sys.path.insert(0, _src)
+_root = str(Path(__file__).resolve().parent.parent.parent)
+if _root not in sys.path:
+    sys.path.insert(0, _root)
 
-from core.formats.lap import LAPSpec, Endpoint, Param
+from lap.core.formats.lap import LAPSpec, Endpoint, Param
 
 
 # LAP type → JSON Schema type mapping

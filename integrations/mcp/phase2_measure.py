@@ -9,7 +9,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 import tiktoken
-from core.compilers.lap_tools import compile_mcp_manifest
+from lap.core.compilers.lap_tools import compile_mcp_manifest
 
 enc = tiktoken.get_encoding("cl100k_base")
 

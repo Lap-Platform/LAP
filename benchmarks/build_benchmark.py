@@ -8,8 +8,8 @@ import json
 import yaml
 from pathlib import Path
 
-sys.path.insert(0, '/data/workspace/lap-poc')
-from core.compilers.openapi import compile_openapi
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from lap.core.compilers.openapi import compile_openapi
 
 # Spec selections by tier
 SPEC_CONFIG = {

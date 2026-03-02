@@ -24,14 +24,14 @@ import sys
 from pathlib import Path
 from typing import List, Optional
 
-# Add src to path for imports
-_src = str(Path(__file__).resolve().parent.parent.parent / "src")
-if _src not in sys.path:
-    sys.path.insert(0, _src)
+# Add project root to path for imports
+_root = str(Path(__file__).resolve().parent.parent.parent)
+if _root not in sys.path:
+    sys.path.insert(0, _root)
 
-from core.formats.lap import LAPSpec, Endpoint
-from core.parser import parse_lap
-from core.utils import read_file_safe
+from lap.core.formats.lap import LAPSpec, Endpoint
+from lap.core.parser import parse_lap
+from lap.core.utils import read_file_safe
 
 # Graceful degradation — works without LangChain installed
 try:

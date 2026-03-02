@@ -12,7 +12,7 @@ import subprocess
 import pytest
 from pathlib import Path
 
-from core.compilers.postman import (
+from lap.core.compilers.postman import (
     compile_postman,
     _resolve_variables,
     _extract_base_url,
@@ -30,7 +30,7 @@ from core.compilers.postman import (
 
 SPECS_DIR = Path(__file__).parent.parent / 'examples' / 'verbose' / 'postman'
 PROJECT_DIR = Path(__file__).parent.parent
-CLI = str(PROJECT_DIR / 'cli/main.py')
+CLI = str(PROJECT_DIR / 'lap/cli/main.py')
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -480,7 +480,7 @@ class TestTokenBenchmark:
         """LAP should be significantly smaller than raw Postman JSON."""
         ratios = []
         for spec_file in _all_postman_specs():
-            raw_size = len(spec_file.read_text())
+            raw_size = len(spec_file.read_text(encoding='utf-8'))
             ds = compile_postman(str(spec_file))
             lap_size = len(ds.to_lap(lean=False))
             lean_size = len(ds.to_lap(lean=True))
@@ -579,5 +579,5 @@ class TestCLI:
         )
         assert result.returncode == 0
         assert out.exists()
-        content = out.read_text()
+        content = out.read_text(encoding='utf-8')
         assert '@lap' in content

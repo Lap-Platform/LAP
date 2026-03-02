@@ -1,4 +1,4 @@
-// DocLean Parser - TypeScript implementation
+// LAP Parser - TypeScript implementation
 
 export interface ResponseField {
   name: string;
@@ -45,7 +45,7 @@ export interface Endpoint {
   errors: ErrorSchema[];
 }
 
-export interface DocLeanSpec {
+export interface LAPSpec {
   version: string;
   apiName: string;
   baseUrl: string;
@@ -55,6 +55,9 @@ export interface DocLeanSpec {
 
   getEndpoint(method: string, path: string): Endpoint | undefined;
 }
+
+/** @deprecated Use LAPSpec instead */
+export type DocLeanSpec = LAPSpec;
 
 // ── Internal parsing helpers ──
 
@@ -284,7 +287,7 @@ function parseErrors(line: string): ErrorSchema[] {
   });
 }
 
-export function parse(text: string): DocLeanSpec {
+export function parse(text: string): LAPSpec {
   const lines = text.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('//'));
 
   let version = '';
@@ -304,8 +307,8 @@ export function parse(text: string): DocLeanSpec {
   }
 
   for (const line of lines) {
-    if (line.startsWith('@doclean')) {
-      version = line.replace('@doclean', '').trim();
+    if (line.startsWith('@lap ') || line.startsWith('@doclean')) {
+      version = line.replace(/^@(?:lap|doclean)\s*/, '').trim();
     } else if (line.startsWith('@api ')) {
       apiName = line.slice(5).trim();
     } else if (line.startsWith('@base ')) {

@@ -21,9 +21,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import yaml
 
-from core.compilers.openapi import compile_openapi, resolve_ref
-from core.parser import parse_lap
-from core.differ import diff_specs
+from lap.core.compilers.openapi import compile_openapi, resolve_ref
+from lap.core.parser import parse_lap
+from lap.core.differ import diff_specs
 
 # ── Multi-format compiler registry ──────────────────────────────────
 
@@ -52,7 +52,7 @@ def validate_schema_completeness(spec_path: str) -> dict:
     is present in the LAP output.
     """
     path = Path(spec_path)
-    raw = path.read_text()
+    raw = path.read_text(encoding='utf-8')
     if path.suffix in (".yaml", ".yml"):
         spec = yaml.safe_load(raw)
     else:
@@ -295,7 +295,7 @@ def validate_roundtrip(spec_path: str) -> dict:
     Layer 2: Round-trip validation (OpenAPI → LAP → parse → diff).
     Ensures no breaking changes survive the round-trip.
     """
-    from core.converter import lap_to_openapi
+    from lap.core.converter import lap_to_openapi
 
     lap_spec = compile_openapi(spec_path)
     lap_text = lap_spec.to_lap()

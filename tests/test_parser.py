@@ -8,10 +8,10 @@ import pytest
 import yaml
 from pathlib import Path
 
-from core.formats.lap import LAPSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema
-from core.parser import parse_lap, _parse_param, _parse_field, _parse_returns, _parse_errors, _split_top_level
-from core.compilers.openapi import compile_openapi
-from core.converter import lap_to_openapi
+from lap.core.formats.lap import LAPSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema
+from lap.core.parser import parse_lap, _parse_param, _parse_field, _parse_returns, _parse_errors, _split_top_level
+from lap.core.compilers.openapi import compile_openapi
+from lap.core.converter import lap_to_openapi
 
 
 # ── Helper ──
@@ -223,7 +223,7 @@ class TestV03Directives:
 
     def test_grouped_toc(self):
         """Grouped TOC format: name(count), ..."""
-        from core.formats.lap import LAPSpec, Endpoint
+        from lap.core.formats.lap import LAPSpec, Endpoint
         spec = LAPSpec(
             api_name='Test',
             endpoints=[
@@ -237,7 +237,7 @@ class TestV03Directives:
 
     def test_group_markers_emitted(self):
         """Multiple path prefixes emit @group markers."""
-        from core.formats.lap import LAPSpec, Endpoint
+        from lap.core.formats.lap import LAPSpec, Endpoint
         spec = LAPSpec(
             api_name='Test',
             endpoints=[
@@ -252,7 +252,7 @@ class TestV03Directives:
 
     def test_download_hint(self):
         """Specs with >20 endpoints emit @hint."""
-        from core.formats.lap import LAPSpec, Endpoint
+        from lap.core.formats.lap import LAPSpec, Endpoint
         endpoints = [Endpoint(method='get', path=f'/ep{i}') for i in range(25)]
         spec = LAPSpec(api_name='Test', endpoints=endpoints)
         text = spec.to_lap()
@@ -385,7 +385,7 @@ class TestParseFromFile:
         path = OUTPUT_DIR / 'stripe-charges.lap'
         if not path.exists():
             pytest.skip('stripe-charges.lap not found')
-        spec = parse_lap(path.read_text())
+        spec = parse_lap(path.read_text(encoding='utf-8'))
         assert spec.api_name == 'Stripe Charges API'
         assert len(spec.endpoints) == 5
         assert spec.endpoints[0].method == 'post'
@@ -395,7 +395,7 @@ class TestParseFromFile:
         path = OUTPUT_DIR / 'stripe-charges.lean.lap'
         if not path.exists():
             pytest.skip('stripe-charges.lean.lap not found')
-        spec = parse_lap(path.read_text())
+        spec = parse_lap(path.read_text(encoding='utf-8'))
         assert spec.api_name == 'Stripe Charges API'
         assert len(spec.endpoints) == 5
 
@@ -409,7 +409,7 @@ class TestConverter:
         if not spec_path.exists():
             pytest.skip('stripe-charges.yaml not found')
 
-        original_openapi = yaml.safe_load(spec_path.read_text())
+        original_openapi = yaml.safe_load(spec_path.read_text(encoding='utf-8'))
         lap_spec = compile_openapi(str(spec_path))
         text = lap_spec.to_lap(lean=False)
         parsed = parse_lap(text)

@@ -9,7 +9,7 @@ by enabling round-trip: source → LAP → structured data.
 import re
 import warnings
 
-from core.formats.lap_tools import LAPToolSpec, LAPToolBundle, ToolParam, ToolOutput, ToolExample
+from lap.core.formats.lap_tools import LAPToolSpec, LAPToolBundle, ToolParam, ToolOutput, ToolExample
 
 
 class ParseError(Exception):

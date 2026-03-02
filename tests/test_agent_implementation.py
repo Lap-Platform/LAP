@@ -19,27 +19,27 @@ from pathlib import Path
 
 
 import pytest
-from core.formats.lap import LAPSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema
-from core.parser import parse_lap
-from core.compilers.openapi import compile_openapi
+from lap.core.formats.lap import LAPSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema
+from lap.core.parser import parse_lap
+from lap.core.compilers.openapi import compile_openapi
 
 try:
-    from core.compilers.graphql import compile_graphql
+    from lap.core.compilers.graphql import compile_graphql
 except ImportError:
     compile_graphql = None
 
 try:
-    from core.compilers.asyncapi import compile_asyncapi
+    from lap.core.compilers.asyncapi import compile_asyncapi
 except ImportError:
     compile_asyncapi = None
 
 try:
-    from core.compilers.postman import compile_postman
+    from lap.core.compilers.postman import compile_postman
 except ImportError:
     compile_postman = None
 
 try:
-    from core.compilers.protobuf import compile_protobuf
+    from lap.core.compilers.protobuf import compile_protobuf
 except ImportError:
     compile_protobuf = None
 

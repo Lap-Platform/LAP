@@ -11,7 +11,7 @@ import tiktoken
 import yaml
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from core.compilers.openapi import compile_openapi
+from lap.core.compilers.openapi import compile_openapi
 
 SPEC_DIR = Path(__file__).parent.parent / "examples" / "verbose" / "openapi"
 OUT_DIR = Path(__file__).parent / "results"
@@ -38,7 +38,7 @@ def main():
 
     for path in specs:
         name = path.stem
-        raw_yaml = path.read_text()
+        raw_yaml = path.read_text(encoding='utf-8')
         try:
             data = yaml.safe_load(raw_yaml)
         except Exception as e:

@@ -5,15 +5,14 @@ import os
 import unittest
 from pathlib import Path
 
-# Setup paths
+# Setup paths -- SDK package and project root
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 from lap import LAPClient, Registry
 from lap.middleware import LAPDocLoader
 
-# Import the canonical parser from src/
-import sys
-from core.parser import parse_lap as _parse_lap
+from lap.core.parser import parse_lap as _parse_lap
 
 FIXTURES = Path(__file__).resolve().parents[2] / ".." / "output"
 STRIPE = str(FIXTURES / "stripe-charges.lap")

@@ -21,8 +21,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import yaml
 
-from core.compilers.openapi import compile_openapi
-from core.utils import count_tokens
+from lap.core.compilers.openapi import compile_openapi
+from lap.core.utils import count_tokens
 
 SYSTEM_PROMPT = "You are an API integration assistant. Given the API documentation below, write a curl command to accomplish the task. Output ONLY the curl command, nothing else."
 
@@ -150,7 +150,7 @@ def run_single_test(spec_path: str, task: str, api_key: str = None, model: str =
 
 
 def run_all(tasks_file: str, **kwargs) -> list[dict]:
-    tasks = yaml.safe_load(Path(tasks_file).read_text())["tasks"]
+    tasks = yaml.safe_load(Path(tasks_file).read_text(encoding='utf-8'))["tasks"]
     results = []
     for t in tasks:
         print(f"  [{t['api']}] {t['task'][:60]}...", end=" ", flush=True)
