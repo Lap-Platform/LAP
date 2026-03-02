@@ -5,7 +5,7 @@ Compiles AWS SDK service definitions (used by aws-sdk-js and other AWS SDKs) int
 This format is different from standard Smithy - it's AWS's proprietary service definition format.
 
 AWS SDK JSON structure:
-- version: "2.0"
+- version: "2.0" (optional, absent in newer specs)
 - metadata: {apiVersion, serviceFullName, protocol, signatureVersion, etc.}
 - operations: {OperationName: {name, http, input, output, errors}}
 - shapes: {ShapeName: {type, members, required, etc.}}
@@ -102,8 +102,16 @@ def _load_aws_sdk_json(path: Path) -> dict:
         raise ValueError(f"Invalid JSON in {path}: {e}")
 
     # Validate AWS SDK JSON structure
-    if model.get("version") != "2.0":
-        raise ValueError(f"Not a valid AWS SDK JSON: expected version '2.0', got {model.get('version')}")
+    # Accept either version "2.0" or metadata-based (newer specs omit version key)
+    version = model.get("version")
+    meta = model.get("metadata")
+    has_version = version == "2.0"
+    has_meta = isinstance(meta, dict) and "apiVersion" in meta and "protocol" in meta
+    if not has_version and not has_meta:
+        raise ValueError(
+            f"Not a valid AWS SDK JSON: expected version '2.0' or metadata with apiVersion/protocol, "
+            f"got version={version!r}"
+        )
     if "shapes" not in model:
         raise ValueError(f"Not a valid AWS SDK JSON: missing 'shapes' field")
     if "operations" not in model:

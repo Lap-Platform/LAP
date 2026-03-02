@@ -1,4 +1,4 @@
-"""LAP compilers -- OpenAPI, GraphQL, AsyncAPI, Protobuf, Postman, Smithy, LAP.
+"""LAP compilers -- OpenAPI, GraphQL, AsyncAPI, Protobuf, Postman, Smithy, AWS SDK, LAP.
 
 Unified compile() and detect_format() for the CLI.
 """
@@ -13,7 +13,7 @@ from lap.core.yaml_compat import _SafeLoaderCompat
 def detect_format(spec_path: str) -> str:
     """Auto-detect API spec format from file extension and content.
 
-    Returns one of: openapi, graphql, asyncapi, protobuf, postman, smithy.
+    Returns one of: openapi, graphql, asyncapi, protobuf, postman, smithy, aws_sdk.
     Raises ValueError if format cannot be determined.
     """
     p = Path(spec_path)
@@ -59,6 +59,10 @@ def detect_format(spec_path: str) -> str:
                 "Use -f to specify the format."
             )
 
+        # AWS SDK JSON (classic: version 2.0 + operations + shapes)
+        if data.get("version") == "2.0" and "operations" in data and "shapes" in data:
+            return "aws_sdk"
+
         # Smithy JSON AST
         if "smithy" in data and "shapes" in data:
             return "smithy"
@@ -95,14 +99,20 @@ def detect_format(spec_path: str) -> str:
         if isinstance(inner, dict) and "__schema" in inner:
             return "graphql"
 
+        # AWS SDK JSON (newer: no version key, but metadata + operations + shapes)
+        if "operations" in data and "shapes" in data:
+            meta = data.get("metadata")
+            if isinstance(meta, dict) and "apiVersion" in meta and "protocol" in meta:
+                return "aws_sdk"
+
         raise ValueError(
             f"Cannot detect format of '{spec_path}'. "
-            "Use -f FORMAT (openapi, graphql, asyncapi, protobuf, postman, smithy)."
+            "Use -f FORMAT (openapi, graphql, asyncapi, protobuf, postman, smithy, aws_sdk)."
         )
 
     raise ValueError(
         f"Unsupported file extension '{ext}' for '{spec_path}'. "
-        "Use -f FORMAT (openapi, graphql, asyncapi, protobuf, postman, smithy)."
+        "Use -f FORMAT (openapi, graphql, asyncapi, protobuf, postman, smithy, aws_sdk)."
     )
 
 
@@ -111,7 +121,7 @@ def compile(spec_path: str, format: str = None):
 
     Args:
         spec_path: Path to the spec file or directory.
-        format: One of openapi, graphql, asyncapi, protobuf, postman, smithy.
+        format: One of openapi, graphql, asyncapi, protobuf, postman, smithy, aws_sdk.
                 Auto-detected if None.
 
     Returns:
@@ -145,5 +155,9 @@ def compile(spec_path: str, format: str = None):
     if format == "smithy":
         from lap.core.compilers.smithy import compile_smithy
         return compile_smithy(spec_path)
+
+    if format == "aws_sdk":
+        from lap.core.compilers.aws_sdk import compile_aws_sdk
+        return compile_aws_sdk(spec_path)
 
     raise ValueError(f"Unknown format: {format}")
