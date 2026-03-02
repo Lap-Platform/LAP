@@ -36,7 +36,8 @@ class TestIoTMQTT:
         assert "mqtt" in self.lap.base_url
 
     def test_protocol(self):
-        assert self.lap.auth_scheme == "mqtt"
+        # Protocol is in base_url, not auth_scheme (mqtt is not auth)
+        assert self.lap.auth_scheme == ""
 
     def test_endpoint_count(self):
         assert len(self.lap.endpoints) == 4
@@ -162,7 +163,8 @@ class TestNotificationsV3:
         assert self.lap.version == "1.5.0"
 
     def test_protocol(self):
-        assert self.lap.auth_scheme == "amqp"
+        # Protocol is in base_url, not auth_scheme (amqp is not auth)
+        assert self.lap.auth_scheme == ""
 
     def test_endpoint_count(self):
         assert len(self.lap.endpoints) == 4

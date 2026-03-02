@@ -14,6 +14,14 @@ from lap.core.formats.lap import LAPSpec, Endpoint, _group_name
 from lap.core.utils import count_tokens
 
 
+# Parameter names that strongly suggest authentication (safety net)
+_AUTH_PARAM_NAMES = frozenset({
+    "key", "api_key", "apikey", "api-key",
+    "token", "access_token", "x-api-key",
+    "authorization", "auth_token", "secret",
+    "api_secret", "app_key", "appkey", "client_secret",
+})
+
 SKILL_MD_TOKEN_BUDGET = 3000
 
 
@@ -63,6 +71,26 @@ def generate_skill(spec: LAPSpec, options: Optional[SkillOptions] = None) -> Ski
         token_count=total_tokens,
         endpoint_count=len(spec.endpoints),
     )
+
+
+def _detect_auth_param(spec: LAPSpec) -> tuple[str, str] | None:
+    """Safety net: detect auth-like parameters when spec.auth_scheme is empty.
+
+    Scans common_fields first (most likely location after deduplication),
+    then endpoint params. Returns (param_name, location_hint) or None.
+    """
+    # Check common_fields first (auth params usually appear everywhere)
+    for p in spec.common_fields:
+        if p.name.lower() in _AUTH_PARAM_NAMES:
+            return (p.name, "common_fields")
+
+    # Check endpoint params
+    for ep in spec.endpoints:
+        for p in ep.required_params + ep.optional_params + ep.request_body:
+            if p.name.lower() in _AUTH_PARAM_NAMES:
+                return (p.name, "parameter")
+
+    return None
 
 
 def _slugify(name: str) -> str:
@@ -138,7 +166,12 @@ def _generate_skill_body(spec: LAPSpec) -> str:
     if spec.auth_scheme:
         sections.append(spec.auth_scheme)
     else:
-        sections.append("No authentication required.")
+        detected = _detect_auth_param(spec)
+        if detected:
+            name, _ = detected
+            sections.append(f"Requires API key ({name} parameter)")
+        else:
+            sections.append("No authentication required.")
     sections.append("")
 
     # Base URL
@@ -194,7 +227,12 @@ def _generate_setup(spec: LAPSpec) -> str:
         else:
             lines.append(f"1. Configure auth: {spec.auth_scheme}")
     else:
-        lines.append("1. No auth setup needed")
+        detected = _detect_auth_param(spec)
+        if detected:
+            name, _ = detected
+            lines.append(f"1. Include your API key via the {name} parameter")
+        else:
+            lines.append("1. No auth setup needed")
 
     # Step 2: Find a list endpoint for verification
     list_ep = _find_first_endpoint(spec, "get", is_list=True)

@@ -16,6 +16,19 @@ from lap.core.formats.lap import (
     LAPSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema
 )
 
+# Parameter names that strongly suggest authentication (no bare "key" - too many false positives)
+AUTH_PARAM_NAMES = frozenset({
+    "api_key", "apikey", "api-key",
+    "token", "access_token", "x-api-key",
+    "authorization", "auth_token", "secret",
+    "api_secret", "app_key", "appkey", "client_secret",
+    "subscription-key", "ocp-apim-subscription-key",
+    "x-auth-token", "api_token",
+})
+
+# Description keywords that suggest an auth parameter
+AUTH_DESC_KEYWORDS = ("api key", "authentication", "auth token", "access token", "your key", "your token")
+
 
 def _resolve_variables(text: str, variables: dict) -> str:
     """Replace {{var}} with values from the variable dict."""
@@ -336,6 +349,46 @@ def _extract_auth_scheme(auth: dict) -> str:
     return auth_type
 
 
+def _infer_auth_from_postman(collection: dict) -> str:
+    """Heuristic: scan query and header params across all requests for auth-like names/descriptions.
+
+    Called when the collection has no explicit auth block. Returns e.g.
+    "ApiKey api_key in query" or "" if nothing is found.
+    """
+    for item in _flatten_items(collection.get('item', [])):
+        request = item.get('request', {})
+        if not isinstance(request, dict):
+            continue
+
+        # Check query params from the URL object
+        url = request.get('url', '')
+        if isinstance(url, dict):
+            for q in url.get('query', []):
+                if not isinstance(q, dict):
+                    continue
+                name = (q.get('key') or '').strip()
+                name_lower = name.lower()
+                desc = (q.get('description') or '').lower()
+                if name_lower in AUTH_PARAM_NAMES:
+                    return f"ApiKey {name} in query"
+                if any(kw in desc for kw in AUTH_DESC_KEYWORDS):
+                    return f"ApiKey {name} in query"
+
+        # Check header params
+        for h in request.get('header', []):
+            if not isinstance(h, dict):
+                continue
+            name = (h.get('key') or '').strip()
+            name_lower = name.lower()
+            desc = (h.get('description') or '').lower()
+            if name_lower in AUTH_PARAM_NAMES:
+                return f"ApiKey {name} in header"
+            if any(kw in desc for kw in AUTH_DESC_KEYWORDS):
+                return f"ApiKey {name} in header"
+
+    return ""
+
+
 def _collect_variables(collection: dict) -> dict:
     """Collect variables from collection-level variable array."""
     variables = {}
@@ -368,7 +421,7 @@ def compile_postman(spec_path: str) -> LAPSpec:
     base_url = _extract_base_url(collection, variables)
 
     auth = collection.get('auth', {})
-    auth_scheme = _extract_auth_scheme(auth)
+    auth_scheme = _extract_auth_scheme(auth) or _infer_auth_from_postman(collection)
 
     lap = LAPSpec(
         api_name=info.get('name', path.stem),

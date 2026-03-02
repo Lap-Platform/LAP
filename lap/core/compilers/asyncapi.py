@@ -16,6 +16,19 @@ from lap.core.formats.lap import (
     LAPSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema
 )
 
+# Parameter names that strongly suggest authentication
+AUTH_PARAM_NAMES = frozenset({
+    "api_key", "apikey", "api-key",
+    "token", "access_token", "x-api-key",
+    "authorization", "auth_token", "secret",
+    "api_secret", "app_key", "appkey", "client_secret",
+    "subscription-key", "ocp-apim-subscription-key",
+    "x-auth-token", "api_token",
+})
+
+# Description keywords that suggest an auth parameter
+AUTH_DESC_KEYWORDS = ("api key", "authentication", "auth token", "access token", "your key", "your token")
+
 
 def resolve_ref(spec: dict, ref: str, _visited: set = None) -> dict:
     """Resolve a $ref pointer in an AsyncAPI spec with cycle detection."""
@@ -162,6 +175,86 @@ def _get_protocol(spec: dict) -> str:
     return ""
 
 
+def _extract_security_schemes(spec: dict) -> str:
+    """Extract auth scheme string from AsyncAPI components.securitySchemes."""
+    schemes = spec.get("components", {}).get("securitySchemes", {})
+    if not schemes:
+        return ""
+    parts = []
+    for _name, scheme in schemes.items():
+        scheme = _maybe_resolve(spec, scheme)
+        t = scheme.get("type", "")
+        if t in ("http", "httpApiKey"):
+            parts.append(f"Bearer {scheme.get('scheme', 'token')}")
+        elif t == "apiKey":
+            parts.append(f"ApiKey {scheme.get('name', 'key')} in {scheme.get('in', 'header')}")
+        elif t == "oauth2":
+            parts.append("OAuth2")
+        elif t == "userPassword":
+            parts.append("Basic")
+        elif t:
+            parts.append(t)
+    return " | ".join(parts)
+
+
+def _infer_auth_from_async_params(spec: dict) -> str:
+    """Heuristic: scan channel message headers and parameters for auth-like names.
+
+    Called when securitySchemes are empty. Returns e.g. "ApiKey X-API-Key in header"
+    or "" if nothing found.
+    """
+    channels = spec.get("channels", {})
+    for _ch_name, ch_def in (channels or {}).items():
+        if not isinstance(ch_def, dict):
+            continue
+        ch_def = _maybe_resolve(spec, ch_def)
+
+        # Channel parameters
+        for pname, pdef in ch_def.get("parameters", {}).items():
+            pdef = _maybe_resolve(spec, pdef)
+            name_lower = pname.lower()
+            desc = (pdef.get("description") or "").lower()
+            if name_lower in AUTH_PARAM_NAMES:
+                return f"ApiKey {pname} in channel"
+            if any(kw in desc for kw in AUTH_DESC_KEYWORDS):
+                return f"ApiKey {pname} in channel"
+
+        # Message headers (v2: subscribe/publish; v3: messages dict)
+        for operation in ("subscribe", "publish"):
+            op_def = ch_def.get(operation)
+            if not op_def:
+                continue
+            op_def = _maybe_resolve(spec, op_def)
+            msg = op_def.get("message", {})
+            msgs = msg.get("oneOf", [msg]) if msg else []
+            for m in msgs:
+                m = _maybe_resolve(spec, m)
+                headers = _maybe_resolve(spec, m.get("headers", {}))
+                for hname, hprop in headers.get("properties", {}).items():
+                    hprop = _maybe_resolve(spec, hprop)
+                    name_lower = hname.lower()
+                    desc = (hprop.get("description") or "").lower()
+                    if name_lower in AUTH_PARAM_NAMES:
+                        return f"ApiKey {hname} in header"
+                    if any(kw in desc for kw in AUTH_DESC_KEYWORDS):
+                        return f"ApiKey {hname} in header"
+
+        # v3-style messages dict on the channel itself
+        for _msg_name, msg in ch_def.get("messages", {}).items():
+            msg = _maybe_resolve(spec, msg)
+            headers = _maybe_resolve(spec, msg.get("headers", {}))
+            for hname, hprop in headers.get("properties", {}).items():
+                hprop = _maybe_resolve(spec, hprop)
+                name_lower = hname.lower()
+                desc = (hprop.get("description") or "").lower()
+                if name_lower in AUTH_PARAM_NAMES:
+                    return f"ApiKey {hname} in header"
+                if any(kw in desc for kw in AUTH_DESC_KEYWORDS):
+                    return f"ApiKey {hname} in header"
+
+    return ""
+
+
 def _compile_message(msg: dict, spec: dict) -> tuple:
     """Compile a message object into (params, headers_params, summary, response_fields).
     
@@ -193,7 +286,7 @@ def _compile_v2(spec: dict) -> LAPSpec:
         api_name=info.get("title", "AsyncAPI"),
         base_url=_get_servers_url(spec),
         version=info.get("version", ""),
-        auth_scheme=_get_protocol(spec),
+        auth_scheme=_extract_security_schemes(spec) or _infer_auth_from_async_params(spec),
     )
 
     channels = spec.get("channels", {})
@@ -278,7 +371,7 @@ def _compile_v3(spec: dict) -> LAPSpec:
         api_name=info.get("title", "AsyncAPI"),
         base_url=_get_servers_url(spec),
         version=info.get("version", ""),
-        auth_scheme=_get_protocol(spec),
+        auth_scheme=_extract_security_schemes(spec) or _infer_auth_from_async_params(spec),
     )
 
     # In v3, operations are top-level and reference channels

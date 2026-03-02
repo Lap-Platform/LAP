@@ -16,6 +16,17 @@ import yaml
 
 from lap.core.formats.lap import LAPSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema
 
+# Parameter names that strongly suggest authentication
+AUTH_PARAM_NAMES = frozenset({
+    "key", "api_key", "apikey", "api-key",
+    "token", "access_token", "x-api-key",
+    "authorization", "auth_token", "secret",
+    "api_secret", "app_key", "appkey", "client_secret",
+})
+
+# Description keywords that suggest an auth parameter
+AUTH_DESC_KEYWORDS = ("api key", "authentication", "auth token", "access token", "your key", "your token")
+
 
 def resolve_ref(spec: dict, ref: str, _visited: set = None) -> dict:
     """Resolve a $ref pointer in an OpenAPI spec with cycle detection."""
@@ -27,7 +38,15 @@ def resolve_ref(spec: dict, ref: str, _visited: set = None) -> dict:
     parts = ref.lstrip("#/").split("/")
     node = spec
     for part in parts:
-        node = node.get(part, {})
+        if isinstance(node, list):
+            try:
+                node = node[int(part)]
+            except (ValueError, IndexError):
+                return {}
+        elif isinstance(node, dict):
+            node = node.get(part, {})
+        else:
+            return {}
     # If the resolved node itself contains a $ref, resolve it too
     if isinstance(node, dict) and "$ref" in node:
         return resolve_ref(spec, node["$ref"], _visited)
@@ -36,8 +55,12 @@ def resolve_ref(spec: dict, ref: str, _visited: set = None) -> dict:
 
 def extract_type(schema: dict, spec: dict) -> str:
     """Extract a concise type string from an OpenAPI schema."""
+    if not isinstance(schema, dict):
+        return "any"
     if "$ref" in schema:
         schema = resolve_ref(spec, schema["$ref"])
+    if not isinstance(schema, dict):
+        return "any"
 
     t = schema.get("type", "any")
     # OpenAPI 3.1 allows type as a list, e.g. ["integer", "null"]
@@ -70,8 +93,12 @@ def extract_type_inline(schema: dict, spec: dict, depth: int = 0, max_depth: int
     Never returns bare 'map' for objects with known properties.
     Uses '!' suffix on required nested field names.
     """
+    if not isinstance(schema, dict):
+        return "any"
     if "$ref" in schema:
         schema = resolve_ref(spec, schema["$ref"])
+    if not isinstance(schema, dict):
+        return "any"
 
     t = schema.get("type", "any")
     if isinstance(t, list):
@@ -80,7 +107,8 @@ def extract_type_inline(schema: dict, spec: dict, depth: int = 0, max_depth: int
 
     if t == "object" and schema.get("properties") and depth < max_depth:
         props = schema.get("properties", {})
-        required_names = set(schema.get("required", []))
+        raw_req = schema.get("required", [])
+        required_names = set(raw_req) if isinstance(raw_req, list) else set()
         parts = []
         for prop_name, prop_schema in props.items():
             if "$ref" in prop_schema:
@@ -117,7 +145,7 @@ def extract_params(param_list: list, spec: dict) -> tuple[list, list]:
             name=p["name"],
             type=extract_type(schema, spec),
             required=p.get("required", False),
-            description=p.get("description", "").replace('\n', ' ').strip(),
+            description=(p.get("description") or "").replace('\n', ' ').strip(),
             enum=enum_vals,
             default=str(schema["default"]) if "default" in schema else None,
         )
@@ -145,7 +173,8 @@ def extract_request_body(body: dict, spec: dict) -> list:
         json_schema = resolve_ref(spec, json_schema["$ref"])
 
     params = []
-    required_names = set(json_schema.get("required", []))
+    raw_required = json_schema.get("required", [])
+    required_names = set(raw_required) if isinstance(raw_required, list) else set()
     properties = json_schema.get("properties", {})
 
     for name, schema in properties.items():
@@ -162,7 +191,7 @@ def extract_request_body(body: dict, spec: dict) -> list:
             name=name,
             type=type_str,
             required=name in required_names,
-            description=schema.get("description", "").replace('\n', ' ').strip(),
+            description=(schema.get("description") or "").replace('\n', ' ').strip(),
             enum=enum_vals,
             default=str(schema["default"]) if "default" in schema else None,
         ))
@@ -181,6 +210,8 @@ def extract_response_fields(schema: dict, spec: dict, depth: int = 0, max_depth:
     for count, (name, prop) in enumerate(properties.items()):
         if count >= max_properties:
             break
+        if not isinstance(prop, dict):
+            continue
         if "$ref" in prop:
             prop = resolve_ref(spec, prop["$ref"])
 
@@ -206,11 +237,12 @@ def extract_response_schemas(responses: dict, spec: dict) -> tuple:
     response_schemas = []
     error_schemas = []
 
-    for code, resp in responses.items():
+    for raw_code, resp in responses.items():
+        code = str(raw_code)
         if "$ref" in resp:
             resp = resolve_ref(spec, resp["$ref"])
 
-        desc = resp.get("description", "").replace('\n', ' ').strip()
+        desc = (resp.get("description") or "").replace('\n', ' ').strip()
 
         # Extract response body schema
         content = resp.get("content", {})
@@ -236,16 +268,55 @@ def extract_response_schemas(responses: dict, spec: dict) -> tuple:
     return response_schemas, error_schemas
 
 
+def _infer_auth_from_params(spec: dict) -> str:
+    """Heuristic: scan path parameters for names/descriptions that suggest auth.
+
+    Called when the spec has no securitySchemes. Returns e.g. "ApiKey key in query"
+    or "" if nothing found.
+    """
+    paths = spec.get("paths", {})
+    for _path, methods in (paths or {}).items():
+        if not isinstance(methods, dict):
+            continue
+        for method, details in methods.items():
+            if method not in ("get", "post", "put", "patch", "delete", "head", "options"):
+                continue
+            if not isinstance(details, dict):
+                continue
+            for p in details.get("parameters", []):
+                if not isinstance(p, dict):
+                    continue
+                if "$ref" in p:
+                    try:
+                        p = resolve_ref(spec, p["$ref"])
+                    except (ValueError, KeyError):
+                        continue
+                name = (p.get("name") or "").strip()
+                name_lower = name.lower()
+                location = p.get("in", "query")
+                desc = (p.get("description") or "").lower()
+
+                if name_lower in AUTH_PARAM_NAMES:
+                    return f"ApiKey {name} in {location}"
+                if any(kw in desc for kw in AUTH_DESC_KEYWORDS):
+                    return f"ApiKey {name} in {location}"
+    return ""
+
+
 def extract_auth(spec: dict) -> str:
     """Extract auth scheme from security definitions."""
     schemes = spec.get("components", {}).get("securitySchemes", {})
     security = spec.get("security", [])
 
     if not schemes:
-        return ""
+        return _infer_auth_from_params(spec)
 
     parts = []
     for scheme_name, scheme in schemes.items():
+        if isinstance(scheme, str):
+            continue
+        if not isinstance(scheme, dict):
+            continue
         t = scheme.get("type", "")
         if t == "http":
             parts.append(f"Bearer {scheme.get('scheme', 'token')}")
@@ -326,7 +397,7 @@ def compile_openapi(spec_path: str) -> LAPSpec:
 
     info = spec.get("info", {})
     servers = spec.get("servers", [])
-    base_url = servers[0]["url"] if servers else ""
+    base_url = servers[0].get("url", "") if servers else ""
 
     lap = LAPSpec(
         api_name=info.get("title", path.stem),
