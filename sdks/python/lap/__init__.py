@@ -1,7 +1,10 @@
 """LAP SDK — LeanAgent Protocol client library."""
 
-from .client import LAPClient, DocLeanDoc, EndpointInfo
+from .client import LAPClient, LAPDoc, EndpointInfo
 from .registry import Registry
 
 __version__ = "0.1.0"
-__all__ = ["LAPClient", "DocLeanDoc", "EndpointInfo", "Registry"]
+__all__ = ["LAPClient", "LAPDoc", "EndpointInfo", "Registry"]
+
+# Backward-compatible aliases
+DocLeanDoc = LAPDoc

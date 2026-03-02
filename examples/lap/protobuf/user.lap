@@ -1,0 +1,38 @@
+@lap v0.3
+# Machine-readable API spec. Each @endpoint block is one API call.
+@api user.v1
+@base grpc://user.v1
+@version proto3
+@endpoints 6
+@toc UserService(6)
+
+@type User {id: str, email: str, display_name: str, role: enum(ADMIN/EDITOR/VIEWER), address: Address, metadata: map<str,str>, created_at: str(timestamp), updated_at: str(timestamp), avatar_url: str?, avatar_data: bytes?}
+@type Address {street: str, city: str, state: str, zip_code: str, country: str}
+@type Timestamp {seconds: int(i64), nanos: int}
+@type CreateUserRequest {email: str, display_name: str, role: enum(ADMIN/EDITOR/VIEWER), address: Address, metadata: map<str,str>}
+
+@endpoint UNARY /UserService/CreateUser
+@body → CreateUserRequest
+@returns(OK) → User
+
+@endpoint UNARY /UserService/GetUser
+@optional {id: str}
+@returns(OK) → User
+
+@endpoint UNARY /UserService/UpdateUser
+@optional {id: str, email: str, display_name: str, role: enum(ADMIN/EDITOR/VIEWER), address: Address}
+@returns(OK) → User
+
+@endpoint UNARY /UserService/DeleteUser
+@optional {id: str}
+@returns(OK) Empty response
+
+@endpoint UNARY /UserService/ListUsers
+@optional {page_size: int, page_token: str, filter: str}
+@returns(OK) {users: [User], next_page_token: str, total_count: int} # ListUsersResponse
+
+@endpoint CLIENT-STREAM /UserService/BulkImportUsers
+@body → CreateUserRequest
+@returns(OK) {imported_count: int, failed_count: int, errors: [str]} # BulkImportResponse
+
+@end

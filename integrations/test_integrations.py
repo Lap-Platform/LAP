@@ -9,12 +9,12 @@ from pathlib import Path
 
 # Ensure src is importable
 
-from core.formats.doclean import DocLeanSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema
+from core.formats.lap import LAPSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema
 
 
-def _make_test_spec() -> DocLeanSpec:
+def _make_test_spec() -> LAPSpec:
     """Create a minimal test spec."""
-    return DocLeanSpec(
+    return LAPSpec(
         api_name="TestAPI",
         base_url="https://api.test.com/v1",
         version="1.0",
@@ -64,10 +64,10 @@ def _make_test_spec() -> DocLeanSpec:
 
 def test_langchain_loader():
     """Test LangChain document loader conversion."""
-    from langchain.lap_loader import DocLeanLoader, DocLeanRetriever
+    from langchain.lap_loader import LAPLoader, LAPRetriever
 
     spec = _make_test_spec()
-    loader = DocLeanLoader(spec=spec)
+    loader = LAPLoader(spec=spec)
     docs = loader.load()
 
     assert len(docs) == 3, f"Expected 3 docs, got {len(docs)}"
@@ -78,7 +78,7 @@ def test_langchain_loader():
     assert "@endpoint GET /users/{id}" in docs[0].page_content
 
     # Test retriever
-    retriever = DocLeanRetriever(spec=spec)
+    retriever = LAPRetriever(spec=spec)
     results = retriever.get_relevant_documents("create user")
     assert len(results) > 0
     assert any("POST" in d.metadata["method"] for d in results)
@@ -92,10 +92,10 @@ def test_langchain_loader():
 
 def test_crewai_tool():
     """Test CrewAI tool lookup."""
-    from crewai.lap_tool import DocLeanLookup
+    from crewai.lap_tool import LAPLookup
 
     spec = _make_test_spec()
-    tool = DocLeanLookup()
+    tool = LAPLookup()
     tool.add_spec("testapi", spec)
 
     # Full spec lookup
@@ -121,10 +121,10 @@ def test_crewai_tool():
 
 def test_openai_functions():
     """Test OpenAI function-calling conversion."""
-    from openai.function_converter import doclean_to_functions, endpoint_to_function
+    from openai.function_converter import lap_to_functions, endpoint_to_function
 
     spec = _make_test_spec()
-    functions = doclean_to_functions(spec)
+    functions = lap_to_functions(spec)
 
     assert len(functions) == 3
     
@@ -162,10 +162,10 @@ def test_openai_functions():
 
 def test_mcp_server():
     """Test MCP server tool generation."""
-    from mcp.lap_mcp_server import DocLeanMCPServer, endpoint_to_mcp_tool
+    from mcp.lap_mcp_server import LAPMCPServer, endpoint_to_mcp_tool
 
     spec = _make_test_spec()
-    server = DocLeanMCPServer()
+    server = LAPMCPServer()
     server.add_spec(spec)
 
     tools = server.list_tools()
@@ -193,7 +193,7 @@ def test_mcp_server():
 
     # Test manifest
     manifest = server.to_mcp_manifest()
-    assert manifest["name"] == "lap-doclean-server"
+    assert manifest["name"] == "lap-lap-server"
     assert len(manifest["tools"]) == 3
 
     print("  ✅ MCP server")

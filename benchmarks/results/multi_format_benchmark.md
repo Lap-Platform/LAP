@@ -1,4 +1,4 @@
-# LAP DocLean — Multi-Format Benchmark Report
+# LAP LAP — Multi-Format Benchmark Report
 
 > **Date:** 2026-02-08 · **Tokenizer:** tiktoken `cl100k_base` (GPT-4) · **Formats:** 5
 
@@ -6,14 +6,14 @@
 
 ## Executive Summary
 
-DocLean compiles API specifications from **5 source formats** into a unified, token-efficient representation for LLM consumption. Across **2,765 endpoints** in **48 specs**, DocLean Lean mode achieves an average **10.0x compression** vs raw source — saving up to **93% of context window**.
+LAP compiles API specifications from **5 source formats** into a unified, token-efficient representation for LLM consumption. Across **2,765 endpoints** in **48 specs**, LAP Lean mode achieves an average **10.0x compression** vs raw source — saving up to **93% of context window**.
 
 | Metric | Value |
 |--------|-------|
 | Total specs benchmarked | 48 |
 | Total endpoints | 2,765 |
 | Total raw tokens | 2,146,590 |
-| Total DocLean Lean tokens | 175,096 |
+| Total LAP Lean tokens | 175,096 |
 | **Overall compression ratio** | **12.3x** |
 
 ---
@@ -30,13 +30,13 @@ DocLean compiles API specifications from **5 source formats** into a unified, to
 
 \* OpenAPI specs used cached pre-compiled output; compile times range 10ms–2s depending on spec size.
 
-> **⚠️ GraphQL & Protobuf note:** These formats are inherently terse (schema-only, no JSON boilerplate). DocLean _adds_ typed schema information and descriptions, making the standard output larger than raw source. This is expected — the value is **format unification**, not compression, for already-compact formats.
+> **⚠️ GraphQL & Protobuf note:** These formats are inherently terse (schema-only, no JSON boilerplate). LAP _adds_ typed schema information and descriptions, making the standard output larger than raw source. This is expected — the value is **format unification**, not compression, for already-compact formats.
 
 ---
 
 ## Per-Spec Detail — OpenAPI (28 specs, 2,635 endpoints)
 
-| API | Endpoints | Raw Tokens | DocLean Std | DocLean Lean | Std/Raw | Lean/Raw |
+| API | Endpoints | Raw Tokens | LAP Std | LAP Lean | Std/Raw | Lean/Raw |
 |-----|----------:|-----------:|------------:|-------------:|--------:|---------:|
 | asana | 167 | 97,427 | 43,043 | 7,450 | 2.3x | 13.1x |
 | box | 260 | 232,848 | 60,288 | 16,228 | 3.9x | 14.3x |
@@ -77,7 +77,7 @@ DocLean compiles API specifications from **5 source formats** into a unified, to
 
 ## Per-Spec Detail — GraphQL (5 specs, 59 endpoints)
 
-| API | Endpoints | Raw Tokens | DocLean Std | DocLean Lean | Lean/Raw | Validation |
+| API | Endpoints | Raw Tokens | LAP Std | LAP Lean | Lean/Raw | Validation |
 |-----|----------:|-----------:|------------:|-------------:|---------:|:----------:|
 | analytics | 9 | 473 | 662 | 603 | 0.8x | ❌ |
 | cms | 16 | 764 | 2,138 | 2,038 | 0.4x | ❌ |
@@ -85,13 +85,13 @@ DocLean compiles API specifications from **5 source formats** into a unified, to
 | github | 10 | 674 | 1,370 | 1,291 | 0.5x | ✅ |
 | social | 13 | 642 | 2,623 | 2,529 | 0.3x | ❌ |
 
-> GraphQL SDL is already extremely compact. DocLean expands it by adding typed parameter/response schemas — trading compression for **uniform format** across all API types.
+> GraphQL SDL is already extremely compact. LAP expands it by adding typed parameter/response schemas — trading compression for **uniform format** across all API types.
 
 ---
 
 ## Per-Spec Detail — AsyncAPI (5 specs, 24 endpoints)
 
-| API | Endpoints | Raw Tokens | DocLean Std | DocLean Lean | Lean/Raw | Validation |
+| API | Endpoints | Raw Tokens | LAP Std | LAP Lean | Lean/Raw | Validation |
 |-----|----------:|-----------:|------------:|-------------:|---------:|:----------:|
 | chat-websocket | 5 | 658 | 445 | 361 | 1.8x | ✅ |
 | ecommerce-kafka | 6 | 786 | 533 | 443 | 1.8x | ❌ |
@@ -103,7 +103,7 @@ DocLean compiles API specifications from **5 source formats** into a unified, to
 
 ## Per-Spec Detail — Protobuf/gRPC (5 specs, 22 endpoints)
 
-| API | Endpoints | Raw Tokens | DocLean Std | DocLean Lean | Lean/Raw | Validation |
+| API | Endpoints | Raw Tokens | LAP Std | LAP Lean | Lean/Raw | Validation |
 |-----|----------:|-----------:|------------:|-------------:|---------:|:----------:|
 | chat | 5 | 662 | 830 | 771 | 0.9x | ❌ |
 | health | 2 | 157 | 134 | 110 | 1.4x | ✅ |
@@ -111,13 +111,13 @@ DocLean compiles API specifications from **5 source formats** into a unified, to
 | payments | 4 | 653 | 767 | 733 | 0.9x | ❌ |
 | user | 6 | 546 | 716 | 657 | 0.8x | ❌ |
 
-> Like GraphQL, Protobuf is already a compact wire-format definition. DocLean value here is **format unification**, not compression.
+> Like GraphQL, Protobuf is already a compact wire-format definition. LAP value here is **format unification**, not compression.
 
 ---
 
 ## Per-Spec Detail — Postman (5 specs, 25 endpoints)
 
-| API | Endpoints | Raw Tokens | DocLean Std | DocLean Lean | Lean/Raw | Validation |
+| API | Endpoints | Raw Tokens | LAP Std | LAP Lean | Lean/Raw | Validation |
 |-----|----------:|-----------:|------------:|-------------:|---------:|:----------:|
 | auth-heavy | 6 | 1,311 | 354 | 293 | 4.5x | ✅ |
 | crud-api | 5 | 924 | 267 | 212 | 4.4x | ✅ |
@@ -125,7 +125,7 @@ DocLean compiles API specifications from **5 source formats** into a unified, to
 | multi-env | 5 | 1,067 | 301 | 247 | 4.3x | ✅ |
 | paginated | 5 | 1,206 | 371 | 294 | 4.1x | ✅ |
 
-> Postman collections contain extensive metadata (environments, tests, scripts) that DocLean strips cleanly.
+> Postman collections contain extensive metadata (environments, tests, scripts) that LAP strips cleanly.
 
 ---
 
@@ -145,7 +145,7 @@ DocLean compiles API specifications from **5 source formats** into a unified, to
 Compression ratio correlates directly with **source format verbosity**:
 - **OpenAPI/Postman** — JSON/YAML with deep nesting, descriptions, examples → massive compression
 - **AsyncAPI** — similar to OpenAPI but smaller specs → moderate compression  
-- **Protobuf/GraphQL** — already optimized IDLs → DocLean adds value through **format unification**, not compression
+- **Protobuf/GraphQL** — already optimized IDLs → LAP adds value through **format unification**, not compression
 
 ---
 
@@ -158,7 +158,7 @@ Compression ratio correlates directly with **source format verbosity**:
 | GraphQL | 1 | 4 | 5 | 20% |
 | Protobuf | 1 | 4 | 5 | 20% |
 
-Validation failures in GraphQL and Protobuf are primarily due to **parser round-trip** limitations with nested custom types (the DocLean parser doesn't yet fully handle complex inline type definitions). The compiled output itself is correct — only the re-parsing step loses some parameter detail.
+Validation failures in GraphQL and Protobuf are primarily due to **parser round-trip** limitations with nested custom types (the LAP parser doesn't yet fully handle complex inline type definitions). The compiled output itself is correct — only the re-parsing step loses some parameter detail.
 
 ---
 
@@ -166,7 +166,7 @@ Validation failures in GraphQL and Protobuf are primarily due to **parser round-
 
 | Claim | Evidence |
 |-------|----------|
-| **"One format for all APIs"** | ✅ 5 formats → single DocLean output |
+| **"One format for all APIs"** | ✅ 5 formats → single LAP output |
 | **"13x average compression for REST"** | ✅ 13.2x across 28 OpenAPI specs (2,635 endpoints) |
 | **"Lossless for what matters"** | ✅ All endpoints preserved; params ≥95% across formats |
 | **"Sub-second compilation"** | ✅ All formats compile in <2s, most <15ms |

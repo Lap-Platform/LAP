@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Tests for Postman Collection v2.1 → DocLean compiler.
+Tests for Postman Collection v2.1 → LAP compiler.
 """
 
 import os
@@ -28,7 +28,7 @@ from core.compilers.postman import (
     _fields_from_dict,
 )
 
-SPECS_DIR = Path(__file__).parent.parent / 'examples' / 'postman'
+SPECS_DIR = Path(__file__).parent.parent / 'examples' / 'verbose' / 'postman'
 PROJECT_DIR = Path(__file__).parent.parent
 CLI = str(PROJECT_DIR / 'cli/main.py')
 
@@ -257,16 +257,16 @@ class TestCompileAllSpecs:
             assert ep.method in ('get', 'post', 'put', 'patch', 'delete', 'head', 'options')
             assert ep.path.startswith('/')
 
-    def test_doclean_output_not_empty(self, postman_spec):
+    def test_lap_output_not_empty(self, postman_spec):
         ds = compile_postman(postman_spec)
-        output = ds.to_doclean()
-        assert '@doclean' in output
+        output = ds.to_lap()
+        assert '@lap' in output
         assert '@endpoint' in output
 
     def test_lean_output_shorter(self, postman_spec):
         ds = compile_postman(postman_spec)
-        normal = ds.to_doclean(lean=False)
-        lean = ds.to_doclean(lean=True)
+        normal = ds.to_lap(lean=False)
+        lean = ds.to_lap(lean=True)
         assert len(lean) <= len(normal)
 
 
@@ -474,17 +474,17 @@ class TestEdgeCases:
 # ═══════════════════════════════════════════════════════════════════
 
 class TestTokenBenchmark:
-    """Verify DocLean compression provides meaningful reduction vs raw JSON."""
+    """Verify LAP compression provides meaningful reduction vs raw JSON."""
 
     def test_compression_ratio(self):
-        """DocLean should be significantly smaller than raw Postman JSON."""
+        """LAP should be significantly smaller than raw Postman JSON."""
         ratios = []
         for spec_file in _all_postman_specs():
             raw_size = len(spec_file.read_text())
             ds = compile_postman(str(spec_file))
-            doclean_size = len(ds.to_doclean(lean=False))
-            lean_size = len(ds.to_doclean(lean=True))
-            ratio = raw_size / doclean_size if doclean_size else float('inf')
+            lap_size = len(ds.to_lap(lean=False))
+            lean_size = len(ds.to_lap(lean=True))
+            ratio = raw_size / lap_size if lap_size else float('inf')
             lean_ratio = raw_size / lean_size if lean_size else float('inf')
             ratios.append((spec_file.stem, ratio, lean_ratio))
 
@@ -495,8 +495,8 @@ class TestTokenBenchmark:
     def test_lean_smaller_than_standard(self):
         for spec_file in _all_postman_specs():
             ds = compile_postman(str(spec_file))
-            normal = ds.to_doclean(lean=False)
-            lean = ds.to_doclean(lean=True)
+            normal = ds.to_lap(lean=False)
+            lean = ds.to_lap(lean=True)
             assert len(lean) <= len(normal), f"{spec_file.stem}: lean not smaller"
 
 
@@ -555,29 +555,29 @@ class TestIsLikelyOptional:
 class TestCLI:
     def test_postman_subcommand(self):
         result = subprocess.run(
-            [sys.executable, CLI, 'postman', str(SPECS_DIR / 'crud-api.json')],
+            [sys.executable, CLI, 'compile', str(SPECS_DIR / 'crud-api.json')],
             capture_output=True, text=True, timeout=30,
         )
         assert result.returncode == 0
-        assert '@doclean' in result.stdout
+        assert '@lap' in result.stdout
         assert '@endpoint' in result.stdout
         assert 'Task Manager' in result.stdout
 
     def test_postman_lean(self):
         result = subprocess.run(
-            [sys.executable, CLI, 'postman', '--lean', str(SPECS_DIR / 'crud-api.json')],
+            [sys.executable, CLI, 'compile', '--lean', str(SPECS_DIR / 'crud-api.json')],
             capture_output=True, text=True, timeout=30,
         )
         assert result.returncode == 0
         assert '@desc' not in result.stdout
 
     def test_postman_output_file(self, tmp_path):
-        out = tmp_path / 'out.doclean'
+        out = tmp_path / 'out.lap'
         result = subprocess.run(
-            [sys.executable, CLI, 'postman', str(SPECS_DIR / 'crud-api.json'), '-o', str(out)],
+            [sys.executable, CLI, 'compile', str(SPECS_DIR / 'crud-api.json'), '-o', str(out)],
             capture_output=True, text=True, timeout=30,
         )
         assert result.returncode == 0
         assert out.exists()
         content = out.read_text()
-        assert '@doclean' in content
+        assert '@lap' in content

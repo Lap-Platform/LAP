@@ -6,7 +6,7 @@ sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parents[1]
 from lap import LAPClient
 
 client = LAPClient()
-docs = client.load("../../output/stripe-charges.doclean")
+docs = client.load("../../output/stripe-charges.lap")
 
 print(f"API: {docs.api_name} | Base: {docs.base_url} | Version: {docs.version}")
 print(f"Endpoints: {len(docs.endpoints)}\n")

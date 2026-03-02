@@ -2,14 +2,14 @@
 
 ## Basic Compilation
 
-Convert any OpenAPI 3.x YAML or JSON spec to DocLean:
+Convert any OpenAPI 3.x YAML or JSON spec to LAP:
 
 ```bash
-lap compile specs/stripe-charges.yaml -o output/stripe.doclean
+lap compile specs/stripe-charges.yaml -o output/stripe.lap
 ```
 
 ```
-✓ Compiled stripe-charges.yaml → output/stripe.doclean
+✓ Compiled stripe-charges.yaml → output/stripe.lap
 ✓ 5 endpoints | 4,291 chars | standard mode
 ```
 
@@ -20,7 +20,7 @@ lap compile specs/stripe-charges.yaml -o output/stripe.doclean
 Keeps descriptions and comments. Good for debugging and human review.
 
 ```bash
-lap compile specs/github-core.yaml -o github.doclean
+lap compile specs/github-core.yaml -o github.lap
 ```
 
 ```
@@ -35,7 +35,7 @@ lap compile specs/github-core.yaml -o github.doclean
 Strips all descriptions for maximum token compression. Use in production when agents already know the API semantics.
 
 ```bash
-lap compile specs/github-core.yaml -o github.lean.doclean --lean
+lap compile specs/github-core.yaml -o github.lean.lap --lean
 ```
 
 ```
@@ -59,7 +59,7 @@ lap compile specs/github-core.yaml -o github.lean.doclean --lean
 Large OpenAPI specs (1000+ endpoints) compile fine — the compiler processes endpoints sequentially:
 
 ```bash
-lap compile specs/stripe-full.yaml -o stripe-full.doclean
+lap compile specs/stripe-full.yaml -o stripe-full.lap
 ```
 
 For very large specs, the output file may be substantial. Tips:
@@ -83,8 +83,8 @@ To compile individually with control over output:
 ```bash
 for spec in specs/*.yaml; do
   name=$(basename "$spec" .yaml)
-  lap compile "$spec" -o "output/${name}.doclean"
-  lap compile "$spec" -o "output/${name}.lean.doclean" --lean
+  lap compile "$spec" -o "output/${name}.lap"
+  lap compile "$spec" -o "output/${name}.lean.lap" --lean
 done
 ```
 
@@ -119,17 +119,17 @@ lap validate specs/stripe-charges.yaml
 PASS — Zero information loss!
 ```
 
-The validator round-trips: compiles to DocLean, then checks that every endpoint, parameter, and error code from the original spec is present.
+The validator round-trips: compiles to LAP, then checks that every endpoint, parameter, and error code from the original spec is present.
 
 ## Converting Back to OpenAPI
 
-DocLean is not a one-way street. Convert back to OpenAPI:
+LAP is not a one-way street. Convert back to OpenAPI:
 
 ```bash
-lap convert output/stripe-charges.doclean -f openapi -o stripe-roundtrip.yaml
+lap convert output/stripe-charges.lap -f openapi -o stripe-roundtrip.yaml
 ```
 
 This is useful for:
 - Verifying compilation fidelity
-- Generating OpenAPI from hand-written DocLean
+- Generating OpenAPI from hand-written LAP
 - Interoperability with OpenAPI tooling

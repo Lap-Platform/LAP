@@ -1,4 +1,4 @@
-"""LAP Client — load and query DocLean documents."""
+"""LAP Client — load and query LAP documents."""
 
 import os
 import sys
@@ -11,14 +11,14 @@ _src_path = str(Path(__file__).resolve().parents[3] / "src")
 if _src_path not in sys.path:
     sys.path.insert(0, _src_path)
 
-from core.formats.doclean import DocLeanSpec, Endpoint, Param, ResponseSchema, ErrorSchema, ResponseField
-from core.parser import parse_doclean
+from core.formats.lap import LAPSpec, Endpoint, Param, ResponseSchema, ErrorSchema, ResponseField
+from core.parser import parse_lap
 from core.utils import count_tokens as _count_tokens, get_tiktoken_encoding
 
 
 @dataclass
 class EndpointInfo:
-    """Structured endpoint data returned by DocLeanDoc.get_endpoint()."""
+    """Structured endpoint data returned by LAPDoc.get_endpoint()."""
     method: str
     path: str
     summary: str
@@ -34,10 +34,10 @@ class EndpointInfo:
         return self.response_schemas[0] if self.response_schemas else None
 
 
-class DocLeanDoc:
-    """A loaded DocLean document with query and formatting methods."""
+class LAPDoc:
+    """A loaded LAP document with query and formatting methods."""
 
-    def __init__(self, spec: DocLeanSpec, raw_text: str):
+    def __init__(self, spec: LAPSpec, raw_text: str):
         self._spec = spec
         self._raw = raw_text
 
@@ -79,7 +79,7 @@ class DocLeanDoc:
 
     def to_context(self, lean: bool = False) -> str:
         """Format for LLM context injection."""
-        return self._spec.to_doclean(lean=lean)
+        return self._spec.to_lap(lean=lean)
 
     def token_count(self, lean: bool = False) -> int:
         """Count tokens using tiktoken (falls back to char estimate)."""
@@ -88,13 +88,13 @@ class DocLeanDoc:
 
 
 class LAPClient:
-    """Main LAP client for loading DocLean documents."""
+    """Main LAP client for loading LAP documents."""
 
-    def load(self, path: str) -> DocLeanDoc:
-        """Load a .doclean file and return a queryable document."""
+    def load(self, path: str) -> LAPDoc:
+        """Load a .lap file and return a queryable document."""
         p = Path(path)
         if not p.exists():
-            raise FileNotFoundError(f"DocLean file not found: {path}")
+            raise FileNotFoundError(f"LAP file not found: {path}")
         raw = p.read_text()
-        spec = parse_doclean(raw)
-        return DocLeanDoc(spec, raw)
+        spec = parse_lap(raw)
+        return LAPDoc(spec, raw)

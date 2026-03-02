@@ -5,8 +5,8 @@ Live Agent Benchmark - Generate prompts for head-to-head LLM testing.
 This script:
 1. Loads full_test_tasks.yaml
 2. Picks the first 2 docs per protocol (10 docs total)
-3. For each doc, compiles both verbose (raw) and DocLean versions
-4. Generates 20 prompt files (verbose_<protocol>_<n>.txt, doclean_<protocol>_<n>.txt)
+3. For each doc, compiles both verbose (raw) and LAP versions
+4. Generates 20 prompt files (verbose_<protocol>_<n>.txt, lap_<protocol>_<n>.txt)
 """
 
 import sys
@@ -54,25 +54,25 @@ def get_spec_path(spec_rel_path):
 
 
 def compile_doc(spec_path, protocol):
-    """Compile a spec to DocLean format based on protocol type."""
+    """Compile a spec to LAP format based on protocol type."""
     spec_path = str(spec_path)
     
     try:
         if protocol == "openapi":
             doc = compile_openapi(spec_path)
-            return doc.to_doclean(lean=False)
+            return doc.to_lap(lean=False)
         elif protocol == "graphql":
             doc = compile_graphql(spec_path)
-            return doc.to_doclean(lean=False)
+            return doc.to_lap(lean=False)
         elif protocol == "asyncapi":
             doc = compile_asyncapi(spec_path)
-            return doc.to_doclean(lean=False)
+            return doc.to_lap(lean=False)
         elif protocol == "postman":
             doc = compile_postman(spec_path)
-            return doc.to_doclean(lean=False)
+            return doc.to_lap(lean=False)
         elif protocol == "protobuf":
             doc = compile_protobuf(spec_path)
-            return doc.to_doclean(lean=False)
+            return doc.to_lap(lean=False)
         else:
             raise ValueError(f"Unknown protocol: {protocol}")
     except Exception as e:
@@ -136,10 +136,10 @@ def generate_prompts():
             with open(spec_path, 'r') as f:
                 verbose_doc = f.read()
             
-            # Compile DocLean version
-            doclean_doc = compile_doc(spec_path, protocol_name)
+            # Compile LAP version
+            lap_doc = compile_doc(spec_path, protocol_name)
             
-            if doclean_doc is None:
+            if lap_doc is None:
                 print(f"      ⚠️  SKIP: Compilation failed")
                 continue
             
@@ -152,27 +152,27 @@ def generate_prompts():
                 tasks=tasks_text
             )
             
-            # Generate DocLean prompt
-            doclean_prompt = PROMPT_TEMPLATE.format(
-                doc=doclean_doc,
+            # Generate LAP prompt
+            lap_prompt = PROMPT_TEMPLATE.format(
+                doc=lap_doc,
                 tasks=tasks_text
             )
             
             # Save prompts
             verbose_filename = f"verbose_{protocol_name}_{doc_idx}.txt"
-            doclean_filename = f"doclean_{protocol_name}_{doc_idx}.txt"
+            lap_filename = f"lap_{protocol_name}_{doc_idx}.txt"
             
             verbose_path = output_dir / verbose_filename
-            doclean_path = output_dir / doclean_filename
+            lap_path = output_dir / lap_filename
             
             with open(verbose_path, 'w') as f:
                 f.write(verbose_prompt)
             
-            with open(doclean_path, 'w') as f:
-                f.write(doclean_prompt)
+            with open(lap_path, 'w') as f:
+                f.write(lap_prompt)
             
             print(f"      ✅ Generated: {verbose_filename} ({len(verbose_prompt):,} chars)")
-            print(f"      ✅ Generated: {doclean_filename} ({len(doclean_prompt):,} chars)")
+            print(f"      ✅ Generated: {lap_filename} ({len(lap_prompt):,} chars)")
             print()
             
             protocol_count += 2

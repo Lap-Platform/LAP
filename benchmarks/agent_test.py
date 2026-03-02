@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Agent Validation Test — Prove DocLean produces functionally equivalent LLM output.
+Agent Validation Test — Prove LAP produces functionally equivalent LLM output.
 
-Compares LLM responses when given: verbose human docs, DocLean standard, DocLean lean.
+Compares LLM responses when given: verbose human docs, LAP standard, LAP lean.
 Uses --dry-run to show token counts and what would be compared without an LLM call.
 
 Usage:
@@ -101,19 +101,19 @@ def run_single_test(spec_path: str, task: str, api_key: str = None, model: str =
     """Run a single agent validation test."""
     spec = compile_openapi(spec_path)
     verbose = spec.to_original_text()
-    doclean_std = spec.to_doclean(lean=False)
-    doclean_lean = spec.to_doclean(lean=True)
+    lap_std = spec.to_lap(lean=False)
+    lap_lean = spec.to_lap(lean=True)
 
     prompt_verbose = build_prompt(verbose, task)
-    prompt_std = build_prompt(doclean_std, task)
-    prompt_lean = build_prompt(doclean_lean, task)
+    prompt_std = build_prompt(lap_std, task)
+    prompt_lean = build_prompt(lap_lean, task)
 
     tokens = {
         "verbose": count_tokens(prompt_verbose),
-        "doclean": count_tokens(prompt_std),
+        "lap": count_tokens(prompt_std),
         "lean": count_tokens(prompt_lean),
     }
-    tokens["reduction_std"] = f"{(1 - tokens['doclean'] / tokens['verbose']) * 100:.1f}%"
+    tokens["reduction_std"] = f"{(1 - tokens['lap'] / tokens['verbose']) * 100:.1f}%"
     tokens["reduction_lean"] = f"{(1 - tokens['lean'] / tokens['verbose']) * 100:.1f}%"
 
     result = {
@@ -132,17 +132,17 @@ def run_single_test(spec_path: str, task: str, api_key: str = None, model: str =
 
     # Live LLM calls
     responses = {}
-    for label, prompt in [("verbose", prompt_verbose), ("doclean", prompt_std), ("lean", prompt_lean)]:
+    for label, prompt in [("verbose", prompt_verbose), ("lap", prompt_std), ("lean", prompt_lean)]:
         responses[label] = call_llm(prompt, api_key, model)
 
     curls = {k: extract_curl_parts(v) for k, v in responses.items()}
 
-    eq_std, diffs_std = check_equivalence(curls["verbose"], curls["doclean"])
+    eq_std, diffs_std = check_equivalence(curls["verbose"], curls["lap"])
     eq_lean, diffs_lean = check_equivalence(curls["verbose"], curls["lean"])
 
     result["responses"] = responses
     result["equivalence"] = {
-        "verbose_vs_doclean": {"match": eq_std, "diffs": diffs_std},
+        "verbose_vs_lap": {"match": eq_std, "diffs": diffs_std},
         "verbose_vs_lean": {"match": eq_lean, "diffs": diffs_lean},
     }
     result["status"] = "pass" if (eq_std and eq_lean) else "partial"
@@ -156,7 +156,7 @@ def run_all(tasks_file: str, **kwargs) -> list[dict]:
         print(f"  [{t['api']}] {t['task'][:60]}...", end=" ", flush=True)
         r = run_single_test(t["spec"], t["task"], expect_endpoint=t.get("expect_endpoint"),
                             expect_params=t.get("expect_params"), **kwargs)
-        print(f"✓ ({r['tokens']['verbose']}→{r['tokens']['doclean']}→{r['tokens']['lean']} tokens)")
+        print(f"✓ ({r['tokens']['verbose']}→{r['tokens']['lap']}→{r['tokens']['lean']} tokens)")
         results.append(r)
     return results
 
@@ -165,20 +165,20 @@ def print_summary(results: list[dict]):
     print("\n" + "=" * 70)
     print("📊 Agent Validation Test Summary")
     print("=" * 70)
-    print(f"\n{'Task':<55} {'Verbose':>7} {'DocLean':>7} {'Lean':>6} {'Saved':>6}")
+    print(f"\n{'Task':<55} {'Verbose':>7} {'LAP':>7} {'Lean':>6} {'Saved':>6}")
     print("-" * 85)
-    total = {"verbose": 0, "doclean": 0, "lean": 0}
+    total = {"verbose": 0, "lap": 0, "lean": 0}
     for r in results:
         t = r["tokens"]
         total["verbose"] += t["verbose"]
-        total["doclean"] += t["doclean"]
+        total["lap"] += t["lap"]
         total["lean"] += t["lean"]
         task_short = r["task"][:53]
-        print(f"{task_short:<55} {t['verbose']:>7} {t['doclean']:>7} {t['lean']:>6} {t['reduction_lean']:>6}")
+        print(f"{task_short:<55} {t['verbose']:>7} {t['lap']:>7} {t['lean']:>6} {t['reduction_lean']:>6}")
 
     print("-" * 85)
     overall_red = f"{(1 - total['lean'] / total['verbose']) * 100:.1f}%"
-    print(f"{'TOTAL':<55} {total['verbose']:>7} {total['doclean']:>7} {total['lean']:>6} {overall_red:>6}")
+    print(f"{'TOTAL':<55} {total['verbose']:>7} {total['lap']:>7} {total['lean']:>6} {overall_red:>6}")
 
     if results[0].get("equivalence"):
         matches = sum(1 for r in results if r.get("equivalence", {}).get("verbose_vs_lean", {}).get("match"))

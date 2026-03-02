@@ -22,7 +22,7 @@ def run_all(output_json: bool = True, formats: list[str] = None):
     ts = datetime.now(timezone.utc)
 
     print("\n" + "█" * 80)
-    print("  LAP DocLean — COMPREHENSIVE BENCHMARK SUITE")
+    print("  LAP LAP — COMPREHENSIVE BENCHMARK SUITE")
     print(f"  {ts.strftime('%Y-%m-%d %H:%M:%S UTC')}")
     print("█" * 80)
 

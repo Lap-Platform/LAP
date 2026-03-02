@@ -2,7 +2,7 @@
 """
 Full Multi-Protocol Agent Benchmark for LAP
 
-Comprehensive benchmark comparing LLM agent performance with verbose docs vs. DocLean.
+Comprehensive benchmark comparing LLM agent performance with verbose docs vs. LAP.
 Tests OpenAPI, GraphQL, AsyncAPI, Postman, and Protobuf protocols.
 
 Usage:
@@ -257,7 +257,7 @@ def compile_spec(protocol: str, spec_path: str) -> Tuple[Optional[str], Optional
             return None, None
         
         spec = compiler(spec_path)
-        lean = spec.to_doclean(lean=True)
+        lean = spec.to_lap(lean=True)
         return verbose, lean
     except Exception as e:
         print(f"\n⚠️  Failed to compile {spec_path}: {e}")

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-DocLean Compiler — OpenAPI → DocLean format
+LAP Compiler — OpenAPI → LAP format
 
 Usage:
-    python compiler.py <openapi-spec.yaml> [-o output.doclean]
+    python compiler.py <openapi-spec.yaml> [-o output.lap]
 """
 
 import argparse
@@ -14,7 +14,7 @@ from pathlib import Path
 
 import yaml
 
-from core.formats.doclean import DocLeanSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema
+from core.formats.lap import LAPSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema
 
 
 def resolve_ref(spec: dict, ref: str, _visited: set = None) -> dict:
@@ -301,8 +301,8 @@ def extract_request_example(body: dict, spec: dict) -> str:
 _COMMON_FIELD_THRESHOLD = 0.95
 
 
-def compile_openapi(spec_path: str) -> DocLeanSpec:
-    """Compile an OpenAPI spec to DocLean format."""
+def compile_openapi(spec_path: str) -> LAPSpec:
+    """Compile an OpenAPI spec to LAP format."""
     path = Path(spec_path)
     file_size = path.stat().st_size
     if file_size > 50 * 1024 * 1024:
@@ -321,7 +321,7 @@ def compile_openapi(spec_path: str) -> DocLeanSpec:
     servers = spec.get("servers", [])
     base_url = servers[0]["url"] if servers else ""
 
-    doclean = DocLeanSpec(
+    lap = LAPSpec(
         api_name=info.get("title", path.stem),
         base_url=base_url,
         version=info.get("version", ""),
@@ -359,21 +359,21 @@ def compile_openapi(spec_path: str) -> DocLeanSpec:
                     error_schemas=error_schemas,
                     example_request=example,
                 )
-                doclean.endpoints.append(endpoint)
+                lap.endpoints.append(endpoint)
 
     # Deduplicate common fields -- any param (body, query, path, header)
     # appearing in >95% of all endpoints gets extracted into @common_fields.
-    if len(doclean.endpoints) > 5:
+    if len(lap.endpoints) > 5:
         from collections import Counter
         name_counts = Counter()
-        for ep in doclean.endpoints:
+        for ep in lap.endpoints:
             seen = set()
             for p in ep.request_body + ep.required_params + ep.optional_params:
                 if p.name not in seen:
                     name_counts[p.name] += 1
                     seen.add(p.name)
 
-        threshold = len(doclean.endpoints) * _COMMON_FIELD_THRESHOLD
+        threshold = len(lap.endpoints) * _COMMON_FIELD_THRESHOLD
         common_names = {name for name, count in name_counts.items()
                         if count >= threshold}
 
@@ -381,41 +381,41 @@ def compile_openapi(spec_path: str) -> DocLeanSpec:
             # Collect param objects from first endpoint that has each
             common_params = []
             found = set()
-            for ep in doclean.endpoints:
+            for ep in lap.endpoints:
                 for p in ep.request_body + ep.required_params + ep.optional_params:
                     if p.name in common_names and p.name not in found:
                         common_params.append(p)
                         found.add(p.name)
             # Strip from all endpoints
-            for ep in doclean.endpoints:
+            for ep in lap.endpoints:
                 ep.request_body = [p for p in ep.request_body
                                   if p.name not in common_names]
                 ep.required_params = [p for p in ep.required_params
                                      if p.name not in common_names]
                 ep.optional_params = [p for p in ep.optional_params
                                      if p.name not in common_names]
-            doclean.common_fields = common_params
+            lap.common_fields = common_params
 
-    return doclean
+    return lap
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Compile OpenAPI spec to DocLean format")
+    parser = argparse.ArgumentParser(description="Compile OpenAPI spec to LAP format")
     parser.add_argument("spec", help="Path to OpenAPI spec (YAML/JSON)")
     parser.add_argument("-o", "--output", help="Output file (default: stdout)")
     parser.add_argument("--verbose", action="store_true", help="Also output verbose version for comparison")
     parser.add_argument("--lean", action="store_true", help="Strip all description comments for maximum compression")
     args = parser.parse_args()
 
-    doclean = compile_openapi(args.spec)
-    result = doclean.to_doclean(lean=args.lean)
+    lap = compile_openapi(args.spec)
+    result = lap.to_lap(lean=args.lean)
 
     if args.output:
         Path(args.output).write_text(result)
         print(f"✅ Compiled to {args.output}")
         if args.verbose:
-            verbose_path = args.output.replace(".doclean", ".verbose.md")
-            Path(verbose_path).write_text(doclean.to_original_text())
+            verbose_path = args.output.replace(".lap", ".verbose.md")
+            Path(verbose_path).write_text(lap.to_original_text())
             print(f"📝 Verbose version: {verbose_path}")
     else:
         print(result)

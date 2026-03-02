@@ -206,13 +206,13 @@ def build_benchmark():
             all_valid, valid_flags = validate_task_endpoints(tasks, endpoints)
             print(f"  Task validation: {sum(valid_flags)}/{len(tasks)} valid")
             
-            # Step 2: Compile DocLean
-            print("Step 2: Compiling DocLean...")
+            # Step 2: Compile LAP
+            print("Step 2: Compiling LAP...")
             try:
                 doc = compile_openapi(str(spec_path))
-                doclean = doc.to_doclean(lean=False)
+                lap = doc.to_lap(lean=False)
             except Exception as e:
-                print(f"  ERROR compiling DocLean: {e}")
+                print(f"  ERROR compiling LAP: {e}")
                 continue
             
             # Step 3: Read verbose spec
@@ -220,11 +220,11 @@ def build_benchmark():
                 verbose_spec = f.read()
             
             verbose_chars = len(verbose_spec)
-            doclean_chars = len(doclean)
-            compression_ratio = round(verbose_chars / doclean_chars, 2) if doclean_chars > 0 else 0
+            lap_chars = len(lap)
+            compression_ratio = round(verbose_chars / lap_chars, 2) if lap_chars > 0 else 0
             
             print(f"  Verbose: {verbose_chars:,} chars")
-            print(f"  DocLean: {doclean_chars:,} chars")
+            print(f"  LAP: {lap_chars:,} chars")
             print(f"  Compression: {compression_ratio}x")
             
             # Step 4: Generate prompt files
@@ -250,14 +250,14 @@ TASKS:
             with open(verbose_file, 'w') as f:
                 f.write(verbose_prompt)
             
-            # DocLean prompt
-            doclean_prompt = prompt_template.format(doc=doclean, tasks=task_list)
-            doclean_file = output_dir / f"doclean_{spec_name}.txt"
-            with open(doclean_file, 'w') as f:
-                f.write(doclean_prompt)
+            # LAP prompt
+            lap_prompt = prompt_template.format(doc=lap, tasks=task_list)
+            lap_file = output_dir / f"lap_{spec_name}.txt"
+            with open(lap_file, 'w') as f:
+                f.write(lap_prompt)
             
             print(f"  Written: {verbose_file.name}")
-            print(f"  Written: {doclean_file.name}")
+            print(f"  Written: {lap_file.name}")
             
             # Add to config
             spec_config = {
@@ -265,7 +265,7 @@ TASKS:
                 "tier": tier,
                 "endpoints": len(endpoints),
                 "verbose_chars": verbose_chars,
-                "doclean_chars": doclean_chars,
+                "lap_chars": lap_chars,
                 "compression_ratio": compression_ratio,
                 "tasks": [{"task": t['task'], "expect_endpoint": t['endpoint']} for t in tasks]
             }
@@ -277,7 +277,7 @@ TASKS:
                 "tier": tier,
                 "endpoints": len(endpoints),
                 "verbose_size": verbose_chars,
-                "doclean_size": doclean_chars,
+                "lap_size": lap_chars,
                 "ratio": compression_ratio,
                 "tasks_valid": f"{sum(valid_flags)}/{len(tasks)}"
             })
@@ -297,12 +297,12 @@ TASKS:
     print("\n" + "="*100)
     print("SUMMARY TABLE")
     print("="*100)
-    print(f"{'Spec':<20} {'Tier':<8} {'Endpoints':<10} {'Verbose':<12} {'DocLean':<12} {'Ratio':<8} {'Valid':<10}")
+    print(f"{'Spec':<20} {'Tier':<8} {'Endpoints':<10} {'Verbose':<12} {'LAP':<12} {'Ratio':<8} {'Valid':<10}")
     print("-"*100)
     
     for row in summary_table:
         print(f"{row['spec']:<20} {row['tier']:<8} {row['endpoints']:<10} "
-              f"{row['verbose_size']:<12,} {row['doclean_size']:<12,} "
+              f"{row['verbose_size']:<12,} {row['lap_size']:<12,} "
               f"{row['ratio']:<8} {row['tasks_valid']:<10}")
     
     print("="*100)

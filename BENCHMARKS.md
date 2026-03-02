@@ -1,4 +1,4 @@
-# DocLean Benchmark Results
+# LAP Benchmark Results
 
 **v0.3** — 162 specs across 5 formats — **10.3x overall compression** (4.37M → 423K tokens)
 
@@ -63,7 +63,7 @@
 | AsyncAPI | 31 | 1.4x |
 | GraphQL | 30 | 1.3x |
 
-DocLean delivers the highest compression on verbose formats (OpenAPI, Postman) where JSON/YAML schemas carry significant structural redundancy. Compact formats like Protobuf and GraphQL are already information-dense, so compression is modest — but still meaningful at scale.
+LAP delivers the highest compression on verbose formats (OpenAPI, Postman) where JSON/YAML schemas carry significant structural redundancy. Compact formats like Protobuf and GraphQL are already information-dense, so compression is modest — but still meaningful at scale.
 
 ---
 
@@ -71,9 +71,9 @@ DocLean delivers the highest compression on verbose formats (OpenAPI, Postman) w
 
 ![Implementation comparison](benchmarks/results/charts/implementation_comparison.png)
 
-Real-world validation: five scenarios where an LLM agent generates working API integration code. The agent produces **identical output** regardless of whether it receives raw OpenAPI or DocLean — it just costs fewer tokens.
+Real-world validation: five scenarios where an LLM agent generates working API integration code. The agent produces **identical output** regardless of whether it receives raw OpenAPI or LAP — it just costs fewer tokens.
 
-| Scenario | OpenAPI Tokens | DocLean Tokens | Savings |
+| Scenario | OpenAPI Tokens | LAP Tokens | Savings |
 |----------|---------------:|---------------:|--------:|
 | Stripe | 3,166 | 1,736 | 45% |
 | GitHub | 3,384 | 1,743 | 49% |
@@ -81,7 +81,7 @@ Real-world validation: five scenarios where an LLM agent generates working API i
 | Slack | 2,163 | 1,639 | 24% |
 | Hetzner | 168,388 | 15,045 | 91% |
 
-Hetzner's 91% reduction is notable — the raw spec barely fits in most context windows, while the DocLean version fits comfortably.
+Hetzner's 91% reduction is notable — the raw spec barely fits in most context windows, while the LAP version fits comfortably.
 
 ---
 
@@ -117,13 +117,13 @@ For teams making hundreds of agent calls per day against large API specs, this c
 
 ## Key Findings
 
-1. **Verbose specs benefit most.** Notion (39.6x), Snyk (38.7x), and Zoom (37.8x) have massive schemas with repetitive patterns that DocLean compresses aggressively.
+1. **Verbose specs benefit most.** Notion (39.6x), Snyk (38.7x), and Zoom (37.8x) have massive schemas with repetitive patterns that LAP compresses aggressively.
 
 2. **Small specs still compress.** Even minimal specs like Slack (762 tokens) achieve 2.4x — the floor is meaningful, not zero.
 
-3. **Format matters.** OpenAPI and Postman carry structural overhead that compresses well. GraphQL and Protobuf are already concise — DocLean still helps, but expect 1.3–1.5x rather than 5–10x.
+3. **Format matters.** OpenAPI and Postman carry structural overhead that compresses well. GraphQL and Protobuf are already concise — LAP still helps, but expect 1.3–1.5x rather than 5–10x.
 
-4. **Agent output is preserved.** Implementation tests confirm that agents produce identical working code with DocLean input — the compression is lossless for practical purposes.
+4. **Agent output is preserved.** Implementation tests confirm that agents produce identical working code with LAP input — the compression is lossless for practical purposes.
 
 5. **v0.3 trades ~4% size for reliability.** Inline schemas and completeness signals add a small number of tokens but eliminate common agent failure modes (broken `$ref` resolution, missing required fields).
 
@@ -134,6 +134,6 @@ For teams making hundreds of agent calls per day against large API specs, this c
 - **Token counting:** cl100k_base tokenizer (GPT-4/Claude compatible)
 - **Specs:** 162 real-world API specifications sourced from public repositories and official documentation
 - **Formats:** OpenAPI 3.x, Postman Collections, Protocol Buffers, AsyncAPI, GraphQL SDL
-- **Implementation test:** Claude Sonnet generates integration code from both raw and DocLean specs; output correctness verified manually
+- **Implementation test:** Claude Sonnet generates integration code from both raw and LAP specs; output correctness verified manually
 - **Compression ratio:** Raw tokens ÷ Lean tokens
 - **All results reproducible** from the benchmark suite in this repository

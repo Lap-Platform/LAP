@@ -1,0 +1,50 @@
+[
+  {
+    "name": "brave-search",
+    "num_tools": 6,
+    "json_pretty": 1403,
+    "json_compact": 1154,
+    "toollean": 797,
+    "toollean_lean": 427
+  },
+  {
+    "name": "filesystem",
+    "num_tools": 14,
+    "json_pretty": 764,
+    "json_compact": 615,
+    "toollean": 427,
+    "toollean_lean": 421
+  },
+  {
+    "name": "github",
+    "num_tools": 8,
+    "json_pretty": 1778,
+    "json_compact": 1388,
+    "toollean": 831,
+    "toollean_lean": 580
+  },
+  {
+    "name": "memory",
+    "num_tools": 9,
+    "json_pretty": 470,
+    "json_compact": 371,
+    "toollean": 243,
+    "toollean_lean": 237
+  },
+  {
+    "name": "postgres",
+    "num_tools": 8,
+    "json_pretty": 1369,
+    "json_compact": 1068,
+    "toollean": 669,
+    "toollean_lean": 504
+  },
+  {
+    "name": "slack",
+    "num_tools": 9,
+    "json_pretty": 1596,
+    "json_compact": 1265,
+    "toollean": 822,
+    "toollean_lean": 532
+  }
+]

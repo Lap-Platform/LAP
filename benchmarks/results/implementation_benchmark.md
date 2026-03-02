@@ -5,10 +5,10 @@
 ## Executive Summary
 
 This benchmark simulates a real-world scenario: **an AI agent implementing code using API documentation**.
-We compare the full token cost when the agent receives OpenAPI specs vs DocLean-compressed specs.
+We compare the full token cost when the agent receives OpenAPI specs vs LAP-compressed specs.
 
 **Key finding:** Agents produce **identical-quality implementations** with **70-95% fewer input tokens**
-when using DocLean format, because DocLean preserves all the information developers actually need
+when using LAP format, because LAP preserves all the information developers actually need
 (endpoints, parameters, types, auth) while eliminating verbose YAML boilerplate.
 
 ---
@@ -17,7 +17,7 @@ when using DocLean format, because DocLean preserves all the information develop
 
 ### Stripe: Create & Confirm Payment Intent
 
-| Metric | OpenAPI | DocLean | Savings |
+| Metric | OpenAPI | LAP | Savings |
 |--------|---------|---------|---------|
 | Input tokens (docs + prompt) | 1,994 | 564 | **1,430 (71.7%)** |
 | Output tokens (implementation) | 1,172 | 1,172 | 0 (same code) |
@@ -25,7 +25,7 @@ when using DocLean format, because DocLean preserves all the information develop
 
 ### GitHub: Create PR with Reviewers & Labels
 
-| Metric | OpenAPI | DocLean | Savings |
+| Metric | OpenAPI | LAP | Savings |
 |--------|---------|---------|---------|
 | Input tokens (docs + prompt) | 2,277 | 636 | **1,641 (72.1%)** |
 | Output tokens (implementation) | 1,107 | 1,107 | 0 (same code) |
@@ -33,7 +33,7 @@ when using DocLean format, because DocLean preserves all the information develop
 
 ### Twilio: Send SMS with Delivery Callback
 
-| Metric | OpenAPI | DocLean | Savings |
+| Metric | OpenAPI | LAP | Savings |
 |--------|---------|---------|---------|
 | Input tokens (docs + prompt) | 2,554 | 788 | **1,766 (69.1%)** |
 | Output tokens (implementation) | 1,069 | 1,069 | 0 (same code) |
@@ -41,7 +41,7 @@ when using DocLean format, because DocLean preserves all the information develop
 
 ### Slack: List Channels & Post Message
 
-| Metric | OpenAPI | DocLean | Savings |
+| Metric | OpenAPI | LAP | Savings |
 |--------|---------|---------|---------|
 | Input tokens (docs + prompt) | 847 | 323 | **524 (61.9%)** |
 | Output tokens (implementation) | 1,316 | 1,316 | 0 (same code) |
@@ -49,20 +49,20 @@ when using DocLean format, because DocLean preserves all the information develop
 
 ### Hetzner: Server + Floating IP + Firewall
 
-| Metric | OpenAPI | DocLean | Savings |
+| Metric | OpenAPI | LAP | Savings |
 |--------|---------|---------|---------|
 | Input tokens (docs + prompt) | 167,000 | 13,657 | **153,343 (91.8%)** |
 | Output tokens (implementation) | 1,388 | 1,388 | 0 (same code) |
 | **Total tokens** | **168,388** | **15,045** | **153,343 (91.1%)** |
 
 > 💡 **This is a large spec (144 endpoints).** The OpenAPI YAML alone is 166,953 tokens.
-> DocLean compresses it to 13,610 tokens — the agent still produces the same implementation.
+> LAP compresses it to 13,610 tokens — the agent still produces the same implementation.
 
 ---
 
 ## Summary Table
 
-| Scenario | OpenAPI Total | DocLean Total | Tokens Saved | % Saved |
+| Scenario | OpenAPI Total | LAP Total | Tokens Saved | % Saved |
 |----------|--------------|--------------|-------------|---------|
 | Stripe: Create & Confirm Payment Intent | 3,166 | 1,736 | 1,430 | **45.2%** |
 | GitHub: Create PR with Reviewers & Labels | 3,384 | 1,743 | 1,641 | **48.5%** |
@@ -77,7 +77,7 @@ when using DocLean format, because DocLean preserves all the information develop
 
 **Agent making 10 API implementation calls in one session**
 
-| Metric | OpenAPI | DocLean |
+| Metric | OpenAPI | LAP |
 |--------|---------|---------|
 | Total tokens (10 calls) | 31,222 | 17,429 |
 | Tokens saved | — | **13,793** |
@@ -90,7 +90,7 @@ when using DocLean format, because DocLean preserves all the information develop
 
 **Agent using Stripe + GitHub + Slack APIs in one task (all docs loaded)**
 
-| Metric | OpenAPI | DocLean |
+| Metric | OpenAPI | LAP |
 |--------|---------|---------|
 | Combined input tokens | 5,118 | 1,523 |
 | Output tokens | 3,595 | 3,595 |
@@ -100,13 +100,13 @@ when using DocLean format, because DocLean preserves all the information develop
 
 > When agents need multiple APIs simultaneously, context windows fill up fast.
 > With OpenAPI, 3 specs may not even fit in a standard context window.
-> DocLean makes multi-API tasks practical.
+> LAP makes multi-API tasks practical.
 
 ---
 
 ## Cost Impact (at GPT-4o pricing: $3/M input, $15/M output)
 
-| Scenario | OpenAPI Cost | DocLean Cost | Savings |
+| Scenario | OpenAPI Cost | LAP Cost | Savings |
 |----------|-------------|-------------|---------|
 | Stripe: Create & Confirm Payment Intent | $0.0236 | $0.0193 | $0.0043 |
 | GitHub: Create PR with Reviewers & Labels | $0.0234 | $0.0185 | $0.0049 |
@@ -116,14 +116,14 @@ when using DocLean format, because DocLean preserves all the information develop
 
 > **At scale (1,000 agent calls/day across these APIs):**
 > - OpenAPI input cost: $104.80/day → $3144.10/month
-> - DocLean input cost: $9.58/day → $287.42/month
+> - LAP input cost: $9.58/day → $287.42/month
 > - **Monthly savings: $2856.67**
 
 ---
 
 ## Key Takeaway
 
-DocLean doesn't degrade output quality — the agent writes the **exact same code**.
+LAP doesn't degrade output quality — the agent writes the **exact same code**.
 It simply removes the verbose YAML/JSON boilerplate that LLMs don't need.
 For agent-heavy workloads, this means:
 

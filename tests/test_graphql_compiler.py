@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for GraphQL SDL → DocLean compiler."""
+"""Tests for GraphQL SDL → LAP compiler."""
 
 import sys
 from pathlib import Path
@@ -7,9 +7,9 @@ from pathlib import Path
 
 import pytest
 from core.compilers.graphql import compile_graphql, _unwrap, _type_string
-from core.formats.doclean import DocLeanSpec
+from core.formats.lap import LAPSpec
 
-SPECS_DIR = Path(__file__).parent.parent / "examples" / "graphql"
+SPECS_DIR = Path(__file__).parent.parent / "examples" / "verbose" / "graphql"
 
 
 # ── Basic compilation tests ──────────────────────────────────────────
@@ -17,7 +17,7 @@ SPECS_DIR = Path(__file__).parent.parent / "examples" / "graphql"
 class TestBasicCompilation:
     def test_compile_github(self):
         ds = compile_graphql(str(SPECS_DIR / "github.graphql"))
-        assert isinstance(ds, DocLeanSpec)
+        assert isinstance(ds, LAPSpec)
         assert ds.api_name  # non-empty
         assert len(ds.endpoints) > 0
 
@@ -146,18 +146,18 @@ class TestResponseFields:
         assert len(feed_ep.response_schemas) > 0
 
 
-# ── DocLean output tests ─────────────────────────────────────────────
+# ── LAP output tests ─────────────────────────────────────────────
 
-class TestDocLeanOutput:
-    def test_output_contains_doclean_header(self):
+class TestLAPOutput:
+    def test_output_contains_lap_header(self):
         ds = compile_graphql(str(SPECS_DIR / "github.graphql"))
-        output = ds.to_doclean()
-        assert "@doclean" in output
+        output = ds.to_lap()
+        assert "@lap" in output
         assert "@api" in output
 
     def test_output_contains_endpoints(self):
         ds = compile_graphql(str(SPECS_DIR / "github.graphql"))
-        output = ds.to_doclean()
+        output = ds.to_lap()
         # New compact format uses Q/M/S prefixes instead of @endpoint
         assert "Q " in output or "@endpoint GET" in output
         assert "M " in output or "@endpoint POST" in output
@@ -165,28 +165,28 @@ class TestDocLeanOutput:
 
     def test_output_contains_type_defs(self):
         ds = compile_graphql(str(SPECS_DIR / "github.graphql"))
-        output = ds.to_doclean()
+        output = ds.to_lap()
         assert "enum IssueState" in output
 
     def test_lean_mode_strips_descriptions(self):
         ds = compile_graphql(str(SPECS_DIR / "github.graphql"))
-        standard = ds.to_doclean(lean=False)
-        lean = ds.to_doclean(lean=True)
+        standard = ds.to_lap(lean=False)
+        lean = ds.to_lap(lean=True)
         assert len(lean) <= len(standard)
 
     def test_output_contains_input_types(self):
         ds = compile_graphql(str(SPECS_DIR / "github.graphql"))
-        output = ds.to_doclean()
+        output = ds.to_lap()
         assert "input CreateIssueInput" in output
 
     def test_output_contains_interface(self):
         ds = compile_graphql(str(SPECS_DIR / "github.graphql"))
-        output = ds.to_doclean()
+        output = ds.to_lap()
         assert "iface Node" in output or "@interface Node" in output
 
     def test_output_contains_union(self):
         ds = compile_graphql(str(SPECS_DIR / "social.graphql"))
-        output = ds.to_doclean()
+        output = ds.to_lap()
         assert "union FeedItem" in output or "@union FeedItem" in output
 
     def test_base_url_is_graphql(self):
@@ -206,9 +206,9 @@ class TestAllSchemas:
     ])
     def test_schema_compiles(self, schema):
         ds = compile_graphql(str(SPECS_DIR / schema))
-        output = ds.to_doclean()
+        output = ds.to_lap()
         assert len(output) > 100
-        assert "@doclean" in output
+        assert "@lap" in output
 
     @pytest.mark.parametrize("schema", [
         "github.graphql",
@@ -219,8 +219,8 @@ class TestAllSchemas:
     ])
     def test_schema_lean_mode(self, schema):
         ds = compile_graphql(str(SPECS_DIR / schema))
-        standard = ds.to_doclean(lean=False)
-        lean = ds.to_doclean(lean=True)
+        standard = ds.to_lap(lean=False)
+        lean = ds.to_lap(lean=True)
         assert len(lean) <= len(standard)
 
 
@@ -232,16 +232,16 @@ class TestTokenBenchmark:
         return max(1, len(text) // 4)
 
     def test_compression_ratio(self):
-        """DocLean output should be significantly smaller than raw SDL."""
+        """LAP output should be significantly smaller than raw SDL."""
         for schema in SPECS_DIR.glob("*.graphql"):
             raw = schema.read_text()
             ds = compile_graphql(str(schema))
-            doclean = ds.to_doclean(lean=True)
+            lap = ds.to_lap(lean=True)
             raw_tokens = self._count_tokens_approx(raw)
-            dl_tokens = self._count_tokens_approx(doclean)
-            # GraphQL SDL is already compact; DocLean adds response schemas so may be larger
+            dl_tokens = self._count_tokens_approx(lap)
+            # GraphQL SDL is already compact; LAP adds response schemas so may be larger
             # but should not be absurdly larger (< 5x)
-            assert dl_tokens < raw_tokens * 5, f"{schema.name}: DocLean ({dl_tokens}) too large vs SDL ({raw_tokens})"
+            assert dl_tokens < raw_tokens * 5, f"{schema.name}: LAP ({dl_tokens}) too large vs SDL ({raw_tokens})"
 
     def test_all_schemas_token_summary(self):
         """Print token summary for all schemas (informational)."""
@@ -251,8 +251,8 @@ class TestTokenBenchmark:
         for schema in sorted(SPECS_DIR.glob("*.graphql")):
             raw = schema.read_text()
             ds = compile_graphql(str(schema))
-            standard = ds.to_doclean(lean=False)
-            lean = ds.to_doclean(lean=True)
+            standard = ds.to_lap(lean=False)
+            lean = ds.to_lap(lean=True)
             raw_t = self._count_tokens_approx(raw)
             dl_t = self._count_tokens_approx(standard)
             lean_t = self._count_tokens_approx(lean)

@@ -4,7 +4,7 @@
 protocols:
   openapi:
     docs:
-      - spec: examples/stripe-charges.yaml
+      - spec: examples/verbose/openapi/stripe-charges.yaml
         api: Stripe Charges
         tasks:
           - task: "Create a charge for $50.00 USD with token tok_visa"
@@ -38,7 +38,7 @@ protocols:
             expect_endpoint: "POST /v1/charges/{charge}"
             expect_params: ["charge", "shipping", "fraud_details"]
 
-      - spec: examples/github-core.yaml
+      - spec: examples/verbose/openapi/github-core.yaml
         api: GitHub Core
         tasks:
           - task: "List issues for repository octocat/Hello-World"
@@ -72,7 +72,7 @@ protocols:
             expect_endpoint: "GET /repos/{owner}/{repo}/pulls"
             expect_params: ["owner", "repo", "base", "direction"]
 
-      - spec: examples/openai-core.yaml
+      - spec: examples/verbose/openapi/openai-core.yaml
         api: OpenAI Core
         tasks:
           - task: "Create chat completion with gpt-4 and message 'Explain quantum computing'"
@@ -106,7 +106,7 @@ protocols:
             expect_endpoint: "POST /v1/chat/completions"
             expect_params: ["model", "messages", "stream"]
 
-      - spec: examples/twilio-core.yaml
+      - spec: examples/verbose/openapi/twilio-core.yaml
         api: Twilio Core
         tasks:
           - task: "Send SMS from +15551234567 to +15559876543 with body 'Hello from Twilio'"
@@ -140,7 +140,7 @@ protocols:
             expect_endpoint: "GET /2010-04-01/Accounts/{AccountSid}/Messages.json"
             expect_params: ["To"]
 
-      - spec: examples/slack.yaml
+      - spec: examples/verbose/openapi/slack.yaml
         api: Slack
         tasks:
           - task: "Post message 'Hello team!' to channel #general"
@@ -174,7 +174,7 @@ protocols:
             expect_endpoint: "POST /files.upload"
             expect_params: ["channels", "file"]
 
-      - spec: examples/discord.yaml
+      - spec: examples/verbose/openapi/discord.yaml
         api: Discord
         tasks:
           - task: "Send message 'Hello Discord!' to channel 123456789012345678"
@@ -208,7 +208,7 @@ protocols:
             expect_endpoint: "POST /channels/{channel_id}/messages"
             expect_params: ["channel_id", "embeds"]
 
-      - spec: examples/spotify.yaml
+      - spec: examples/verbose/openapi/spotify.yaml
         api: Spotify
         tasks:
           - task: "Search for tracks matching 'Bohemian Rhapsody'"
@@ -242,7 +242,7 @@ protocols:
             expect_endpoint: "GET /v1/me"
             expect_params: []
 
-      - spec: examples/cloudflare.yaml
+      - spec: examples/verbose/openapi/cloudflare.yaml
         api: Cloudflare DNS
         tasks:
           - task: "List DNS records for zone abc123"
@@ -276,7 +276,7 @@ protocols:
             expect_endpoint: "POST /zones/{zone_id}/dns_records"
             expect_params: ["zone_id", "type", "name", "content"]
 
-      - spec: examples/sendgrid.yaml
+      - spec: examples/verbose/openapi/sendgrid.yaml
         api: SendGrid
         tasks:
           - task: "Send email from sender@example.com to recipient@example.com with subject 'Hello' and body 'World'"
@@ -310,7 +310,7 @@ protocols:
             expect_endpoint: "POST /v3/mail/send"
             expect_params: ["personalizations", "from", "subject", "content", "reply_to"]
 
-      - spec: examples/snyk.yaml
+      - spec: examples/verbose/openapi/snyk.yaml
         api: Snyk
         tasks:
           - task: "List all organizations"
@@ -346,7 +346,7 @@ protocols:
 
   graphql:
     docs:
-      - spec: examples/graphql/github.graphql
+      - spec: examples/verbose/graphql/github.graphql
         api: GitHub GraphQL
         tasks:
           - task: "Query viewer's login name and email"
@@ -380,7 +380,7 @@ protocols:
             expect_subscription: "pullRequestUpdated"
             expect_params: ["repositoryId"]
 
-      - spec: examples/graphql/stripe.graphql
+      - spec: examples/verbose/graphql/stripe.graphql
         api: Stripe GraphQL
         tasks:
           - task: "Query customer by ID cus_abc123 with email and metadata"
@@ -414,7 +414,7 @@ protocols:
             expect_mutation: "invoiceFinalize"
             expect_params: ["id"]
 
-      - spec: examples/graphql/shopify.graphql
+      - spec: examples/verbose/graphql/shopify.graphql
         api: Shopify GraphQL
         tasks:
           - task: "Query shop name and email"
@@ -448,7 +448,7 @@ protocols:
             expect_query: "collections"
             expect_params: ["first", "title"]
 
-      - spec: examples/graphql/slack.graphql
+      - spec: examples/verbose/graphql/slack.graphql
         api: Slack GraphQL
         tasks:
           - task: "Query workspace name and domain"
@@ -482,7 +482,7 @@ protocols:
             expect_mutation: "createChannel"
             expect_params: ["name"]
 
-      - spec: examples/graphql/twitter.graphql
+      - spec: examples/verbose/graphql/twitter.graphql
         api: Twitter GraphQL
         tasks:
           - task: "Query user by username elonmusk with followers count"
@@ -516,7 +516,7 @@ protocols:
             expect_query: "viewer"
             expect_params: ["directMessages", "first"]
 
-      - spec: examples/graphql/spotify.graphql
+      - spec: examples/verbose/graphql/spotify.graphql
         api: Spotify GraphQL
         tasks:
           - task: "Query track by ID 3n3Ppam7vgaVa1iaRUc9Lp with name and artists"
@@ -550,7 +550,7 @@ protocols:
             expect_mutation: "saveTrack"
             expect_params: ["trackId"]
 
-      - spec: examples/graphql/gitlab.graphql
+      - spec: examples/verbose/graphql/gitlab.graphql
         api: GitLab GraphQL
         tasks:
           - task: "Query project by path group/project with name and description"
@@ -584,7 +584,7 @@ protocols:
             expect_mutation: "mergeRequestMerge"
             expect_params: ["iid", "projectPath"]
 
-      - spec: examples/graphql/notion.graphql
+      - spec: examples/verbose/graphql/notion.graphql
         api: Notion GraphQL
         tasks:
           - task: "Query page by ID abc-123-xyz with title and content"
@@ -618,7 +618,7 @@ protocols:
             expect_mutation: "createPage"
             expect_params: ["parentId", "properties"]
 
-      - spec: examples/graphql/linear.graphql
+      - spec: examples/verbose/graphql/linear.graphql
         api: Linear GraphQL
         tasks:
           - task: "Query viewer with name and email"
@@ -652,7 +652,7 @@ protocols:
             expect_query: "issueSearch"
             expect_params: ["query", "first"]
 
-      - spec: examples/graphql/ecommerce.graphql
+      - spec: examples/verbose/graphql/ecommerce.graphql
         api: E-commerce GraphQL
         tasks:
           - task: "Query product by ID prod-123 with name, price, and stock"
@@ -686,7 +686,7 @@ protocols:
             expect_query: "me"
             expect_params: ["orders", "first"]
 
-      - spec: examples/graphql/contentful.graphql
+      - spec: examples/verbose/graphql/contentful.graphql
         api: Contentful GraphQL
         tasks:
           - task: "Query entry by ID entry-123 with all fields"
@@ -722,7 +722,7 @@ protocols:
 
   asyncapi:
     docs:
-      - spec: examples/asyncapi/stripe-webhooks.yaml
+      - spec: examples/verbose/asyncapi/stripe-webhooks.yaml
         api: Stripe Webhooks
         tasks:
           - task: "Subscribe to payment_intent/succeeded event for successful payment intents"
@@ -756,7 +756,7 @@ protocols:
             expect_channel: "charge/refunded"
             expect_params: ["amount"]
 
-      - spec: examples/asyncapi/slack-events.yaml
+      - spec: examples/verbose/asyncapi/slack-events.yaml
         api: Slack Events
         tasks:
           - task: "Subscribe to message event for new messages in channels"
@@ -790,7 +790,7 @@ protocols:
             expect_channel: "message"
             expect_params: ["channel", "text"]
 
-      - spec: examples/asyncapi/kafka-ecommerce.yaml
+      - spec: examples/verbose/asyncapi/kafka-ecommerce.yaml
         api: Kafka E-commerce
         tasks:
           - task: "Publish order-created event to orders topic"
@@ -824,7 +824,7 @@ protocols:
             expect_channel: "orders"
             expect_params: ["orderId", "reason"]
 
-      - spec: examples/asyncapi/github-webhooks.yaml
+      - spec: examples/verbose/asyncapi/github-webhooks.yaml
         api: GitHub Webhooks
         tasks:
           - task: "Subscribe to push events"
@@ -858,7 +858,7 @@ protocols:
             expect_channel: "workflow_run"
             expect_params: ["workflow_run"]
 
-      - spec: examples/asyncapi/slack-rtm-asyncapi.yml
+      - spec: examples/verbose/asyncapi/slack-rtm-asyncapi.yml
         api: Slack RTM
         tasks:
           - task: "Connect to RTM API with token"
@@ -892,7 +892,7 @@ protocols:
             expect_channel: "user_typing"
             expect_params: ["user_typing"]
 
-      - spec: examples/asyncapi/chat-websocket.yaml
+      - spec: examples/verbose/asyncapi/chat-websocket.yaml
         api: Chat WebSocket
         tasks:
           - task: "Connect to chat WebSocket at wss://chat.example.com"
@@ -926,7 +926,7 @@ protocols:
             expect_channel: "user_joined"
             expect_params: ["userId", "roomId"]
 
-      - spec: examples/asyncapi/aws-sns-sqs.yaml
+      - spec: examples/verbose/asyncapi/aws-sns-sqs.yaml
         api: AWS SNS/SQS
         tasks:
           - task: "Publish message to SNS topic arn:aws:sns:us-east-1:123:topic"
@@ -960,7 +960,7 @@ protocols:
             expect_channel: "sqs/get_attributes"
             expect_params: ["QueueUrl", "AttributeNames"]
 
-      - spec: examples/asyncapi/iot-mqtt.yaml
+      - spec: examples/verbose/asyncapi/iot-mqtt.yaml
         api: IoT MQTT
         tasks:
           - task: "Connect to MQTT broker at mqtt://broker.example.com"
@@ -994,7 +994,7 @@ protocols:
             expect_channel: "sensors/data"
             expect_params: ["topic", "payload"]
 
-      - spec: examples/asyncapi/notifications.yaml
+      - spec: examples/verbose/asyncapi/notifications.yaml
         api: Notifications
         tasks:
           - task: "Send push notification to device token abc123"
@@ -1028,7 +1028,7 @@ protocols:
             expect_channel: "get_unread"
             expect_params: ["userId"]
 
-      - spec: examples/asyncapi/stock-market-feed.yaml
+      - spec: examples/verbose/asyncapi/stock-market-feed.yaml
         api: Stock Market Feed
         tasks:
           - task: "Subscribe to real-time quotes for ticker AAPL"
@@ -1064,7 +1064,7 @@ protocols:
 
   postman:
     docs:
-      - spec: examples/postman/stripe-payments.json
+      - spec: examples/verbose/postman/stripe-payments.json
         api: Stripe Payments (Postman)
         tasks:
           - task: "Create charge for $2000 USD with source tok_visa"
@@ -1098,7 +1098,7 @@ protocols:
             expect_endpoint: "GET /charges"
             expect_params: ["customer", "starting_after"]
 
-      - spec: examples/postman/github-repos.json
+      - spec: examples/verbose/postman/github-repos.json
         api: GitHub Repos (Postman)
         tasks:
           - task: "List repositories for current user with type 'owner' and sort by 'updated'"
@@ -1132,7 +1132,7 @@ protocols:
             expect_endpoint: "POST /repos/:owner/:repo/issues"
             expect_params: ["owner", "repo", "title", "body", "assignees"]
 
-      - spec: examples/postman/slack-api.json
+      - spec: examples/verbose/postman/slack-api.json
         api: Slack API (Postman)
         tasks:
           - task: "Post message 'Hello Slack!' to channel #general"
@@ -1166,7 +1166,7 @@ protocols:
             expect_endpoint: "POST /files.upload"
             expect_params: ["channels", "file"]
 
-      - spec: examples/postman/twilio-messaging.json
+      - spec: examples/verbose/postman/twilio-messaging.json
         api: Twilio Messaging (Postman)
         tasks:
           - task: "Send SMS from +15551234567 to +15559876543 with body 'Hello'"
@@ -1200,7 +1200,7 @@ protocols:
             expect_endpoint: "POST /2010-04-01/Accounts/{AccountSid}/Messages.json"
             expect_params: ["To", "From", "Body", "SendAt"]
 
-      - spec: examples/postman/sendgrid-email.json
+      - spec: examples/verbose/postman/sendgrid-email.json
         api: SendGrid Email (Postman)
         tasks:
           - task: "Send email from sender@example.com to recipient@example.com"
@@ -1234,7 +1234,7 @@ protocols:
             expect_endpoint: "GET /v3/stats"
             expect_params: ["start_date", "end_date"]
 
-      - spec: examples/postman/discord-bot.json
+      - spec: examples/verbose/postman/discord-bot.json
         api: Discord Bot (Postman)
         tasks:
           - task: "Send message 'Hello Discord!' to channel 123456789"
@@ -1268,7 +1268,7 @@ protocols:
             expect_endpoint: "POST /users/@me/channels"
             expect_params: ["recipient_id"]
 
-      - spec: examples/postman/notion-workspace.json
+      - spec: examples/verbose/postman/notion-workspace.json
         api: Notion Workspace (Postman)
         tasks:
           - task: "Get page abc-123-xyz details"
@@ -1302,7 +1302,7 @@ protocols:
             expect_endpoint: "GET /v1/users/{user_id}"
             expect_params: ["user_id"]
 
-      - spec: examples/postman/jira-projects.json
+      - spec: examples/verbose/postman/jira-projects.json
         api: Jira Projects (Postman)
         tasks:
           - task: "Get project details for project key PROJ"
@@ -1336,7 +1336,7 @@ protocols:
             expect_endpoint: "DELETE /rest/api/3/issue/{issueIdOrKey}"
             expect_params: ["issueIdOrKey"]
 
-      - spec: examples/postman/shopify-ecommerce.json
+      - spec: examples/verbose/postman/shopify-ecommerce.json
         api: Shopify E-commerce (Postman)
         tasks:
           - task: "Get product details for product ID 123456789"
@@ -1370,7 +1370,7 @@ protocols:
             expect_endpoint: "GET /admin/api/2023-10/inventory_levels.json"
             expect_params: ["location_ids"]
 
-      - spec: examples/postman/hubspot-crm.json
+      - spec: examples/verbose/postman/hubspot-crm.json
         api: HubSpot CRM (Postman)
         tasks:
           - task: "Get contact by ID 12345"
@@ -1404,7 +1404,7 @@ protocols:
             expect_endpoint: "GET /crm/v3/objects/deals"
             expect_params: []
 
-      - spec: examples/postman/zoom-meetings.json
+      - spec: examples/verbose/postman/zoom-meetings.json
         api: Zoom Meetings (Postman)
         tasks:
           - task: "Get user details for user ID abc123@email.com"
@@ -1440,7 +1440,7 @@ protocols:
 
   protobuf:
     docs:
-      - spec: examples/protobuf/user.proto
+      - spec: examples/verbose/protobuf/user.proto
         api: User Service (gRPC)
         tasks:
           - task: "Call GetUser RPC with user ID 'user-123'"
@@ -1474,7 +1474,7 @@ protocols:
             expect_rpc: "ListUsers"
             expect_params: ["page_size", "created_after"]
 
-      - spec: examples/protobuf/chat.proto
+      - spec: examples/verbose/protobuf/chat.proto
         api: Chat Service (gRPC)
         tasks:
           - task: "Call SendMessage RPC with text 'Hello!' to room 'general'"
@@ -1508,7 +1508,7 @@ protocols:
             expect_rpc: "SendMessage"
             expect_params: ["room_id", "user_id", "text", "attachments"]
 
-      - spec: examples/protobuf/payments.proto
+      - spec: examples/verbose/protobuf/payments.proto
         api: Payments Service (gRPC)
         tasks:
           - task: "Call CreatePayment RPC with amount 5000 and currency USD"
@@ -1542,7 +1542,7 @@ protocols:
             expect_rpc: "StreamPaymentEvents"
             expect_params: []
 
-      - spec: examples/protobuf/health.proto
+      - spec: examples/verbose/protobuf/health.proto
         api: Health Service (gRPC)
         tasks:
           - task: "Call Check RPC to verify service health"
@@ -1576,7 +1576,7 @@ protocols:
             expect_rpc: "Check"
             expect_params: ["service"]
 
-      - spec: examples/protobuf/google_pubsub.proto
+      - spec: examples/verbose/protobuf/google_pubsub.proto
         api: Google Pub/Sub (gRPC)
         tasks:
           - task: "Call CreateTopic RPC with topic name 'projects/my-project/topics/notifications'"
@@ -1610,7 +1610,7 @@ protocols:
             expect_rpc: "ModifyAckDeadline"
             expect_params: ["subscription", "ack_ids", "ack_deadline_seconds"]
 
-      - spec: examples/protobuf/google_firestore.proto
+      - spec: examples/verbose/protobuf/google_firestore.proto
         api: Google Firestore (gRPC)
         tasks:
           - task: "Call GetDocument RPC for document 'projects/my-project/databases/(default)/documents/users/user-123'"
@@ -1644,7 +1644,7 @@ protocols:
             expect_rpc: "Listen"
             expect_params: []
 
-      - spec: examples/protobuf/google_storage.proto
+      - spec: examples/verbose/protobuf/google_storage.proto
         api: Google Cloud Storage (gRPC)
         tasks:
           - task: "Call GetBucket RPC for bucket 'my-bucket'"
@@ -1678,7 +1678,7 @@ protocols:
             expect_rpc: "UpdateObject"
             expect_params: ["bucket", "object", "metadata"]
 
-      - spec: examples/protobuf/auth_service.proto
+      - spec: examples/verbose/protobuf/auth_service.proto
         api: Auth Service (gRPC)
         tasks:
           - task: "Call Login RPC with username 'john' and password 'secret123'"
@@ -1712,7 +1712,7 @@ protocols:
             expect_rpc: "RevokeToken"
             expect_params: ["token"]
 
-      - spec: examples/protobuf/search_service.proto
+      - spec: examples/verbose/protobuf/search_service.proto
         api: Search Service (gRPC)
         tasks:
           - task: "Call Search RPC with query 'artificial intelligence' and limit 10"
@@ -1746,7 +1746,7 @@ protocols:
             expect_rpc: "RankDocuments"
             expect_params: ["query", "documents", "ranking_model"]
 
-      - spec: examples/protobuf/notification_service.proto
+      - spec: examples/verbose/protobuf/notification_service.proto
         api: Notification Service (gRPC)
         tasks:
           - task: "Call SendNotification RPC to user 'user-123' with message 'Hello!'"

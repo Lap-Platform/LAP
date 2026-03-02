@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
-Agent Implementation Tests — Verify LLM agents can USE DocLean output.
+Agent Implementation Tests — Verify LLM agents can USE LAP output.
 
 These tests verify that an AI agent can:
-1. Parse compiled DocLean specs programmatically
+1. Parse compiled LAP specs programmatically
 2. Extract all necessary information (endpoints, parameters, types, responses)
 3. Understand required vs optional parameters
 4. Handle enums, nested objects, arrays, unions
-5. Round-trip: original spec → DocLean → parse → equivalent information
+5. Round-trip: original spec → LAP → parse → equivalent information
 
 This is NOT testing LLMs directly (no API keys needed).
-This tests that DocLean format contains all info an agent needs to make correct API calls.
+This tests that LAP format contains all info an agent needs to make correct API calls.
 """
 
 import sys
@@ -19,8 +19,8 @@ from pathlib import Path
 
 
 import pytest
-from core.formats.doclean import DocLeanSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema
-from core.parser import parse_doclean
+from core.formats.lap import LAPSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema
+from core.parser import parse_lap
 from core.compilers.openapi import compile_openapi
 
 try:
@@ -44,7 +44,7 @@ except ImportError:
     compile_protobuf = None
 
 
-SPECS_DIR = Path(__file__).parent.parent / 'examples'
+SPECS_DIR = Path(__file__).parent.parent / 'examples' / 'verbose'
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -52,20 +52,20 @@ SPECS_DIR = Path(__file__).parent.parent / 'examples'
 # ═════════════════════════════════════════════════════════════════════════════
 
 class TestAgentOpenAPIUsage:
-    """Test that an agent can parse and use OpenAPI DocLean output."""
+    """Test that an agent can parse and use OpenAPI LAP output."""
 
     def test_extract_endpoint_basics(self):
         """Agent can extract endpoint method, path, and description."""
-        spec_path = SPECS_DIR / 'stripe-charges.yaml'
+        spec_path = SPECS_DIR / 'openapi' / 'stripe-charges.yaml'
         if not spec_path.exists():
             pytest.skip(f"Spec not found: {spec_path}")
 
-        # Compile to DocLean
-        doclean_spec = compile_openapi(str(spec_path))
-        doclean_text = doclean_spec.to_doclean()
+        # Compile to LAP
+        lap_spec = compile_openapi(str(spec_path))
+        lap_text = lap_spec.to_lap()
 
-        # Agent parses DocLean (simulating what an LLM agent would do)
-        parsed = parse_doclean(doclean_text)
+        # Agent parses LAP (simulating what an LLM agent would do)
+        parsed = parse_lap(lap_text)
 
         # Agent can extract endpoints
         assert len(parsed.endpoints) > 0, "Agent should find endpoints"
@@ -79,13 +79,13 @@ class TestAgentOpenAPIUsage:
 
     def test_extract_required_vs_optional_params(self):
         """Agent can distinguish required vs optional parameters."""
-        spec_path = SPECS_DIR / 'stripe-charges.yaml'
+        spec_path = SPECS_DIR / 'openapi' / 'stripe-charges.yaml'
         if not spec_path.exists():
             pytest.skip(f"Spec not found: {spec_path}")
 
-        doclean_spec = compile_openapi(str(spec_path))
-        doclean_text = doclean_spec.to_doclean()
-        parsed = parse_doclean(doclean_text)
+        lap_spec = compile_openapi(str(spec_path))
+        lap_text = lap_spec.to_lap()
+        parsed = parse_lap(lap_text)
 
         # Find POST endpoint (likely has required params)
         post_endpoints = [ep for ep in parsed.endpoints if ep.method == 'POST']
@@ -112,13 +112,13 @@ class TestAgentOpenAPIUsage:
 
     def test_extract_parameter_types(self):
         """Agent can extract and understand parameter types."""
-        spec_path = SPECS_DIR / 'github-core.yaml'
+        spec_path = SPECS_DIR / 'openapi' / 'github-core.yaml'
         if not spec_path.exists():
             pytest.skip(f"Spec not found: {spec_path}")
 
-        doclean_spec = compile_openapi(str(spec_path))
-        doclean_text = doclean_spec.to_doclean()
-        parsed = parse_doclean(doclean_text)
+        lap_spec = compile_openapi(str(spec_path))
+        lap_text = lap_spec.to_lap()
+        parsed = parse_lap(lap_text)
 
         # Collect all parameter types
         param_types = set()
@@ -137,13 +137,13 @@ class TestAgentOpenAPIUsage:
 
     def test_extract_enum_values(self):
         """Agent can extract enum constraint values."""
-        spec_path = SPECS_DIR / 'github-core.yaml'
+        spec_path = SPECS_DIR / 'openapi' / 'github-core.yaml'
         if not spec_path.exists():
             pytest.skip(f"Spec not found: {spec_path}")
 
-        doclean_spec = compile_openapi(str(spec_path))
-        doclean_text = doclean_spec.to_doclean()
-        parsed = parse_doclean(doclean_text)
+        lap_spec = compile_openapi(str(spec_path))
+        lap_text = lap_spec.to_lap()
+        parsed = parse_lap(lap_text)
 
         # Find parameters with enum types
         enum_params = []
@@ -164,13 +164,13 @@ class TestAgentOpenAPIUsage:
 
     def test_extract_response_schema(self):
         """Agent can extract response schemas and status codes."""
-        spec_path = SPECS_DIR / 'openai-core.yaml'
+        spec_path = SPECS_DIR / 'openapi' / 'openai-core.yaml'
         if not spec_path.exists():
             pytest.skip(f"Spec not found: {spec_path}")
 
-        doclean_spec = compile_openapi(str(spec_path))
-        doclean_text = doclean_spec.to_doclean()
-        parsed = parse_doclean(doclean_text)
+        lap_spec = compile_openapi(str(spec_path))
+        lap_text = lap_spec.to_lap()
+        parsed = parse_lap(lap_text)
 
         # Find endpoints with responses (use response_schemas list)
         endpoints_with_responses = [ep for ep in parsed.endpoints if ep.response_schemas]
@@ -188,13 +188,13 @@ class TestAgentOpenAPIUsage:
 
     def test_extract_nested_response_objects(self):
         """Agent can extract nested object structures from responses."""
-        spec_path = SPECS_DIR / 'stripe-charges.yaml'
+        spec_path = SPECS_DIR / 'openapi' / 'stripe-charges.yaml'
         if not spec_path.exists():
             pytest.skip(f"Spec not found: {spec_path}")
 
-        doclean_spec = compile_openapi(str(spec_path))
-        doclean_text = doclean_spec.to_doclean()
-        parsed = parse_doclean(doclean_text)
+        lap_spec = compile_openapi(str(spec_path))
+        lap_text = lap_spec.to_lap()
+        parsed = parse_lap(lap_text)
 
         # Find response with nested objects
         nested_found = False
@@ -215,13 +215,13 @@ class TestAgentOpenAPIUsage:
 
     def test_extract_error_responses(self):
         """Agent can extract error response information."""
-        spec_path = SPECS_DIR / 'stripe-charges.yaml'
+        spec_path = SPECS_DIR / 'openapi' / 'stripe-charges.yaml'
         if not spec_path.exists():
             pytest.skip(f"Spec not found: {spec_path}")
 
-        doclean_spec = compile_openapi(str(spec_path))
-        doclean_text = doclean_spec.to_doclean()
-        parsed = parse_doclean(doclean_text)
+        lap_spec = compile_openapi(str(spec_path))
+        lap_text = lap_spec.to_lap()
+        parsed = parse_lap(lap_text)
 
         # Find endpoints with error definitions (use error_schemas list)
         endpoints_with_errors = [ep for ep in parsed.endpoints if ep.error_schemas]
@@ -236,19 +236,19 @@ class TestAgentOpenAPIUsage:
             assert isinstance(error.code, str), "Error code is string"
 
     def test_round_trip_information_preservation(self):
-        """Verify original spec → DocLean → parse preserves key information."""
-        spec_path = SPECS_DIR / 'github-core.yaml'
+        """Verify original spec → LAP → parse preserves key information."""
+        spec_path = SPECS_DIR / 'openapi' / 'github-core.yaml'
         if not spec_path.exists():
             pytest.skip(f"Spec not found: {spec_path}")
 
         # Original compilation
         original = compile_openapi(str(spec_path))
         
-        # Convert to DocLean text (what agent sees)
-        doclean_text = original.to_doclean()
+        # Convert to LAP text (what agent sees)
+        lap_text = original.to_lap()
         
         # Agent parses it back
-        parsed = parse_doclean(doclean_text)
+        parsed = parse_lap(lap_text)
 
         # Verify endpoint count preserved
         assert len(parsed.endpoints) == len(original.endpoints), \
@@ -267,7 +267,7 @@ class TestAgentOpenAPIUsage:
 
 @pytest.mark.skipif(compile_graphql is None, reason="GraphQL compiler not available")
 class TestAgentGraphQLUsage:
-    """Test that an agent can parse and use GraphQL DocLean output."""
+    """Test that an agent can parse and use GraphQL LAP output."""
 
     def test_extract_query_operations(self):
         """Agent can extract GraphQL query operations."""
@@ -275,20 +275,20 @@ class TestAgentGraphQLUsage:
         if not spec_path.exists():
             pytest.skip(f"Spec not found: {spec_path}")
 
-        # Compile GraphQL to DocLean
-        doclean_spec = compile_graphql(str(spec_path))
-        doclean_text = doclean_spec.to_doclean()
+        # Compile GraphQL to LAP
+        lap_spec = compile_graphql(str(spec_path))
+        lap_text = lap_spec.to_lap()
 
         # Agent parses it - NOTE: GraphQL uses type definitions, not traditional endpoints
-        # The compiled spec has endpoints, but the DocLean text representation focuses on types
-        assert len(doclean_spec.endpoints) > 0, "Compiler finds GraphQL operations"
+        # The compiled spec has endpoints, but the LAP text representation focuses on types
+        assert len(lap_spec.endpoints) > 0, "Compiler finds GraphQL operations"
         
-        # Verify DocLean text contains type information agent can use
-        assert 'type ' in doclean_text or 'input ' in doclean_text, \
+        # Verify LAP text contains type information agent can use
+        assert 'type ' in lap_text or 'input ' in lap_text, \
             "Agent can access GraphQL type definitions"
         
         # Agent can see the compiled endpoint information
-        query_ops = [ep for ep in doclean_spec.endpoints if 'query' in ep.path.lower() or ep.method.lower() == 'query']
+        query_ops = [ep for ep in lap_spec.endpoints if 'query' in ep.path.lower() or ep.method.lower() == 'query']
         # GraphQL operations exist in compiled form (even if text format is type-focused)
         assert True, "GraphQL operations accessible to agent"
 
@@ -298,24 +298,24 @@ class TestAgentGraphQLUsage:
         if not spec_path.exists():
             pytest.skip(f"Spec not found: {spec_path}")
 
-        doclean_spec = compile_graphql(str(spec_path))
-        doclean_text = doclean_spec.to_doclean()
+        lap_spec = compile_graphql(str(spec_path))
+        lap_text = lap_spec.to_lap()
 
-        # GraphQL DocLean format focuses on type definitions
+        # GraphQL LAP format focuses on type definitions
         # Agent can extract type information from the compiled spec
         field_types = set()
-        for endpoint in doclean_spec.endpoints:
+        for endpoint in lap_spec.endpoints:
             if endpoint.response_schemas:
                 for response in endpoint.response_schemas:
                     for field in response.fields:
                         field_types.add(field.type)
 
         # Should have various GraphQL types in compiled spec
-        # (DocLean text uses type definition syntax, compiled spec has structured data)
-        assert len(doclean_spec.endpoints) > 0, "Compiler extracts GraphQL operations"
+        # (LAP text uses type definition syntax, compiled spec has structured data)
+        assert len(lap_spec.endpoints) > 0, "Compiler extracts GraphQL operations"
         
         # Verify type definitions present in text that agent can parse
-        assert 'type ' in doclean_text or 'id' in doclean_text or 'str' in doclean_text, \
+        assert 'type ' in lap_text or 'id' in lap_text or 'str' in lap_text, \
             "Agent can access GraphQL type definitions in text"
 
     def test_extract_graphql_required_fields(self):
@@ -324,14 +324,14 @@ class TestAgentGraphQLUsage:
         if not spec_path.exists():
             pytest.skip(f"Spec not found: {spec_path}")
 
-        doclean_spec = compile_graphql(str(spec_path))
-        doclean_text = doclean_spec.to_doclean()
+        lap_spec = compile_graphql(str(spec_path))
+        lap_text = lap_spec.to_lap()
 
         # Check parameters for required flags in compiled spec (GraphQL ! notation)
         has_required = False
         has_optional = False
         
-        for endpoint in doclean_spec.endpoints:
+        for endpoint in lap_spec.endpoints:
             all_params = endpoint.required_params + endpoint.optional_params
             for param in all_params:
                 if param.required:
@@ -340,10 +340,10 @@ class TestAgentGraphQLUsage:
                     has_optional = True
 
         # Verify agent can distinguish required/optional from compiled spec
-        # Also check DocLean text uses ! notation
-        has_required_notation = '!' in doclean_text
+        # Also check LAP text uses ! notation
+        has_required_notation = '!' in lap_text
         assert has_required_notation, "Agent can see required field notation (!) in text"
-        assert has_required or has_optional or len(doclean_spec.endpoints) > 0, \
+        assert has_required or has_optional or len(lap_spec.endpoints) > 0, \
             "Agent has access to field nullability information"
 
 
@@ -353,7 +353,7 @@ class TestAgentGraphQLUsage:
 
 @pytest.mark.skipif(compile_asyncapi is None, reason="AsyncAPI compiler not available")
 class TestAgentAsyncAPIUsage:
-    """Test that an agent can parse and use AsyncAPI DocLean output."""
+    """Test that an agent can parse and use AsyncAPI LAP output."""
 
     def test_extract_channels(self):
         """Agent can extract AsyncAPI channels (pub/sub endpoints)."""
@@ -361,11 +361,11 @@ class TestAgentAsyncAPIUsage:
         if not spec_path.exists():
             pytest.skip(f"Spec not found: {spec_path}")
 
-        doclean_spec = compile_asyncapi(str(spec_path))
-        doclean_text = doclean_spec.to_doclean()
-        parsed = parse_doclean(doclean_text)
+        lap_spec = compile_asyncapi(str(spec_path))
+        lap_text = lap_spec.to_lap()
+        parsed = parse_lap(lap_text)
 
-        # AsyncAPI channels become endpoints in DocLean
+        # AsyncAPI channels become endpoints in LAP
         assert len(parsed.endpoints) > 0, "Agent finds AsyncAPI channels"
 
     def test_extract_message_payloads(self):
@@ -374,9 +374,9 @@ class TestAgentAsyncAPIUsage:
         if not spec_path.exists():
             pytest.skip(f"Spec not found: {spec_path}")
 
-        doclean_spec = compile_asyncapi(str(spec_path))
-        doclean_text = doclean_spec.to_doclean()
-        parsed = parse_doclean(doclean_text)
+        lap_spec = compile_asyncapi(str(spec_path))
+        lap_text = lap_spec.to_lap()
+        parsed = parse_lap(lap_text)
 
         # Check for message payload information in responses or params
         has_payload_info = False
@@ -394,9 +394,9 @@ class TestAgentAsyncAPIUsage:
         if not spec_path.exists():
             pytest.skip(f"Spec not found: {spec_path}")
 
-        doclean_spec = compile_asyncapi(str(spec_path))
-        doclean_text = doclean_spec.to_doclean()
-        parsed = parse_doclean(doclean_text)
+        lap_spec = compile_asyncapi(str(spec_path))
+        lap_text = lap_spec.to_lap()
+        parsed = parse_lap(lap_text)
 
         # Check if method or description indicates pub/sub
         methods = {ep.method for ep in parsed.endpoints}
@@ -411,7 +411,7 @@ class TestAgentAsyncAPIUsage:
 
 @pytest.mark.skipif(compile_postman is None, reason="Postman compiler not available")
 class TestAgentPostmanUsage:
-    """Test that an agent can parse and use Postman DocLean output."""
+    """Test that an agent can parse and use Postman LAP output."""
 
     def test_extract_requests(self):
         """Agent can extract Postman collection requests."""
@@ -419,9 +419,9 @@ class TestAgentPostmanUsage:
         if not spec_path.exists():
             pytest.skip(f"Spec not found: {spec_path}")
 
-        doclean_spec = compile_postman(str(spec_path))
-        doclean_text = doclean_spec.to_doclean()
-        parsed = parse_doclean(doclean_text)
+        lap_spec = compile_postman(str(spec_path))
+        lap_text = lap_spec.to_lap()
+        parsed = parse_lap(lap_text)
 
         # Postman requests become endpoints
         assert len(parsed.endpoints) > 0, "Agent finds Postman requests"
@@ -432,9 +432,9 @@ class TestAgentPostmanUsage:
         if not spec_path.exists():
             pytest.skip(f"Spec not found: {spec_path}")
 
-        doclean_spec = compile_postman(str(spec_path))
-        doclean_text = doclean_spec.to_doclean()
-        parsed = parse_doclean(doclean_text)
+        lap_spec = compile_postman(str(spec_path))
+        lap_text = lap_spec.to_lap()
+        parsed = parse_lap(lap_text)
 
         # Check for header parameters
         has_headers = False
@@ -455,9 +455,9 @@ class TestAgentPostmanUsage:
         if not spec_path.exists():
             pytest.skip(f"Spec not found: {spec_path}")
 
-        doclean_spec = compile_postman(str(spec_path))
-        doclean_text = doclean_spec.to_doclean()
-        parsed = parse_doclean(doclean_text)
+        lap_spec = compile_postman(str(spec_path))
+        lap_text = lap_spec.to_lap()
+        parsed = parse_lap(lap_text)
 
         # POST/PUT requests likely have body params
         post_endpoints = [ep for ep in parsed.endpoints 
@@ -475,7 +475,7 @@ class TestAgentPostmanUsage:
 
 @pytest.mark.skipif(compile_protobuf is None, reason="Protobuf compiler not available")
 class TestAgentProtobufUsage:
-    """Test that an agent can parse and use Protobuf DocLean output."""
+    """Test that an agent can parse and use Protobuf LAP output."""
 
     def test_extract_rpc_methods(self):
         """Agent can extract gRPC service methods."""
@@ -483,9 +483,9 @@ class TestAgentProtobufUsage:
         if not spec_path.exists():
             pytest.skip(f"Spec not found: {spec_path}")
 
-        doclean_spec = compile_protobuf(str(spec_path))
-        doclean_text = doclean_spec.to_doclean()
-        parsed = parse_doclean(doclean_text)
+        lap_spec = compile_protobuf(str(spec_path))
+        lap_text = lap_spec.to_lap()
+        parsed = parse_lap(lap_text)
 
         # gRPC methods become endpoints
         assert len(parsed.endpoints) > 0, "Agent finds gRPC methods"
@@ -496,9 +496,9 @@ class TestAgentProtobufUsage:
         if not spec_path.exists():
             pytest.skip(f"Spec not found: {spec_path}")
 
-        doclean_spec = compile_protobuf(str(spec_path))
-        doclean_text = doclean_spec.to_doclean()
-        parsed = parse_doclean(doclean_text)
+        lap_spec = compile_protobuf(str(spec_path))
+        lap_text = lap_spec.to_lap()
+        parsed = parse_lap(lap_text)
 
         # Check for message field types in parameters or responses
         has_types = False
@@ -517,9 +517,9 @@ class TestAgentProtobufUsage:
         if not spec_path.exists():
             pytest.skip(f"Spec not found: {spec_path}")
 
-        doclean_spec = compile_protobuf(str(spec_path))
-        doclean_text = doclean_spec.to_doclean()
-        parsed = parse_doclean(doclean_text)
+        lap_spec = compile_protobuf(str(spec_path))
+        lap_text = lap_spec.to_lap()
+        parsed = parse_lap(lap_text)
 
         # Check if any endpoint summary or types indicate streaming
         # (e.g., 'stream' in summary or special type notation)
@@ -539,14 +539,14 @@ class TestAgentCrossProtocol:
     """Test agent can handle patterns across different protocol types."""
 
     def test_agent_can_parse_multiple_formats(self):
-        """Agent can parse DocLean output from multiple protocol types."""
+        """Agent can parse LAP output from multiple protocol types."""
         protocols_tested = 0
 
         # OpenAPI
-        openapi_path = SPECS_DIR / 'github-core.yaml'
+        openapi_path = SPECS_DIR / 'openapi' / 'github-core.yaml'
         if openapi_path.exists():
-            doclean = compile_openapi(str(openapi_path))
-            parsed = parse_doclean(doclean.to_doclean())
+            lap = compile_openapi(str(openapi_path))
+            parsed = parse_lap(lap.to_lap())
             assert len(parsed.endpoints) > 0, "OpenAPI parsing works"
             protocols_tested += 1
 
@@ -554,20 +554,20 @@ class TestAgentCrossProtocol:
         if compile_graphql:
             graphql_path = SPECS_DIR / 'graphql' / 'github.graphql'
             if graphql_path.exists():
-                doclean = compile_graphql(str(graphql_path))
-                doclean_text = doclean.to_doclean()
-                # GraphQL DocLean uses type definitions; agent accesses compiled spec
-                assert len(doclean.endpoints) > 0, "GraphQL compilation produces operations"
-                assert 'type ' in doclean_text or 'input ' in doclean_text, \
-                    "GraphQL DocLean text contains type definitions"
+                lap = compile_graphql(str(graphql_path))
+                lap_text = lap.to_lap()
+                # GraphQL LAP uses type definitions; agent accesses compiled spec
+                assert len(lap.endpoints) > 0, "GraphQL compilation produces operations"
+                assert 'type ' in lap_text or 'input ' in lap_text, \
+                    "GraphQL LAP text contains type definitions"
                 protocols_tested += 1
 
         # AsyncAPI
         if compile_asyncapi:
             asyncapi_path = SPECS_DIR / 'asyncapi' / 'chat-websocket.yaml'
             if asyncapi_path.exists():
-                doclean = compile_asyncapi(str(asyncapi_path))
-                parsed = parse_doclean(doclean.to_doclean())
+                lap = compile_asyncapi(str(asyncapi_path))
+                parsed = parse_lap(lap.to_lap())
                 assert len(parsed.endpoints) > 0, "AsyncAPI parsing works"
                 protocols_tested += 1
 
@@ -575,8 +575,8 @@ class TestAgentCrossProtocol:
         if compile_postman:
             postman_path = SPECS_DIR / 'postman' / 'crud-api.json'
             if postman_path.exists():
-                doclean = compile_postman(str(postman_path))
-                parsed = parse_doclean(doclean.to_doclean())
+                lap = compile_postman(str(postman_path))
+                parsed = parse_lap(lap.to_lap())
                 assert len(parsed.endpoints) > 0, "Postman parsing works"
                 protocols_tested += 1
 
@@ -584,8 +584,8 @@ class TestAgentCrossProtocol:
         if compile_protobuf:
             protobuf_path = SPECS_DIR / 'protobuf' / 'user.proto'
             if protobuf_path.exists():
-                doclean = compile_protobuf(str(protobuf_path))
-                parsed = parse_doclean(doclean.to_doclean())
+                lap = compile_protobuf(str(protobuf_path))
+                parsed = parse_lap(lap.to_lap())
                 assert len(parsed.endpoints) > 0, "Protobuf parsing works"
                 protocols_tested += 1
 
@@ -594,7 +594,7 @@ class TestAgentCrossProtocol:
     def test_consistent_endpoint_structure(self):
         """All protocol types produce consistent endpoint structures."""
         test_files = [
-            (SPECS_DIR / 'openai-core.yaml', compile_openapi),
+            (SPECS_DIR / 'openapi' / 'openai-core.yaml', compile_openapi),
         ]
 
         if compile_graphql:
@@ -606,8 +606,8 @@ class TestAgentCrossProtocol:
             if not spec_path.exists():
                 continue
 
-            doclean = compiler(str(spec_path))
-            parsed = parse_doclean(doclean.to_doclean())
+            lap = compiler(str(spec_path))
+            parsed = parse_lap(lap.to_lap())
 
             # All endpoints should have core attributes
             for endpoint in parsed.endpoints:
@@ -628,12 +628,12 @@ class TestAgentDecisionMaking:
 
     def test_agent_knows_required_params_for_call(self):
         """Agent can determine which parameters are required for a successful API call."""
-        spec_path = SPECS_DIR / 'stripe-charges.yaml'
+        spec_path = SPECS_DIR / 'openapi' / 'stripe-charges.yaml'
         if not spec_path.exists():
             pytest.skip(f"Spec not found: {spec_path}")
 
-        doclean = compile_openapi(str(spec_path))
-        parsed = parse_doclean(doclean.to_doclean())
+        lap = compile_openapi(str(spec_path))
+        parsed = parse_lap(lap.to_lap())
 
         # Find a POST endpoint (usually has required params)
         post_eps = [ep for ep in parsed.endpoints if ep.method == 'POST']
@@ -654,12 +654,12 @@ class TestAgentDecisionMaking:
 
     def test_agent_knows_valid_enum_values(self):
         """Agent knows which enum values are valid for a parameter."""
-        spec_path = SPECS_DIR / 'github-core.yaml'
+        spec_path = SPECS_DIR / 'openapi' / 'github-core.yaml'
         if not spec_path.exists():
             pytest.skip(f"Spec not found: {spec_path}")
 
-        doclean = compile_openapi(str(spec_path))
-        parsed = parse_doclean(doclean.to_doclean())
+        lap = compile_openapi(str(spec_path))
+        parsed = parse_lap(lap.to_lap())
 
         # Find enum parameters
         enum_params = []
@@ -679,12 +679,12 @@ class TestAgentDecisionMaking:
 
     def test_agent_knows_response_structure(self):
         """Agent knows what to expect in API response."""
-        spec_path = SPECS_DIR / 'openai-core.yaml'
+        spec_path = SPECS_DIR / 'openapi' / 'openai-core.yaml'
         if not spec_path.exists():
             pytest.skip(f"Spec not found: {spec_path}")
 
-        doclean = compile_openapi(str(spec_path))
-        parsed = parse_doclean(doclean.to_doclean())
+        lap = compile_openapi(str(spec_path))
+        parsed = parse_lap(lap.to_lap())
 
         # Find endpoint with response schema
         eps_with_responses = [ep for ep in parsed.endpoints if ep.response_schemas]
@@ -703,12 +703,12 @@ class TestAgentDecisionMaking:
 
     def test_agent_can_build_correct_api_call(self):
         """Agent has all info needed to construct a correct API call."""
-        spec_path = SPECS_DIR / 'stripe-charges.yaml'
+        spec_path = SPECS_DIR / 'openapi' / 'stripe-charges.yaml'
         if not spec_path.exists():
             pytest.skip(f"Spec not found: {spec_path}")
 
-        doclean = compile_openapi(str(spec_path))
-        parsed = parse_doclean(doclean.to_doclean())
+        lap = compile_openapi(str(spec_path))
+        parsed = parse_lap(lap.to_lap())
 
         # Pick an endpoint
         if not parsed.endpoints:

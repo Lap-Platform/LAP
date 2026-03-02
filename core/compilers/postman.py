@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Postman Collection v2.1 → DocLean compiler.
+Postman Collection v2.1 → LAP compiler.
 
-Reads a Postman Collection JSON and produces a DocLean spec.
+Reads a Postman Collection JSON and produces a LAP spec.
 Handles: folders, auth, variables, request bodies (JSON/form-data/urlencoded),
 response examples, path/query/header params.
 """
@@ -12,8 +12,8 @@ import re
 from pathlib import Path
 from typing import Optional
 
-from core.formats.doclean import (
-    DocLeanSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema
+from core.formats.lap import (
+    LAPSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema
 )
 
 
@@ -230,7 +230,7 @@ def _is_likely_optional(key: str, value) -> bool:
 
 
 def _infer_type(value) -> str:
-    """Infer DocLean type from a JSON value."""
+    """Infer LAP type from a JSON value."""
     if isinstance(value, bool):
         return 'bool'
     if isinstance(value, int):
@@ -307,7 +307,7 @@ def _fields_from_dict(data: dict, depth: int = 0, max_depth: int = 2) -> list:
 
 
 def _extract_auth_scheme(auth: dict) -> str:
-    """Convert Postman auth object to DocLean auth string."""
+    """Convert Postman auth object to LAP auth string."""
     if not auth:
         return ''
     
@@ -345,8 +345,8 @@ def _collect_variables(collection: dict) -> dict:
     return variables
 
 
-def compile_postman(spec_path: str) -> DocLeanSpec:
-    """Compile a Postman Collection v2.1 JSON to DocLean format."""
+def compile_postman(spec_path: str) -> LAPSpec:
+    """Compile a Postman Collection v2.1 JSON to LAP format."""
     path = Path(spec_path)
     file_size = path.stat().st_size
     if file_size > 50 * 1024 * 1024:
@@ -370,7 +370,7 @@ def compile_postman(spec_path: str) -> DocLeanSpec:
     auth = collection.get('auth', {})
     auth_scheme = _extract_auth_scheme(auth)
 
-    doclean = DocLeanSpec(
+    lap = LAPSpec(
         api_name=info.get('name', path.stem),
         base_url=base_url,
         version=info.get('version', '') if isinstance(info.get('version'), str) else '',
@@ -418,21 +418,21 @@ def compile_postman(spec_path: str) -> DocLeanSpec:
             response_schemas=response_schemas,
             error_schemas=error_schemas,
         )
-        doclean.endpoints.append(endpoint)
+        lap.endpoints.append(endpoint)
 
-    return doclean
+    return lap
 
 
 def main():
     import argparse
-    parser = argparse.ArgumentParser(description="Compile Postman Collection to DocLean format")
+    parser = argparse.ArgumentParser(description="Compile Postman Collection to LAP format")
     parser.add_argument("spec", help="Path to Postman Collection JSON")
     parser.add_argument("-o", "--output", help="Output file (default: stdout)")
     parser.add_argument("--lean", action="store_true", help="Maximum compression")
     args = parser.parse_args()
 
-    doclean = compile_postman(args.spec)
-    result = doclean.to_doclean(lean=args.lean)
+    lap = compile_postman(args.spec)
+    result = lap.to_lap(lean=args.lean)
 
     if args.output:
         Path(args.output).write_text(result)

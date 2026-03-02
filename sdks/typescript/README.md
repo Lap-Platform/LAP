@@ -1,6 +1,6 @@
-# @lap/sdk — TypeScript SDK for DocLean
+# @lap/sdk — TypeScript SDK for LAP
 
-Parse and work with DocLean API specifications in TypeScript/JavaScript.
+Parse and work with LAP API specifications in TypeScript/JavaScript.
 
 ## Quick Start
 
@@ -8,7 +8,7 @@ Parse and work with DocLean API specifications in TypeScript/JavaScript.
 import { LAPClient, toContext } from '@lap/sdk';
 
 const client = new LAPClient();
-const spec = client.loadFile('./stripe-charges.doclean');
+const spec = client.loadFile('./stripe-charges.lap');
 
 // Get a specific endpoint
 const ep = spec.getEndpoint('POST', '/v1/charges');
@@ -24,13 +24,13 @@ const ctx = toContext(spec, { lean: true });
 
 ### `LAPClient`
 
-- **`loadFile(path)`** — Parse a `.doclean` file from disk
-- **`loadString(text)`** — Parse DocLean text directly
+- **`loadFile(path)`** — Parse a `.lap` file from disk
+- **`loadString(text)`** — Parse LAP text directly
 - **`fromRegistry(url, apiName)`** — Fetch from a LAP registry (async)
 
-### `parse(text): DocLeanSpec`
+### `parse(text): LAPSpec`
 
-Low-level parser. Returns a `DocLeanSpec` with:
+Low-level parser. Returns a `LAPSpec` with:
 
 - `apiName`, `baseUrl`, `apiVersion`, `auth`
 - `endpoints: Endpoint[]`

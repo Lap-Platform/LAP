@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-DocLean Parser — DocLean text → structured Python objects
+LAP Parser — LAP text → structured Python objects
 
-The reverse of the compiler: proves DocLean is a true protocol
-by enabling round-trip: OpenAPI → DocLean → structured data.
+The reverse of the compiler: proves LAP is a true protocol
+by enabling round-trip: OpenAPI → LAP → structured data.
 """
 
 import re
@@ -11,13 +11,13 @@ import warnings
 from dataclasses import dataclass, field
 from typing import Optional
 
-from core.formats.doclean import DocLeanSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema
+from core.formats.lap import LAPSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema
 
 
 # ── Error Handling ──────────────────────────────────────────────────
 
 class ParseError(Exception):
-    """Raised when DocLean parsing encounters invalid syntax."""
+    """Raised when LAP parsing encounters invalid syntax."""
     def __init__(self, message: str, line_number: int = 0, context: str = ""):
         self.line_number = line_number
         self.context = context
@@ -347,13 +347,13 @@ def _parse_params_block(line: str) -> list[Param]:
     return [_parse_param(p) for p in parts if p]
 
 
-def parse_doclean(text: str) -> DocLeanSpec:
-    """Parse DocLean text into a DocLeanSpec object.
+def parse_lap(text: str) -> LAPSpec:
+    """Parse LAP text into a LAPSpec object.
     
     Raises ParseError for structural issues (unmatched braces, lines exceeding
     size limits). Issues warnings for recoverable problems (malformed fields).
     """
-    spec = DocLeanSpec(api_name='')
+    spec = LAPSpec(api_name='')
 
     # Join continuation lines (lines that are part of multi-line braced content)
     MAX_LINE_LENGTH = 100 * 1024  # 100KB
@@ -381,7 +381,7 @@ def parse_doclean(text: str) -> DocLeanSpec:
             continue
 
         try:
-            if stripped.startswith('@doclean '):
+            if stripped.startswith('@lap '):
                 # version info, skip
                 continue
             elif stripped.startswith('@api '):

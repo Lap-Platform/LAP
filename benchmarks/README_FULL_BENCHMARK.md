@@ -1,13 +1,13 @@
 # Full Multi-Protocol Agent Benchmark
 
-Comprehensive benchmark suite testing LLM agent performance with verbose API documentation vs. DocLean across 5 protocol types.
+Comprehensive benchmark suite testing LLM agent performance with verbose API documentation vs. LAP across 5 protocol types.
 
 ## Overview
 
 - **500+ tasks** across OpenAPI, GraphQL, AsyncAPI, Postman, and Protobuf
 - **10 docs per protocol**, 10 tasks per doc
 - Tests **correctness**, **token usage**, and **response time**
-- Compares verbose documentation vs. DocLean output
+- Compares verbose documentation vs. LAP output
 
 ## Quick Start
 
@@ -206,4 +206,4 @@ GitHub Core:      911 → 603 tokens (33.8% reduction)
 OpenAI Core:      893 → 516 tokens (42.2% reduction)
 ```
 
-This demonstrates DocLean's ability to reduce token usage by ~40% on average while maintaining the information needed for LLM agents to make correct API calls.
+This demonstrates LAP's ability to reduce token usage by ~40% on average while maintaining the information needed for LLM agents to make correct API calls.

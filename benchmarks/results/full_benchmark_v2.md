@@ -1,4 +1,4 @@
-# DocLean Compression Benchmark v2
+# LAP Compression Benchmark v2
 
 **162 API specs** across 5 formats · **5,228 endpoints** · **5,887,999 → 336,430 tokens**
 

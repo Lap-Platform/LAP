@@ -4,7 +4,7 @@
 
 ### `LAPClient`
 
-Main client for loading DocLean documents.
+Main client for loading LAP documents.
 
 ```python
 from lap import LAPClient
@@ -12,21 +12,21 @@ from lap import LAPClient
 client = LAPClient()
 ```
 
-#### `client.load(path: str) -> DocLeanDoc`
+#### `client.load(path: str) -> LAPDoc`
 
-Load a `.doclean` file and return a queryable document.
+Load a `.lap` file and return a queryable document.
 
 ```python
-doc = client.load("output/stripe-charges.doclean")
+doc = client.load("output/stripe-charges.lap")
 ```
 
 Raises `FileNotFoundError` if the file doesn't exist.
 
 ---
 
-### `DocLeanDoc`
+### `LAPDoc`
 
-A loaded DocLean document with query and formatting methods.
+A loaded LAP document with query and formatting methods.
 
 #### Properties
 
@@ -100,7 +100,7 @@ Parameter definition.
 
 ### `Registry`
 
-Local registry for browsing DocLean files in a directory.
+Local registry for browsing LAP files in a directory.
 
 ```python
 from lap import Registry
@@ -117,7 +117,7 @@ names = registry.list()
 # ['asana', 'box', 'cloudflare', 'discord', 'github-core', ...]
 ```
 
-#### `registry.get(name: str) -> Optional[DocLeanDoc]`
+#### `registry.get(name: str) -> Optional[LAPDoc]`
 
 Get a spec by name (exact or partial match).
 
@@ -125,7 +125,7 @@ Get a spec by name (exact or partial match).
 doc = registry.get("stripe")
 ```
 
-#### `registry.search(query: str) -> List[DocLeanDoc]`
+#### `registry.search(query: str) -> List[LAPDoc]`
 
 Search across all specs by name or content.
 
@@ -142,7 +142,7 @@ LangChain-compatible document loader.
 ```python
 from lap.middleware import LAPDocLoader
 
-loader = LAPDocLoader("output/stripe.doclean", lean=True)
+loader = LAPDocLoader("output/stripe.lap", lean=True)
 docs = loader.load()       # List[Document] — one per endpoint
 full = loader.load_full()  # List[Document] — single document with full context
 ```
@@ -159,23 +159,23 @@ import { LAPClient } from '@anthropic/lap-sdk';
 const client = new LAPClient();
 ```
 
-#### `client.loadFile(filePath: string): DocLeanSpec`
+#### `client.loadFile(filePath: string): LAPSpec`
 
-Load a `.doclean` file from disk.
-
-```typescript
-const spec = client.loadFile('output/stripe-charges.doclean');
-```
-
-#### `client.loadString(text: string): DocLeanSpec`
-
-Parse a DocLean string directly.
+Load a `.lap` file from disk.
 
 ```typescript
-const spec = client.loadString(docleanText);
+const spec = client.loadFile('output/stripe-charges.lap');
 ```
 
-#### `client.fromRegistry(registryUrl: string, apiName: string): Promise<DocLeanSpec>`
+#### `client.loadString(text: string): LAPSpec`
+
+Parse a LAP string directly.
+
+```typescript
+const spec = client.loadString(lapText);
+```
+
+#### `client.fromRegistry(registryUrl: string, apiName: string): Promise<LAPSpec>`
 
 Fetch a spec from a registry server.
 
@@ -185,7 +185,7 @@ const spec = await client.fromRegistry('http://localhost:8420', 'stripe-charges'
 
 ---
 
-### `DocLeanSpec`
+### `LAPSpec`
 
 | Property | Type | Description |
 |----------|------|-------------|
@@ -260,11 +260,11 @@ List all available specs.
 
 ### `GET /specs/{name}`
 
-Get the raw DocLean text for a spec.
+Get the raw LAP text for a spec.
 
 **Query params:** `format=lean` for lean version.
 
-**Response:** `200 OK` — raw DocLean text (`text/plain`)
+**Response:** `200 OK` — raw LAP text (`text/plain`)
 
 ### `GET /specs/{name}/meta`
 

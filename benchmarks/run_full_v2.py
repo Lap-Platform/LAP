@@ -21,8 +21,8 @@ def run_one(compiler_fn, filepath, timeout_sec=120):
         raw = open(filepath).read()
         raw_tokens = count_tokens_approx(raw)
         spec = compiler_fn(filepath)
-        standard = spec.to_doclean(lean=False)
-        lean = spec.to_doclean(lean=True)
+        standard = spec.to_lap(lean=False)
+        lean = spec.to_lap(lean=True)
         std_tokens = count_tokens_approx(standard)
         lean_tokens = count_tokens_approx(lean)
         endpoints = len(spec.endpoints)
@@ -68,19 +68,19 @@ from core.compilers.postman import compile_postman
 formats = {}
 
 print("=== OpenAPI ===", flush=True)
-formats['OpenAPI'] = run_format('OpenAPI', compile_openapi, 'examples/*.yaml', skip={'jira.yaml'}, timeout_sec=300)
+formats['OpenAPI'] = run_format('OpenAPI', compile_openapi, 'examples/verbose/openapi/*.yaml', skip={'jira.yaml'}, timeout_sec=300)
 
 print("=== GraphQL ===", flush=True)
-formats['GraphQL'] = run_format('GraphQL', compile_graphql, 'examples/graphql/*.graphql')
+formats['GraphQL'] = run_format('GraphQL', compile_graphql, 'examples/verbose/graphql/*.graphql')
 
 print("=== AsyncAPI ===", flush=True)
-formats['AsyncAPI'] = run_format('AsyncAPI', compile_asyncapi, 'examples/asyncapi/*.yaml')
+formats['AsyncAPI'] = run_format('AsyncAPI', compile_asyncapi, 'examples/verbose/asyncapi/*.yaml')
 
 print("=== Protobuf ===", flush=True)
-formats['Protobuf'] = run_format('Protobuf', compile_protobuf, 'examples/protobuf/*.proto')
+formats['Protobuf'] = run_format('Protobuf', compile_protobuf, 'examples/verbose/protobuf/*.proto')
 
 print("=== Postman ===", flush=True)
-formats['Postman'] = run_format('Postman', compile_postman, 'examples/postman/*.json')
+formats['Postman'] = run_format('Postman', compile_postman, 'examples/verbose/postman/*.json')
 
 # Compute stats
 def compute_stats(results):
@@ -126,7 +126,7 @@ for results in formats.values():
 global_median = round(statistics.median(all_ratios), 2) if all_ratios else 0
 
 md = []
-md.append("# DocLean Compression Benchmark v2")
+md.append("# LAP Compression Benchmark v2")
 md.append("")
 md.append(f"**{total_specs} API specs** across 5 formats · **{total_endpoints:,} endpoints** · **{total_raw:,} → {total_lean:,} tokens**")
 md.append("")

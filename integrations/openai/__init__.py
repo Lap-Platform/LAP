@@ -1,1 +1,1 @@
-"""OpenAI function-calling integration for LAP DocLean format."""
+"""OpenAI function-calling integration for LAP LAP format."""

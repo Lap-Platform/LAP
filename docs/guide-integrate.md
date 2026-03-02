@@ -1,10 +1,10 @@
 # Framework Integration Guide
 
-LAP integrates with popular agent frameworks. Each integration converts DocLean specs into the framework's native tool/document format.
+LAP integrates with popular agent frameworks. Each integration converts LAP specs into the framework's native tool/document format.
 
 ## Using with LangChain
 
-LAP provides a LangChain-compatible `DocumentLoader` that loads DocLean files as LangChain `Document` objects.
+LAP provides a LangChain-compatible `DocumentLoader` that loads LAP files as LangChain `Document` objects.
 
 ### Installation
 
@@ -17,8 +17,8 @@ pip install lap-sdk[langchain]
 ```python
 from lap.middleware import LAPDocLoader
 
-# Load a DocLean file — one Document per endpoint
-loader = LAPDocLoader("output/stripe-charges.doclean")
+# Load a LAP file — one Document per endpoint
+loader = LAPDocLoader("output/stripe-charges.lap")
 docs = loader.load()
 
 print(f"Loaded {len(docs)} endpoint documents")
@@ -47,7 +47,7 @@ from langchain.vectorstores import FAISS
 from langchain.embeddings import OpenAIEmbeddings
 
 # Index all endpoints
-loader = LAPDocLoader("output/github-core.doclean")
+loader = LAPDocLoader("output/github-core.lap")
 docs = loader.load()
 vectorstore = FAISS.from_documents(docs, OpenAIEmbeddings())
 
@@ -62,10 +62,10 @@ LAP provides a CrewAI-compatible tool for API lookup.
 
 ```python
 from crewai import Agent, Task, Crew
-from integrations.crewai.lap_tool import DocLeanLookup
+from integrations.crewai.lap_tool import LAPLookup
 
 # Create the tool
-api_lookup = DocLeanLookup(specs_dir="output/")
+api_lookup = LAPLookup(specs_dir="output/")
 
 # Use it in an agent
 agent = Agent(
@@ -86,22 +86,22 @@ result = crew.kickoff()
 ### Standalone usage (without CrewAI)
 
 ```python
-from integrations.crewai.lap_tool import DocLeanLookup
+from integrations.crewai.lap_tool import LAPLookup
 
-tool = DocLeanLookup(specs_dir="output/")
+tool = LAPLookup(specs_dir="output/")
 result = tool._run("stripe", endpoint="charges")
 print(result)
 ```
 
 ## Using with OpenAI Function Calling
 
-Convert DocLean endpoints to OpenAI function schemas:
+Convert LAP endpoints to OpenAI function schemas:
 
 ```python
 from lap import LAPClient
 
 client = LAPClient()
-doc = client.load("output/stripe-charges.doclean")
+doc = client.load("output/stripe-charges.lap")
 
 # Convert each endpoint to an OpenAI function definition
 functions = []
@@ -145,14 +145,14 @@ response = openai.chat.completions.create(
 
 ## Using with MCP
 
-LAP complements MCP — it compresses the documentation that MCP tools expose. The MCP integration serves DocLean endpoints as MCP tools.
+LAP complements MCP — it compresses the documentation that MCP tools expose. The MCP integration serves LAP endpoints as MCP tools.
 
 ```python
-from integrations.mcp.lap_mcp_server import DocLeanMCPServer
+from integrations.mcp.lap_mcp_server import LAPMCPServer
 
 # Load specs and serve as MCP tools
-server = DocLeanMCPServer("output/")
-server.load_spec("output/github-core.doclean")
+server = LAPMCPServer("output/")
+server.load_spec("output/github-core.lap")
 
 # List available tools
 tools = server.list_tools()
@@ -161,7 +161,7 @@ for tool in tools:
     print(f"  Input: {json.dumps(tool['inputSchema'], indent=2)[:100]}...")
 ```
 
-Each DocLean endpoint becomes an MCP tool with:
+Each LAP endpoint becomes an MCP tool with:
 - `name`: Derived from method + path (e.g., `github_get_repos_owner_repo`)
 - `description`: From `@desc`
 - `inputSchema`: JSON Schema generated from `@required` and `@optional` params
@@ -170,7 +170,7 @@ Each DocLean endpoint becomes an MCP tool with:
 
 - **MCP** defines the protocol for tool discovery and invocation
 - **LAP** compresses the API documentation each tool exposes
-- An MCP server uses DocLean for compact tool descriptions
+- An MCP server uses LAP for compact tool descriptions
 - The agent sees shorter, typed schemas instead of verbose JSON Schema
 
 ## Custom Integration
@@ -183,7 +183,7 @@ For frameworks not listed above, use the Python or TypeScript SDK directly:
 from lap import LAPClient
 
 client = LAPClient()
-doc = client.load("output/stripe-charges.doclean")
+doc = client.load("output/stripe-charges.lap")
 
 # Get full context string for LLM injection
 context = doc.to_context(lean=True)
@@ -201,7 +201,7 @@ print(f"Optional: {[p.name for p in ep.optional_params]}")
 import { LAPClient, toContext } from '@anthropic/lap-sdk';
 
 const client = new LAPClient();
-const spec = client.loadFile('output/stripe-charges.doclean');
+const spec = client.loadFile('output/stripe-charges.lap');
 
 // Full context
 const context = toContext(spec, { lean: true });

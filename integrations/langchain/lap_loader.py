@@ -1,12 +1,12 @@
 """
-LangChain Document Loader for DocLean API specs.
+LangChain Document Loader for LAP API specs.
 
-Loads DocLean files as LangChain Documents — one per endpoint —
+Loads LAP files as LangChain Documents — one per endpoint —
 enabling RAG pipelines over API documentation with massive token savings.
 
 Example usage:
-    >>> from integrations.langchain.lap_loader import DocLeanLoader
-    >>> loader = DocLeanLoader("examples/github.doclean")
+    >>> from integrations.langchain.lap_loader import LAPLoader
+    >>> loader = LAPLoader("examples/lap/openapi/petstore.lap")
     >>> docs = loader.load()
     >>> print(docs[0].page_content)
     '@endpoint GET /repos/{owner}/{repo}\\n@desc Get a repository...'
@@ -14,7 +14,7 @@ Example usage:
     {'api': 'GitHub', 'method': 'GET', 'path': '/repos/{owner}/{repo}', 'params_count': 3}
 
     # Retriever usage:
-    >>> retriever = DocLeanRetriever("examples/github.doclean")
+    >>> retriever = LAPRetriever("examples/lap/openapi/petstore.lap")
     >>> results = retriever.get_relevant_documents("list repositories")
 """
 
@@ -29,8 +29,8 @@ _src = str(Path(__file__).resolve().parent.parent.parent / "src")
 if _src not in sys.path:
     sys.path.insert(0, _src)
 
-from core.formats.doclean import DocLeanSpec, Endpoint
-from core.parser import parse_doclean
+from core.formats.lap import LAPSpec, Endpoint
+from core.parser import parse_lap
 from core.utils import read_file_safe
 
 # Graceful degradation — works without LangChain installed
@@ -64,7 +64,7 @@ except ImportError:
 
 def _endpoint_to_document(endpoint: Endpoint, api_name: str, lean: bool = False) -> Document:
     """Convert a single Endpoint to a LangChain Document."""
-    content = endpoint.to_doclean(lean=lean)
+    content = endpoint.to_lap(lean=lean)
     params_count = (
         len(endpoint.required_params)
         + len(endpoint.optional_params)
@@ -81,33 +81,33 @@ def _endpoint_to_document(endpoint: Endpoint, api_name: str, lean: bool = False)
     return Document(page_content=content, metadata=metadata)
 
 
-class DocLeanLoader(BaseLoader):
-    """Load DocLean API specs as LangChain documents.
+class LAPLoader(BaseLoader):
+    """Load LAP API specs as LangChain documents.
 
     Each endpoint in the spec becomes a separate Document with:
-    - page_content: The DocLean text for that endpoint
+    - page_content: The LAP text for that endpoint
     - metadata: {api, method, path, params_count, summary}
 
     Args:
-        path: Path to a .doclean file
+        path: Path to a .lap file
         lean: If True, strip descriptions for maximum compression
-        spec: Alternatively, pass an already-parsed DocLeanSpec directly
+        spec: Alternatively, pass an already-parsed LAPSpec directly
     """
 
-    def __init__(self, path: str = None, lean: bool = False, spec: DocLeanSpec = None):
+    def __init__(self, path: str = None, lean: bool = False, spec: LAPSpec = None):
         self.path = path
         self.lean = lean
         self._spec = spec
 
-    def _get_spec(self) -> DocLeanSpec:
+    def _get_spec(self) -> LAPSpec:
         if self._spec:
             return self._spec
         if not self.path:
             raise ValueError("Either path or spec must be provided")
         text = read_file_safe(self.path)
         if text is None:
-            raise FileNotFoundError(f"Cannot read DocLean file: {self.path}")
-        return parse_doclean(text)
+            raise FileNotFoundError(f"Cannot read LAP file: {self.path}")
+        return parse_lap(text)
 
     def load(self) -> List[Document]:
         """Load and return one Document per endpoint."""
@@ -118,21 +118,21 @@ class DocLeanLoader(BaseLoader):
         ]
 
 
-class DocLeanRetriever:
-    """Simple keyword-based retriever for DocLean endpoints.
+class LAPRetriever:
+    """Simple keyword-based retriever for LAP endpoints.
 
     Searches endpoint paths, summaries, and parameter names for keyword matches.
     For production use, wrap with a proper vector store retriever.
 
     Example:
-        >>> retriever = DocLeanRetriever("examples/github.doclean")
+        >>> retriever = LAPRetriever("examples/lap/openapi/petstore.lap")
         >>> docs = retriever.get_relevant_documents("create issue")
         >>> print(docs[0].metadata['path'])
         '/repos/{owner}/{repo}/issues'
     """
 
-    def __init__(self, path: str = None, lean: bool = False, spec: DocLeanSpec = None):
-        loader = DocLeanLoader(path=path, lean=lean, spec=spec)
+    def __init__(self, path: str = None, lean: bool = False, spec: LAPSpec = None):
+        loader = LAPLoader(path=path, lean=lean, spec=spec)
         self._documents = loader.load()
         self._spec = loader._get_spec()
 

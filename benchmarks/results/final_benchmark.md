@@ -6,7 +6,7 @@
 
 ## Executive Summary
 
-LAP compiles API specifications from four major formats — OpenAPI, GraphQL, AsyncAPI, and Protobuf — into DocLean, a typed, deterministically parsable contract format purpose-built for LLM agents. Across **2,740 endpoints** from **43 real-world specs**, LAP achieves **13.2× lean compression on OpenAPI** (the dominant format), reducing 2.1M tokens to 161K with **zero information loss**. All 43 specs compile successfully, 42/43 pass full lossless round-trip validation (1 excluded due to malformed source YAML), and agent simulation achieves 100% task accuracy on DocLean output. The compression benefit is format-dependent: verbose, schema-heavy formats like OpenAPI see massive gains (up to 47×), while already-compact formats like Protobuf and GraphQL SDL benefit more from format unification than token reduction.
+LAP compiles API specifications from four major formats — OpenAPI, GraphQL, AsyncAPI, and Protobuf — into LAP, a typed, deterministically parsable contract format purpose-built for LLM agents. Across **2,740 endpoints** from **43 real-world specs**, LAP achieves **13.2× lean compression on OpenAPI** (the dominant format), reducing 2.1M tokens to 161K with **zero information loss**. All 43 specs compile successfully, 42/43 pass full lossless round-trip validation (1 excluded due to malformed source YAML), and agent simulation achieves 100% task accuracy on LAP output. The compression benefit is format-dependent: verbose, schema-heavy formats like OpenAPI see massive gains (up to 47×), while already-compact formats like Protobuf and GraphQL SDL benefit more from format unification than token reduction.
 
 ---
 
@@ -57,7 +57,7 @@ LAP compiles API specifications from four major formats — OpenAPI, GraphQL, As
 | Social | 13 | 642 | 2,623 | 2,529 | 0.3× | 12ms |
 | **TOTAL** | **59** | **3,167** | **8,235** | **7,821** | **0.4×** | — |
 
-> ⚠️ GraphQL SDL is already extremely compact. DocLean **adds** typed schemas that SDL only implies, making output larger but more explicit for agents.
+> ⚠️ GraphQL SDL is already extremely compact. LAP **adds** typed schemas that SDL only implies, making output larger but more explicit for agents.
 
 ### AsyncAPI (Event-Driven APIs)
 
@@ -81,7 +81,7 @@ LAP compiles API specifications from four major formats — OpenAPI, GraphQL, As
 | User | 6 | 546 | 716 | 657 | 0.8× | 1ms |
 | **TOTAL** | **22** | **2,783** | **3,287** | **3,054** | **0.9×** | — |
 
-> ⚠️ Protobuf is already a typed binary-oriented IDL. DocLean adds explicit response schemas and descriptions, making output slightly larger but agent-consumable.
+> ⚠️ Protobuf is already a typed binary-oriented IDL. LAP adds explicit response schemas and descriptions, making output slightly larger but agent-consumable.
 
 ---
 
@@ -120,8 +120,8 @@ Every compiled spec is validated with 7 round-trip checks:
 
 | Check | Description |
 |-------|-------------|
-| Endpoint Completeness (Compile) | All source endpoints appear in DocLean |
-| Endpoint Completeness (Parse) | All DocLean endpoints survive parsing |
+| Endpoint Completeness (Compile) | All source endpoints appear in LAP |
+| Endpoint Completeness (Parse) | All LAP endpoints survive parsing |
 | Parameter Preservation | Required/optional params with types preserved |
 | Schema Fidelity | Response fields survive round-trip parse |
 | Auth Preservation | Authentication schemes correctly mapped |
@@ -144,7 +144,7 @@ TOTAL          43     42/43    ✅ PASS
   that prevent parsing. This is a source file issue, not a LAP issue.
 ```
 
-**Agent Simulation:** 306/306 tasks answered correctly (100%) — agents can extract all information from DocLean that exists in the original spec.
+**Agent Simulation:** 306/306 tasks answered correctly (100%) — agents can extract all information from LAP that exists in the original spec.
 
 ---
 
@@ -158,7 +158,7 @@ TOTAL          43     42/43    ✅ PASS
 
 ### Per 1M Agent API Lookups (OpenAPI)
 
-| Metric | Raw Spec | DocLean Lean | Savings |
+| Metric | Raw Spec | LAP Lean | Savings |
 |--------|----------|-------------|---------|
 | **Tokens consumed** | 76.1B | 5.75B | **70.4B tokens saved** |
 | **Input cost** | $190,333 | $14,385 | **$175,948 saved (92.4%)** |
@@ -189,9 +189,9 @@ TOTAL          43     42/43    ✅ PASS
 
 **Unification winners (use LAP for a common agent format):**
 
-3. **GraphQL SDL** — Already terse. DocLean output is *larger* because it adds explicit typed response schemas that SDL only implies through return types. The value isn't compression — it's giving agents the same contract format regardless of whether the API is REST, GraphQL, or gRPC.
+3. **GraphQL SDL** — Already terse. LAP output is *larger* because it adds explicit typed response schemas that SDL only implies through return types. The value isn't compression — it's giving agents the same contract format regardless of whether the API is REST, GraphQL, or gRPC.
 
-4. **Protobuf** — Already a typed IDL. DocLean adds descriptions and explicit request/response schemas. Marginal size difference. The value is format unification: an agent consuming 10 different APIs shouldn't need 4 different parsers.
+4. **Protobuf** — Already a typed IDL. LAP adds descriptions and explicit request/response schemas. Marginal size difference. The value is format unification: an agent consuming 10 different APIs shouldn't need 4 different parsers.
 
 **The pattern:** The more verbose and loosely-typed the source format, the more LAP compresses it. The more structured and typed the source format, the more LAP's value is in **unification** rather than compression. OpenAPI is both verbose and loosely-typed — which is why it's LAP's sweet spot, and why OpenAPI dominates real-world agent workloads.
 
