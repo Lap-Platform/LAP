@@ -7,6 +7,8 @@ import json
 import os
 from pathlib import Path
 
+from lap.core.yaml_compat import _SafeLoaderCompat
+
 
 def detect_format(spec_path: str) -> str:
     """Auto-detect API spec format from file extension and content.
@@ -44,7 +46,7 @@ def detect_format(spec_path: str) -> str:
                 data = json.loads(text)
             else:
                 import yaml
-                data = yaml.safe_load(text)
+                data = yaml.load(text, Loader=_SafeLoaderCompat)
         except Exception:
             raise ValueError(
                 f"Cannot parse '{spec_path}' as {'JSON' if ext == '.json' else 'YAML'}. "

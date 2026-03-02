@@ -13,6 +13,13 @@ from typing import Optional
 LAP_TOOL_VERSION = "v0.1"
 
 
+def _enum_str(v) -> str:
+    """Convert enum value to string, fixing YAML boolean corruption."""
+    if isinstance(v, bool):
+        return "true" if v else "false"
+    return str(v)
+
+
 @dataclass
 class ToolParam:
     """An input parameter for a tool."""
@@ -27,7 +34,7 @@ class ToolParam:
         opt = "" if self.required else "?"
         parts = [f"{self.name}:{self.type}{opt}"]
         if self.enum:
-            parts[0] += f"({'/'.join(str(e) for e in self.enum)})"
+            parts[0] += f"({'/'.join(_enum_str(e) for e in self.enum)})"
         if self.default is not None:
             parts[0] += f"={self.default}"
         if self.description and not lean:

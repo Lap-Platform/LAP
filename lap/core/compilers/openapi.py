@@ -9,19 +9,23 @@ Usage:
 import argparse
 import datetime
 import json
+import re as _re
 import sys
 from pathlib import Path
 
 import yaml
 
 from lap.core.formats.lap import LAPSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema
+from lap.core.yaml_compat import _SafeLoaderCompat
 
 # Parameter names that strongly suggest authentication
 AUTH_PARAM_NAMES = frozenset({
-    "key", "api_key", "apikey", "api-key",
+    "api_key", "apikey", "api-key",
     "token", "access_token", "x-api-key",
     "authorization", "auth_token", "secret",
     "api_secret", "app_key", "appkey", "client_secret",
+    "subscription-key", "ocp-apim-subscription-key",
+    "x-auth-token", "api_token",
 })
 
 # Description keywords that suggest an auth parameter
@@ -87,7 +91,7 @@ def extract_type(schema: dict, spec: dict) -> str:
     return t
 
 
-def extract_type_inline(schema: dict, spec: dict, depth: int = 0, max_depth: int = 1) -> str:
+def extract_type_inline(schema: dict, spec: dict, depth: int = 0, max_depth: int = 2) -> str:
     """Extract type string, inlining object properties up to max_depth.
 
     Never returns bare 'map' for objects with known properties.
@@ -184,7 +188,7 @@ def extract_request_body(body: dict, spec: dict) -> list:
             schema = resolve_ref(spec, schema["$ref"])
 
         # Use inline expansion for object-type params to avoid bare 'map'
-        type_str = extract_type_inline(schema, spec, depth=0, max_depth=1)
+        type_str = extract_type_inline(schema, spec, depth=0, max_depth=2)
 
         enum_vals = [v for v in schema.get("enum", []) if v is not None]
         params.append(Param(
@@ -199,7 +203,7 @@ def extract_request_body(body: dict, spec: dict) -> list:
     return params
 
 
-def extract_response_fields(schema: dict, spec: dict, depth: int = 0, max_depth: int = 2, max_properties: int = 500) -> list:
+def extract_response_fields(schema: dict, spec: dict, depth: int = 0, max_depth: int = 3, max_properties: int = 500) -> list:
     """Recursively extract typed fields from a response schema."""
     if "$ref" in schema:
         schema = resolve_ref(spec, schema["$ref"])
@@ -303,13 +307,40 @@ def _infer_auth_from_params(spec: dict) -> str:
     return ""
 
 
+def _infer_auth_from_description(spec: dict) -> str:
+    """Last-resort: scan info.description for auth mentions."""
+    desc = spec.get("info", {}).get("description", "").lower()
+    if not desc:
+        return ""
+
+    # Strong signals - specific auth patterns
+    if "authorization: bearer" in desc or "bearer token" in desc:
+        return "Bearer (inferred from docs)"
+    if "authorization: token" in desc:
+        return "ApiKey (inferred from docs)"
+    if any(phrase in desc for phrase in ("api key", "api token", "api_key", "apikey")):
+        return "ApiKey (inferred from docs)"
+    if "oauth2" in desc or "oauth 2" in desc:
+        return "OAuth2 (inferred from docs)"
+
+    # Weaker but common
+    if any(phrase in desc for phrase in ("authentication required", "must authenticate", "requires authentication")):
+        return "Auth required (see docs)"
+
+    return ""
+
+
 def extract_auth(spec: dict) -> str:
     """Extract auth scheme from security definitions."""
     schemes = spec.get("components", {}).get("securitySchemes", {})
+    # Swagger 2.0 fallback
+    if not schemes:
+        schemes = spec.get("securityDefinitions", {})
     security = spec.get("security", [])
 
     if not schemes:
-        return _infer_auth_from_params(spec)
+        inferred = _infer_auth_from_params(spec)
+        return inferred if inferred else _infer_auth_from_description(spec)
 
     parts = []
     for scheme_name, scheme in schemes.items():
@@ -381,12 +412,8 @@ def compile_openapi(spec_path: str) -> LAPSpec:
     raw = path.read_text(encoding='utf-8')
 
     if path.suffix in (".yaml", ".yml"):
-        # Use a custom loader that handles non-standard YAML tags gracefully
-        class _SafeLoaderIgnoreUnknown(yaml.SafeLoader):
-            pass
-        _SafeLoaderIgnoreUnknown.add_constructor(None, lambda loader, node: loader.construct_mapping(node) if isinstance(node, yaml.MappingNode) else loader.construct_sequence(node) if isinstance(node, yaml.SequenceNode) else loader.construct_scalar(node))
         try:
-            spec = yaml.load(raw, Loader=_SafeLoaderIgnoreUnknown)
+            spec = yaml.load(raw, Loader=_SafeLoaderCompat)
         except yaml.YAMLError:
             spec = yaml.safe_load(raw)
     else:
@@ -398,6 +425,12 @@ def compile_openapi(spec_path: str) -> LAPSpec:
     info = spec.get("info", {})
     servers = spec.get("servers", [])
     base_url = servers[0].get("url", "") if servers else ""
+
+    # Swagger 2.0 base URL fallback
+    if not base_url and spec.get("host"):
+        scheme = (spec.get("schemes") or ["https"])[0]
+        base_path = spec.get("basePath", "")
+        base_url = f"{scheme}://{spec['host']}{base_path}"
 
     lap = LAPSpec(
         api_name=info.get("title", path.stem),

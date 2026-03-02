@@ -124,11 +124,26 @@ def _generate_frontmatter(spec: LAPSpec, options: SkillOptions) -> str:
     group_text = ", ".join(top_groups) if top_groups else "API operations"
     ep_count = len(spec.endpoints)
 
-    desc = (
-        f"{spec.api_name} API skill. "
-        f"Use when working with {spec.api_name} for {group_text}. "
-        f"Covers {ep_count} endpoint{'s' if ep_count != 1 else ''}."
-    )
+    # Strip trailing " API" (or bare "API") to avoid "API API" doubling
+    display_name = spec.api_name
+    if display_name.upper().endswith(" API"):
+        display_name = display_name[:-4].rstrip()
+    if not display_name or display_name.upper() == "API":
+        display_name = spec.api_name  # fallback: use original name as-is
+
+    # If display_name is exactly "API", use it directly without appending " API" again
+    if display_name.upper() == "API":
+        desc = (
+            f"API skill. "
+            f"Use when working with this API for {group_text}. "
+            f"Covers {ep_count} endpoint{'s' if ep_count != 1 else ''}."
+        )
+    else:
+        desc = (
+            f"{display_name} API skill. "
+            f"Use when working with {display_name} for {group_text}. "
+            f"Covers {ep_count} endpoint{'s' if ep_count != 1 else ''}."
+        )
 
     desc_escaped = desc.replace('"', '\\"')
     lines = [

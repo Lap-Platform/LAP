@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lapsh"
-version = "0.3.0"
+version = "0.3.1"
 description = "Lean API Platform -- Token-efficient API specs for AI agents"
 readme = "README.md"
 license = "Apache-2.0"
@@ -24,7 +24,7 @@ classifiers = [
     "Topic :: Software Development :: Libraries",
     "Topic :: Software Development :: Documentation",
 ]
-dependencies = ["pyyaml>=6.0", "tiktoken>=0.5.0"]
+dependencies = ["pyyaml>=6.0", "tiktoken>=0.5.0", "graphql-core>=3.2.0"]
 
 [project.optional-dependencies]
 dev = ["pytest", "pytest-timeout", "rich", "graphql-core", "tiktoken", "build", "twine"]

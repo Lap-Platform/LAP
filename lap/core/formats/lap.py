@@ -13,6 +13,13 @@ from typing import Optional
 LAP_VERSION = "v0.3"
 
 
+def _enum_str(v) -> str:
+    """Convert enum value to string, fixing YAML boolean corruption."""
+    if isinstance(v, bool):
+        return "true" if v else "false"
+    return str(v)
+
+
 @dataclass
 class Param:
     name: str
@@ -25,7 +32,7 @@ class Param:
     def to_lap(self, lean: bool = False) -> str:
         parts = [f"{self.name}: {self.type}"]
         if self.enum and len(self.enum) > 1:
-            parts[0] += f"({'/'.join(str(e) for e in self.enum)})"
+            parts[0] += f"({'/'.join(_enum_str(e) for e in self.enum)})"
         if self.default is not None:
             parts[0] += f"={self.default}"
         if self.description and not lean:
