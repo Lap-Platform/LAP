@@ -9,8 +9,8 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 
-LAP compiles API specs into **LAP** — a typed, token-efficient format built for AI agents.  
-OpenAPI, GraphQL, AsyncAPI, Protobuf, Postman → one compact format.
+LAP compiles API specs into **LAP** — a typed, token-efficient format built for AI agents.
+OpenAPI, GraphQL, AsyncAPI, Protobuf, Postman, Smithy → one compact format.
 
 </div>
 
@@ -21,7 +21,7 @@ LLMs waste thousands of tokens parsing bloated API specs. Stripe's OpenAPI spec 
 - **10.3× overall compression** across 162 real-world specs
 - **Up to 39.6×** on large OpenAPI specs (Notion, Snyk, Zoom)
 - **Zero information loss** — every endpoint, param, and type constraint preserved
-- **5 formats supported** — one CLI, one output format
+- **6 formats supported** — one CLI, one output format
 
 ![Compression by Format](benchmarks/results/charts/format_comparison.png)
 
@@ -174,6 +174,7 @@ lap graphql     schema.graphql     # GraphQL SDL
 lap asyncapi    events.yaml        # AsyncAPI
 lap protobuf    service.proto      # Protobuf / gRPC
 lap postman     collection.json    # Postman v2.1
+lap compile     model.json         # AWS Smithy (JSON AST or .smithy)
 ```
 
 ## Python SDK

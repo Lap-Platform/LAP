@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 """
-GraphQL SDL → LAP compiler.
+GraphQL SDL / Introspection JSON → LAP compiler.
 
 Produces a compact GraphQL-native LAP representation that defines
 types once and references them by name, avoiding the massive expansion
 that comes from inlining response fields in every endpoint.
 """
 
+import json
 from pathlib import Path
 from graphql import (
     build_schema,
+    build_client_schema,
     GraphQLObjectType,
     GraphQLInputObjectType,
     GraphQLEnumType,
@@ -339,13 +341,27 @@ def _compile_field(field_name, field, method, schema):
     )
 
 
+# ── Schema loading ───────────────────────────────────────────────────
+
+def _load_schema(path: Path) -> GraphQLSchema:
+    """Load a GraphQL schema from SDL or introspection JSON."""
+    if path.suffix.lower() == '.json':
+        raw = json.loads(path.read_text(encoding='utf-8'))
+        # Unwrap {"data": {"__schema": ...}} wrapper if present
+        if 'data' in raw and isinstance(raw['data'], dict):
+            raw = raw['data']
+        return build_client_schema(raw)
+    else:
+        sdl = path.read_text(encoding='utf-8')
+        return build_schema(sdl, assume_valid_sdl=True)
+
+
 # ── Main compile function ────────────────────────────────────────────
 
 def compile_graphql(spec_path: str) -> 'GraphQLLAPSpec':
-    """Compile a GraphQL SDL file to LAP format."""
+    """Compile a GraphQL SDL or introspection JSON file to LAP format."""
     path = Path(spec_path)
-    sdl = path.read_text()
-    schema = build_schema(sdl)
+    schema = _load_schema(path)
 
     api_name = path.stem.replace('-', ' ').replace('_', ' ').title()
 

@@ -1,4 +1,4 @@
-"""LAP compilers -- OpenAPI, GraphQL, AsyncAPI, Protobuf, Postman, LAP.
+"""LAP compilers -- OpenAPI, GraphQL, AsyncAPI, Protobuf, Postman, Smithy, LAP.
 
 Unified compile() and detect_format() for the CLI.
 """
@@ -11,7 +11,7 @@ from pathlib import Path
 def detect_format(spec_path: str) -> str:
     """Auto-detect API spec format from file extension and content.
 
-    Returns one of: openapi, graphql, asyncapi, protobuf, postman.
+    Returns one of: openapi, graphql, asyncapi, protobuf, postman, smithy.
     Raises ValueError if format cannot be determined.
     """
     p = Path(spec_path)
@@ -22,12 +22,17 @@ def detect_format(spec_path: str) -> str:
         return "graphql"
     if ext == ".proto":
         return "protobuf"
+    if ext == ".smithy":
+        return "smithy"
     if p.is_dir():
         # Directory with .proto files
         if list(p.glob("*.proto")):
             return "protobuf"
+        # Directory with smithy-build.json
+        if (p / "smithy-build.json").exists():
+            return "smithy"
         raise ValueError(
-            f"Directory '{spec_path}' has no .proto files. "
+            f"Directory '{spec_path}' has no .proto files or smithy-build.json. "
             "Use -f to specify the format."
         )
 
@@ -51,6 +56,10 @@ def detect_format(spec_path: str) -> str:
                 f"Expected a mapping in '{spec_path}', got {type(data).__name__}. "
                 "Use -f to specify the format."
             )
+
+        # Smithy JSON AST
+        if "smithy" in data and "shapes" in data:
+            return "smithy"
 
         # AsyncAPI
         if "asyncapi" in data:
@@ -77,14 +86,21 @@ def detect_format(spec_path: str) -> str:
                 if isinstance(schema, str) and "postman" in schema.lower():
                     return "postman"
 
+        # GraphQL introspection JSON
+        if "__schema" in data:
+            return "graphql"
+        inner = data.get("data")
+        if isinstance(inner, dict) and "__schema" in inner:
+            return "graphql"
+
         raise ValueError(
             f"Cannot detect format of '{spec_path}'. "
-            "Use -f FORMAT (openapi, graphql, asyncapi, protobuf, postman)."
+            "Use -f FORMAT (openapi, graphql, asyncapi, protobuf, postman, smithy)."
         )
 
     raise ValueError(
         f"Unsupported file extension '{ext}' for '{spec_path}'. "
-        "Use -f FORMAT (openapi, graphql, asyncapi, protobuf, postman)."
+        "Use -f FORMAT (openapi, graphql, asyncapi, protobuf, postman, smithy)."
     )
 
 
@@ -93,7 +109,7 @@ def compile(spec_path: str, format: str = None):
 
     Args:
         spec_path: Path to the spec file or directory.
-        format: One of openapi, graphql, asyncapi, protobuf, postman.
+        format: One of openapi, graphql, asyncapi, protobuf, postman, smithy.
                 Auto-detected if None.
 
     Returns:
@@ -123,5 +139,9 @@ def compile(spec_path: str, format: str = None):
     if format == "postman":
         from core.compilers.postman import compile_postman
         return compile_postman(spec_path)
+
+    if format == "smithy":
+        from core.compilers.smithy import compile_smithy
+        return compile_smithy(spec_path)
 
     raise ValueError(f"Unknown format: {format}")

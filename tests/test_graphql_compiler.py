@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-"""Tests for GraphQL SDL → LAP compiler."""
+"""Tests for GraphQL SDL / Introspection JSON → LAP compiler."""
 
+import json
 import sys
 from pathlib import Path
 
 
 import pytest
+from graphql import build_schema, introspection_from_schema
 from core.compilers.graphql import compile_graphql, _unwrap, _type_string
+from core.compilers import detect_format
 from core.formats.lap import LAPSpec
 
 SPECS_DIR = Path(__file__).parent.parent / "examples" / "verbose" / "graphql"
@@ -315,3 +318,106 @@ class TestEdgeCases:
         ds = compile_graphql(str(SPECS_DIR / "github.graphql"))
         user_ep = next(e for e in ds.endpoints if e.path == "/user")
         assert "user" in user_ep.summary.lower() or "login" in user_ep.summary.lower()
+
+
+# ── Introspection JSON tests ─────────────────────────────────────────
+
+def _write_introspection(tmp_path, sdl_text, *, wrap_data=False):
+    """Helper: build SDL -> introspection JSON -> write to tmp file."""
+    schema = build_schema(sdl_text)
+    intro = introspection_from_schema(schema)
+    payload = {"data": intro} if wrap_data else intro
+    p = tmp_path / "spec.json"
+    p.write_text(json.dumps(payload), encoding="utf-8")
+    return p
+
+
+class TestIntrospectionJSON:
+    def test_basic_query(self, tmp_path):
+        p = _write_introspection(tmp_path, "type Query { hello: String }")
+        ds = compile_graphql(str(p))
+        assert len(ds.endpoints) == 1
+        assert ds.endpoints[0].path == "/hello"
+        assert ds.endpoints[0].method == "GET"
+
+    def test_data_wrapper(self, tmp_path):
+        p = _write_introspection(
+            tmp_path, "type Query { ping: String }", wrap_data=True
+        )
+        ds = compile_graphql(str(p))
+        assert len(ds.endpoints) == 1
+        assert ds.endpoints[0].path == "/ping"
+
+    def test_mutations(self, tmp_path):
+        sdl = """
+            type Query { noop: Boolean }
+            type Mutation { createUser(name: String!): Boolean }
+        """
+        p = _write_introspection(tmp_path, sdl)
+        ds = compile_graphql(str(p))
+        mut = [e for e in ds.endpoints if e.method == "POST"]
+        assert len(mut) == 1
+        assert mut[0].path == "/createUser"
+
+    def test_enum_types(self, tmp_path):
+        sdl = """
+            enum Color { RED GREEN BLUE }
+            type Query { color: Color }
+        """
+        p = _write_introspection(tmp_path, sdl)
+        ds = compile_graphql(str(p))
+        output = ds.to_lap()
+        assert "enum Color" in output
+
+    def test_input_types(self, tmp_path):
+        sdl = """
+            input CreateInput { name: String!, age: Int }
+            type Query { create(input: CreateInput!): Boolean }
+        """
+        p = _write_introspection(tmp_path, sdl)
+        ds = compile_graphql(str(p))
+        output = ds.to_lap()
+        assert "input CreateInput" in output
+
+    def test_default_values(self, tmp_path):
+        sdl = 'type Query { items(limit: Int = 10): [String] }'
+        p = _write_introspection(tmp_path, sdl)
+        ds = compile_graphql(str(p))
+        ep = ds.endpoints[0]
+        limit = next(p for p in ep.optional_params if p.name == "limit")
+        assert limit.default == "10"
+
+    def test_lean_mode(self, tmp_path):
+        sdl = """
+            type User { id: ID!, name: String! }
+            type Query {
+                "Fetch a user by ID"
+                user(id: ID!): User
+            }
+        """
+        p = _write_introspection(tmp_path, sdl)
+        ds = compile_graphql(str(p))
+        std = ds.to_lap(lean=False)
+        lean = ds.to_lap(lean=True)
+        assert len(lean) <= len(std)
+
+
+class TestIntrospectionFormatDetection:
+    def test_detect_bare_introspection(self, tmp_path):
+        schema = build_schema("type Query { x: String }")
+        intro = introspection_from_schema(schema)
+        p = tmp_path / "api.json"
+        p.write_text(json.dumps(intro), encoding="utf-8")
+        assert detect_format(str(p)) == "graphql"
+
+    def test_detect_data_wrapped(self, tmp_path):
+        schema = build_schema("type Query { x: String }")
+        intro = introspection_from_schema(schema)
+        p = tmp_path / "api.json"
+        p.write_text(json.dumps({"data": intro}), encoding="utf-8")
+        assert detect_format(str(p)) == "graphql"
+
+    def test_openapi_not_confused(self, tmp_path):
+        p = tmp_path / "api.json"
+        p.write_text(json.dumps({"openapi": "3.0.0", "info": {}, "paths": {}}), encoding="utf-8")
+        assert detect_format(str(p)) == "openapi"
