@@ -1,0 +1,185 @@
+enum MergeRequestState { OPENED CLOSED MERGED ALL }
+enum PipelineStatus { CREATED WAITING_FOR_RESOURCE PREPARING PENDING RUNNING SUCCESS FAILED CANCELED SKIPPED MANUAL SCHEDULED }
+enum IssueState { OPENED CLOSED ALL }
+enum VisibilityLevel { PRIVATE INTERNAL PUBLIC }
+enum MilestoneState { ACTIVE CLOSED }
+
+interface Node { id: ID! }
+
+type PageInfo { hasNextPage: Boolean! hasPreviousPage: Boolean! startCursor: String endCursor: String }
+
+type Project implements Node {
+  id: ID!
+  name: String!
+  fullPath: String!
+  description: String
+  visibility: VisibilityLevel!
+  webUrl: String!
+  namespace: Namespace!
+  repository: Repository
+  issues(first: Int, after: String, state: IssueState): IssueConnection!
+  mergeRequests(first: Int, after: String, state: MergeRequestState): MergeRequestConnection!
+  pipelines(first: Int, after: String, status: PipelineStatus): PipelineConnection!
+  milestones(first: Int, after: String): MilestoneConnection!
+  labels(first: Int, after: String): LabelConnection!
+  members(first: Int, after: String): MemberConnection!
+  createdAt: String!
+  lastActivityAt: String
+  starCount: Int!
+  forksCount: Int!
+}
+
+type Namespace { id: ID! name: String! fullPath: String! }
+
+type Repository { rootRef: String tree(path: String, ref: String): Tree }
+type Tree { blobs(first: Int): BlobConnection! trees(first: Int): TreeEntryConnection! }
+type Blob { name: String! path: String! size: Int }
+type TreeEntry { name: String! path: String! type: String! }
+type BlobConnection { edges: [BlobEdge!]! pageInfo: PageInfo! }
+type BlobEdge { cursor: String! node: Blob! }
+type TreeEntryConnection { edges: [TreeEntryEdge!]! pageInfo: PageInfo! }
+type TreeEntryEdge { cursor: String! node: TreeEntry! }
+
+type User implements Node {
+  id: ID!
+  username: String!
+  name: String!
+  avatarUrl: String
+  webUrl: String!
+  email: String
+  state: String!
+  bot: Boolean!
+}
+
+type Issue implements Node {
+  id: ID!
+  iid: String!
+  title: String!
+  description: String
+  state: IssueState!
+  author: User!
+  assignees(first: Int): UserConnection!
+  labels(first: Int): LabelConnection!
+  milestone: Milestone
+  weight: Int
+  dueDate: String
+  confidential: Boolean!
+  webUrl: String!
+  notes(first: Int, after: String): NoteConnection!
+  createdAt: String!
+  updatedAt: String!
+  closedAt: String
+}
+
+type MergeRequest implements Node {
+  id: ID!
+  iid: String!
+  title: String!
+  description: String
+  state: MergeRequestState!
+  author: User!
+  assignees(first: Int): UserConnection!
+  reviewers(first: Int): UserConnection!
+  sourceBranch: String!
+  targetBranch: String!
+  diffStats: [DiffStats!]
+  pipeline: Pipeline
+  labels(first: Int): LabelConnection!
+  milestone: Milestone
+  conflicts: Boolean!
+  mergeable: Boolean!
+  webUrl: String!
+  notes(first: Int, after: String): NoteConnection!
+  createdAt: String!
+  updatedAt: String!
+  mergedAt: String
+}
+
+type DiffStats { path: String! additions: Int! deletions: Int! }
+
+type Pipeline implements Node {
+  id: ID!
+  iid: String!
+  status: PipelineStatus!
+  ref: String
+  sha: String!
+  duration: Int
+  stages(first: Int): StageConnection!
+  jobs(first: Int): JobConnection!
+  user: User
+  createdAt: String!
+  finishedAt: String
+}
+
+type Stage { name: String! status: PipelineStatus! jobs(first: Int): JobConnection! }
+type Job implements Node {
+  id: ID!
+  name: String!
+  status: PipelineStatus!
+  stage: String!
+  duration: Float
+  artifacts(first: Int): ArtifactConnection!
+  runner: Runner
+  webUrl: String!
+  createdAt: String!
+  finishedAt: String
+}
+
+type Runner { id: ID! description: String active: Boolean! runnerType: String }
+type Artifact { fileType: String! name: String! downloadPath: String }
+
+type Note implements Node { id: ID! body: String! author: User! system: Boolean! createdAt: String! updatedAt: String! }
+type Label implements Node { id: ID! title: String! color: String! description: String }
+type Milestone implements Node { id: ID! title: String! description: String state: MilestoneState! dueDate: String startDate: String }
+type Member { id: ID! user: User! accessLevel: Int! }
+
+# Connections
+type ProjectConnection { edges: [ProjectEdge!]! pageInfo: PageInfo! }
+type ProjectEdge { cursor: String! node: Project! }
+type IssueConnection { edges: [IssueEdge!]! pageInfo: PageInfo! }
+type IssueEdge { cursor: String! node: Issue! }
+type MergeRequestConnection { edges: [MergeRequestEdge!]! pageInfo: PageInfo! }
+type MergeRequestEdge { cursor: String! node: MergeRequest! }
+type PipelineConnection { edges: [PipelineEdge!]! pageInfo: PageInfo! }
+type PipelineEdge { cursor: String! node: Pipeline! }
+type JobConnection { edges: [JobEdge!]! pageInfo: PageInfo! }
+type JobEdge { cursor: String! node: Job! }
+type StageConnection { edges: [StageEdge!]! pageInfo: PageInfo! }
+type StageEdge { cursor: String! node: Stage! }
+type ArtifactConnection { edges: [ArtifactEdge!]! pageInfo: PageInfo! }
+type ArtifactEdge { cursor: String! node: Artifact! }
+type NoteConnection { edges: [NoteEdge!]! pageInfo: PageInfo! }
+type NoteEdge { cursor: String! node: Note! }
+type LabelConnection { edges: [LabelEdge!]! pageInfo: PageInfo! }
+type LabelEdge { cursor: String! node: Label! }
+type MilestoneConnection { edges: [MilestoneEdge!]! pageInfo: PageInfo! }
+type MilestoneEdge { cursor: String! node: Milestone! }
+type MemberConnection { edges: [MemberEdge!]! pageInfo: PageInfo! }
+type MemberEdge { cursor: String! node: Member! }
+type UserConnection { edges: [UserEdge!]! pageInfo: PageInfo! }
+type UserEdge { cursor: String! node: User! }
+
+input CreateIssueInput { projectPath: String! title: String! description: String labelIds: [ID!] milestoneId: ID assigneeIds: [ID!] weight: Int dueDate: String confidential: Boolean }
+input CreateMergeRequestInput { projectPath: String! title: String! description: String sourceBranch: String! targetBranch: String! assigneeIds: [ID!] reviewerIds: [ID!] labelIds: [ID!] milestoneId: ID }
+input UpdateIssueInput { projectPath: String! iid: String! title: String description: String state: IssueState }
+
+type CreateIssuePayload { issue: Issue errors: [String!]! }
+type CreateMergeRequestPayload { mergeRequest: MergeRequest errors: [String!]! }
+type UpdateIssuePayload { issue: Issue errors: [String!]! }
+type MergeRequestAcceptPayload { mergeRequest: MergeRequest errors: [String!]! }
+
+type Query {
+  project(fullPath: String!): Project
+  projects(first: Int, after: String, search: String, membership: Boolean): ProjectConnection!
+  currentUser: User
+  issue(id: ID!): Issue
+  mergeRequest(id: ID!): MergeRequest
+  node(id: ID!): Node
+}
+
+type Mutation {
+  createIssue(input: CreateIssueInput!): CreateIssuePayload!
+  updateIssue(input: UpdateIssueInput!): UpdateIssuePayload!
+  createMergeRequest(input: CreateMergeRequestInput!): CreateMergeRequestPayload!
+  acceptMergeRequest(projectPath: String!, iid: String!, sha: String): MergeRequestAcceptPayload!
+}

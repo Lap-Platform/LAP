@@ -1,0 +1,236 @@
+{
+  "info": {
+    "name": "S3 Object Storage API",
+    "_postman_id": "s3-001",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      {
+        "key": "key",
+        "value": "X-Api-Key"
+      },
+      {
+        "key": "in",
+        "value": "header"
+      },
+      {
+        "key": "value",
+        "value": "{{apiKey}}"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://s3.amazonaws.com"
+    }
+  ],
+  "item": [
+    {
+      "name": "List Buckets",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": []
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"buckets\": [{\"name\": \"my-bucket\", \"creation_date\": \"2024-01-01\"}]}"
+        }
+      ]
+    },
+    {
+      "name": "Create Bucket",
+      "request": {
+        "method": "PUT",
+        "url": {
+          "raw": "{{baseUrl}}/:bucket",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            ":bucket"
+          ],
+          "variable": [
+            {
+              "key": "bucket",
+              "value": "my-bucket"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "Created",
+          "code": 200,
+          "body": "{}"
+        }
+      ]
+    },
+    {
+      "name": "Put Object",
+      "request": {
+        "method": "PUT",
+        "url": {
+          "raw": "{{baseUrl}}/:bucket/:key",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            ":bucket",
+            ":key"
+          ],
+          "variable": [
+            {
+              "key": "bucket",
+              "value": "my-bucket"
+            },
+            {
+              "key": "key",
+              "value": "file.txt"
+            }
+          ]
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/octet-stream",
+            "description": ""
+          },
+          {
+            "key": "x-amz-storage-class",
+            "value": "STANDARD",
+            "description": "Storage class"
+          }
+        ]
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"etag\": \"\\\"abc123\\\"\"}"
+        }
+      ]
+    },
+    {
+      "name": "Get Object",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/:bucket/:key",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            ":bucket",
+            ":key"
+          ],
+          "variable": [
+            {
+              "key": "bucket",
+              "value": "my-bucket"
+            },
+            {
+              "key": "key",
+              "value": "file.txt"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{}"
+        }
+      ]
+    },
+    {
+      "name": "Delete Object",
+      "request": {
+        "method": "DELETE",
+        "url": {
+          "raw": "{{baseUrl}}/:bucket/:key",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            ":bucket",
+            ":key"
+          ],
+          "variable": [
+            {
+              "key": "bucket",
+              "value": "my-bucket"
+            },
+            {
+              "key": "key",
+              "value": "file.txt"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "Deleted",
+          "code": 204,
+          "body": "{}"
+        }
+      ]
+    },
+    {
+      "name": "List Objects",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/:bucket",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            ":bucket"
+          ],
+          "query": [
+            {
+              "key": "prefix",
+              "value": "",
+              "description": "Key prefix"
+            },
+            {
+              "key": "max-keys",
+              "value": "1000",
+              "description": ""
+            },
+            {
+              "key": "delimiter",
+              "value": "/",
+              "description": ""
+            }
+          ],
+          "variable": [
+            {
+              "key": "bucket",
+              "value": "my-bucket"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"contents\": [{\"key\": \"file.txt\", \"size\": 1024, \"last_modified\": \"2024-01-01\"}]}"
+        }
+      ]
+    }
+  ]
+}

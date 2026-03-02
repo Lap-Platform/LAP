@@ -1,0 +1,36 @@
+# filesystem
+# MCP server for local filesystem operations
+
+@toollean v0.1
+@tool read_file
+@desc Read complete contents of a file
+@in path:str Absolute path to file
+
+@toollean v0.1
+@tool write_file
+@desc Create or overwrite a file with content
+@in path:str Absolute path to file
+@in content:str Content to write
+
+@toollean v0.1
+@tool list_directory
+@desc List files and directories at a path
+@in path:str Absolute path to directory
+
+@toollean v0.1
+@tool search_files
+@desc Recursively search for files matching a pattern
+@in path:str Starting directory
+@in pattern:str Glob pattern to match
+@in excludePatterns:[str]? Patterns to exclude
+
+@toollean v0.1
+@tool move_file
+@desc Move or rename a file/directory
+@in source:str Source path
+@in destination:str Destination path
+
+@toollean v0.1
+@tool get_file_info
+@desc Get metadata about a file (size, modified time, permissions)
+@in path:str Absolute path to file

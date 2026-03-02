@@ -1,0 +1,175 @@
+openapi: "3.0.0"
+info:
+  title: Discord API
+  version: "10"
+servers:
+  - url: https://discord.com/api/v10
+security:
+  - botAuth: []
+components:
+  securitySchemes:
+    botAuth:
+      type: http
+      scheme: bearer
+paths:
+  /channels/{channel_id}/messages:
+    post:
+      summary: Create Message
+      parameters:
+        - name: channel_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The channel to send the message in
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content]
+              properties:
+                content:
+                  type: string
+                  description: Message content (up to 2000 chars)
+                tts:
+                  type: boolean
+                  description: Whether this is a TTS message
+                embeds:
+                  type: array
+                  items:
+                    type: object
+                  description: Array of embed objects (up to 10)
+                message_reference:
+                  type: object
+                  description: Reference for replies
+      responses:
+        "200":
+          description: Message object
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  channel_id:
+                    type: string
+                  content:
+                    type: string
+                  author:
+                    type: object
+                  timestamp:
+                    type: string
+                    format: date-time
+  /guilds/{guild_id}/channels:
+    post:
+      summary: Create Guild Channel
+      parameters:
+        - name: guild_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                  description: Channel name (1-100 chars)
+                type:
+                  type: integer
+                  description: "Channel type (0=text, 2=voice, 4=category)"
+                topic:
+                  type: string
+                  description: Channel topic (0-1024 chars)
+                parent_id:
+                  type: string
+                  description: Category ID for the channel
+                nsfw:
+                  type: boolean
+      responses:
+        "201":
+          description: Channel object
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  type:
+                    type: integer
+                  guild_id:
+                    type: string
+  /guilds/{guild_id}/members:
+    get:
+      summary: List Guild Members
+      parameters:
+        - name: guild_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 1
+          description: Max members to return (1-1000)
+        - name: after
+          in: query
+          schema:
+            type: string
+          description: Highest user ID in previous page
+      responses:
+        "200":
+          description: Array of guild member objects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    user:
+                      type: object
+                    nick:
+                      type: string
+                      nullable: true
+                    roles:
+                      type: array
+                      items:
+                        type: string
+                    joined_at:
+                      type: string
+                      format: date-time
+  /channels/{channel_id}/messages/{message_id}/reactions/{emoji}/@me:
+    put:
+      summary: Create Reaction
+      parameters:
+        - name: channel_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: message_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: emoji
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "URL-encoded emoji (e.g. %F0%9F%94%A5 or name:id for custom)"
+      responses:
+        "204":
+          description: Reaction added successfully

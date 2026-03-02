@@ -1,0 +1,212 @@
+{
+  "info": {
+    "name": "Algolia Search API",
+    "_postman_id": "algolia-001",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      {
+        "key": "key",
+        "value": "X-Algolia-API-Key"
+      },
+      {
+        "key": "in",
+        "value": "header"
+      },
+      {
+        "key": "value",
+        "value": "{{apiKey}}"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://{{appId}}-dsn.algolia.net/1"
+    },
+    {
+      "key": "appId",
+      "value": "APPID"
+    }
+  ],
+  "item": [
+    {
+      "name": "Search",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/indexes/:indexName/query",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "indexes",
+            ":indexName",
+            "query"
+          ],
+          "variable": [
+            {
+              "key": "indexName",
+              "value": "products"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"query\": \"smartphone\", \"hitsPerPage\": 20, \"page\": 0, \"filters\": \"price > 100\"}"
+        },
+        "header": [
+          {
+            "key": "X-Algolia-Application-Id",
+            "value": "{{appId}}",
+            "description": ""
+          }
+        ]
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"hits\": [{\"objectID\": \"1\", \"name\": \"iPhone\", \"_highlightResult\": {}}], \"nbHits\": 42, \"page\": 0}"
+        }
+      ]
+    },
+    {
+      "name": "Add Object",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/indexes/:indexName",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "indexes",
+            ":indexName"
+          ],
+          "variable": [
+            {
+              "key": "indexName",
+              "value": "products"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"name\": \"Widget\", \"price\": 9.99}"
+        }
+      },
+      "response": [
+        {
+          "name": "Created",
+          "code": 201,
+          "body": "{\"objectID\": \"2\", \"taskID\": 100}"
+        }
+      ]
+    },
+    {
+      "name": "Get Object",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/indexes/:indexName/:objectID",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "indexes",
+            ":indexName",
+            ":objectID"
+          ],
+          "variable": [
+            {
+              "key": "indexName",
+              "value": "products"
+            },
+            {
+              "key": "objectID",
+              "value": "1"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"objectID\": \"1\", \"name\": \"iPhone\"}"
+        }
+      ]
+    },
+    {
+      "name": "Delete Object",
+      "request": {
+        "method": "DELETE",
+        "url": {
+          "raw": "{{baseUrl}}/indexes/:indexName/:objectID",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "indexes",
+            ":indexName",
+            ":objectID"
+          ],
+          "variable": [
+            {
+              "key": "indexName",
+              "value": "products"
+            },
+            {
+              "key": "objectID",
+              "value": "1"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"taskID\": 101}"
+        }
+      ]
+    },
+    {
+      "name": "Browse Index",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/indexes/:indexName/browse",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "indexes",
+            ":indexName",
+            "browse"
+          ],
+          "variable": [
+            {
+              "key": "indexName",
+              "value": "products"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"cursor\": \"\"}"
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"hits\": [], \"cursor\": \"abc\"}"
+        }
+      ]
+    }
+  ]
+}

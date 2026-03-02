@@ -1,0 +1,250 @@
+syntax = "proto3";
+
+package temporal.api.workflowservice.v1;
+
+// Temporal Workflow Service API.
+// Manages workflow executions, task queues, and queries.
+service WorkflowService {
+  // Start a new workflow execution.
+  rpc StartWorkflowExecution(StartWorkflowExecutionRequest) returns (StartWorkflowExecutionResponse);
+
+  // Signal a running workflow execution.
+  rpc SignalWorkflowExecution(SignalWorkflowExecutionRequest) returns (SignalWorkflowExecutionResponse);
+
+  // Query a running workflow execution.
+  rpc QueryWorkflow(QueryWorkflowRequest) returns (QueryWorkflowResponse);
+
+  // Terminate a workflow execution.
+  rpc TerminateWorkflowExecution(TerminateWorkflowExecutionRequest) returns (TerminateWorkflowExecutionResponse);
+
+  // Request cancellation of a workflow execution.
+  rpc RequestCancelWorkflowExecution(RequestCancelWorkflowExecutionRequest) returns (RequestCancelWorkflowExecutionResponse);
+
+  // Describe a workflow execution.
+  rpc DescribeWorkflowExecution(DescribeWorkflowExecutionRequest) returns (DescribeWorkflowExecutionResponse);
+
+  // Get the history of a workflow execution.
+  rpc GetWorkflowExecutionHistory(GetWorkflowExecutionHistoryRequest) returns (GetWorkflowExecutionHistoryResponse);
+
+  // List workflow executions.
+  rpc ListWorkflowExecutions(ListWorkflowExecutionsRequest) returns (ListWorkflowExecutionsResponse);
+
+  // Poll for decision tasks from a task queue.
+  rpc PollWorkflowTaskQueue(PollWorkflowTaskQueueRequest) returns (PollWorkflowTaskQueueResponse);
+
+  // Poll for activity tasks from a task queue.
+  rpc PollActivityTaskQueue(PollActivityTaskQueueRequest) returns (PollActivityTaskQueueResponse);
+}
+
+message WorkflowExecution {
+  string workflow_id = 1;
+  string run_id = 2;
+}
+
+message WorkflowType {
+  string name = 1;
+}
+
+message TaskQueue {
+  string name = 1;
+  enum Kind {
+    NORMAL = 0;
+    STICKY = 1;
+  }
+  Kind kind = 2;
+}
+
+message Payload {
+  map<string, bytes> metadata = 1;
+  bytes data = 2;
+}
+
+message Payloads {
+  repeated Payload payloads = 1;
+}
+
+message RetryPolicy {
+  int32 maximum_attempts = 1;
+  int64 initial_interval_seconds = 2;
+  double backoff_coefficient = 3;
+  int64 maximum_interval_seconds = 4;
+  repeated string non_retryable_error_types = 5;
+}
+
+message Memo {
+  map<string, Payload> fields = 1;
+}
+
+message SearchAttributes {
+  map<string, Payload> indexed_fields = 1;
+}
+
+message Header {
+  map<string, Payload> fields = 1;
+}
+
+// --- Requests and Responses ---
+
+message StartWorkflowExecutionRequest {
+  string namespace = 1;
+  string workflow_id = 2;
+  WorkflowType workflow_type = 3;
+  TaskQueue task_queue = 4;
+  Payloads input = 5;
+  int32 workflow_execution_timeout_seconds = 6;
+  int32 workflow_run_timeout_seconds = 7;
+  int32 workflow_task_timeout_seconds = 8;
+  string identity = 9;
+  string request_id = 10;
+  RetryPolicy retry_policy = 11;
+  string cron_schedule = 12;
+  Memo memo = 13;
+  SearchAttributes search_attributes = 14;
+  Header header = 15;
+}
+
+message StartWorkflowExecutionResponse {
+  string run_id = 1;
+}
+
+message SignalWorkflowExecutionRequest {
+  string namespace = 1;
+  WorkflowExecution workflow_execution = 2;
+  string signal_name = 3;
+  Payloads input = 4;
+  string identity = 5;
+  string request_id = 6;
+}
+
+message SignalWorkflowExecutionResponse {}
+
+message QueryWorkflowRequest {
+  string namespace = 1;
+  WorkflowExecution execution = 2;
+  WorkflowQuery query = 3;
+}
+
+message WorkflowQuery {
+  string query_type = 1;
+  Payloads query_args = 2;
+}
+
+message QueryWorkflowResponse {
+  Payloads query_result = 1;
+}
+
+message TerminateWorkflowExecutionRequest {
+  string namespace = 1;
+  WorkflowExecution workflow_execution = 2;
+  string reason = 3;
+  Payloads details = 4;
+  string identity = 5;
+}
+
+message TerminateWorkflowExecutionResponse {}
+
+message RequestCancelWorkflowExecutionRequest {
+  string namespace = 1;
+  WorkflowExecution workflow_execution = 2;
+  string identity = 3;
+  string request_id = 4;
+}
+
+message RequestCancelWorkflowExecutionResponse {}
+
+enum WorkflowExecutionStatus {
+  WORKFLOW_EXECUTION_STATUS_UNSPECIFIED = 0;
+  WORKFLOW_EXECUTION_STATUS_RUNNING = 1;
+  WORKFLOW_EXECUTION_STATUS_COMPLETED = 2;
+  WORKFLOW_EXECUTION_STATUS_FAILED = 3;
+  WORKFLOW_EXECUTION_STATUS_CANCELED = 4;
+  WORKFLOW_EXECUTION_STATUS_TERMINATED = 5;
+  WORKFLOW_EXECUTION_STATUS_CONTINUED_AS_NEW = 6;
+  WORKFLOW_EXECUTION_STATUS_TIMED_OUT = 7;
+}
+
+message WorkflowExecutionInfo {
+  WorkflowExecution execution = 1;
+  WorkflowType type = 2;
+  int64 start_time = 3;
+  int64 close_time = 4;
+  WorkflowExecutionStatus status = 5;
+  int64 history_length = 6;
+  Memo memo = 7;
+  SearchAttributes search_attributes = 8;
+  string task_queue = 9;
+}
+
+message DescribeWorkflowExecutionRequest {
+  string namespace = 1;
+  WorkflowExecution execution = 2;
+}
+
+message DescribeWorkflowExecutionResponse {
+  WorkflowExecutionInfo workflow_execution_info = 1;
+}
+
+message GetWorkflowExecutionHistoryRequest {
+  string namespace = 1;
+  WorkflowExecution execution = 2;
+  int32 maximum_page_size = 3;
+  bytes next_page_token = 4;
+  bool wait_new_event = 5;
+}
+
+message HistoryEvent {
+  int64 event_id = 1;
+  int64 event_time = 2;
+  string event_type = 3;
+  Payloads attributes = 4;
+}
+
+message GetWorkflowExecutionHistoryResponse {
+  repeated HistoryEvent events = 1;
+  bytes next_page_token = 2;
+}
+
+message ListWorkflowExecutionsRequest {
+  string namespace = 1;
+  int32 page_size = 2;
+  bytes next_page_token = 3;
+  string query = 4;
+}
+
+message ListWorkflowExecutionsResponse {
+  repeated WorkflowExecutionInfo executions = 1;
+  bytes next_page_token = 2;
+}
+
+message PollWorkflowTaskQueueRequest {
+  string namespace = 1;
+  TaskQueue task_queue = 2;
+  string identity = 3;
+}
+
+message PollWorkflowTaskQueueResponse {
+  bytes task_token = 1;
+  WorkflowExecution workflow_execution = 2;
+  WorkflowType workflow_type = 3;
+  repeated HistoryEvent history = 4;
+  bytes next_page_token = 5;
+  int64 started_event_id = 6;
+}
+
+message PollActivityTaskQueueRequest {
+  string namespace = 1;
+  TaskQueue task_queue = 2;
+  string identity = 3;
+}
+
+message PollActivityTaskQueueResponse {
+  bytes task_token = 1;
+  WorkflowExecution workflow_execution = 2;
+  string activity_id = 3;
+  string activity_type = 4;
+  Payloads input = 5;
+  int64 scheduled_time = 6;
+  int64 started_time = 7;
+  int32 attempt = 8;
+  RetryPolicy retry_policy = 9;
+}

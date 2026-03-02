@@ -1,0 +1,38 @@
+# github-mcp
+# GitHub MCP server for repository management
+
+@toollean v0.1
+@tool create_issue
+@desc Create a new issue in a GitHub repository
+@in owner:str Repository owner
+@in repo:str Repository name
+@in title:str Issue title
+@in body:str? Issue body (markdown)
+@in labels:[str]? Labels to apply
+@in assignees:[str]? Usernames to assign
+
+@toollean v0.1
+@tool list_issues
+@desc List issues in a repository with filters
+@in owner:str Repository owner
+@in repo:str Repository name
+@in state:str?(open/closed/all) Filter by state
+@in labels:[str]? Filter by labels
+@in per_page:int?=30 Results per page
+
+@toollean v0.1
+@tool create_pull_request
+@desc Create a pull request
+@in owner:str Repository owner
+@in repo:str Repository name
+@in title:str PR title
+@in body:str? PR description
+@in head:str Branch with changes
+@in base:str Branch to merge into
+@in draft:bool? Create as draft PR
+
+@toollean v0.1
+@tool search_code
+@desc Search for code across GitHub repositories
+@in query:str Search query (GitHub code search syntax)
+@in per_page:int?=30 Results per page

@@ -1,0 +1,135 @@
+enum TweetType { TWEET RETWEET REPLY QUOTE }
+enum MediaType { PHOTO VIDEO ANIMATED_GIF }
+enum TimelineType { HOME USER MENTIONS LIKES BOOKMARKS }
+
+type PageInfo { hasNextPage: Boolean! hasPreviousPage: Boolean! startCursor: String endCursor: String }
+interface Node { id: ID! }
+
+type User implements Node {
+  id: ID!
+  username: String!
+  name: String!
+  description: String
+  profileImageUrl: String
+  profileBannerUrl: String
+  verified: Boolean!
+  protected: Boolean!
+  location: String
+  url: String
+  createdAt: String!
+  publicMetrics: UserMetrics!
+  pinnedTweet: Tweet
+  tweets(first: Int, after: String): TweetConnection!
+  followers(first: Int, after: String): UserConnection!
+  following(first: Int, after: String): UserConnection!
+  lists(first: Int, after: String): ListConnection!
+}
+
+type UserMetrics { followersCount: Int! followingCount: Int! tweetCount: Int! listedCount: Int! }
+
+type Tweet implements Node {
+  id: ID!
+  text: String!
+  author: User!
+  tweetType: TweetType!
+  conversationId: ID
+  inReplyToUserId: ID
+  referencedTweets: [ReferencedTweet!]
+  attachments: TweetAttachments
+  entities: TweetEntities
+  publicMetrics: TweetMetrics!
+  possiblySensitive: Boolean!
+  lang: String
+  source: String
+  createdAt: String!
+  replySettings: String
+  context: [TweetContext!]
+}
+
+type ReferencedTweet { type: String! tweet: Tweet! }
+type TweetAttachments { mediaKeys: [String!] media: [Media!] poll: Poll }
+type Media { mediaKey: String! type: MediaType! url: String previewImageUrl: String width: Int height: Int durationMs: Int altText: String }
+type Poll { id: ID! options: [PollOption!]! votingStatus: String! endDatetime: String! durationMinutes: Int! }
+type PollOption { position: Int! label: String! votes: Int! }
+type TweetEntities { urls: [UrlEntity!] hashtags: [HashtagEntity!] mentions: [MentionEntity!] cashtags: [CashtagEntity!] annotations: [Annotation!] }
+type UrlEntity { start: Int! end: Int! url: String! expandedUrl: String displayUrl: String title: String description: String }
+type HashtagEntity { start: Int! end: Int! tag: String! }
+type MentionEntity { start: Int! end: Int! username: String! id: ID }
+type CashtagEntity { start: Int! end: Int! tag: String! }
+type Annotation { start: Int! end: Int! probability: Float! type: String! normalizedText: String! }
+type TweetMetrics { retweetCount: Int! replyCount: Int! likeCount: Int! quoteCount: Int! bookmarkCount: Int impressionCount: Int }
+type TweetContext { domain: ContextDomain! entity: ContextEntity! }
+type ContextDomain { id: ID! name: String! description: String }
+type ContextEntity { id: ID! name: String! description: String }
+
+type TweetList implements Node {
+  id: ID!
+  name: String!
+  description: String
+  owner: User!
+  private: Boolean!
+  followerCount: Int!
+  memberCount: Int!
+  members(first: Int, after: String): UserConnection!
+  tweets(first: Int, after: String): TweetConnection!
+  createdAt: String!
+}
+
+type Space implements Node {
+  id: ID!
+  title: String
+  state: String!
+  hostIds: [ID!]!
+  speakerIds: [ID!]
+  participantCount: Int
+  scheduledStart: String
+  startedAt: String
+  lang: String
+  isTicketed: Boolean!
+}
+
+type TweetConnection { edges: [TweetEdge!]! pageInfo: PageInfo! }
+type TweetEdge { cursor: String! node: Tweet! }
+type UserConnection { edges: [UserEdge!]! pageInfo: PageInfo! }
+type UserEdge { cursor: String! node: User! }
+type ListConnection { edges: [ListEdge!]! pageInfo: PageInfo! }
+type ListEdge { cursor: String! node: TweetList! }
+
+input CreateTweetInput { text: String! inReplyToTweetId: ID quoteTweetId: ID mediaIds: [ID!] pollOptions: [String!] pollDurationMinutes: Int replySettings: String }
+input CreateListInput { name: String! description: String private: Boolean }
+
+type TweetPayload { tweet: Tweet }
+type DeletePayload { deleted: Boolean! }
+type RelationshipPayload { success: Boolean! }
+type ListPayload { list: TweetList }
+
+type Query {
+  me: User!
+  user(id: ID!): User
+  userByUsername(username: String!): User
+  tweet(id: ID!): Tweet
+  tweets(ids: [ID!]!): [Tweet!]!
+  timeline(type: TimelineType!, userId: ID, first: Int, after: String): TweetConnection!
+  search(query: String!, first: Int, after: String, startTime: String, endTime: String): TweetConnection!
+  list(id: ID!): TweetList
+  space(id: ID!): Space
+  node(id: ID!): Node
+}
+
+type Mutation {
+  createTweet(input: CreateTweetInput!): TweetPayload!
+  deleteTweet(id: ID!): DeletePayload!
+  like(tweetId: ID!): RelationshipPayload!
+  unlike(tweetId: ID!): RelationshipPayload!
+  retweet(tweetId: ID!): RelationshipPayload!
+  unretweet(tweetId: ID!): RelationshipPayload!
+  bookmark(tweetId: ID!): RelationshipPayload!
+  removeBookmark(tweetId: ID!): RelationshipPayload!
+  follow(userId: ID!): RelationshipPayload!
+  unfollow(userId: ID!): RelationshipPayload!
+  mute(userId: ID!): RelationshipPayload!
+  block(userId: ID!): RelationshipPayload!
+  createList(input: CreateListInput!): ListPayload!
+  addListMember(listId: ID!, userId: ID!): RelationshipPayload!
+  removeListMember(listId: ID!, userId: ID!): RelationshipPayload!
+}

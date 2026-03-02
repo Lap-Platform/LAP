@@ -1,0 +1,129 @@
+enum ListingType { ENTIRE_HOME PRIVATE_ROOM SHARED_ROOM HOTEL_ROOM }
+enum BookingStatus { PENDING CONFIRMED CANCELLED COMPLETED }
+enum CancellationPolicy { FLEXIBLE MODERATE STRICT SUPER_STRICT }
+enum Currency { USD EUR GBP AUD CAD JPY }
+enum ReviewCategory { CLEANLINESS ACCURACY COMMUNICATION LOCATION CHECK_IN VALUE }
+
+type PageInfo { hasNextPage: Boolean! endCursor: String hasPreviousPage: Boolean! startCursor: String }
+
+type Host {
+  id: ID!
+  firstName: String!
+  about: String
+  pictureUrl: String
+  isSuperhost: Boolean!
+  responseRate: Float
+  responseTime: String
+  memberSince: String!
+  reviewCount: Int!
+  listings(first: Int, after: String): ListingConnection!
+  verifications: [String!]!
+  languages: [String!]!
+}
+
+type Listing {
+  id: ID!
+  title: String!
+  description: String!
+  listingType: ListingType!
+  host: Host!
+  location: ListingLocation!
+  pricing: Pricing!
+  capacity: Capacity!
+  amenities: [Amenity!]!
+  photos: [Photo!]!
+  reviews(first: Int, after: String): ReviewConnection!
+  rating: OverallRating
+  availability(startDate: String!, endDate: String!): [AvailabilityDate!]!
+  houseRules: [String!]!
+  cancellationPolicy: CancellationPolicy!
+  checkInTime: String
+  checkOutTime: String
+  minimumNights: Int!
+  maximumNights: Int
+  instantBook: Boolean!
+  isSuperhost: Boolean!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type ListingLocation { lat: Float! lng: Float! city: String! state: String country: String! neighborhood: String address: String }
+type Pricing { basePrice: Float! currency: Currency! cleaningFee: Float serviceFee: Float weeklyDiscount: Float monthlyDiscount: Float }
+type Capacity { guests: Int! bedrooms: Int! beds: Int! bathrooms: Float! }
+type Amenity { id: ID! name: String! category: String! icon: String }
+type Photo { id: ID! url: String! caption: String sortOrder: Int! }
+type OverallRating { overall: Float! cleanliness: Float accuracy: Float communication: Float location: Float checkIn: Float value: Float reviewCount: Int! }
+type AvailabilityDate { date: String! available: Boolean! price: Float minNights: Int }
+
+type Booking {
+  id: ID!
+  listing: Listing!
+  guest: Guest!
+  status: BookingStatus!
+  checkIn: String!
+  checkOut: String!
+  guests: Int!
+  totalPrice: Float!
+  currency: Currency!
+  serviceFee: Float!
+  cleaningFee: Float
+  hostPayout: Float!
+  specialRequests: String
+  confirmationCode: String!
+  cancellation: Cancellation
+  review: Review
+  createdAt: String!
+  updatedAt: String!
+}
+
+type Guest { id: ID! firstName: String! pictureUrl: String memberSince: String! verifications: [String!]! reviewCount: Int! }
+type Cancellation { cancelledAt: String! cancelledBy: String! reason: String refundAmount: Float }
+
+type Review {
+  id: ID!
+  listing: Listing!
+  author: Guest!
+  rating: Int!
+  comment: String!
+  response: String
+  categoryRatings: [CategoryRating!]!
+  createdAt: String!
+}
+
+type CategoryRating { category: ReviewCategory! rating: Int! }
+
+type SearchResult { listings: [Listing!]! total: Int! filters: AppliedFilters }
+type AppliedFilters { priceMin: Float priceMax: Float listingType: ListingType guests: Int }
+
+type ListingConnection { edges: [ListingEdge!]! pageInfo: PageInfo! totalCount: Int! }
+type ListingEdge { cursor: String! node: Listing! }
+type ReviewConnection { edges: [ReviewEdge!]! pageInfo: PageInfo! totalCount: Int! }
+type ReviewEdge { cursor: String! node: Review! }
+type BookingConnection { edges: [BookingEdge!]! pageInfo: PageInfo! }
+type BookingEdge { cursor: String! node: Booking! }
+
+input SearchInput { location: String! checkIn: String checkOut: String guests: Int priceMin: Float priceMax: Float listingType: ListingType amenities: [ID!] instantBook: Boolean superhost: Boolean limit: Int offset: Int }
+input BookingInput { listingId: ID! checkIn: String! checkOut: String! guests: Int! specialRequests: String }
+input ReviewInput { bookingId: ID! rating: Int! comment: String! categoryRatings: [CategoryRatingInput!] }
+input CategoryRatingInput { category: ReviewCategory! rating: Int! }
+
+type BookingPayload { booking: Booking }
+type ReviewPayload { review: Review }
+type CancelPayload { booking: Booking refundAmount: Float }
+
+type Query {
+  listing(id: ID!): Listing
+  search(input: SearchInput!): SearchResult!
+  host(id: ID!): Host
+  booking(id: ID!): Booking
+  myBookings(status: BookingStatus, first: Int, after: String): BookingConnection!
+  myListings(first: Int, after: String): ListingConnection!
+}
+
+type Mutation {
+  createBooking(input: BookingInput!): BookingPayload!
+  cancelBooking(id: ID!, reason: String): CancelPayload!
+  confirmBooking(id: ID!): BookingPayload!
+  submitReview(input: ReviewInput!): ReviewPayload!
+  respondToReview(reviewId: ID!, response: String!): ReviewPayload!
+}

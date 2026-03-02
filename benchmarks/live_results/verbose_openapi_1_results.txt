@@ -1,0 +1,10 @@
+TASK 1: curl -X GET https://api.github.com/repos/octocat/Hello-World/issues -H "Authorization: Bearer YOUR_API_KEY"
+TASK 2: curl -X POST https://api.github.com/repos/octocat/Hello-World/issues -H "Authorization: Bearer YOUR_API_KEY" -H "Content-Type: application/json" -d '{"title": "Bug: Login fails", "body": "Steps to reproduce..."}'
+TASK 3: curl -X GET "https://api.github.com/repos/octocat/Hello-World/issues?state=open&labels=bug&sort=created" -H "Authorization: Bearer YOUR_API_KEY"
+TASK 4: curl -X GET "https://api.github.com/repos/octocat/Hello-World/issues?state=closed&per_page=25" -H "Authorization: Bearer YOUR_API_KEY"
+TASK 5: curl -X GET https://api.github.com/repos/octocat/Hello-World -H "Authorization: Bearer YOUR_API_KEY"
+TASK 6: curl -X POST https://api.github.com/repos/octocat/Hello-World/issues -H "Authorization: Bearer YOUR_API_KEY" -H "Content-Type: application/json" -d '{"title": "Feature request", "assignees": ["user1", "user2"]}'
+TASK 7: curl -X GET "https://api.github.com/repos/octocat/Hello-World/pulls?state=open&sort=updated" -H "Authorization: Bearer YOUR_API_KEY"
+TASK 8: curl -X POST https://api.github.com/repos/octocat/Hello-World/pulls -H "Authorization: Bearer YOUR_API_KEY" -H "Content-Type: application/json" -d '{"title": "Add new feature", "head": "feature-branch", "base": "main"}'
+TASK 9: curl -X PUT https://api.github.com/repos/octocat/Hello-World/pulls/42/merge -H "Authorization: Bearer YOUR_API_KEY" -H "Content-Type: application/json" -d '{"merge_method": "squash"}'
+TASK 10: curl -X GET "https://api.github.com/repos/octocat/Hello-World/pulls?base=develop&direction=desc" -H "Authorization: Bearer YOUR_API_KEY"

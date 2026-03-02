@@ -1,0 +1,58 @@
+{
+  "name": "sqlite-mcp",
+  "description": "MCP server for SQLite database operations",
+  "tools": [
+    {
+      "name": "read_query",
+      "description": "Execute a SELECT query and return results",
+      "inputSchema": {
+        "type": "object",
+        "required": ["query"],
+        "properties": {
+          "query": {"type": "string", "description": "SELECT SQL query to execute"}
+        }
+      }
+    },
+    {
+      "name": "write_query",
+      "description": "Execute an INSERT, UPDATE, or DELETE query",
+      "inputSchema": {
+        "type": "object",
+        "required": ["query"],
+        "properties": {
+          "query": {"type": "string", "description": "SQL write query to execute"}
+        }
+      }
+    },
+    {
+      "name": "create_table",
+      "description": "Create a new table in the database",
+      "inputSchema": {
+        "type": "object",
+        "required": ["query"],
+        "properties": {
+          "query": {"type": "string", "description": "CREATE TABLE SQL statement"}
+        }
+      }
+    },
+    {
+      "name": "list_tables",
+      "description": "List all tables in the database",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "describe_table",
+      "description": "Get schema information for a table",
+      "inputSchema": {
+        "type": "object",
+        "required": ["table_name"],
+        "properties": {
+          "table_name": {"type": "string", "description": "Name of the table to describe"}
+        }
+      }
+    }
+  ]
+}

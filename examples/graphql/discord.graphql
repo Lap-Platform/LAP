@@ -1,0 +1,172 @@
+enum ChannelType { GUILD_TEXT GUILD_VOICE GUILD_CATEGORY GUILD_ANNOUNCEMENT GUILD_STAGE_VOICE GUILD_FORUM DM GROUP_DM }
+enum PermissionOverwriteType { ROLE MEMBER }
+enum MessageType { DEFAULT REPLY SLASH_COMMAND THREAD_STARTER_MESSAGE CONTEXT_MENU_COMMAND }
+enum PresenceStatus { ONLINE IDLE DND OFFLINE }
+enum VerificationLevel { NONE LOW MEDIUM HIGH VERY_HIGH }
+enum NsfwLevel { DEFAULT EXPLICIT SAFE AGE_RESTRICTED }
+enum PremiumTier { NONE TIER_1 TIER_2 TIER_3 }
+
+type Snowflake { id: ID! }
+
+type Guild {
+  id: ID!
+  name: String!
+  icon: String
+  splash: String
+  banner: String
+  description: String
+  ownerId: ID!
+  owner: Member
+  region: String
+  verificationLevel: VerificationLevel!
+  nsfwLevel: NsfwLevel!
+  premiumTier: PremiumTier!
+  premiumSubscriptionCount: Int
+  memberCount: Int!
+  maxMembers: Int
+  channels: [Channel!]!
+  roles: [Role!]!
+  emojis: [Emoji!]!
+  stickers: [Sticker!]!
+  members(limit: Int, after: ID): [Member!]!
+  bans(limit: Int, after: ID): [Ban!]!
+  vanityUrlCode: String
+  features: [String!]!
+}
+
+type Channel {
+  id: ID!
+  name: String
+  type: ChannelType!
+  guildId: ID
+  guild: Guild
+  position: Int
+  topic: String
+  nsfw: Boolean
+  rateLimitPerUser: Int
+  parentId: ID
+  parent: Channel
+  permissionOverwrites: [PermissionOverwrite!]
+  messages(limit: Int, before: ID, after: ID, around: ID): [Message!]!
+  pinnedMessages: [Message!]!
+  threads: [Channel!]
+  lastMessageId: ID
+}
+
+type PermissionOverwrite { id: ID! type: PermissionOverwriteType! allow: String! deny: String! }
+
+type Role {
+  id: ID!
+  name: String!
+  color: Int!
+  hoist: Boolean!
+  icon: String
+  position: Int!
+  permissions: String!
+  managed: Boolean!
+  mentionable: Boolean!
+}
+
+type Member {
+  user: User!
+  nick: String
+  avatar: String
+  roles: [Role!]!
+  joinedAt: String!
+  premiumSince: String
+  deaf: Boolean!
+  mute: Boolean!
+  pending: Boolean
+  communicationDisabledUntil: String
+  presence: Presence
+}
+
+type User {
+  id: ID!
+  username: String!
+  discriminator: String!
+  globalName: String
+  avatar: String
+  bot: Boolean
+  system: Boolean
+  banner: String
+  accentColor: Int
+}
+
+type Presence { status: PresenceStatus! activities: [Activity!]! }
+type Activity { name: String! type: Int! url: String state: String details: String }
+
+type Message {
+  id: ID!
+  channelId: ID!
+  channel: Channel
+  author: User!
+  member: Member
+  content: String!
+  timestamp: String!
+  editedTimestamp: String
+  tts: Boolean!
+  mentionEveryone: Boolean!
+  mentions: [User!]!
+  mentionRoles: [ID!]!
+  attachments: [Attachment!]!
+  embeds: [Embed!]!
+  reactions: [Reaction!]
+  pinned: Boolean!
+  type: MessageType!
+  thread: Channel
+  referencedMessage: Message
+  components: [ActionRow!]
+  stickers: [Sticker!]
+}
+
+type Attachment { id: ID! filename: String! size: Int! url: String! proxyUrl: String! contentType: String width: Int height: Int }
+type Embed { title: String description: String url: String color: Int timestamp: String footer: EmbedFooter image: EmbedMedia thumbnail: EmbedMedia author: EmbedAuthor fields: [EmbedField!] }
+type EmbedFooter { text: String! iconUrl: String }
+type EmbedMedia { url: String width: Int height: Int }
+type EmbedAuthor { name: String url: String iconUrl: String }
+type EmbedField { name: String! value: String! inline: Boolean }
+type Reaction { count: Int! me: Boolean! emoji: Emoji! }
+type Emoji { id: ID name: String animated: Boolean }
+type Sticker { id: ID! name: String! description: String formatType: Int! }
+type ActionRow { type: Int! components: [Component!]! }
+type Component { type: Int! customId: String label: String style: Int disabled: Boolean }
+type Ban { user: User! reason: String }
+
+type Invite { code: String! guild: Guild channel: Channel inviter: User uses: Int maxUses: Int maxAge: Int temporary: Boolean }
+
+input SendMessageInput { channelId: ID! content: String embeds: [EmbedInput!] tts: Boolean messageReference: MessageReferenceInput }
+input EmbedInput { title: String description: String url: String color: Int fields: [EmbedFieldInput!] }
+input EmbedFieldInput { name: String! value: String! inline: Boolean }
+input MessageReferenceInput { messageId: ID! channelId: ID guildId: ID }
+input CreateChannelInput { guildId: ID! name: String! type: ChannelType topic: String parentId: ID nsfw: Boolean rateLimitPerUser: Int position: Int }
+input EditRoleInput { guildId: ID! roleId: ID! name: String color: Int hoist: Boolean mentionable: Boolean permissions: String }
+input BanInput { guildId: ID! userId: ID! reason: String deleteMessageSeconds: Int }
+
+type MessagePayload { message: Message }
+type ChannelPayload { channel: Channel }
+type RolePayload { role: Role }
+type BanPayload { success: Boolean! }
+
+type Query {
+  guild(id: ID!): Guild
+  channel(id: ID!): Channel
+  message(channelId: ID!, messageId: ID!): Message
+  user(id: ID!): User
+  me: User!
+  invite(code: String!): Invite
+}
+
+type Mutation {
+  sendMessage(input: SendMessageInput!): MessagePayload!
+  editMessage(channelId: ID!, messageId: ID!, content: String, embeds: [EmbedInput!]): MessagePayload!
+  deleteMessage(channelId: ID!, messageId: ID!): BanPayload!
+  pinMessage(channelId: ID!, messageId: ID!): BanPayload!
+  addReaction(channelId: ID!, messageId: ID!, emoji: String!): BanPayload!
+  createChannel(input: CreateChannelInput!): ChannelPayload!
+  deleteChannel(channelId: ID!): BanPayload!
+  editRole(input: EditRoleInput!): RolePayload!
+  ban(input: BanInput!): BanPayload!
+  unban(guildId: ID!, userId: ID!): BanPayload!
+  kick(guildId: ID!, userId: ID!, reason: String): BanPayload!
+}

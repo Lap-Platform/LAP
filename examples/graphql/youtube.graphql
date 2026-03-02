@@ -1,0 +1,137 @@
+enum VideoPrivacy { PUBLIC UNLISTED PRIVATE }
+enum LiveBroadcastStatus { UPCOMING LIVE COMPLETED NONE }
+enum ChannelType { SHOW STANDARD }
+enum CommentModerationStatus { PUBLISHED HELD_FOR_REVIEW LIKELY_SPAM REJECTED }
+
+type PageInfo { totalResults: Int resultsPerPage: Int nextPageToken: String prevPageToken: String }
+
+type Video {
+  id: ID!
+  snippet: VideoSnippet!
+  contentDetails: VideoContentDetails!
+  statistics: VideoStatistics!
+  status: VideoStatus!
+  player: VideoPlayer
+  liveStreamingDetails: LiveStreamingDetails
+  topicDetails: TopicDetails
+}
+
+type VideoSnippet {
+  publishedAt: String!
+  channelId: ID!
+  title: String!
+  description: String!
+  thumbnails: Thumbnails!
+  channel: Channel
+  tags: [String!]
+  categoryId: String!
+  liveBroadcastContent: LiveBroadcastStatus!
+  defaultLanguage: String
+  defaultAudioLanguage: String
+}
+
+type VideoContentDetails { duration: String! dimension: String! definition: String! caption: String projection: String licensedContent: Boolean! }
+type VideoStatistics { viewCount: String! likeCount: String commentCount: String favoriteCount: String }
+type VideoStatus { uploadStatus: String! privacyStatus: VideoPrivacy! license: String! embeddable: Boolean! publicStatsViewable: Boolean! madeForKids: Boolean! }
+type VideoPlayer { embedHtml: String }
+type LiveStreamingDetails { actualStartTime: String actualEndTime: String scheduledStartTime: String concurrentViewers: String }
+type TopicDetails { topicCategories: [String!] }
+
+type Thumbnails { default: Thumbnail medium: Thumbnail high: Thumbnail standard: Thumbnail maxres: Thumbnail }
+type Thumbnail { url: String! width: Int! height: Int! }
+
+type Channel {
+  id: ID!
+  snippet: ChannelSnippet!
+  statistics: ChannelStatistics!
+  contentDetails: ChannelContentDetails
+  brandingSettings: BrandingSettings
+  status: ChannelStatus
+}
+
+type ChannelSnippet { title: String! description: String! customUrl: String publishedAt: String! thumbnails: Thumbnails! country: String defaultLanguage: String }
+type ChannelStatistics { viewCount: String! subscriberCount: String! hiddenSubscriberCount: Boolean! videoCount: String! }
+type ChannelContentDetails { relatedPlaylists: RelatedPlaylists }
+type RelatedPlaylists { likes: String uploads: String }
+type BrandingSettings { channel: BrandingChannel image: BrandingImage }
+type BrandingChannel { title: String description: String keywords: String country: String }
+type BrandingImage { bannerExternalUrl: String }
+type ChannelStatus { privacyStatus: VideoPrivacy isLinked: Boolean longUploadsStatus: String madeForKids: Boolean }
+
+type Playlist {
+  id: ID!
+  snippet: PlaylistSnippet!
+  contentDetails: PlaylistContentDetails!
+  status: PlaylistStatus!
+  items(maxResults: Int, pageToken: String): PlaylistItemPage!
+}
+
+type PlaylistSnippet { publishedAt: String! channelId: ID! title: String! description: String! thumbnails: Thumbnails! channel: Channel }
+type PlaylistContentDetails { itemCount: Int! }
+type PlaylistStatus { privacyStatus: VideoPrivacy! }
+type PlaylistItem { id: ID! snippet: PlaylistItemSnippet! contentDetails: PlaylistItemContentDetails! status: PlaylistItemStatus }
+type PlaylistItemSnippet { publishedAt: String! channelId: ID! title: String! description: String! thumbnails: Thumbnails! playlistId: ID! position: Int! videoOwnerChannelId: ID }
+type PlaylistItemContentDetails { videoId: ID! videoPublishedAt: String }
+type PlaylistItemStatus { privacyStatus: VideoPrivacy }
+
+type Comment {
+  id: ID!
+  snippet: CommentSnippet!
+}
+type CommentSnippet { authorDisplayName: String! authorProfileImageUrl: String authorChannelId: String textDisplay: String! textOriginal: String! likeCount: Int! publishedAt: String! updatedAt: String! parentId: ID videoId: ID }
+type CommentThread { id: ID! snippet: CommentThreadSnippet! replies: CommentThreadReplies }
+type CommentThreadSnippet { channelId: ID videoId: ID! topLevelComment: Comment! totalReplyCount: Int! isPublic: Boolean! }
+type CommentThreadReplies { comments: [Comment!]! }
+
+type Subscription { id: ID! snippet: SubscriptionSnippet! }
+type SubscriptionSnippet { publishedAt: String! title: String! description: String! channelId: ID! thumbnails: Thumbnails! }
+
+type VideoPage { items: [Video!]! pageInfo: PageInfo! }
+type ChannelPage { items: [Channel!]! pageInfo: PageInfo! }
+type PlaylistPage { items: [Playlist!]! pageInfo: PageInfo! }
+type PlaylistItemPage { items: [PlaylistItem!]! pageInfo: PageInfo! }
+type CommentThreadPage { items: [CommentThread!]! pageInfo: PageInfo! }
+type SubscriptionPage { items: [Subscription!]! pageInfo: PageInfo! }
+
+type SearchResult { items: [SearchItem!]! pageInfo: PageInfo! }
+union SearchItem = VideoSearchResult | ChannelSearchResult | PlaylistSearchResult
+type VideoSearchResult { videoId: ID! snippet: VideoSnippet! }
+type ChannelSearchResult { channelId: ID! snippet: ChannelSnippet! }
+type PlaylistSearchResult { playlistId: ID! snippet: PlaylistSnippet! }
+
+input VideoUploadInput { title: String! description: String tags: [String!] categoryId: String privacyStatus: VideoPrivacy defaultLanguage: String }
+input PlaylistInput { title: String! description: String privacyStatus: VideoPrivacy }
+input CommentInput { videoId: ID parentId: ID text: String! }
+
+type VideoPayload { video: Video }
+type PlaylistPayload { playlist: Playlist }
+type CommentPayload { comment: Comment }
+type DeletePayload { success: Boolean! }
+
+type Query {
+  video(id: ID!): Video
+  videos(ids: [ID!]!, maxResults: Int): [Video!]!
+  channel(id: ID!): Channel
+  channelByUsername(username: String!): Channel
+  playlist(id: ID!): Playlist
+  search(query: String!, type: String, maxResults: Int, pageToken: String, channelId: ID, order: String, publishedAfter: String): SearchResult!
+  commentThreads(videoId: ID!, maxResults: Int, pageToken: String, order: String): CommentThreadPage!
+  mySubscriptions(maxResults: Int, pageToken: String): SubscriptionPage!
+  myPlaylists(maxResults: Int, pageToken: String): PlaylistPage!
+  popularVideos(regionCode: String, categoryId: String, maxResults: Int, pageToken: String): VideoPage!
+}
+
+type Mutation {
+  uploadVideo(input: VideoUploadInput!): VideoPayload!
+  updateVideo(id: ID!, input: VideoUploadInput!): VideoPayload!
+  deleteVideo(id: ID!): DeletePayload!
+  createPlaylist(input: PlaylistInput!): PlaylistPayload!
+  deletePlaylist(id: ID!): DeletePayload!
+  addToPlaylist(playlistId: ID!, videoId: ID!, position: Int): PlaylistPayload!
+  removeFromPlaylist(playlistItemId: ID!): DeletePayload!
+  insertComment(input: CommentInput!): CommentPayload!
+  deleteComment(id: ID!): DeletePayload!
+  subscribe(channelId: ID!): DeletePayload!
+  unsubscribe(subscriptionId: ID!): DeletePayload!
+  rateTweet(videoId: ID!, rating: String!): DeletePayload!
+}

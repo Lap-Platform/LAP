@@ -1,0 +1,266 @@
+syntax = "proto3";
+
+package nats.jetstream.v1;
+
+// NATS JetStream management and messaging service.
+service JetStream {
+  // Create a new stream.
+  rpc CreateStream(CreateStreamRequest) returns (StreamInfo);
+
+  // Update stream configuration.
+  rpc UpdateStream(UpdateStreamRequest) returns (StreamInfo);
+
+  // Delete a stream.
+  rpc DeleteStream(DeleteStreamRequest) returns (DeleteStreamResponse);
+
+  // Get stream information.
+  rpc GetStream(GetStreamRequest) returns (StreamInfo);
+
+  // List all streams.
+  rpc ListStreams(ListStreamsRequest) returns (ListStreamsResponse);
+
+  // Purge all messages from a stream.
+  rpc PurgeStream(PurgeStreamRequest) returns (PurgeStreamResponse);
+
+  // Create a consumer on a stream.
+  rpc CreateConsumer(CreateConsumerRequest) returns (ConsumerInfo);
+
+  // Delete a consumer.
+  rpc DeleteConsumer(DeleteConsumerRequest) returns (DeleteConsumerResponse);
+
+  // Get consumer information.
+  rpc GetConsumer(GetConsumerRequest) returns (ConsumerInfo);
+
+  // Publish a message to a subject.
+  rpc Publish(PublishRequest) returns (PublishAck);
+
+  // Subscribe and receive messages (server streaming).
+  rpc Subscribe(SubscribeRequest) returns (stream DeliveredMessage);
+
+  // Acknowledge a message.
+  rpc Ack(AckRequest) returns (AckResponse);
+}
+
+// Stream retention policy.
+enum RetentionPolicy {
+  LIMITS = 0;
+  INTEREST = 1;
+  WORK_QUEUE = 2;
+}
+
+// Stream storage type.
+enum StorageType {
+  FILE = 0;
+  MEMORY = 1;
+}
+
+// Discard policy when stream limits are reached.
+enum DiscardPolicy {
+  OLD = 0;
+  NEW = 1;
+}
+
+// Stream configuration.
+message StreamConfig {
+  string name = 1;
+  repeated string subjects = 2;
+  RetentionPolicy retention = 3;
+  int64 max_consumers = 4;
+  int64 max_msgs = 5;
+  int64 max_bytes = 6;
+  int64 max_age_ns = 7;
+  int32 max_msg_size = 8;
+  StorageType storage = 9;
+  int32 num_replicas = 10;
+  bool no_ack = 11;
+  DiscardPolicy discard = 12;
+  int64 duplicate_window_ns = 13;
+  bool sealed = 14;
+  bool deny_delete = 15;
+  bool deny_purge = 16;
+  bool allow_rollup = 17;
+}
+
+// Stream state information.
+message StreamState {
+  uint64 messages = 1;
+  uint64 bytes = 2;
+  uint64 first_seq = 3;
+  int64 first_ts = 4;
+  uint64 last_seq = 5;
+  int64 last_ts = 6;
+  int32 consumer_count = 7;
+}
+
+message StreamInfo {
+  StreamConfig config = 1;
+  StreamState state = 2;
+  int64 created = 3;
+  string cluster_name = 4;
+}
+
+// Consumer deliver policy.
+enum DeliverPolicy {
+  ALL = 0;
+  LAST = 1;
+  NEW_ONLY = 2;
+  BY_START_SEQUENCE = 3;
+  BY_START_TIME = 4;
+  LAST_PER_SUBJECT = 5;
+}
+
+// Consumer ack policy.
+enum AckPolicy {
+  NONE = 0;
+  EXPLICIT = 1;
+  ACK_ALL = 2;
+}
+
+// Consumer replay policy.
+enum ReplayPolicy {
+  INSTANT = 0;
+  ORIGINAL = 1;
+}
+
+// Consumer configuration.
+message ConsumerConfig {
+  string durable_name = 1;
+  string name = 2;
+  string description = 3;
+  DeliverPolicy deliver_policy = 4;
+  uint64 opt_start_seq = 5;
+  int64 opt_start_time = 6;
+  AckPolicy ack_policy = 7;
+  int64 ack_wait_ns = 8;
+  int64 max_deliver = 9;
+  string filter_subject = 10;
+  ReplayPolicy replay_policy = 11;
+  int64 max_waiting = 12;
+  int64 max_ack_pending = 13;
+  string deliver_subject = 14;
+  string deliver_group = 15;
+  int64 inactive_threshold_ns = 16;
+}
+
+message ConsumerInfo {
+  string stream_name = 1;
+  ConsumerConfig config = 2;
+  uint64 delivered_seq = 3;
+  uint64 ack_floor_seq = 4;
+  int64 num_ack_pending = 5;
+  int64 num_redelivered = 6;
+  int64 num_waiting = 7;
+  int64 num_pending = 8;
+  int64 created = 9;
+}
+
+// --- Requests ---
+
+message CreateStreamRequest {
+  StreamConfig config = 1;
+}
+
+message UpdateStreamRequest {
+  StreamConfig config = 1;
+}
+
+message DeleteStreamRequest {
+  string name = 1;
+}
+
+message DeleteStreamResponse {
+  bool success = 1;
+}
+
+message GetStreamRequest {
+  string name = 1;
+  bool subjects_filter = 2;
+}
+
+message ListStreamsRequest {
+  int32 offset = 1;
+  int32 limit = 2;
+  string subject_filter = 3;
+}
+
+message ListStreamsResponse {
+  repeated StreamInfo streams = 1;
+  int32 total = 2;
+}
+
+message PurgeStreamRequest {
+  string name = 1;
+  string filter_subject = 2;
+  uint64 sequence = 3;
+  bool keep = 4;
+}
+
+message PurgeStreamResponse {
+  bool success = 1;
+  uint64 purged = 2;
+}
+
+message CreateConsumerRequest {
+  string stream_name = 1;
+  ConsumerConfig config = 2;
+}
+
+message DeleteConsumerRequest {
+  string stream_name = 1;
+  string consumer_name = 2;
+}
+
+message DeleteConsumerResponse {
+  bool success = 1;
+}
+
+message GetConsumerRequest {
+  string stream_name = 1;
+  string consumer_name = 2;
+}
+
+message PublishRequest {
+  string subject = 1;
+  bytes data = 2;
+  map<string, string> headers = 3;
+  string msg_id = 4;
+  string expected_stream = 5;
+  uint64 expected_last_seq = 6;
+}
+
+message PublishAck {
+  string stream = 1;
+  uint64 sequence = 2;
+  bool duplicate = 3;
+  string domain = 4;
+}
+
+message SubscribeRequest {
+  string stream_name = 1;
+  string consumer_name = 2;
+  int32 batch_size = 3;
+  int64 expires_ns = 4;
+}
+
+message DeliveredMessage {
+  string subject = 1;
+  bytes data = 2;
+  map<string, string> headers = 3;
+  uint64 sequence = 4;
+  int64 timestamp = 5;
+  int32 num_delivered = 6;
+  int32 num_pending = 7;
+  string stream = 8;
+  string consumer = 9;
+  string reply_subject = 10;
+}
+
+message AckRequest {
+  string stream_name = 1;
+  string consumer_name = 2;
+  uint64 sequence = 3;
+}
+
+message AckResponse {
+  bool success = 1;
+}

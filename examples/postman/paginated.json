@@ -1,0 +1,110 @@
+{
+  "info": {
+    "name": "Analytics API",
+    "_postman_id": "page-001",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {"key": "baseUrl", "value": "https://api.analytics.io/v3"}
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{"key": "token", "value": "{{token}}"}]
+  },
+  "item": [
+    {
+      "name": "Events",
+      "item": [
+        {
+          "name": "List Events",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/events?page=1&per_page=50&start_date=2024-01-01&end_date=2024-12-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["events"],
+              "query": [
+                {"key": "page", "value": "1", "description": "Page number"},
+                {"key": "per_page", "value": "50", "description": "Items per page"},
+                {"key": "start_date", "value": "2024-01-01", "description": "Start date (YYYY-MM-DD)"},
+                {"key": "end_date", "value": "2024-12-31", "description": "End date (YYYY-MM-DD)"},
+                {"key": "event_type", "value": "pageview", "description": "Filter by type", "disabled": true}
+              ]
+            }
+          },
+          "response": [
+            {"name": "Page 1", "code": 200, "body": "{\"data\": [{\"id\": \"ev_1\", \"type\": \"pageview\", \"timestamp\": \"2024-01-01T00:00:00Z\"}], \"pagination\": {\"page\": 1, \"per_page\": 50, \"total\": 10000, \"total_pages\": 200}}"}
+          ]
+        },
+        {
+          "name": "Get Event",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/events/:eventId",
+              "host": ["{{baseUrl}}"],
+              "path": ["events", ":eventId"],
+              "variable": [{"key": "eventId", "value": "ev_1"}]
+            }
+          },
+          "response": [
+            {"name": "Event", "code": 200, "body": "{\"id\": \"ev_1\", \"type\": \"pageview\", \"url\": \"/home\", \"user_id\": \"u_42\", \"timestamp\": \"2024-01-01T00:00:00Z\", \"metadata\": {\"browser\": \"Chrome\", \"os\": \"macOS\"}}"}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        {
+          "name": "Generate Report",
+          "request": {
+            "method": "POST",
+            "url": {"raw": "{{baseUrl}}/reports", "host": ["{{baseUrl}}"], "path": ["reports"]},
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"Monthly Overview\", \"metrics\": [\"pageviews\", \"sessions\", \"bounce_rate\"], \"group_by\": \"day\", \"filters\": {\"country\": \"US\"}}"
+            }
+          },
+          "response": [
+            {"name": "Created", "code": 202, "body": "{\"report_id\": \"rpt_1\", \"status\": \"processing\", \"eta_seconds\": 30}"}
+          ]
+        },
+        {
+          "name": "Get Report",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/reports/:reportId",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", ":reportId"],
+              "variable": [{"key": "reportId", "value": "rpt_1"}]
+            }
+          },
+          "response": [
+            {"name": "Ready", "code": 200, "body": "{\"report_id\": \"rpt_1\", \"status\": \"completed\", \"data\": [{\"date\": \"2024-01-01\", \"pageviews\": 1500, \"sessions\": 800}]}"}
+          ]
+        },
+        {
+          "name": "List Reports",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/reports?page=1&per_page=10&status=completed",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports"],
+              "query": [
+                {"key": "page", "value": "1", "description": "Page number"},
+                {"key": "per_page", "value": "10", "description": "Items per page"},
+                {"key": "status", "value": "completed", "description": "Filter by status"}
+              ]
+            }
+          },
+          "response": [
+            {"name": "Reports", "code": 200, "body": "{\"data\": [{\"report_id\": \"rpt_1\", \"name\": \"Monthly Overview\", \"status\": \"completed\"}], \"pagination\": {\"page\": 1, \"per_page\": 10, \"total\": 25, \"total_pages\": 3}}"}
+          ]
+        }
+      ]
+    }
+  ]
+}

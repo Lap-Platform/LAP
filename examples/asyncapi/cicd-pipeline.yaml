@@ -1,0 +1,78 @@
+asyncapi: 2.6.0
+info:
+  title: CI/CD Pipeline Events
+  version: 1.0.0
+  description: Build and deployment pipeline events
+
+servers:
+  production:
+    url: amqp://rabbitmq.internal:5672
+    protocol: amqp
+
+channels:
+  pipeline/builds:
+    subscribe:
+      summary: Build status events
+      message:
+        name: BuildEvent
+        payload:
+          type: object
+          required: [buildId, status, repository]
+          properties:
+            buildId: {type: string}
+            status: {type: string, enum: [queued, running, success, failed, cancelled]}
+            repository: {type: string}
+            branch: {type: string}
+            commitSha: {type: string}
+            duration: {type: integer, description: Seconds}
+            triggeredBy: {type: string}
+            startedAt: {type: string, format: date-time}
+
+  pipeline/deployments:
+    subscribe:
+      summary: Deployment events
+      message:
+        name: DeploymentEvent
+        payload:
+          type: object
+          required: [deploymentId, environment, status]
+          properties:
+            deploymentId: {type: string}
+            environment: {type: string, enum: [staging, production, canary]}
+            status: {type: string, enum: [pending, in_progress, success, rollback, failed]}
+            version: {type: string}
+            changelog: {type: string}
+            approvedBy: {type: string}
+
+  pipeline/tests:
+    subscribe:
+      summary: Test suite results
+      message:
+        name: TestResults
+        payload:
+          type: object
+          required: [buildId, passed, failed, total]
+          properties:
+            buildId: {type: string}
+            suite: {type: string}
+            passed: {type: integer}
+            failed: {type: integer}
+            skipped: {type: integer}
+            total: {type: integer}
+            coverage: {type: number}
+            duration: {type: integer}
+
+  pipeline/artifacts:
+    publish:
+      summary: Build artifact published
+      message:
+        name: ArtifactPublished
+        payload:
+          type: object
+          required: [buildId, name, url]
+          properties:
+            buildId: {type: string}
+            name: {type: string}
+            url: {type: string}
+            size: {type: integer}
+            checksum: {type: string}

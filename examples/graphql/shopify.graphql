@@ -1,0 +1,237 @@
+enum CurrencyCode { USD EUR GBP CAD AUD JPY }
+enum OrderFinancialStatus { PENDING AUTHORIZED PARTIALLY_PAID PAID PARTIALLY_REFUNDED REFUNDED VOIDED }
+enum OrderFulfillmentStatus { UNFULFILLED PARTIALLY_FULFILLED FULFILLED RESTOCKED }
+enum ProductStatus { ACTIVE ARCHIVED DRAFT }
+enum WeightUnit { KILOGRAMS GRAMS POUNDS OUNCES }
+enum DiscountType { PERCENTAGE FIXED_AMOUNT }
+
+interface Node { id: ID! }
+interface HasMetafields { metafields(first: Int, after: String, namespace: String): MetafieldConnection! }
+
+type PageInfo { hasNextPage: Boolean! hasPreviousPage: Boolean! startCursor: String endCursor: String }
+
+type Money { amount: String! currencyCode: CurrencyCode! }
+type MoneyV2 { amount: Float! currencyCode: CurrencyCode! }
+
+type Image implements Node { id: ID! altText: String src: String! width: Int height: Int }
+
+type Product implements Node & HasMetafields {
+  id: ID!
+  title: String!
+  handle: String!
+  descriptionHtml: String
+  vendor: String
+  productType: String
+  status: ProductStatus!
+  tags: [String!]!
+  totalInventory: Int
+  variants(first: Int, after: String): ProductVariantConnection!
+  images(first: Int, after: String): ImageConnection!
+  metafields(first: Int, after: String, namespace: String): MetafieldConnection!
+  createdAt: String!
+  updatedAt: String!
+  publishedAt: String
+}
+
+type ProductVariant implements Node {
+  id: ID!
+  title: String!
+  sku: String
+  price: MoneyV2!
+  compareAtPrice: MoneyV2
+  inventoryQuantity: Int
+  weight: Float
+  weightUnit: WeightUnit
+  barcode: String
+  image: Image
+  selectedOptions: [SelectedOption!]!
+  product: Product!
+}
+
+type SelectedOption { name: String! value: String! }
+
+type Customer implements Node & HasMetafields {
+  id: ID!
+  firstName: String
+  lastName: String
+  email: String
+  phone: String
+  ordersCount: Int!
+  totalSpent: MoneyV2!
+  addresses(first: Int): MailingAddressConnection!
+  orders(first: Int, after: String, sortKey: OrderSortKeys): OrderConnection!
+  tags: [String!]!
+  metafields(first: Int, after: String, namespace: String): MetafieldConnection!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type MailingAddress implements Node {
+  id: ID!
+  address1: String
+  address2: String
+  city: String
+  province: String
+  country: String
+  zip: String
+  phone: String
+  firstName: String
+  lastName: String
+}
+
+type Order implements Node {
+  id: ID!
+  name: String!
+  orderNumber: Int!
+  email: String
+  phone: String
+  financialStatus: OrderFinancialStatus!
+  fulfillmentStatus: OrderFulfillmentStatus!
+  totalPrice: MoneyV2!
+  subtotalPrice: MoneyV2!
+  totalTax: MoneyV2
+  totalShippingPrice: MoneyV2
+  lineItems(first: Int, after: String): LineItemConnection!
+  customer: Customer
+  shippingAddress: MailingAddress
+  billingAddress: MailingAddress
+  discountCodes: [String!]!
+  note: String
+  tags: [String!]!
+  createdAt: String!
+  processedAt: String!
+  cancelledAt: String
+}
+
+type LineItem implements Node {
+  id: ID!
+  title: String!
+  quantity: Int!
+  variant: ProductVariant
+  originalTotalPrice: MoneyV2!
+  discountedTotalPrice: MoneyV2!
+  sku: String
+}
+
+type InventoryItem implements Node {
+  id: ID!
+  sku: String
+  tracked: Boolean!
+  inventoryLevels(first: Int): InventoryLevelConnection!
+}
+
+type InventoryLevel {
+  id: ID!
+  available: Int!
+  location: Location!
+}
+
+type Location implements Node {
+  id: ID!
+  name: String!
+  address: MailingAddress
+  isActive: Boolean!
+}
+
+type Collection implements Node {
+  id: ID!
+  title: String!
+  handle: String!
+  descriptionHtml: String
+  image: Image
+  products(first: Int, after: String, sortKey: ProductCollectionSortKeys): ProductConnection!
+  updatedAt: String!
+}
+
+type Metafield implements Node {
+  id: ID!
+  namespace: String!
+  key: String!
+  value: String!
+  type: String!
+}
+
+type DiscountCode { code: String! discountType: DiscountType! value: Float! }
+
+type Shop {
+  name: String!
+  email: String!
+  currencyCode: CurrencyCode!
+  primaryDomain: ShopDomain!
+  myshopifyDomain: String!
+  plan: ShopPlan!
+}
+type ShopDomain { host: String! url: String! }
+type ShopPlan { displayName: String! partnerDevelopment: Boolean! shopifyPlus: Boolean! }
+
+# Connections
+type ProductConnection { edges: [ProductEdge!]! pageInfo: PageInfo! }
+type ProductEdge { cursor: String! node: Product! }
+type ProductVariantConnection { edges: [ProductVariantEdge!]! pageInfo: PageInfo! }
+type ProductVariantEdge { cursor: String! node: ProductVariant! }
+type OrderConnection { edges: [OrderEdge!]! pageInfo: PageInfo! }
+type OrderEdge { cursor: String! node: Order! }
+type LineItemConnection { edges: [LineItemEdge!]! pageInfo: PageInfo! }
+type LineItemEdge { cursor: String! node: LineItem! }
+type CustomerConnection { edges: [CustomerEdge!]! pageInfo: PageInfo! }
+type CustomerEdge { cursor: String! node: Customer! }
+type ImageConnection { edges: [ImageEdge!]! pageInfo: PageInfo! }
+type ImageEdge { cursor: String! node: Image! }
+type CollectionConnection { edges: [CollectionEdge!]! pageInfo: PageInfo! }
+type CollectionEdge { cursor: String! node: Collection! }
+type MetafieldConnection { edges: [MetafieldEdge!]! pageInfo: PageInfo! }
+type MetafieldEdge { cursor: String! node: Metafield! }
+type MailingAddressConnection { edges: [MailingAddressEdge!]! pageInfo: PageInfo! }
+type MailingAddressEdge { cursor: String! node: MailingAddress! }
+type InventoryLevelConnection { edges: [InventoryLevelEdge!]! pageInfo: PageInfo! }
+type InventoryLevelEdge { cursor: String! node: InventoryLevel! }
+
+enum OrderSortKeys { CREATED_AT UPDATED_AT TOTAL_PRICE ORDER_NUMBER }
+enum ProductCollectionSortKeys { TITLE PRICE BEST_SELLING CREATED MANUAL }
+
+input ProductInput {
+  title: String
+  descriptionHtml: String
+  vendor: String
+  productType: String
+  tags: [String!]
+  status: ProductStatus
+  variants: [ProductVariantInput!]
+  images: [ImageInput!]
+}
+input ProductVariantInput { title: String sku: String price: String compareAtPrice: String weight: Float weightUnit: WeightUnit barcode: String }
+input ImageInput { altText: String src: String }
+input CustomerInput { firstName: String lastName: String email: String phone: String tags: [String!] addresses: [MailingAddressInput!] }
+input MailingAddressInput { address1: String address2: String city: String province: String country: String zip: String phone: String }
+input OrderInput { email: String note: String tags: [String!] shippingAddress: MailingAddressInput lineItems: [LineItemInput!] }
+input LineItemInput { variantId: ID! quantity: Int! }
+
+type ProductCreatePayload { product: Product userErrors: [UserError!]! }
+type ProductUpdatePayload { product: Product userErrors: [UserError!]! }
+type ProductDeletePayload { deletedProductId: ID userErrors: [UserError!]! }
+type CustomerCreatePayload { customer: Customer userErrors: [UserError!]! }
+type OrderCreatePayload { order: Order userErrors: [UserError!]! }
+type UserError { field: [String!] message: String! }
+
+type Query {
+  shop: Shop!
+  product(id: ID!): Product
+  products(first: Int, after: String, query: String, sortKey: OrderSortKeys): ProductConnection!
+  order(id: ID!): Order
+  orders(first: Int, after: String, query: String): OrderConnection!
+  customer(id: ID!): Customer
+  customers(first: Int, after: String, query: String): CustomerConnection!
+  collection(id: ID!): Collection
+  collections(first: Int, after: String): CollectionConnection!
+  node(id: ID!): Node
+}
+
+type Mutation {
+  productCreate(input: ProductInput!): ProductCreatePayload!
+  productUpdate(input: ProductInput!): ProductUpdatePayload!
+  productDelete(input: ProductDeleteInput!): ProductDeletePayload!
+  customerCreate(input: CustomerInput!): CustomerCreatePayload!
+  orderCreate(input: OrderInput!): OrderCreatePayload!
+}
+
+input ProductDeleteInput { id: ID! }

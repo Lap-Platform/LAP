@@ -1,0 +1,604 @@
+#!/usr/bin/env python3
+"""
+LAP CLI — LeanAgent Protocol command-line tool.
+
+Compile, validate, benchmark, inspect, and convert DocLean API specifications.
+"""
+
+import argparse
+import glob
+import json
+import os
+import sys
+from pathlib import Path
+
+# Add project root to path so `core.*` imports work when run as script
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+try:
+    from rich.console import Console
+    from rich.table import Table
+    from rich.panel import Panel
+    from rich.text import Text
+    from rich import box
+    HAS_RICH = True
+    console = Console()
+except ImportError:
+    HAS_RICH = False
+    console = None
+
+
+# ── Helpers ──────────────────────────────────────────────────────────
+
+def info(msg):
+    if HAS_RICH:
+        console.print(f"[bold green]✓[/] {msg}")
+    else:
+        print(f"✓ {msg}")
+
+def warn(msg):
+    if HAS_RICH:
+        console.print(f"[bold yellow]⚠[/] {msg}")
+    else:
+        print(f"⚠ {msg}")
+
+def error(msg):
+    if HAS_RICH:
+        console.print(f"[bold red]✗[/] {msg}")
+    else:
+        print(f"✗ {msg}")
+    sys.exit(1)
+
+def heading(msg):
+    if HAS_RICH:
+        console.print(Panel(msg, style="bold cyan", box=box.ROUNDED))
+    else:
+        print(f"\n{'='*60}\n  {msg}\n{'='*60}")
+
+
+# ── Commands ─────────────────────────────────────────────────────────
+
+def cmd_asyncapi(args):
+    """Compile AsyncAPI spec to DocLean format."""
+    from core.compilers.asyncapi import compile_asyncapi
+
+    spec_path = args.spec
+    if not Path(spec_path).exists():
+        error(f"File not found: {spec_path}")
+
+    doclean = compile_asyncapi(spec_path)
+    result = doclean.to_doclean(lean=args.lean)
+
+    if args.output:
+        Path(args.output).parent.mkdir(parents=True, exist_ok=True)
+        Path(args.output).write_text(result)
+        info(f"Compiled {Path(spec_path).name} → {args.output}")
+        info(f"{len(doclean.endpoints)} channels | {len(result):,} chars | {'lean' if args.lean else 'standard'} mode")
+    else:
+        print(result)
+
+
+def cmd_postman(args):
+    """Compile Postman Collection to DocLean format."""
+    from core.compilers.postman import compile_postman
+
+    spec_path = args.spec
+    if not Path(spec_path).exists():
+        error(f"File not found: {spec_path}")
+
+    doclean = compile_postman(spec_path)
+    result = doclean.to_doclean(lean=args.lean)
+
+    if args.output:
+        Path(args.output).parent.mkdir(parents=True, exist_ok=True)
+        Path(args.output).write_text(result)
+        info(f"Compiled Postman {Path(spec_path).name} → {args.output}")
+        info(f"{len(doclean.endpoints)} endpoints | {len(result):,} chars | {'lean' if args.lean else 'standard'} mode")
+    else:
+        print(result)
+
+
+def cmd_compile(args):
+    """Compile OpenAPI spec to DocLean format."""
+    from core.compilers.openapi import compile_openapi
+
+    spec_path = args.spec
+    if not Path(spec_path).exists():
+        error(f"File not found: {spec_path}")
+
+    doclean = compile_openapi(spec_path)
+    result = doclean.to_doclean(lean=args.lean)
+
+    if args.output:
+        Path(args.output).parent.mkdir(parents=True, exist_ok=True)
+        Path(args.output).write_text(result)
+        info(f"Compiled {Path(spec_path).name} → {args.output}")
+        info(f"{len(doclean.endpoints)} endpoints | {len(result):,} chars | {'lean' if args.lean else 'standard'} mode")
+    else:
+        print(result)
+
+
+def cmd_validate(args):
+    """Validate DocLean output for information loss."""
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "benchmarks"))
+    from validate import validate_schema_completeness, print_results
+
+    if not Path(args.spec).exists():
+        error(f"File not found: {args.spec}")
+
+    heading("DocLean Semantic Validation")
+    results = validate_schema_completeness(args.spec)
+
+    if HAS_RICH:
+        table = Table(title="Validation Results", box=box.SIMPLE_HEAVY)
+        table.add_column("Check", style="cyan")
+        table.add_column("Result", justify="right")
+        table.add_column("Status", justify="center")
+
+        total_ep = results["total_endpoints"]
+        comp_ep = results["compiled_endpoints"]
+        ep_pct = (comp_ep / total_ep * 100) if total_ep else 100
+        table.add_row("Endpoints", f"{comp_ep}/{total_ep} ({ep_pct:.0f}%)", "✅" if ep_pct == 100 else "⚠️")
+
+        total_p = results["total_params"]
+        cap_p = results["captured_params"]
+        p_pct = (cap_p / total_p * 100) if total_p else 100
+        table.add_row("Parameters", f"{cap_p}/{total_p} ({p_pct:.0f}%)", "✅" if p_pct == 100 else "⚠️")
+
+        total_e = results["total_error_codes"]
+        cap_e = results["captured_error_codes"]
+        e_pct = (cap_e / total_e * 100) if total_e else 100
+        table.add_row("Error Codes", f"{cap_e}/{total_e} ({e_pct:.0f}%)", "✅" if e_pct == 100 else "⚠️")
+
+        console.print(table)
+
+        if ep_pct == 100 and p_pct == 100:
+            console.print("\n[bold green]PASS[/] — Zero information loss!")
+        else:
+            console.print("\n[bold yellow]PARTIAL[/] — Some data not captured")
+            for m in results["missing_params"][:5]:
+                console.print(f"  [red]Missing:[/] {m}")
+    else:
+        print_results(results)
+
+
+def cmd_benchmark(args):
+    """Benchmark token usage for an API spec."""
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "benchmarks"))
+    from benchmark import run_benchmark
+
+    if not Path(args.spec).exists():
+        error(f"File not found: {args.spec}")
+
+    heading(f"Token Benchmark: {Path(args.spec).name}")
+    run_benchmark(args.spec)
+
+
+def cmd_benchmark_all(args):
+    """Benchmark all specs in a directory."""
+    from core.compilers.openapi import compile_openapi
+    from core.utils import count_tokens as count
+
+    specs_dir = Path(args.directory)
+    if not specs_dir.is_dir():
+        error(f"Not a directory: {args.directory}")
+
+    spec_files = sorted(
+        glob.glob(str(specs_dir / "*.yaml")) +
+        glob.glob(str(specs_dir / "*.yml")) +
+        glob.glob(str(specs_dir / "*.json"))
+    )
+    spec_files = [f for f in spec_files if "stripe-full" not in f]
+
+    if not spec_files:
+        error(f"No spec files found in {args.directory}")
+
+    heading(f"Multi-API Benchmark ({len(spec_files)} specs)")
+
+    if HAS_RICH:
+        table = Table(title="DocLean Compression Results", box=box.SIMPLE_HEAVY)
+        table.add_column("API", style="cyan", min_width=18)
+        table.add_column("Endpoints", justify="right")
+        table.add_column("OpenAPI", justify="right")
+        table.add_column("DocLean", justify="right", style="green")
+        table.add_column("Lean", justify="right", style="bold green")
+        table.add_column("vs OpenAPI", justify="right", style="yellow")
+        table.add_column("vs OpenAPI (Lean)", justify="right", style="bold yellow")
+
+        totals = {"oa": 0, "dl": 0, "ln": 0}
+        for spec_path in spec_files:
+            name = Path(spec_path).stem
+            raw = Path(spec_path).read_text()
+            ds = compile_openapi(spec_path)
+            dl = ds.to_doclean(lean=False)
+            ln = ds.to_doclean(lean=True)
+            oa_t = count(raw)
+            dl_t = count(dl)
+            ln_t = count(ln)
+            totals["oa"] += oa_t; totals["dl"] += dl_t; totals["ln"] += ln_t
+            table.add_row(
+                name, str(len(ds.endpoints)),
+                f"{oa_t:,}", f"{dl_t:,}", f"{ln_t:,}",
+                f"{oa_t/dl_t:.1f}x" if dl_t else "∞",
+                f"{oa_t/ln_t:.1f}x" if ln_t else "∞",
+            )
+
+        t = totals
+        table.add_section()
+        table.add_row(
+            "[bold]TOTAL[/]", "",
+            f"[bold]{t['oa']:,}[/]", f"[bold]{t['dl']:,}[/]", f"[bold]{t['ln']:,}[/]",
+            f"[bold]{t['oa']/t['dl']:.1f}x[/]" if t['dl'] else "∞",
+            f"[bold]{t['oa']/t['ln']:.1f}x[/]" if t['ln'] else "∞",
+        )
+        console.print(table)
+    else:
+        sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "benchmarks"))
+        from benchmark_all import run_all
+        run_all()
+
+
+def cmd_inspect(args):
+    """Parse and inspect a DocLean file."""
+    from core.parser import parse_doclean
+
+    path = Path(args.file)
+    if not path.exists():
+        error(f"File not found: {args.file}")
+
+    text = path.read_text()
+    spec = parse_doclean(text)
+
+    if args.endpoint:
+        # Filter to a specific endpoint
+        parts = args.endpoint.split(None, 1)
+        method = parts[0].lower() if parts else ""
+        ep_path = parts[1] if len(parts) > 1 else ""
+        matches = [e for e in spec.endpoints if e.method == method and e.path == ep_path]
+        if not matches:
+            error(f"Endpoint not found: {args.endpoint}")
+        endpoints = matches
+    else:
+        endpoints = spec.endpoints
+
+    if HAS_RICH:
+        console.print(Panel(
+            f"[bold]{spec.api_name}[/] v{spec.version}\n"
+            f"Base: {spec.base_url}\n"
+            f"Auth: {spec.auth_scheme}\n"
+            f"Endpoints: {len(spec.endpoints)}",
+            title="DocLean Spec", box=box.ROUNDED
+        ))
+
+        for ep in endpoints:
+            title = f"[bold cyan]{ep.method.upper()} {ep.path}[/]"
+            if ep.summary:
+                title += f"  [dim]{ep.summary}[/]"
+            console.print(f"\n{title}")
+
+            if ep.required_params:
+                console.print("  [yellow]Required:[/]")
+                for p in ep.required_params:
+                    desc = f" [dim]# {p.description}[/]" if p.description else ""
+                    console.print(f"    {p.name}: [green]{p.type}[/]{desc}")
+
+            opt = ep.optional_params + [p for p in ep.request_body if not p.required]
+            if opt:
+                console.print("  [blue]Optional:[/]")
+                for p in opt:
+                    console.print(f"    {p.name}: [green]{p.type}[/]")
+
+            if ep.response_schemas:
+                for rs in ep.response_schemas:
+                    n = len(rs.fields)
+                    console.print(f"  [green]→ {rs.status_code}[/] {rs.description or ''} ({n} fields)")
+
+            if ep.error_schemas:
+                codes = ", ".join(e.code for e in ep.error_schemas)
+                console.print(f"  [red]Errors:[/] {codes}")
+    else:
+        print(f"\n{spec.api_name} v{spec.version}")
+        print(f"Base: {spec.base_url}")
+        print(f"Auth: {spec.auth_scheme}")
+        print(f"Endpoints: {len(spec.endpoints)}\n")
+        for ep in endpoints:
+            print(f"  {ep.method.upper()} {ep.path}  {ep.summary or ''}")
+            for p in ep.required_params:
+                print(f"    [req] {p.name}: {p.type}")
+            for p in ep.optional_params:
+                print(f"    [opt] {p.name}: {p.type}")
+
+
+def cmd_graphql(args):
+    """Compile GraphQL SDL to DocLean format."""
+    from core.compilers.graphql import compile_graphql
+
+    spec_path = args.spec
+    if not Path(spec_path).exists():
+        error(f"File not found: {spec_path}")
+
+    doclean = compile_graphql(spec_path)
+    result = doclean.to_doclean(lean=args.lean)
+
+    if args.output:
+        Path(args.output).parent.mkdir(parents=True, exist_ok=True)
+        Path(args.output).write_text(result)
+        info(f"Compiled {Path(spec_path).name} → {args.output}")
+        info(f"{len(doclean.endpoints)} endpoints | {len(result):,} chars | {'lean' if args.lean else 'standard'} mode")
+    else:
+        print(result)
+
+
+def cmd_convert(args):
+    """Convert DocLean back to OpenAPI YAML."""
+    from core.converter import convert_file
+
+    path = Path(args.file)
+    if not path.exists():
+        error(f"File not found: {args.file}")
+
+    if args.output:
+        convert_file(str(path), args.output)
+        info(f"Converted {path.name} → {args.output} (OpenAPI 3.0)")
+    else:
+        result = convert_file(str(path))
+        print(result)
+
+
+def cmd_diff(args):
+    """Diff two DocLean files."""
+    from core.parser import parse_doclean
+    from core.differ import diff_specs, generate_changelog, check_compatibility
+
+    old_path, new_path = Path(args.old), Path(args.new)
+    if not old_path.exists():
+        error(f"File not found: {args.old}")
+    if not new_path.exists():
+        error(f"File not found: {args.new}")
+
+    old_spec = parse_doclean(old_path.read_text())
+    new_spec = parse_doclean(new_path.read_text())
+
+    if args.format == "changelog":
+        print(generate_changelog(old_spec, new_spec, version=args.version or "0.0.0"))
+        return
+
+    diff = diff_specs(old_spec, new_spec)
+    compat = check_compatibility(old_spec, new_spec)
+
+    if HAS_RICH:
+        status = "[bold red]BREAKING[/]" if compat.severity == "MAJOR" else "[bold green]COMPATIBLE[/]"
+        console.print(f"\nSemver: [bold]{compat.severity}[/] — {status}\n")
+
+        if diff.breaking_changes:
+            console.print("[bold red]Breaking Changes:[/]")
+            for c in diff.breaking_changes:
+                console.print(f"  [red]✗[/] {c.detail}")
+            console.print()
+
+        if diff.non_breaking_changes:
+            console.print("[bold green]Non-breaking Changes:[/]")
+            for c in diff.non_breaking_changes:
+                console.print(f"  [green]✓[/] {c.detail}")
+            console.print()
+
+        if not diff.changes:
+            console.print("[dim]No changes detected.[/]")
+    else:
+        print(f"\nSemver: {compat.severity}")
+        for c in diff.breaking_changes:
+            print(f"  BREAKING: {c.detail}")
+        for c in diff.non_breaking_changes:
+            print(f"  {c.detail}")
+        if not diff.changes:
+            print("No changes detected.")
+
+
+def cmd_protobuf(args):
+    """Compile Protobuf/gRPC spec to DocLean format."""
+    from core.compilers.protobuf import compile_proto, compile_proto_dir
+
+    spec_path = Path(args.spec)
+    if not spec_path.exists():
+        error(f"File/directory not found: {args.spec}")
+
+    if spec_path.is_dir():
+        specs = compile_proto_dir(str(spec_path))
+        result = "\n---\n\n".join(s.to_doclean(lean=args.lean) for s in specs)
+        total_eps = sum(len(s.endpoints) for s in specs)
+        label = f"{len(specs)} proto files, {total_eps} RPCs"
+    else:
+        spec = compile_proto(str(spec_path))
+        result = spec.to_doclean(lean=args.lean)
+        label = f"{len(spec.endpoints)} RPCs"
+
+    if args.output:
+        Path(args.output).parent.mkdir(parents=True, exist_ok=True)
+        Path(args.output).write_text(result)
+        info(f"Compiled {spec_path.name} → {args.output}")
+        info(f"{label} | {len(result):,} chars | {'lean' if args.lean else 'standard'} mode")
+    else:
+        print(result)
+
+
+def cmd_registry_list(args):
+    """List all DocLean files in a directory."""
+    from core.parser import parse_doclean
+
+    dir_path = Path(args.directory)
+    if not dir_path.is_dir():
+        error(f"Not a directory: {args.directory}")
+
+    files = sorted(dir_path.glob("*.doclean"))
+    if not files:
+        warn(f"No .doclean files in {args.directory}")
+        return
+
+    if HAS_RICH:
+        table = Table(title="DocLean Registry", box=box.SIMPLE_HEAVY)
+        table.add_column("File", style="cyan")
+        table.add_column("API", style="bold")
+        table.add_column("Version")
+        table.add_column("Endpoints", justify="right")
+        table.add_column("Size", justify="right")
+
+        for f in files:
+            text = f.read_text()
+            spec = parse_doclean(text)
+            table.add_row(
+                f.name, spec.api_name, spec.version or "-",
+                str(len(spec.endpoints)), f"{len(text):,} chars"
+            )
+        console.print(table)
+    else:
+        print(f"\n{'File':<40} {'API':<25} {'EPs':>5} {'Size':>10}")
+        print("-" * 82)
+        for f in files:
+            text = f.read_text()
+            spec = parse_doclean(text)
+            print(f"{f.name:<40} {spec.api_name:<25} {len(spec.endpoints):>5} {len(text):>9,}")
+
+
+def cmd_registry_search(args):
+    """Search DocLean files for a query."""
+    from core.parser import parse_doclean
+
+    dir_path = Path(args.directory)
+    if not dir_path.is_dir():
+        error(f"Not a directory: {args.directory}")
+
+    query = args.query.lower()
+    files = sorted(dir_path.glob("*.doclean"))
+    matches = []
+
+    for f in files:
+        text = f.read_text()
+        spec = parse_doclean(text)
+        for ep in spec.endpoints:
+            searchable = f"{ep.method} {ep.path} {ep.summary}".lower()
+            if query in searchable:
+                matches.append((f.name, spec.api_name, ep))
+
+    if not matches:
+        warn(f'No endpoints matching "{args.query}"')
+        return
+
+    if HAS_RICH:
+        console.print(f"\n[bold]Found {len(matches)} endpoints matching[/] [cyan]\"{args.query}\"[/]\n")
+        for fname, api, ep in matches:
+            console.print(f"  [dim]{api}[/] [bold cyan]{ep.method.upper()} {ep.path}[/]  {ep.summary or ''}")
+    else:
+        print(f'\nFound {len(matches)} endpoints matching "{args.query}"\n')
+        for fname, api, ep in matches:
+            print(f"  [{api}] {ep.method.upper()} {ep.path}  {ep.summary or ''}")
+
+
+# ── Main ─────────────────────────────────────────────────────────────
+
+def main():
+    parser = argparse.ArgumentParser(
+        prog="lap",
+        description="LAP — LeanAgent Protocol CLI",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="Run 'lap <command> --help' for more info on a command.",
+    )
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    # asyncapi
+    p = sub.add_parser("asyncapi", help="Compile AsyncAPI spec to DocLean")
+    p.add_argument("spec", help="Path to AsyncAPI spec (YAML/JSON)")
+    p.add_argument("-o", "--output", help="Output file path")
+    p.add_argument("--lean", action="store_true", help="Maximum compression (strip descriptions)")
+
+    # postman
+    p = sub.add_parser("postman", help="Compile Postman Collection to DocLean")
+    p.add_argument("spec", help="Path to Postman Collection JSON")
+    p.add_argument("-o", "--output", help="Output file path")
+    p.add_argument("--lean", action="store_true", help="Maximum compression (strip descriptions)")
+
+    # compile
+    p = sub.add_parser("compile", help="Compile OpenAPI spec to DocLean")
+    p.add_argument("spec", help="Path to OpenAPI spec (YAML/JSON)")
+    p.add_argument("-o", "--output", help="Output file path")
+    p.add_argument("--lean", action="store_true", help="Maximum compression (strip descriptions)")
+
+    # graphql
+    p = sub.add_parser("graphql", help="Compile GraphQL SDL to DocLean")
+    p.add_argument("spec", help="Path to GraphQL SDL file (.graphql/.gql)")
+    p.add_argument("-o", "--output", help="Output file path")
+    p.add_argument("--lean", action="store_true", help="Maximum compression (strip descriptions)")
+
+    # validate
+    p = sub.add_parser("validate", help="Validate DocLean for zero info loss")
+    p.add_argument("spec", help="Path to OpenAPI spec")
+
+    # benchmark
+    p = sub.add_parser("benchmark", help="Benchmark token usage for a spec")
+    p.add_argument("spec", help="Path to OpenAPI spec")
+
+    # benchmark-all
+    p = sub.add_parser("benchmark-all", help="Benchmark all specs in a directory")
+    p.add_argument("directory", help="Directory containing spec files")
+
+    # inspect
+    p = sub.add_parser("inspect", help="Parse and inspect a DocLean file")
+    p.add_argument("file", help="Path to .doclean file")
+    p.add_argument("--endpoint", "-e", help='Filter endpoint, e.g. "POST /v1/charges"')
+
+    # convert
+    p = sub.add_parser("convert", help="Convert DocLean back to OpenAPI")
+    p.add_argument("file", help="Path to .doclean file")
+    p.add_argument("-f", "--format", default="openapi", help="Output format (default: openapi)")
+    p.add_argument("-o", "--output", help="Output file path")
+
+    # diff
+    p = sub.add_parser("diff", help="Diff two DocLean files")
+    p.add_argument("old", help="Path to old .doclean file")
+    p.add_argument("new", help="Path to new .doclean file")
+    p.add_argument("--format", choices=["summary", "changelog"], default="summary", help="Output format")
+    p.add_argument("--version", help="Version label for changelog")
+
+    # protobuf
+    p = sub.add_parser("protobuf", help="Compile Protobuf/gRPC spec to DocLean")
+    p.add_argument("spec", help="Path to .proto file or directory")
+    p.add_argument("-o", "--output", help="Output file path")
+    p.add_argument("--lean", action="store_true", help="Maximum compression (strip descriptions)")
+
+    # registry
+    p = sub.add_parser("registry", help="Registry operations")
+    rsub = p.add_subparsers(dest="registry_command", required=True)
+
+    rp = rsub.add_parser("list", help="List DocLean files")
+    rp.add_argument("directory", help="Directory to scan")
+
+    rp = rsub.add_parser("search", help="Search endpoints")
+    rp.add_argument("directory", help="Directory to scan")
+    rp.add_argument("query", help="Search query")
+
+    args = parser.parse_args()
+
+    commands = {
+        "asyncapi": cmd_asyncapi,
+        "compile": cmd_compile,
+        "postman": cmd_postman,
+        "graphql": cmd_graphql,
+        "validate": cmd_validate,
+        "benchmark": cmd_benchmark,
+        "benchmark-all": cmd_benchmark_all,
+        "inspect": cmd_inspect,
+        "convert": cmd_convert,
+        "diff": cmd_diff,
+        "protobuf": cmd_protobuf,
+    }
+
+    if args.command == "registry":
+        if args.registry_command == "list":
+            cmd_registry_list(args)
+        elif args.registry_command == "search":
+            cmd_registry_search(args)
+    else:
+        commands[args.command](args)
+
+
+if __name__ == "__main__":
+    main()

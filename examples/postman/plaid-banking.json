@@ -1,0 +1,169 @@
+{
+  "info": {
+    "name": "Plaid Banking API",
+    "_postman_id": "plaid-001",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      {
+        "key": "key",
+        "value": "PLAID-CLIENT-ID"
+      },
+      {
+        "key": "in",
+        "value": "header"
+      },
+      {
+        "key": "value",
+        "value": "{{apiKey}}"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://sandbox.plaid.com"
+    }
+  ],
+  "item": [
+    {
+      "name": "Create Link Token",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/link/token/create",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "link",
+            "token",
+            "create"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"client_id\": \"{{clientId}}\", \"secret\": \"{{secret}}\", \"user\": {\"client_user_id\": \"user-123\"}, \"client_name\": \"My App\", \"products\": [\"transactions\"], \"country_codes\": [\"US\"], \"language\": \"en\"}"
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"link_token\": \"link-sandbox-abc\", \"expiration\": \"2024-02-01T00:00:00Z\"}"
+        }
+      ]
+    },
+    {
+      "name": "Exchange Public Token",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/item/public_token/exchange",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "item",
+            "public_token",
+            "exchange"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"client_id\": \"{{clientId}}\", \"secret\": \"{{secret}}\", \"public_token\": \"public-sandbox-xyz\"}"
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"access_token\": \"access-sandbox-123\", \"item_id\": \"item_1\"}"
+        }
+      ]
+    },
+    {
+      "name": "Get Transactions",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/transactions/get",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "transactions",
+            "get"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"client_id\": \"{{clientId}}\", \"secret\": \"{{secret}}\", \"access_token\": \"{{accessToken}}\", \"start_date\": \"2024-01-01\", \"end_date\": \"2024-01-31\", \"options\": {\"count\": 100}}"
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"transactions\": [{\"transaction_id\": \"tx1\", \"amount\": 42.5, \"name\": \"Starbucks\", \"category\": [\"Food and Drink\"]}], \"total_transactions\": 150}"
+        }
+      ]
+    },
+    {
+      "name": "Get Accounts",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/accounts/get",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "accounts",
+            "get"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"client_id\": \"{{clientId}}\", \"secret\": \"{{secret}}\", \"access_token\": \"{{accessToken}}\"}"
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"accounts\": [{\"account_id\": \"acc1\", \"name\": \"Checking\", \"balances\": {\"current\": 1500.0, \"available\": 1400.0}, \"type\": \"depository\"}]}"
+        }
+      ]
+    },
+    {
+      "name": "Get Identity",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/identity/get",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "identity",
+            "get"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"client_id\": \"{{clientId}}\", \"secret\": \"{{secret}}\", \"access_token\": \"{{accessToken}}\"}"
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"accounts\": [{\"account_id\": \"acc1\", \"owners\": [{\"names\": [\"John Doe\"], \"emails\": [{\"data\": \"john@example.com\"}]}]}]}"
+        }
+      ]
+    }
+  ]
+}

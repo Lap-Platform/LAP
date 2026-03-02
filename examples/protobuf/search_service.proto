@@ -1,0 +1,301 @@
+syntax = "proto3";
+
+package search.v1;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+service SearchService {
+  rpc IndexDocument(IndexDocumentRequest) returns (IndexDocumentResponse);
+  rpc IndexDocuments(stream IndexDocumentRequest) returns (IndexDocumentResponse);
+  rpc UpdateDocument(UpdateDocumentRequest) returns (UpdateDocumentResponse);
+  rpc DeleteDocument(DeleteDocumentRequest) returns (google.protobuf.Empty);
+  rpc Search(SearchRequest) returns (SearchResponse);
+  rpc Suggest(SuggestRequest) returns (SuggestResponse);
+  rpc MoreLikeThis(MoreLikeThisRequest) returns (SearchResponse);
+}
+
+service IndexService {
+  rpc CreateIndex(CreateIndexRequest) returns (Index);
+  rpc GetIndex(GetIndexRequest) returns (Index);
+  rpc UpdateIndex(UpdateIndexRequest) returns (Index);
+  rpc DeleteIndex(DeleteIndexRequest) returns (google.protobuf.Empty);
+  rpc ListIndices(ListIndicesRequest) returns (ListIndicesResponse);
+  rpc ReindexDocuments(ReindexRequest) returns (ReindexResponse);
+}
+
+message Document {
+  string id = 1;
+  string index_name = 2;
+  map<string, FieldValue> fields = 3;
+  double score = 4;
+  map<string, string> metadata = 5;
+  google.protobuf.Timestamp indexed_at = 6;
+}
+
+message FieldValue {
+  oneof value {
+    string text_value = 1;
+    int64 int_value = 2;
+    double double_value = 3;
+    bool bool_value = 4;
+    google.protobuf.Timestamp timestamp_value = 5;
+    GeoPoint geo_value = 6;
+    repeated string array_value = 7;
+  }
+}
+
+message GeoPoint {
+  double lat = 1;
+  double lon = 2;
+}
+
+message IndexDocumentRequest {
+  string index_name = 1;
+  string document_id = 2;
+  map<string, FieldValue> fields = 3;
+  map<string, string> metadata = 4;
+}
+
+message IndexDocumentResponse {
+  int32 documents_indexed = 1;
+  repeated string document_ids = 2;
+}
+
+message UpdateDocumentRequest {
+  string index_name = 1;
+  string document_id = 2;
+  map<string, FieldValue> fields = 3;
+  map<string, string> metadata = 4;
+}
+
+message UpdateDocumentResponse {
+  string document_id = 1;
+}
+
+message DeleteDocumentRequest {
+  string index_name = 1;
+  string document_id = 2;
+}
+
+message SearchRequest {
+  string index_name = 1;
+  Query query = 2;
+  repeated string fields = 3;
+  repeated SortField sort = 4;
+  Pagination pagination = 5;
+  Facets facets = 6;
+  Highlight highlight = 7;
+}
+
+message Query {
+  oneof query_type {
+    string query_string = 1;
+    MatchQuery match = 2;
+    BoolQuery bool = 3;
+    RangeQuery range = 4;
+    GeoQuery geo = 5;
+  }
+}
+
+message MatchQuery {
+  string field = 1;
+  string query = 2;
+  MatchOperator operator = 3;
+  double boost = 4;
+}
+
+enum MatchOperator {
+  OPERATOR_UNSPECIFIED = 0;
+  OR = 1;
+  AND = 2;
+}
+
+message BoolQuery {
+  repeated Query must = 1;
+  repeated Query should = 2;
+  repeated Query must_not = 3;
+  repeated Query filter = 4;
+  int32 minimum_should_match = 5;
+}
+
+message RangeQuery {
+  string field = 1;
+  FieldValue gte = 2;
+  FieldValue lte = 3;
+  FieldValue gt = 4;
+  FieldValue lt = 5;
+}
+
+message GeoQuery {
+  string field = 1;
+  GeoPoint center = 2;
+  double distance_km = 3;
+}
+
+message SortField {
+  string field = 1;
+  SortOrder order = 2;
+}
+
+enum SortOrder {
+  ORDER_UNSPECIFIED = 0;
+  ASC = 1;
+  DESC = 2;
+}
+
+message Pagination {
+  int32 offset = 1;
+  int32 limit = 2;
+}
+
+message Facets {
+  repeated FacetField fields = 1;
+}
+
+message FacetField {
+  string field = 1;
+  int32 size = 2;
+}
+
+message Highlight {
+  repeated string fields = 1;
+  int32 fragment_size = 2;
+  int32 number_of_fragments = 3;
+}
+
+message SearchResponse {
+  repeated SearchHit hits = 1;
+  int32 total_hits = 2;
+  double max_score = 3;
+  map<string, FacetResult> facets = 4;
+  int64 took_ms = 5;
+}
+
+message SearchHit {
+  Document document = 1;
+  double score = 2;
+  map<string, repeated string> highlights = 3;
+}
+
+message FacetResult {
+  repeated FacetBucket buckets = 1;
+  int64 sum_other_doc_count = 2;
+}
+
+message FacetBucket {
+  string key = 1;
+  int64 doc_count = 2;
+}
+
+message SuggestRequest {
+  string index_name = 1;
+  string field = 2;
+  string prefix = 3;
+  int32 size = 4;
+}
+
+message SuggestResponse {
+  repeated Suggestion suggestions = 1;
+}
+
+message Suggestion {
+  string text = 1;
+  double score = 2;
+  int32 frequency = 3;
+}
+
+message MoreLikeThisRequest {
+  string index_name = 1;
+  string document_id = 2;
+  repeated string fields = 3;
+  int32 min_term_frequency = 4;
+  int32 max_query_terms = 5;
+  int32 size = 6;
+}
+
+message Index {
+  string name = 1;
+  IndexSettings settings = 2;
+  IndexMappings mappings = 3;
+  IndexStats stats = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+}
+
+message IndexSettings {
+  int32 number_of_shards = 1;
+  int32 number_of_replicas = 2;
+  string analyzer = 3;
+  map<string, string> custom_settings = 4;
+}
+
+message IndexMappings {
+  map<string, FieldMapping> properties = 1;
+}
+
+message FieldMapping {
+  FieldType type = 1;
+  bool indexed = 2;
+  bool stored = 3;
+  string analyzer = 4;
+  map<string, string> options = 5;
+}
+
+enum FieldType {
+  TYPE_UNSPECIFIED = 0;
+  TEXT = 1;
+  KEYWORD = 2;
+  LONG = 3;
+  DOUBLE = 4;
+  BOOLEAN = 5;
+  DATE = 6;
+  GEO_POINT = 7;
+  OBJECT = 8;
+}
+
+message IndexStats {
+  int64 document_count = 1;
+  int64 size_bytes = 2;
+}
+
+message CreateIndexRequest {
+  string name = 1;
+  IndexSettings settings = 2;
+  IndexMappings mappings = 3;
+}
+
+message GetIndexRequest {
+  string name = 1;
+}
+
+message UpdateIndexRequest {
+  string name = 1;
+  IndexSettings settings = 2;
+}
+
+message DeleteIndexRequest {
+  string name = 1;
+}
+
+message ListIndicesRequest {
+  string name_pattern = 1;
+  int32 page_size = 2;
+  string page_token = 3;
+}
+
+message ListIndicesResponse {
+  repeated Index indices = 1;
+  string next_page_token = 2;
+}
+
+message ReindexRequest {
+  string source_index = 1;
+  string destination_index = 2;
+  Query query = 3;
+}
+
+message ReindexResponse {
+  int64 documents_reindexed = 1;
+  int64 took_ms = 2;
+}

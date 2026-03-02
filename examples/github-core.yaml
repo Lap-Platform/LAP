@@ -1,0 +1,403 @@
+openapi: "3.0.0"
+info:
+  title: GitHub REST API
+  version: "2022-11-28"
+servers:
+  - url: https://api.github.com
+security:
+  - bearerAuth: []
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+paths:
+  /repos/{owner}/{repo}:
+    get:
+      summary: Get a repository
+      description: Gets information about a repository.
+      parameters:
+        - name: owner
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The account owner of the repository
+        - name: repo
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The name of the repository
+      responses:
+        "200":
+          description: Repository details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+                  full_name:
+                    type: string
+                  private:
+                    type: boolean
+                  description:
+                    type: string
+                    nullable: true
+                  fork:
+                    type: boolean
+                  html_url:
+                    type: string
+                  language:
+                    type: string
+                    nullable: true
+                  stargazers_count:
+                    type: integer
+                  forks_count:
+                    type: integer
+                  default_branch:
+                    type: string
+                  owner:
+                    type: object
+                    properties:
+                      login:
+                        type: string
+                      id:
+                        type: integer
+                      avatar_url:
+                        type: string
+        "404":
+          description: Repository not found
+        "403":
+          description: Forbidden
+  /repos/{owner}/{repo}/issues:
+    get:
+      summary: List repository issues
+      description: List issues in a repository. Only users with pull access can see this listing.
+      parameters:
+        - name: owner
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The account owner of the repository
+        - name: repo
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The name of the repository
+        - name: state
+          in: query
+          schema:
+            type: string
+            enum: [open, closed, all]
+            default: open
+          description: Filter by state
+        - name: labels
+          in: query
+          schema:
+            type: string
+          description: Comma-separated list of label names
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [created, updated, comments]
+            default: created
+          description: What to sort results by
+        - name: direction
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+          description: Sort direction
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: "30"
+          description: Results per page (max 100)
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: "1"
+          description: Page number
+      responses:
+        "200":
+          description: List of issues
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    number:
+                      type: integer
+                    title:
+                      type: string
+                    state:
+                      type: string
+                    body:
+                      type: string
+                      nullable: true
+                    user:
+                      type: object
+                      properties:
+                        login:
+                          type: string
+                    labels:
+                      type: array
+                      items:
+                        type: object
+                    created_at:
+                      type: string
+                      format: date-time
+                    updated_at:
+                      type: string
+                      format: date-time
+        "404":
+          description: Repository not found
+    post:
+      summary: Create an issue
+      description: Create an issue in a repository. Any user with pull access can create an issue.
+      parameters:
+        - name: owner
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The account owner of the repository
+        - name: repo
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The name of the repository
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+              properties:
+                title:
+                  type: string
+                  description: The title of the issue
+                body:
+                  type: string
+                  description: The contents of the issue
+                assignees:
+                  type: array
+                  items:
+                    type: string
+                  description: Logins for users to assign to this issue
+                labels:
+                  type: array
+                  items:
+                    type: string
+                  description: Labels to associate with this issue
+                milestone:
+                  type: integer
+                  description: The number of the milestone to associate this issue with
+      responses:
+        "201":
+          description: Issue created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  number:
+                    type: integer
+                  title:
+                    type: string
+                  state:
+                    type: string
+                  html_url:
+                    type: string
+        "403":
+          description: Forbidden
+        "410":
+          description: Issues are disabled for this repository
+        "422":
+          description: Validation failed
+  /repos/{owner}/{repo}/pulls:
+    get:
+      summary: List pull requests
+      description: Lists pull requests in a repository.
+      parameters:
+        - name: owner
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The account owner of the repository
+        - name: repo
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The name of the repository
+        - name: state
+          in: query
+          schema:
+            type: string
+            enum: [open, closed, all]
+            default: open
+          description: Filter by state
+        - name: head
+          in: query
+          schema:
+            type: string
+          description: "Filter by head user or head organization and branch name (format: user:ref-name)"
+        - name: base
+          in: query
+          schema:
+            type: string
+          description: Filter by base branch name
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [created, updated, popularity, long-running]
+            default: created
+          description: What to sort results by
+        - name: direction
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+          description: Sort direction
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: "30"
+          description: Results per page (max 100)
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: "1"
+          description: Page number
+      responses:
+        "200":
+          description: List of pull requests
+        "304":
+          description: Not modified
+    post:
+      summary: Create a pull request
+      description: Creates a new pull request.
+      parameters:
+        - name: owner
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The account owner of the repository
+        - name: repo
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The name of the repository
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - head
+                - base
+              properties:
+                title:
+                  type: string
+                  description: The title of the new pull request
+                head:
+                  type: string
+                  description: "The name of the branch where your changes are implemented (format: username:branch)"
+                base:
+                  type: string
+                  description: The name of the branch you want the changes pulled into
+                body:
+                  type: string
+                  description: The contents of the pull request
+                draft:
+                  type: boolean
+                  description: Indicates whether the pull request is a draft
+                maintainer_can_modify:
+                  type: boolean
+                  description: Indicates whether maintainers can modify the pull request
+      responses:
+        "201":
+          description: Pull request created
+        "403":
+          description: Forbidden
+        "422":
+          description: Validation failed
+  /repos/{owner}/{repo}/pulls/{pull_number}/merge:
+    put:
+      summary: Merge a pull request
+      description: Merges a pull request into the base branch.
+      parameters:
+        - name: owner
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The account owner of the repository
+        - name: repo
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The name of the repository
+        - name: pull_number
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: The number of the pull request
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                commit_title:
+                  type: string
+                  description: Title for the automatic merge commit
+                commit_message:
+                  type: string
+                  description: Extra detail for the automatic merge commit
+                merge_method:
+                  type: string
+                  enum: [merge, squash, rebase]
+                  description: The merge method to use
+                sha:
+                  type: string
+                  description: SHA that pull request head must match to allow merge
+      responses:
+        "200":
+          description: Pull request merged successfully
+        "405":
+          description: Pull request is not mergeable
+        "409":
+          description: Head branch was modified

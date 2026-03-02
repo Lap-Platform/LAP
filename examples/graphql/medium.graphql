@@ -1,0 +1,141 @@
+enum PublishStatus { DRAFT PUBLISHED UNLISTED }
+
+type User {
+  id: ID!
+  username: String!
+  name: String!
+  bio: String
+  imageUrl: String
+  url: String!
+  followerCount: Int!
+  followingCount: Int!
+  mediumMemberAt: String
+  isWriter: Boolean!
+  publications(first: Int, after: String): PublicationConnection!
+  articles(first: Int, after: String): ArticleConnection!
+  topArticles(limit: Int): [Article!]!
+}
+
+type Publication {
+  id: ID!
+  name: String!
+  description: String
+  url: String!
+  imageUrl: String
+  followers: Int!
+  creator: User!
+  editors: [User!]!
+  writers: [User!]!
+  tags: [String!]!
+  articles(first: Int, after: String, tag: String): ArticleConnection!
+  newsletter: Newsletter
+}
+
+type Newsletter { id: ID! name: String! description: String subscriberCount: Int frequency: String }
+
+type Article {
+  id: ID!
+  title: String!
+  subtitle: String
+  slug: String!
+  content: ArticleContent!
+  author: User!
+  publication: Publication
+  publishStatus: PublishStatus!
+  tags: [Tag!]!
+  canonicalUrl: String
+  url: String!
+  previewImage: Image
+  readingTime: Float!
+  wordCount: Int!
+  clapCount: Int!
+  responseCount: Int!
+  voterCount: Int!
+  isSeries: Boolean
+  seriesInfo: SeriesInfo
+  license: String
+  createdAt: String!
+  publishedAt: String
+  updatedAt: String!
+  isLocked: Boolean!
+  isShorterThan3Min: Boolean!
+}
+
+type ArticleContent { html: String! markdown: String! bodyModel: BodyModel }
+type BodyModel { paragraphs: [Paragraph!]! sections: [Section!]! }
+type Paragraph { id: ID! type: String! text: String! markups: [Markup!]! layout: String metadata: ParagraphMetadata }
+type Markup { type: String! start: Int! end: Int! href: String anchorType: String }
+type ParagraphMetadata { id: String originalWidth: Int originalHeight: Int }
+type Section { startIndex: Int! }
+type Image { id: ID! url: String! originalWidth: Int originalHeight: Int }
+type SeriesInfo { seriesId: ID! name: String! partNumber: Int! totalParts: Int }
+
+type Tag {
+  id: ID!
+  name: String!
+  slug: String!
+  postCount: Int!
+  followerCount: Int
+  relatedTags: [Tag!]
+  topWriters: [User!]
+  latestArticles(first: Int, after: String): ArticleConnection!
+}
+
+type Response {
+  id: ID!
+  body: String!
+  author: User!
+  article: Article!
+  clapCount: Int!
+  createdAt: String!
+  replies(first: Int): [Response!]!
+}
+
+type ReadingList {
+  id: ID!
+  name: String!
+  description: String
+  isPublic: Boolean!
+  articles(first: Int, after: String): ArticleConnection!
+  createdAt: String!
+}
+
+type ArticleConnection { edges: [ArticleEdge!]! pageInfo: PageInfo! }
+type ArticleEdge { cursor: String! node: Article! }
+type PublicationConnection { edges: [PublicationEdge!]! pageInfo: PageInfo! }
+type PublicationEdge { cursor: String! node: Publication! }
+type PageInfo { hasNextPage: Boolean! endCursor: String }
+
+input CreateArticleInput { title: String! content: String! contentFormat: String tags: [String!] canonicalUrl: String publishStatus: PublishStatus publicationId: ID license: String }
+input UpdateArticleInput { title: String content: String tags: [String!] publishStatus: PublishStatus }
+
+type ArticlePayload { article: Article }
+type ClapPayload { clapCount: Int! }
+type DeletePayload { success: Boolean! }
+type FollowPayload { success: Boolean! }
+
+type Query {
+  me: User!
+  user(username: String!): User
+  article(id: ID!): Article
+  publication(id: ID): Publication
+  publicationBySlug(slug: String!): Publication
+  tag(slug: String!): Tag
+  search(query: String!, type: String, first: Int, after: String): ArticleConnection!
+  topArticles(tag: String, period: String, first: Int): [Article!]!
+  feed(first: Int, after: String): ArticleConnection!
+  myReadingLists: [ReadingList!]!
+}
+
+type Mutation {
+  createArticle(input: CreateArticleInput!): ArticlePayload!
+  updateArticle(id: ID!, input: UpdateArticleInput!): ArticlePayload!
+  deleteArticle(id: ID!): DeletePayload!
+  clap(articleId: ID!, count: Int): ClapPayload!
+  followUser(userId: ID!): FollowPayload!
+  unfollowUser(userId: ID!): FollowPayload!
+  followPublication(publicationId: ID!): FollowPayload!
+  followTag(tagSlug: String!): FollowPayload!
+  addToReadingList(listId: ID!, articleId: ID!): DeletePayload!
+  createReadingList(name: String!, description: String, isPublic: Boolean): ReadingList
+}

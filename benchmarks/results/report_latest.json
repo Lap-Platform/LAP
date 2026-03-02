@@ -1,0 +1,87 @@
+{
+  "timestamp": "2026-02-08T10:27:06.600959+00:00",
+  "benchmarks": {
+    "token_compression": {
+      "openapi": {
+        "spec_count": 28,
+        "total_endpoints": 2635,
+        "total_raw_tokens": 2131740,
+        "total_lean_tokens": 161109,
+        "overall_compression_ratio": 13.2
+      },
+      "graphql": {
+        "spec_count": 5,
+        "total_endpoints": 59,
+        "total_raw_tokens": 3167,
+        "total_lean_tokens": 2026,
+        "overall_compression_ratio": 1.6
+      },
+      "asyncapi": {
+        "spec_count": 30,
+        "total_endpoints": 122,
+        "total_raw_tokens": 17242,
+        "total_lean_tokens": 10625,
+        "overall_compression_ratio": 1.6
+      },
+      "protobuf": {
+        "spec_count": 5,
+        "total_endpoints": 22,
+        "total_raw_tokens": 2783,
+        "total_lean_tokens": 1720,
+        "overall_compression_ratio": 1.6
+      },
+      "postman": {
+        "spec_count": 30,
+        "total_endpoints": 157,
+        "total_raw_tokens": 35199,
+        "total_lean_tokens": 7393,
+        "overall_compression_ratio": 4.8
+      }
+    },
+    "lossless_validation": {
+      "openapi": {
+        "total_specs": 28,
+        "passed": 25,
+        "errored": 1,
+        "failed": 2,
+        "all_pass": false
+      },
+      "graphql": {
+        "total_specs": 5,
+        "passed": 0,
+        "errored": 0,
+        "failed": 5,
+        "all_pass": false
+      },
+      "asyncapi": {
+        "total_specs": 30,
+        "passed": 30,
+        "errored": 0,
+        "failed": 0,
+        "all_pass": true
+      },
+      "protobuf": {
+        "total_specs": 5,
+        "passed": 5,
+        "errored": 0,
+        "failed": 0,
+        "all_pass": true
+      },
+      "postman": {
+        "total_specs": 30,
+        "passed": 30,
+        "errored": 0,
+        "failed": 0,
+        "all_pass": true
+      }
+    },
+    "agent_simulation": {
+      "tasks": 12,
+      "total_verbose_tokens": 11872,
+      "total_lean_tokens": 7189,
+      "token_reduction_pct": 39.4
+    }
+  },
+  "total_time_s": 79.85,
+  "overall_pass": false
+}

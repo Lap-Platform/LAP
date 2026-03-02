@@ -1,0 +1,90 @@
+asyncapi: 2.6.0
+info:
+  title: Email Delivery Events
+  version: 1.0.0
+  description: SendGrid-like email delivery webhooks
+
+servers:
+  production:
+    url: https://webhooks.email.example.com
+    protocol: https
+
+channels:
+  email/delivered:
+    subscribe:
+      summary: Email delivered
+      message:
+        name: EmailDelivered
+        payload:
+          type: object
+          required: [messageId, email, event, timestamp]
+          properties:
+            messageId: {type: string}
+            email: {type: string}
+            event: {type: string, enum: [delivered]}
+            timestamp: {type: integer}
+            smtpId: {type: string}
+            category:
+              type: array
+              items: {type: string}
+
+  email/opened:
+    subscribe:
+      summary: Email opened
+      message:
+        name: EmailOpened
+        payload:
+          type: object
+          required: [messageId, email, event]
+          properties:
+            messageId: {type: string}
+            email: {type: string}
+            event: {type: string, enum: [open]}
+            timestamp: {type: integer}
+            useragent: {type: string}
+            ip: {type: string}
+
+  email/clicked:
+    subscribe:
+      summary: Link clicked in email
+      message:
+        name: EmailClicked
+        payload:
+          type: object
+          required: [messageId, email, url]
+          properties:
+            messageId: {type: string}
+            email: {type: string}
+            url: {type: string}
+            event: {type: string, enum: [click]}
+            timestamp: {type: integer}
+
+  email/bounced:
+    subscribe:
+      summary: Email bounced
+      message:
+        name: EmailBounced
+        payload:
+          type: object
+          required: [messageId, email, reason]
+          properties:
+            messageId: {type: string}
+            email: {type: string}
+            reason: {type: string}
+            bounceType: {type: string, enum: [hard, soft]}
+            status: {type: string}
+            timestamp: {type: integer}
+
+  email/spam_report:
+    subscribe:
+      summary: Spam report received
+      message:
+        name: SpamReport
+        payload:
+          type: object
+          required: [messageId, email]
+          properties:
+            messageId: {type: string}
+            email: {type: string}
+            event: {type: string, enum: [spamreport]}
+            timestamp: {type: integer}

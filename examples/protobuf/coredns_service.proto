@@ -1,0 +1,132 @@
+syntax = "proto3";
+
+package coredns.dns.v1;
+
+// CoreDNS gRPC DNS service and management API.
+service DnsService {
+  // Resolve a DNS query.
+  rpc Query(DnsPacket) returns (DnsPacket);
+}
+
+// Management and control API for CoreDNS plugins.
+service DnsControl {
+  // Get server health and stats.
+  rpc Health(HealthRequest) returns (HealthResponse);
+
+  // Reload configuration.
+  rpc Reload(ReloadRequest) returns (ReloadResponse);
+
+  // Get current zones.
+  rpc ListZones(ListZonesRequest) returns (ListZonesResponse);
+
+  // Add a DNS record.
+  rpc AddRecord(AddRecordRequest) returns (AddRecordResponse);
+
+  // Remove a DNS record.
+  rpc RemoveRecord(RemoveRecordRequest) returns (RemoveRecordResponse);
+
+  // Get metrics snapshot.
+  rpc GetMetrics(GetMetricsRequest) returns (GetMetricsResponse);
+}
+
+// Raw DNS packet for the query/response service.
+message DnsPacket {
+  bytes msg = 1;
+}
+
+message HealthRequest {}
+
+message HealthResponse {
+  bool healthy = 1;
+  string version = 2;
+  int64 uptime_seconds = 3;
+  repeated PluginStatus plugins = 4;
+}
+
+message PluginStatus {
+  string name = 1;
+  bool enabled = 2;
+  string status = 3;
+}
+
+message ReloadRequest {}
+
+message ReloadResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message ListZonesRequest {}
+
+message ZoneInfo {
+  string name = 1;
+  repeated string upstream_servers = 2;
+  int64 record_count = 3;
+  bool dnssec_enabled = 4;
+}
+
+message ListZonesResponse {
+  repeated ZoneInfo zones = 1;
+}
+
+// DNS record types.
+enum RecordType {
+  A = 0;
+  AAAA = 1;
+  CNAME = 2;
+  MX = 3;
+  TXT = 4;
+  SRV = 5;
+  NS = 6;
+  PTR = 7;
+  SOA = 8;
+}
+
+message DnsRecord {
+  string name = 1;
+  RecordType type = 2;
+  uint32 ttl = 3;
+  string value = 4;
+  uint32 priority = 5;
+  uint32 weight = 6;
+  uint32 port = 7;
+}
+
+message AddRecordRequest {
+  string zone = 1;
+  DnsRecord record = 2;
+}
+
+message AddRecordResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message RemoveRecordRequest {
+  string zone = 1;
+  string name = 2;
+  RecordType type = 3;
+}
+
+message RemoveRecordResponse {
+  bool success = 1;
+}
+
+message GetMetricsRequest {
+  string zone = 1;
+}
+
+message DnsMetrics {
+  uint64 total_queries = 1;
+  uint64 total_responses = 2;
+  map<string, uint64> queries_by_type = 3;
+  map<string, uint64> responses_by_rcode = 4;
+  double avg_latency_ms = 5;
+  double p99_latency_ms = 6;
+  uint64 cache_hits = 7;
+  uint64 cache_misses = 8;
+}
+
+message GetMetricsResponse {
+  DnsMetrics metrics = 1;
+}

@@ -1,0 +1,190 @@
+{
+  "info": {
+    "name": "Mailchimp Marketing API",
+    "_postman_id": "mc-001",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "basic",
+    "basic": [
+      {
+        "key": "username",
+        "value": "anystring"
+      },
+      {
+        "key": "password",
+        "value": "{{apiKey}}"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://{{dc}}.api.mailchimp.com/3.0"
+    },
+    {
+      "key": "dc",
+      "value": "us1"
+    },
+    {
+      "key": "apiKey",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "List Audiences",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/lists",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "lists"
+          ],
+          "query": [
+            {
+              "key": "count",
+              "value": "10",
+              "description": ""
+            },
+            {
+              "key": "offset",
+              "value": "0",
+              "description": ""
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"lists\": [{\"id\": \"lst1\", \"name\": \"Newsletter\", \"stats\": {\"member_count\": 5000}}]}"
+        }
+      ]
+    },
+    {
+      "name": "Add Member",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/lists/:listId/members",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "lists",
+            ":listId",
+            "members"
+          ],
+          "variable": [
+            {
+              "key": "listId",
+              "value": "lst1"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email_address\": \"new@example.com\", \"status\": \"subscribed\", \"merge_fields\": {\"FNAME\": \"John\", \"LNAME\": \"Doe\"}, \"tags\": [\"vip\"]}"
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"id\": \"m1\", \"email_address\": \"new@example.com\", \"status\": \"subscribed\"}"
+        }
+      ]
+    },
+    {
+      "name": "Create Campaign",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/campaigns",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "campaigns"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"type\": \"regular\", \"recipients\": {\"list_id\": \"lst1\"}, \"settings\": {\"subject_line\": \"Weekly Update\", \"from_name\": \"Acme\", \"reply_to\": \"hello@acme.com\"}}"
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"id\": \"cmp1\", \"status\": \"save\"}"
+        }
+      ]
+    },
+    {
+      "name": "Send Campaign",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/campaigns/:campaignId/actions/send",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "campaigns",
+            ":campaignId",
+            "actions",
+            "send"
+          ],
+          "variable": [
+            {
+              "key": "campaignId",
+              "value": "cmp1"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 204,
+          "body": "{}"
+        }
+      ]
+    },
+    {
+      "name": "Get Campaign Report",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/reports/:campaignId",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "reports",
+            ":campaignId"
+          ],
+          "variable": [
+            {
+              "key": "campaignId",
+              "value": "cmp1"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"id\": \"cmp1\", \"emails_sent\": 5000, \"opens\": {\"opens_total\": 2500, \"unique_opens\": 2000}, \"clicks\": {\"clicks_total\": 500}}"
+        }
+      ]
+    }
+  ]
+}

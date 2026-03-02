@@ -1,0 +1,176 @@
+enum ChannelType { PUBLIC_CHANNEL PRIVATE_CHANNEL DIRECT_MESSAGE GROUP_DM }
+enum PresenceStatus { ACTIVE AWAY }
+enum MessageSubtype { BOT_MESSAGE FILE_SHARE CHANNEL_JOIN CHANNEL_LEAVE THREAD_BROADCAST }
+
+type PageInfo { hasNextPage: Boolean! hasPreviousPage: Boolean! }
+
+type Workspace {
+  id: ID!
+  name: String!
+  domain: String!
+  icon: WorkspaceIcon
+  plan: String
+  users(limit: Int, cursor: String): UserPage!
+  channels(limit: Int, cursor: String, types: [ChannelType!]): ChannelPage!
+}
+
+type WorkspaceIcon { image68: String image132: String }
+
+type User {
+  id: ID!
+  teamId: ID!
+  name: String!
+  realName: String
+  displayName: String
+  email: String
+  phone: String
+  title: String
+  statusText: String
+  statusEmoji: String
+  isAdmin: Boolean!
+  isOwner: Boolean!
+  isBot: Boolean!
+  deleted: Boolean!
+  presence: PresenceStatus
+  profile: UserProfile!
+  timezone: String
+  updated: Int
+}
+
+type UserProfile {
+  avatarHash: String
+  image24: String
+  image72: String
+  image192: String
+  image512: String
+  firstName: String
+  lastName: String
+}
+
+type Channel {
+  id: ID!
+  name: String!
+  type: ChannelType!
+  topic: ChannelTopic
+  purpose: ChannelPurpose
+  isArchived: Boolean!
+  isMember: Boolean!
+  memberCount: Int
+  creator: User
+  messages(limit: Int, cursor: String, oldest: String, latest: String): MessagePage!
+  pins(limit: Int): [PinnedMessage!]!
+  members(limit: Int, cursor: String): UserPage!
+  created: Int!
+  lastRead: String
+  unreadCount: Int
+}
+
+type ChannelTopic { value: String! creator: ID lastSet: Int }
+type ChannelPurpose { value: String! creator: ID lastSet: Int }
+
+type Message {
+  ts: String!
+  text: String!
+  user: User
+  channel: Channel!
+  subtype: MessageSubtype
+  threadTs: String
+  replyCount: Int
+  replyUsersCount: Int
+  replies(limit: Int, cursor: String): MessagePage
+  reactions: [Reaction!]
+  files: [File!]
+  attachments: [Attachment!]
+  blocks: [Block!]
+  edited: EditedInfo
+  pinned: Boolean
+  permalink: String
+}
+
+type Reaction { name: String! count: Int! users: [User!]! }
+type EditedInfo { user: ID! ts: String! }
+type PinnedMessage { message: Message! channel: Channel! created: Int createdBy: User }
+
+type File {
+  id: ID!
+  name: String!
+  title: String
+  mimetype: String!
+  filetype: String
+  size: Int!
+  urlPrivate: String
+  urlPrivateDownload: String
+  permalink: String
+  thumb360: String
+  user: User
+  created: Int!
+}
+
+type Attachment {
+  fallback: String
+  color: String
+  pretext: String
+  authorName: String
+  title: String
+  titleLink: String
+  text: String
+  imageUrl: String
+  thumbUrl: String
+  footer: String
+  ts: String
+}
+
+union Block = SectionBlock | DividerBlock | ImageBlock | ActionsBlock
+type SectionBlock { type: String! text: TextObject fields: [TextObject!] }
+type DividerBlock { type: String! }
+type ImageBlock { type: String! imageUrl: String! altText: String! title: TextObject }
+type ActionsBlock { type: String! elements: [ActionElement!]! }
+type TextObject { type: String! text: String! }
+type ActionElement { type: String! text: TextObject actionId: String! value: String }
+
+type Emoji { name: String! url: String }
+
+type UserPage { items: [User!]! nextCursor: String }
+type ChannelPage { items: [Channel!]! nextCursor: String }
+type MessagePage { items: [Message!]! nextCursor: String hasMore: Boolean! }
+
+input PostMessageInput { channelId: ID! text: String! threadTs: String unfurlLinks: Boolean unfurlMedia: Boolean }
+input UpdateMessageInput { channelId: ID! ts: String! text: String! }
+input CreateChannelInput { name: String! isPrivate: Boolean description: String }
+input SetTopicInput { channelId: ID! topic: String! }
+input AddReactionInput { channelId: ID! timestamp: String! emoji: String! }
+input UploadFileInput { channelId: ID! filename: String! content: String! title: String initialComment: String }
+
+type MessagePayload { ok: Boolean! message: Message channel: ID ts: String }
+type ChannelPayload { ok: Boolean! channel: Channel }
+type ReactionPayload { ok: Boolean! }
+type FilePayload { ok: Boolean! file: File }
+
+type Query {
+  workspace: Workspace!
+  user(id: ID!): User
+  users(limit: Int, cursor: String): UserPage!
+  channel(id: ID!): Channel
+  channels(limit: Int, cursor: String, types: [ChannelType!]): ChannelPage!
+  conversationHistory(channelId: ID!, limit: Int, cursor: String, oldest: String, latest: String): MessagePage!
+  search(query: String!, sort: String, sortDir: String, count: Int, page: Int): SearchResult!
+  emoji: [Emoji!]!
+}
+
+type SearchResult { messages: SearchMessages files: SearchFiles }
+type SearchMessages { total: Int! matches: [Message!]! }
+type SearchFiles { total: Int! matches: [File!]! }
+
+type Mutation {
+  postMessage(input: PostMessageInput!): MessagePayload!
+  updateMessage(input: UpdateMessageInput!): MessagePayload!
+  deleteMessage(channelId: ID!, ts: String!): MessagePayload!
+  createChannel(input: CreateChannelInput!): ChannelPayload!
+  archiveChannel(channelId: ID!): ChannelPayload!
+  setTopic(input: SetTopicInput!): ChannelPayload!
+  joinChannel(channelId: ID!): ChannelPayload!
+  leaveChannel(channelId: ID!): ChannelPayload!
+  addReaction(input: AddReactionInput!): ReactionPayload!
+  removeReaction(input: AddReactionInput!): ReactionPayload!
+  uploadFile(input: UploadFileInput!): FilePayload!
+}

@@ -1,0 +1,80 @@
+asyncapi: 2.6.0
+info:
+  title: Log Aggregation Stream
+  version: 1.0.0
+  description: Centralized log collection and streaming
+
+servers:
+  production:
+    url: kafka-logs:9092
+    protocol: kafka
+
+channels:
+  logs.application:
+    publish:
+      summary: Application log entry
+      message:
+        name: AppLog
+        payload:
+          type: object
+          required: [timestamp, level, message, service]
+          properties:
+            timestamp: {type: string, format: date-time}
+            level: {type: string, enum: [debug, info, warn, error, fatal]}
+            message: {type: string}
+            service: {type: string}
+            traceId: {type: string}
+            spanId: {type: string}
+            metadata:
+              type: object
+
+  logs.access:
+    publish:
+      summary: HTTP access log
+      message:
+        name: AccessLog
+        payload:
+          type: object
+          required: [method, path, statusCode, duration]
+          properties:
+            method: {type: string}
+            path: {type: string}
+            statusCode: {type: integer}
+            duration: {type: integer, description: Milliseconds}
+            clientIp: {type: string}
+            userAgent: {type: string}
+            requestId: {type: string}
+
+  logs.audit:
+    publish:
+      summary: Audit log entry
+      message:
+        name: AuditLog
+        payload:
+          type: object
+          required: [action, actor, resource, timestamp]
+          properties:
+            action: {type: string}
+            actor: {type: string}
+            resource: {type: string}
+            resourceId: {type: string}
+            changes:
+              type: object
+            ipAddress: {type: string}
+            timestamp: {type: string, format: date-time}
+
+  logs.errors:
+    subscribe:
+      summary: Error log stream for alerting
+      message:
+        name: ErrorLog
+        payload:
+          type: object
+          required: [service, error, timestamp]
+          properties:
+            service: {type: string}
+            error: {type: string}
+            stackTrace: {type: string}
+            count: {type: integer}
+            firstSeen: {type: string, format: date-time}
+            timestamp: {type: string, format: date-time}

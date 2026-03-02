@@ -1,0 +1,12 @@
+@toollean v0.1
+@tool himalaya
+@desc CLI to manage emails via IMAP/SMTP. Use `himalaya` to list, read, write, reply, forward, search, and organize emails from the terminal. Supports multiple accounts and message composition with MML (MIME Meta Language).
+@source /app/skills/himalaya/SKILL.md
+@example
+  > himalaya account configure
+@example
+  > ## Common Operations
+@example
+  > ### List Emails
+@example
+  > List emails in a specific folder:

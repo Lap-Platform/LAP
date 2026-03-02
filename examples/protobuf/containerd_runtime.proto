@@ -1,0 +1,213 @@
+syntax = "proto3";
+
+package containerd.services.containers.v1;
+
+// containerd container runtime service.
+service Containers {
+  // Get a container by ID.
+  rpc Get(GetContainerRequest) returns (GetContainerResponse);
+
+  // List all containers matching filters.
+  rpc List(ListContainersRequest) returns (ListContainersResponse);
+
+  // Create a new container.
+  rpc Create(CreateContainerRequest) returns (CreateContainerResponse);
+
+  // Update an existing container.
+  rpc Update(UpdateContainerRequest) returns (UpdateContainerResponse);
+
+  // Delete a container.
+  rpc Delete(DeleteContainerRequest) returns (DeleteContainerResponse);
+
+  // Stream container events.
+  rpc ListStream(ListContainersRequest) returns (stream ListContainerMessage);
+}
+
+// Task service manages container processes.
+service Tasks {
+  // Create a new task (process) for a container.
+  rpc Create(CreateTaskRequest) returns (CreateTaskResponse);
+
+  // Start a task.
+  rpc Start(StartRequest) returns (StartResponse);
+
+  // Delete a task.
+  rpc Delete(DeleteTaskRequest) returns (DeleteResponse);
+
+  // Kill a task with a signal.
+  rpc Kill(KillRequest) returns (KillResponse);
+
+  // Get task status.
+  rpc Get(GetTaskRequest) returns (GetTaskResponse);
+
+  // List all tasks.
+  rpc List(ListTasksRequest) returns (ListTasksResponse);
+
+  // Wait for a task to exit.
+  rpc Wait(WaitRequest) returns (WaitResponse);
+}
+
+// Container object.
+message Container {
+  string id = 1;
+  map<string, string> labels = 2;
+  string image = 3;
+
+  message Runtime {
+    string name = 1;
+    bytes options = 2;
+  }
+  Runtime runtime = 4;
+
+  string snapshotter = 5;
+  string snapshot_key = 6;
+  int64 created_at = 7;
+  int64 updated_at = 8;
+  map<string, string> extensions = 9;
+  bytes spec = 10;
+}
+
+message GetContainerRequest {
+  string id = 1;
+}
+
+message GetContainerResponse {
+  Container container = 1;
+}
+
+message ListContainersRequest {
+  repeated string filters = 1;
+}
+
+message ListContainersResponse {
+  repeated Container containers = 1;
+}
+
+message CreateContainerRequest {
+  Container container = 1;
+}
+
+message CreateContainerResponse {
+  Container container = 1;
+}
+
+message UpdateContainerRequest {
+  Container container = 1;
+  repeated string update_mask = 2;
+}
+
+message UpdateContainerResponse {
+  Container container = 1;
+}
+
+message DeleteContainerRequest {
+  string id = 1;
+}
+
+message DeleteContainerResponse {}
+
+message ListContainerMessage {
+  Container container = 1;
+}
+
+// --- Task messages ---
+
+message Mount {
+  string type = 1;
+  string source = 2;
+  repeated string options = 3;
+}
+
+message CreateTaskRequest {
+  string container_id = 1;
+  repeated Mount rootfs = 2;
+  string stdin = 3;
+  string stdout = 4;
+  string stderr = 5;
+  bool terminal = 6;
+  bytes checkpoint = 7;
+  bytes options = 8;
+}
+
+message CreateTaskResponse {
+  string container_id = 1;
+  uint32 pid = 2;
+}
+
+message StartRequest {
+  string container_id = 1;
+  string exec_id = 2;
+}
+
+message StartResponse {
+  uint32 pid = 1;
+}
+
+message DeleteTaskRequest {
+  string container_id = 1;
+}
+
+message DeleteResponse {
+  string container_id = 1;
+  uint32 pid = 2;
+  uint32 exit_status = 3;
+  int64 exited_at = 4;
+}
+
+message KillRequest {
+  string container_id = 1;
+  string exec_id = 2;
+  uint32 signal = 3;
+  bool all = 4;
+}
+
+message KillResponse {}
+
+enum TaskStatus {
+  UNKNOWN = 0;
+  CREATED = 1;
+  RUNNING = 2;
+  STOPPED = 3;
+  PAUSED = 4;
+  PAUSING = 5;
+}
+
+message Process {
+  string container_id = 1;
+  string id = 2;
+  uint32 pid = 3;
+  TaskStatus status = 4;
+  string stdin = 5;
+  string stdout = 6;
+  string stderr = 7;
+  bool terminal = 8;
+  uint32 exit_status = 9;
+  int64 exited_at = 10;
+}
+
+message GetTaskRequest {
+  string container_id = 1;
+  string exec_id = 2;
+}
+
+message GetTaskResponse {
+  Process process = 1;
+}
+
+message ListTasksRequest {
+  string filter = 1;
+}
+
+message ListTasksResponse {
+  repeated Process tasks = 1;
+}
+
+message WaitRequest {
+  string container_id = 1;
+  string exec_id = 2;
+}
+
+message WaitResponse {
+  uint32 exit_status = 1;
+  int64 exited_at = 2;
+}

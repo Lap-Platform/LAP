@@ -1,0 +1,19 @@
+openapi: "3.0.0"
+info:
+  title: Public API
+  version: "1.0.0"
+servers:
+  - url: https://api.public.com
+paths:
+  /status:
+    get:
+      summary: Get system status
+      responses:
+        "200":
+          description: OK
+  /info:
+    get:
+      summary: Get system info
+      responses:
+        "200":
+          description: System information

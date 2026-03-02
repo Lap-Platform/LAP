@@ -1,0 +1,78 @@
+asyncapi: 2.6.0
+info:
+  title: Smart Home Automation
+  version: 1.0.0
+  description: MQTT-based smart home device events
+
+servers:
+  production:
+    url: mqtt://home-hub.local:1883
+    protocol: mqtt
+
+channels:
+  home/{roomId}/temperature:
+    parameters:
+      roomId:
+        schema: {type: string}
+    publish:
+      summary: Temperature sensor reading
+      message:
+        name: TemperatureReading
+        payload:
+          type: object
+          required: [sensorId, temperature, unit]
+          properties:
+            sensorId: {type: string}
+            temperature: {type: number}
+            humidity: {type: number}
+            unit: {type: string, enum: [celsius, fahrenheit]}
+            timestamp: {type: string, format: date-time}
+    bindings:
+      mqtt:
+        qos: 0
+
+  home/{roomId}/lights:
+    parameters:
+      roomId:
+        schema: {type: string}
+    subscribe:
+      summary: Light control command
+      message:
+        name: LightCommand
+        payload:
+          type: object
+          required: [deviceId, action]
+          properties:
+            deviceId: {type: string}
+            action: {type: string, enum: [on, off, dim, color]}
+            brightness: {type: integer}
+            color: {type: string}
+
+  home/security:
+    publish:
+      summary: Security system events
+      message:
+        name: SecurityEvent
+        payload:
+          type: object
+          required: [type, zone, timestamp]
+          properties:
+            type: {type: string, enum: [motion, door_open, door_close, window_open, alarm_triggered, alarm_armed, alarm_disarmed]}
+            zone: {type: string}
+            sensorId: {type: string}
+            timestamp: {type: string, format: date-time}
+
+  home/energy:
+    publish:
+      summary: Energy consumption data
+      message:
+        name: EnergyReading
+        payload:
+          type: object
+          required: [watts, timestamp]
+          properties:
+            watts: {type: number}
+            kwhToday: {type: number}
+            solarGeneration: {type: number}
+            gridImport: {type: number}
+            timestamp: {type: string, format: date-time}

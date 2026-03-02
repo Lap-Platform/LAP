@@ -1,0 +1,109 @@
+enum TitleType { MOVIE SERIES DOCUMENTARY SPECIAL }
+enum MaturityRating { G PG PG13 R NC17 TV_Y TV_G TV_PG TV_14 TV_MA }
+enum VideoQuality { SD HD UHD HDR DOLBY_VISION }
+enum AudioFormat { STEREO SURROUND DOLBY_ATMOS }
+enum WatchStatus { NOT_STARTED IN_PROGRESS COMPLETED }
+enum RecommendationReason { BECAUSE_YOU_WATCHED TRENDING TOP_PICKS POPULAR NEW_RELEASES SIMILAR_TASTES }
+
+type Profile {
+  id: ID!
+  name: String!
+  avatarUrl: String!
+  isKids: Boolean!
+  maturityLevel: MaturityRating!
+  language: String!
+  subtitlePreference: String
+  autoplayNextEpisode: Boolean!
+  autoplayPreviews: Boolean!
+  watchlist(first: Int, after: String): TitleConnection!
+  continueWatching(first: Int): [WatchProgress!]!
+  viewingHistory(first: Int, after: String): WatchHistoryConnection!
+  ratings: [TitleRating!]!
+}
+
+type Title {
+  id: ID!
+  type: TitleType!
+  title: String!
+  originalTitle: String
+  description: String!
+  shortDescription: String
+  releaseYear: Int!
+  maturityRating: MaturityRating!
+  duration: Int
+  genres: [Genre!]!
+  cast: [CastMember!]!
+  creators: [Person!]
+  directors: [Person!]
+  seasons(seasonNumber: Int): [Season!]
+  images: TitleImages!
+  trailers: [Trailer!]!
+  availableQualities: [VideoQuality!]!
+  availableAudio: [AudioTrack!]!
+  availableSubtitles: [SubtitleTrack!]!
+  similarTitles(first: Int): [Title!]!
+  rating: Float
+  userRating: Int
+  matchPercentage: Int
+  isNew: Boolean!
+  addedDate: String
+  expiringDate: String
+  countries: [String!]!
+}
+
+type Season { seasonNumber: Int! title: String episodes: [Episode!]! year: Int }
+type Episode { episodeNumber: Int! title: String! description: String duration: Int! thumbnailUrl: String stillUrl: String }
+type Genre { id: ID! name: String! slug: String! }
+type CastMember { person: Person! role: String! character: String }
+type Person { id: ID! name: String! imageUrl: String }
+type TitleImages { poster: String! backdrop: String! logo: String titleCard: String billboard: String }
+type Trailer { id: ID! title: String url: String! duration: Int! thumbnailUrl: String type: String }
+type AudioTrack { language: String! format: AudioFormat! }
+type SubtitleTrack { language: String! forced: Boolean! }
+type WatchProgress { title: Title! episode: Episode season: Int progressSeconds: Int! totalSeconds: Int! percentage: Float! lastWatched: String! }
+type TitleRating { titleId: ID! rating: Int! ratedAt: String! }
+
+type WatchHistoryEntry { title: Title! episode: Episode season: Int watchedAt: String! duration: Int! }
+
+type RecommendationRow { reason: RecommendationReason! reasonTitle: String! basedOn: Title titles: [Title!]! }
+
+type SearchResult { titles: [Title!]! people: [Person!]! genres: [Genre!]! total: Int! }
+
+type TitleConnection { edges: [TitleEdge!]! pageInfo: PageInfo! }
+type TitleEdge { cursor: String! node: Title! }
+type WatchHistoryConnection { edges: [WatchHistoryEdge!]! pageInfo: PageInfo! }
+type WatchHistoryEdge { cursor: String! node: WatchHistoryEntry! }
+type PageInfo { hasNextPage: Boolean! endCursor: String }
+
+input RateTitleInput { titleId: ID! rating: Int! }
+input UpdateProfileInput { name: String avatarUrl: String language: String maturityLevel: MaturityRating autoplayNextEpisode: Boolean autoplayPreviews: Boolean subtitlePreference: String }
+
+type RatePayload { success: Boolean! }
+type WatchlistPayload { success: Boolean! }
+type ProfilePayload { profile: Profile }
+type PlaybackPayload { url: String! quality: VideoQuality! audioTracks: [AudioTrack!]! subtitles: [SubtitleTrack!]! resumePosition: Int }
+
+type Query {
+  profiles: [Profile!]!
+  profile(id: ID!): Profile
+  title(id: ID!): Title
+  search(query: String!, limit: Int): SearchResult!
+  browse(genreId: ID, first: Int, after: String): TitleConnection!
+  trending(country: String, first: Int): [Title!]!
+  newReleases(first: Int, after: String): TitleConnection!
+  recommendations(profileId: ID!, first: Int): [RecommendationRow!]!
+  genres: [Genre!]!
+  continueWatching(profileId: ID!, first: Int): [WatchProgress!]!
+}
+
+type Mutation {
+  rateTitle(input: RateTitleInput!): RatePayload!
+  removeRating(titleId: ID!): RatePayload!
+  addToWatchlist(profileId: ID!, titleId: ID!): WatchlistPayload!
+  removeFromWatchlist(profileId: ID!, titleId: ID!): WatchlistPayload!
+  updateWatchProgress(profileId: ID!, titleId: ID!, episodeNumber: Int, seasonNumber: Int, progressSeconds: Int!): RatePayload!
+  startPlayback(titleId: ID!, profileId: ID!, episodeNumber: Int, seasonNumber: Int, quality: VideoQuality): PlaybackPayload!
+  updateProfile(id: ID!, input: UpdateProfileInput!): ProfilePayload!
+  createProfile(name: String!, isKids: Boolean): ProfilePayload!
+  deleteProfile(id: ID!): RatePayload!
+}

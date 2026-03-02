@@ -1,0 +1,73 @@
+asyncapi: 2.6.0
+info:
+  title: Payment Processing Pipeline
+  version: 1.0.0
+  description: Multi-stage payment processing events
+
+servers:
+  production:
+    url: kafka-payments:9092
+    protocol: kafka
+
+channels:
+  payments.initiated:
+    publish:
+      summary: Payment initiated
+      message:
+        name: PaymentInitiated
+        payload:
+          type: object
+          required: [paymentId, amount, currency, merchantId]
+          properties:
+            paymentId: {type: string}
+            amount: {type: number}
+            currency: {type: string}
+            merchantId: {type: string}
+            customerId: {type: string}
+            method: {type: string, enum: [card, bank_transfer, wallet, crypto]}
+            cardLast4: {type: string}
+
+  payments.authorized:
+    subscribe:
+      summary: Payment authorized
+      message:
+        name: PaymentAuthorized
+        payload:
+          type: object
+          required: [paymentId, authCode, status]
+          properties:
+            paymentId: {type: string}
+            authCode: {type: string}
+            status: {type: string, enum: [approved, declined]}
+            riskScore: {type: number}
+            processorResponse: {type: string}
+
+  payments.settled:
+    subscribe:
+      summary: Payment settled
+      message:
+        name: PaymentSettled
+        payload:
+          type: object
+          required: [paymentId, settledAmount, settlementDate]
+          properties:
+            paymentId: {type: string}
+            settledAmount: {type: number}
+            fee: {type: number}
+            netAmount: {type: number}
+            settlementDate: {type: string, format: date}
+
+  payments.disputed:
+    subscribe:
+      summary: Payment disputed (chargeback)
+      message:
+        name: PaymentDisputed
+        payload:
+          type: object
+          required: [paymentId, disputeId, reason]
+          properties:
+            paymentId: {type: string}
+            disputeId: {type: string}
+            reason: {type: string, enum: [fraudulent, not_received, product_not_as_described, duplicate]}
+            amount: {type: number}
+            deadline: {type: string, format: date}

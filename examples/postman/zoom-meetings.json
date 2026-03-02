@@ -1,0 +1,195 @@
+{
+  "info": {
+    "name": "Zoom Meetings API",
+    "_postman_id": "zoom-001",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://api.zoom.us/v2"
+    }
+  ],
+  "item": [
+    {
+      "name": "Create Meeting",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/users/:userId/meetings",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "users",
+            ":userId",
+            "meetings"
+          ],
+          "variable": [
+            {
+              "key": "userId",
+              "value": "me"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"topic\": \"Team Standup\", \"type\": 2, \"start_time\": \"2024-02-01T10:00:00Z\", \"duration\": 30, \"settings\": {\"join_before_host\": true, \"mute_upon_entry\": true}}"
+        }
+      },
+      "response": [
+        {
+          "name": "Created",
+          "code": 201,
+          "body": "{\"id\": 123456, \"join_url\": \"https://zoom.us/j/123456\", \"start_url\": \"https://zoom.us/s/123456\", \"password\": \"abc123\"}"
+        }
+      ]
+    },
+    {
+      "name": "List Meetings",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/users/:userId/meetings",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "users",
+            ":userId",
+            "meetings"
+          ],
+          "query": [
+            {
+              "key": "type",
+              "value": "scheduled",
+              "description": ""
+            },
+            {
+              "key": "page_size",
+              "value": "30",
+              "description": ""
+            }
+          ],
+          "variable": [
+            {
+              "key": "userId",
+              "value": "me"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"meetings\": [{\"id\": 123456, \"topic\": \"Team Standup\", \"start_time\": \"2024-02-01T10:00:00Z\"}]}"
+        }
+      ]
+    },
+    {
+      "name": "Get Meeting",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/meetings/:meetingId",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "meetings",
+            ":meetingId"
+          ],
+          "variable": [
+            {
+              "key": "meetingId",
+              "value": "123456"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"id\": 123456, \"topic\": \"Team Standup\", \"status\": \"waiting\"}"
+        }
+      ]
+    },
+    {
+      "name": "Delete Meeting",
+      "request": {
+        "method": "DELETE",
+        "url": {
+          "raw": "{{baseUrl}}/meetings/:meetingId",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "meetings",
+            ":meetingId"
+          ],
+          "variable": [
+            {
+              "key": "meetingId",
+              "value": "123456"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "Deleted",
+          "code": 204,
+          "body": "{}"
+        }
+      ]
+    },
+    {
+      "name": "List Participants",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/past_meetings/:meetingId/participants",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "past_meetings",
+            ":meetingId",
+            "participants"
+          ],
+          "query": [
+            {
+              "key": "page_size",
+              "value": "30",
+              "description": ""
+            }
+          ],
+          "variable": [
+            {
+              "key": "meetingId",
+              "value": "123456"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"participants\": [{\"id\": \"u1\", \"name\": \"John\", \"join_time\": \"2024-02-01T10:00:00Z\", \"duration\": 1800}]}"
+        }
+      ]
+    }
+  ]
+}

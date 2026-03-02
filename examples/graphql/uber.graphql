@@ -1,0 +1,87 @@
+enum RideStatus { PROCESSING ACCEPTED EN_ROUTE ARRIVED IN_PROGRESS COMPLETED CANCELLED DRIVER_CANCELLED NO_DRIVERS_AVAILABLE }
+enum VehicleType { UBERX UBER_COMFORT UBER_XL UBER_BLACK UBER_SUV UBER_GREEN }
+enum PaymentMethodType { CREDIT_CARD DEBIT_CARD PAYPAL APPLE_PAY GOOGLE_PAY CASH }
+enum Currency { USD EUR GBP }
+
+type Location { latitude: Float! longitude: Float! address: String displayName: String }
+
+type RideEstimate {
+  vehicleType: VehicleType!
+  displayName: String!
+  estimatedPrice: PriceEstimate!
+  estimatedDuration: Int!
+  estimatedDistance: Float!
+  surgeMultiplier: Float
+  capacity: Int!
+  eta: Int
+}
+
+type PriceEstimate { low: Float! high: Float! currency: Currency! surgeMultiplier: Float displayAmount: String! }
+
+type Ride {
+  id: ID!
+  status: RideStatus!
+  vehicleType: VehicleType!
+  rider: Rider!
+  driver: Driver
+  vehicle: Vehicle
+  pickup: Location!
+  dropoff: Location!
+  waypoints: [Location!]
+  route: Route
+  fare: Fare
+  requestedAt: String!
+  acceptedAt: String
+  arrivedAt: String
+  startedAt: String
+  completedAt: String
+  cancelledAt: String
+  cancellationReason: String
+  rating: Int
+  tip: Float
+  receipt: Receipt
+}
+
+type Rider { id: ID! firstName: String! lastName: String! phone: String email: String rating: Float! picture: String paymentMethods: [PaymentMethod!]! }
+type Driver { id: ID! firstName: String! lastName: String! phone: String! rating: Float! picture: String tripsCompleted: Int! memberSince: String! }
+type Vehicle { make: String! model: String! year: Int! color: String! licensePlate: String! }
+type Route { polyline: String! distanceKm: Float! durationMinutes: Int! }
+type Fare { baseFare: Float! distanceFare: Float! timeFare: Float! surgeFee: Float bookingFee: Float! tolls: Float tips: Float total: Float! currency: Currency! }
+type Receipt { id: ID! totalCharged: Float! currency: Currency! distance: String duration: String surgeCharge: Float downloadUrl: String }
+type PaymentMethod { id: ID! type: PaymentMethodType! last4: String description: String! isDefault: Boolean! }
+
+type RideConnection { edges: [RideEdge!]! pageInfo: PageInfo! totalCount: Int }
+type RideEdge { cursor: String! node: Ride! }
+type PageInfo { hasNextPage: Boolean! endCursor: String }
+
+input RequestRideInput { pickupLatitude: Float! pickupLongitude: Float! pickupAddress: String dropoffLatitude: Float! dropoffLongitude: Float! dropoffAddress: String vehicleType: VehicleType! paymentMethodId: ID seatCount: Int fareId: ID }
+input RateRideInput { rideId: ID! rating: Int! comment: String tip: Float }
+input UpdatePaymentInput { type: PaymentMethodType! token: String! setDefault: Boolean }
+
+type RidePayload { ride: Ride }
+type EstimatePayload { estimates: [RideEstimate!]! }
+type CancelPayload { ride: Ride cancellationFee: Float }
+type RatePayload { success: Boolean! }
+type PaymentPayload { paymentMethod: PaymentMethod }
+
+type Query {
+  me: Rider!
+  ride(id: ID!): Ride
+  currentRide: Ride
+  rideHistory(first: Int, after: String): RideConnection!
+  estimateRide(pickupLatitude: Float!, pickupLongitude: Float!, dropoffLatitude: Float!, dropoffLongitude: Float!, seatCount: Int): EstimatePayload!
+  nearbyDrivers(latitude: Float!, longitude: Float!, vehicleType: VehicleType): [DriverLocation!]!
+  paymentMethods: [PaymentMethod!]!
+}
+
+type DriverLocation { driverId: ID! location: Location! eta: Int! vehicleType: VehicleType! }
+
+type Mutation {
+  requestRide(input: RequestRideInput!): RidePayload!
+  cancelRide(rideId: ID!, reason: String): CancelPayload!
+  rateRide(input: RateRideInput!): RatePayload!
+  addPaymentMethod(input: UpdatePaymentInput!): PaymentPayload!
+  removePaymentMethod(id: ID!): RatePayload!
+  setDefaultPayment(id: ID!): PaymentPayload!
+  updateRideDestination(rideId: ID!, latitude: Float!, longitude: Float!, address: String): RidePayload!
+}

@@ -1,0 +1,231 @@
+syntax = "proto3";
+
+package workflow.v1;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/any.proto";
+import "google/protobuf/empty.proto";
+
+service WorkflowService {
+  rpc CreateWorkflow(CreateWorkflowRequest) returns (Workflow);
+  rpc GetWorkflow(GetWorkflowRequest) returns (Workflow);
+  rpc UpdateWorkflow(UpdateWorkflowRequest) returns (Workflow);
+  rpc DeleteWorkflow(DeleteWorkflowRequest) returns (google.protobuf.Empty);
+  rpc ListWorkflows(ListWorkflowsRequest) returns (ListWorkflowsResponse);
+  rpc ExecuteWorkflow(ExecuteWorkflowRequest) returns (WorkflowExecution);
+  rpc GetExecution(GetExecutionRequest) returns (WorkflowExecution);
+  rpc ListExecutions(ListExecutionsRequest) returns (ListExecutionsResponse);
+  rpc CancelExecution(CancelExecutionRequest) returns (google.protobuf.Empty);
+  rpc RetryExecution(RetryExecutionRequest) returns (WorkflowExecution);
+}
+
+message Workflow {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  repeated WorkflowStep steps = 4;
+  map<string, Variable> variables = 5;
+  TriggerConfig trigger = 6;
+  WorkflowStatus status = 7;
+  google.protobuf.Timestamp created_at = 8;
+  google.protobuf.Timestamp updated_at = 9;
+}
+
+enum WorkflowStatus {
+  STATUS_UNSPECIFIED = 0;
+  DRAFT = 1;
+  ACTIVE = 2;
+  PAUSED = 3;
+  ARCHIVED = 4;
+}
+
+message WorkflowStep {
+  string id = 1;
+  string name = 2;
+  StepType type = 3;
+  map<string, google.protobuf.Any> config = 4;
+  repeated string depends_on = 5;
+  RetryPolicy retry_policy = 6;
+  google.protobuf.Duration timeout = 7;
+  Condition condition = 8;
+}
+
+enum StepType {
+  STEP_TYPE_UNSPECIFIED = 0;
+  HTTP_REQUEST = 1;
+  FUNCTION_CALL = 2;
+  DELAY = 3;
+  PARALLEL = 4;
+  CHOICE = 5;
+  LOOP = 6;
+  TRANSFORM = 7;
+}
+
+message RetryPolicy {
+  int32 max_attempts = 1;
+  google.protobuf.Duration initial_delay = 2;
+  double backoff_multiplier = 3;
+  google.protobuf.Duration max_delay = 4;
+}
+
+message Condition {
+  string expression = 1;
+  ConditionOperator operator = 2;
+  google.protobuf.Any value = 3;
+}
+
+enum ConditionOperator {
+  CONDITION_OPERATOR_UNSPECIFIED = 0;
+  EQUALS = 1;
+  NOT_EQUALS = 2;
+  GREATER_THAN = 3;
+  LESS_THAN = 4;
+  CONTAINS = 5;
+  EXISTS = 6;
+}
+
+message Variable {
+  string name = 1;
+  VariableType type = 2;
+  google.protobuf.Any default_value = 3;
+  bool required = 4;
+}
+
+enum VariableType {
+  VARIABLE_TYPE_UNSPECIFIED = 0;
+  STRING = 1;
+  NUMBER = 2;
+  BOOLEAN = 3;
+  OBJECT = 4;
+  ARRAY = 5;
+}
+
+message TriggerConfig {
+  oneof trigger_type {
+    ManualTrigger manual = 1;
+    ScheduleTrigger schedule = 2;
+    EventTrigger event = 3;
+    WebhookTrigger webhook = 4;
+  }
+}
+
+message ManualTrigger {
+  bool enabled = 1;
+}
+
+message ScheduleTrigger {
+  string cron_expression = 1;
+  string timezone = 2;
+}
+
+message EventTrigger {
+  string event_type = 1;
+  map<string, string> filters = 2;
+}
+
+message WebhookTrigger {
+  string url = 1;
+  string secret = 2;
+}
+
+message WorkflowExecution {
+  string id = 1;
+  string workflow_id = 2;
+  ExecutionStatus status = 3;
+  map<string, google.protobuf.Any> input = 4;
+  map<string, google.protobuf.Any> output = 5;
+  repeated StepExecution step_executions = 6;
+  google.protobuf.Timestamp started_at = 7;
+  google.protobuf.Timestamp completed_at = 8;
+  google.protobuf.Duration duration = 9;
+  string error = 10;
+}
+
+enum ExecutionStatus {
+  EXECUTION_STATUS_UNSPECIFIED = 0;
+  PENDING = 1;
+  RUNNING = 2;
+  SUCCEEDED = 3;
+  FAILED = 4;
+  CANCELED = 5;
+  TIMED_OUT = 6;
+}
+
+message StepExecution {
+  string step_id = 1;
+  string step_name = 2;
+  ExecutionStatus status = 3;
+  google.protobuf.Any input = 4;
+  google.protobuf.Any output = 5;
+  google.protobuf.Timestamp started_at = 6;
+  google.protobuf.Timestamp completed_at = 7;
+  int32 attempt = 8;
+  string error = 9;
+}
+
+message CreateWorkflowRequest {
+  string name = 1;
+  string description = 2;
+  repeated WorkflowStep steps = 3;
+  map<string, Variable> variables = 4;
+  TriggerConfig trigger = 5;
+}
+
+message GetWorkflowRequest {
+  string id = 1;
+}
+
+message UpdateWorkflowRequest {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  repeated WorkflowStep steps = 4;
+  map<string, Variable> variables = 5;
+  TriggerConfig trigger = 6;
+  WorkflowStatus status = 7;
+}
+
+message DeleteWorkflowRequest {
+  string id = 1;
+}
+
+message ListWorkflowsRequest {
+  WorkflowStatus status = 1;
+  int32 page_size = 2;
+  string page_token = 3;
+}
+
+message ListWorkflowsResponse {
+  repeated Workflow workflows = 1;
+  string next_page_token = 2;
+}
+
+message ExecuteWorkflowRequest {
+  string workflow_id = 1;
+  map<string, google.protobuf.Any> input = 2;
+}
+
+message GetExecutionRequest {
+  string execution_id = 1;
+}
+
+message ListExecutionsRequest {
+  string workflow_id = 1;
+  ExecutionStatus status = 2;
+  int32 page_size = 3;
+  string page_token = 4;
+}
+
+message ListExecutionsResponse {
+  repeated WorkflowExecution executions = 1;
+  string next_page_token = 2;
+}
+
+message CancelExecutionRequest {
+  string execution_id = 1;
+}
+
+message RetryExecutionRequest {
+  string execution_id = 1;
+}

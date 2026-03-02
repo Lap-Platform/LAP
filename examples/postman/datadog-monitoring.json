@@ -1,0 +1,190 @@
+{
+  "info": {
+    "name": "Datadog Monitoring API",
+    "_postman_id": "dd-001",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      {
+        "key": "key",
+        "value": "DD-API-KEY"
+      },
+      {
+        "key": "in",
+        "value": "header"
+      },
+      {
+        "key": "value",
+        "value": "{{apiKey}}"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://api.datadoghq.com/api/v1"
+    }
+  ],
+  "item": [
+    {
+      "name": "Post Metrics",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/series",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "series"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"series\": [{\"metric\": \"system.cpu.usage\", \"points\": [[1704067200, 45.5]], \"type\": \"gauge\", \"host\": \"web-01\", \"tags\": [\"env:prod\"]}]}"
+        },
+        "header": [
+          {
+            "key": "DD-APPLICATION-KEY",
+            "value": "{{appKey}}",
+            "description": ""
+          }
+        ]
+      },
+      "response": [
+        {
+          "name": "Accepted",
+          "code": 202,
+          "body": "{\"status\": \"ok\"}"
+        }
+      ]
+    },
+    {
+      "name": "Query Metrics",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/query",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "query"
+          ],
+          "query": [
+            {
+              "key": "from",
+              "value": "1704067200",
+              "description": "Unix timestamp"
+            },
+            {
+              "key": "to",
+              "value": "1704153600",
+              "description": ""
+            },
+            {
+              "key": "query",
+              "value": "avg:system.cpu.usage{env:prod}",
+              "description": ""
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"series\": [{\"metric\": \"system.cpu.usage\", \"pointlist\": [[1704067200000, 45.5]]}]}"
+        }
+      ]
+    },
+    {
+      "name": "Create Monitor",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/monitor",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "monitor"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"name\": \"High CPU\", \"type\": \"metric alert\", \"query\": \"avg(last_5m):avg:system.cpu.usage{*} > 90\", \"message\": \"CPU is high @ops-team\"}"
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"id\": 12345, \"name\": \"High CPU\", \"overall_state\": \"OK\"}"
+        }
+      ]
+    },
+    {
+      "name": "List Monitors",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/monitor",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "monitor"
+          ],
+          "query": [
+            {
+              "key": "name",
+              "value": "",
+              "description": "Filter"
+            },
+            {
+              "key": "tags",
+              "value": "",
+              "description": ""
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "[{\"id\": 12345, \"name\": \"High CPU\", \"overall_state\": \"OK\"}]"
+        }
+      ]
+    },
+    {
+      "name": "Post Event",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/events",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "events"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"title\": \"Deploy v2.1\", \"text\": \"Deployed to production\", \"tags\": [\"env:prod\", \"service:api\"], \"alert_type\": \"info\"}"
+        }
+      },
+      "response": [
+        {
+          "name": "Accepted",
+          "code": 202,
+          "body": "{\"event\": {\"id\": 67890}}"
+        }
+      ]
+    }
+  ]
+}

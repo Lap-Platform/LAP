@@ -1,0 +1,245 @@
+{
+  "info": {
+    "name": "Jira Project Management API",
+    "_postman_id": "jira-001",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "basic",
+    "basic": [
+      {
+        "key": "username",
+        "value": "{{email}}"
+      },
+      {
+        "key": "password",
+        "value": "{{apiToken}}"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://{{domain}}.atlassian.net/rest/api/3"
+    },
+    {
+      "key": "domain",
+      "value": "mycompany"
+    },
+    {
+      "key": "email",
+      "value": ""
+    },
+    {
+      "key": "apiToken",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Issues",
+      "item": [
+        {
+          "name": "Create Issue",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/issue",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "issue"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"fields\": {\"project\": {\"key\": \"PROJ\"}, \"summary\": \"Bug report\", \"issuetype\": {\"name\": \"Bug\"}, \"priority\": {\"name\": \"High\"}, \"description\": {\"type\": \"doc\", \"version\": 1, \"content\": []}}}"
+            }
+          },
+          "response": [
+            {
+              "name": "Created",
+              "code": 201,
+              "body": "{\"id\": \"10001\", \"key\": \"PROJ-42\", \"self\": \"https://myco.atlassian.net/rest/api/3/issue/10001\"}"
+            }
+          ]
+        },
+        {
+          "name": "Get Issue",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/issue/:issueIdOrKey",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "issue",
+                ":issueIdOrKey"
+              ],
+              "query": [
+                {
+                  "key": "fields",
+                  "value": "",
+                  "description": "Comma-separated"
+                },
+                {
+                  "key": "expand",
+                  "value": "",
+                  "description": ""
+                }
+              ],
+              "variable": [
+                {
+                  "key": "issueIdOrKey",
+                  "value": "PROJ-42"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "OK",
+              "code": 200,
+              "body": "{\"id\": \"10001\", \"key\": \"PROJ-42\", \"fields\": {\"summary\": \"Bug report\", \"status\": {\"name\": \"To Do\"}}}"
+            }
+          ]
+        },
+        {
+          "name": "Search Issues (JQL)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/search",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "search"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"jql\": \"project = PROJ AND status = 'In Progress'\", \"maxResults\": 50, \"startAt\": 0}"
+            }
+          },
+          "response": [
+            {
+              "name": "OK",
+              "code": 200,
+              "body": "{\"issues\": [{\"key\": \"PROJ-1\", \"fields\": {\"summary\": \"Task\"}}], \"total\": 100}"
+            }
+          ]
+        },
+        {
+          "name": "Transition Issue",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/issue/:issueIdOrKey/transitions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "issue",
+                ":issueIdOrKey",
+                "transitions"
+              ],
+              "variable": [
+                {
+                  "key": "issueIdOrKey",
+                  "value": "PROJ-42"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"transition\": {\"id\": \"31\"}}"
+            }
+          },
+          "response": [
+            {
+              "name": "OK",
+              "code": 204,
+              "body": "{}"
+            }
+          ]
+        },
+        {
+          "name": "Add Comment",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/issue/:issueIdOrKey/comment",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "issue",
+                ":issueIdOrKey",
+                "comment"
+              ],
+              "variable": [
+                {
+                  "key": "issueIdOrKey",
+                  "value": "PROJ-42"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"body\": {\"type\": \"doc\", \"version\": 1, \"content\": [{\"type\": \"paragraph\", \"content\": [{\"type\": \"text\", \"text\": \"Fixed in v2.1\"}]}]}}"
+            }
+          },
+          "response": [
+            {
+              "name": "Created",
+              "code": 201,
+              "body": "{\"id\": \"10050\", \"body\": {}, \"author\": {\"displayName\": \"John\"}}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Projects",
+      "item": [
+        {
+          "name": "List Projects",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/project",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "project"
+              ],
+              "query": [
+                {
+                  "key": "maxResults",
+                  "value": "50",
+                  "description": ""
+                },
+                {
+                  "key": "startAt",
+                  "value": "0",
+                  "description": ""
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "OK",
+              "code": 200,
+              "body": "[{\"id\": \"10000\", \"key\": \"PROJ\", \"name\": \"My Project\"}]"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

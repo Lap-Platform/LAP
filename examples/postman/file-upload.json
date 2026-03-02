@@ -1,0 +1,89 @@
+{
+  "info": {
+    "name": "Media Storage API",
+    "_postman_id": "upload-001",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {"key": "baseUrl", "value": "https://api.mediastorage.io/v1"}
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{"key": "token", "value": "{{token}}"}]
+  },
+  "item": [
+    {
+      "name": "Upload File",
+      "request": {
+        "method": "POST",
+        "url": {"raw": "{{baseUrl}}/files", "host": ["{{baseUrl}}"], "path": ["files"]},
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {"key": "file", "type": "file", "src": "/path/to/file.png", "description": "File to upload"},
+            {"key": "folder", "value": "images", "type": "text", "description": "Target folder"},
+            {"key": "tags", "value": "photo,landscape", "type": "text", "description": "Comma-separated tags"}
+          ]
+        }
+      },
+      "response": [
+        {"name": "Uploaded", "code": 201, "body": "{\"id\": \"file_abc\", \"url\": \"https://cdn.example.com/file_abc.png\", \"size\": 1048576}"},
+        {"name": "Too Large", "code": 413, "body": "{\"error\": \"File exceeds 10MB limit\"}"}
+      ]
+    },
+    {
+      "name": "Upload Avatar",
+      "request": {
+        "method": "POST",
+        "url": {"raw": "{{baseUrl}}/users/:userId/avatar", "host": ["{{baseUrl}}"], "path": ["users", ":userId", "avatar"],
+          "variable": [{"key": "userId", "value": "user_123"}]
+        },
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {"key": "avatar", "type": "file", "src": "/path/to/avatar.jpg"},
+            {"key": "crop", "value": "{\"x\":0,\"y\":0,\"w\":200,\"h\":200}", "type": "text", "description": "Crop coordinates"}
+          ]
+        }
+      },
+      "response": [
+        {"name": "Updated", "code": 200, "body": "{\"avatar_url\": \"https://cdn.example.com/avatars/user_123.jpg\"}"}
+      ]
+    },
+    {
+      "name": "List Files",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/files?folder=images&sort=created_desc",
+          "host": ["{{baseUrl}}"],
+          "path": ["files"],
+          "query": [
+            {"key": "folder", "value": "images", "description": "Filter by folder"},
+            {"key": "sort", "value": "created_desc", "description": "Sort order"},
+            {"key": "limit", "value": "50", "disabled": true}
+          ]
+        }
+      },
+      "response": [
+        {"name": "Files", "code": 200, "body": "{\"files\": [{\"id\": \"file_abc\", \"name\": \"photo.png\", \"size\": 1048576}], \"total\": 150}"}
+      ]
+    },
+    {
+      "name": "Delete File",
+      "request": {
+        "method": "DELETE",
+        "url": {
+          "raw": "{{baseUrl}}/files/:fileId",
+          "host": ["{{baseUrl}}"],
+          "path": ["files", ":fileId"],
+          "variable": [{"key": "fileId", "value": "file_abc"}]
+        }
+      },
+      "response": [
+        {"name": "Deleted", "code": 204, "body": ""},
+        {"name": "Not Found", "code": 404, "body": "{\"error\": \"File not found\"}"}
+      ]
+    }
+  ]
+}

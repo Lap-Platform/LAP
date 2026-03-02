@@ -1,0 +1,244 @@
+You are an API integration assistant. You will be given API documentation and a series of tasks.
+For each task, write the exact API call (curl command for REST, GraphQL query, protobuf RPC call, etc).
+
+Format your response as:
+TASK 1: <your api call>
+TASK 2: <your api call>
+... etc
+
+--- API DOCUMENTATION ---
+{
+  "info": {
+    "name": "Stripe Payments API",
+    "_postman_id": "stripe-001",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://api.stripe.com/v1"
+    }
+  ],
+  "item": [
+    {
+      "name": "Charges",
+      "item": [
+        {
+          "name": "Create Charge",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/charges",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "charges"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"amount\": 2000, \"currency\": \"usd\", \"source\": \"tok_visa\", \"description\": \"My charge\"}"
+            }
+          },
+          "response": [
+            {
+              "name": "Created",
+              "code": 201,
+              "body": "{\"id\": \"ch_1A\", \"amount\": 2000, \"status\": \"succeeded\"}"
+            },
+            {
+              "name": "Failed",
+              "code": 402,
+              "body": "{\"error\": {\"type\": \"card_error\", \"message\": \"Card declined\"}}"
+            }
+          ]
+        },
+        {
+          "name": "Get Charge",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/charges/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "charges",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "ch_1A"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "OK",
+              "code": 200,
+              "body": "{\"id\": \"ch_1A\", \"amount\": 2000, \"currency\": \"usd\", \"status\": \"succeeded\"}"
+            }
+          ]
+        },
+        {
+          "name": "List Charges",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/charges",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "charges"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Max results"
+                },
+                {
+                  "key": "starting_after",
+                  "value": "",
+                  "description": "Cursor"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "OK",
+              "code": 200,
+              "body": "{\"data\": [{\"id\": \"ch_1A\", \"amount\": 2000}], \"has_more\": false}"
+            }
+          ]
+        },
+        {
+          "name": "Capture Charge",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/charges/:id/capture",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "charges",
+                ":id",
+                "capture"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "ch_1A"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"amount\": 2000}"
+            }
+          },
+          "response": [
+            {
+              "name": "OK",
+              "code": 200,
+              "body": "{\"id\": \"ch_1A\", \"captured\": true}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Customers",
+      "item": [
+        {
+          "name": "Create Customer",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/customers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customers"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"user@example.com\", \"name\": \"John Doe\", \"metadata\": {\"org\": \"acme\"}}"
+            }
+          },
+          "response": [
+            {
+              "name": "Created",
+              "code": 201,
+              "body": "{\"id\": \"cus_1B\", \"email\": \"user@example.com\"}"
+            }
+          ]
+        },
+        {
+          "name": "List Customers",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/customers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customers"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": ""
+                },
+                {
+                  "key": "email",
+                  "value": "",
+                  "description": "Filter by email"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "OK",
+              "code": 200,
+              "body": "{\"data\": [{\"id\": \"cus_1B\", \"email\": \"user@example.com\"}]}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+--- END DOCUMENTATION ---
+
+TASKS:
+1. Create charge for $2000 USD with source tok_visa
+2. Get charge details for ch_abc123
+3. List all charges with limit 10
+4. Capture uncaptured charge ch_xyz789 for full amount
+5. Create customer with email customer@example.com and name 'Jane Doe'
+6. Get customer details for cus_abc123
+7. List customers with limit 20 and created after timestamp
+8. Create charge for customer cus_abc123 with amount 5000 and description 'Service fee'
+9. Capture charge ch_test123 for partial amount 1000 with receipt email
+10. List charges for customer cus_xyz789 with starting_after cursor

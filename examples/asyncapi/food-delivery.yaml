@@ -1,0 +1,74 @@
+asyncapi: 2.6.0
+info:
+  title: Food Delivery Tracking
+  version: 1.0.0
+  description: Real-time food delivery order tracking
+
+servers:
+  production:
+    url: wss://delivery.food.example.com
+    protocol: ws
+
+channels:
+  orders/{orderId}/status:
+    parameters:
+      orderId:
+        schema: {type: string}
+    subscribe:
+      summary: Order status update
+      message:
+        name: OrderStatus
+        payload:
+          type: object
+          required: [orderId, status, updatedAt]
+          properties:
+            orderId: {type: string}
+            status: {type: string, enum: [placed, confirmed, preparing, ready, picked_up, delivering, delivered]}
+            estimatedDelivery: {type: string, format: date-time}
+            updatedAt: {type: string, format: date-time}
+
+  orders/{orderId}/driver:
+    parameters:
+      orderId:
+        schema: {type: string}
+    subscribe:
+      summary: Driver tracking
+      message:
+        name: DriverTracking
+        payload:
+          type: object
+          required: [driverId, location]
+          properties:
+            driverId: {type: string}
+            driverName: {type: string}
+            location:
+              type: object
+              properties:
+                lat: {type: number}
+                lng: {type: number}
+            eta: {type: integer}
+            distanceRemaining: {type: number}
+
+  restaurants/{restaurantId}/orders:
+    parameters:
+      restaurantId:
+        schema: {type: string}
+    subscribe:
+      summary: New order for restaurant
+      message:
+        name: RestaurantOrder
+        payload:
+          type: object
+          required: [orderId, items]
+          properties:
+            orderId: {type: string}
+            items:
+              type: array
+              items:
+                type: object
+                properties:
+                  name: {type: string}
+                  quantity: {type: integer}
+                  specialInstructions: {type: string}
+            customerName: {type: string}
+            prepTime: {type: integer}

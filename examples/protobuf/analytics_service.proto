@@ -1,0 +1,359 @@
+syntax = "proto3";
+
+package analytics.v1;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/empty.proto";
+
+service EventService {
+  rpc TrackEvent(TrackEventRequest) returns (TrackEventResponse);
+  rpc TrackEvents(stream TrackEventRequest) returns (TrackEventResponse);
+  rpc GetEvent(GetEventRequest) returns (Event);
+  rpc QueryEvents(QueryEventsRequest) returns (QueryEventsResponse);
+}
+
+service AnalyticsService {
+  rpc CreateReport(CreateReportRequest) returns (Report);
+  rpc GetReport(GetReportRequest) returns (Report);
+  rpc RunReport(RunReportRequest) returns (ReportResult);
+  rpc ListReports(ListReportsRequest) returns (ListReportsResponse);
+  rpc DeleteReport(DeleteReportRequest) returns (google.protobuf.Empty);
+}
+
+service FunnelService {
+  rpc CreateFunnel(CreateFunnelRequest) returns (Funnel);
+  rpc GetFunnel(GetFunnelRequest) returns (Funnel);
+  rpc AnalyzeFunnel(AnalyzeFunnelRequest) returns (FunnelAnalysis);
+  rpc ListFunnels(ListFunnelsRequest) returns (ListFunnelsResponse);
+}
+
+service CohortService {
+  rpc CreateCohort(CreateCohortRequest) returns (Cohort);
+  rpc GetCohort(GetCohortRequest) returns (Cohort);
+  rpc AnalyzeCohort(AnalyzeCohortRequest) returns (CohortAnalysis);
+  rpc ListCohorts(ListCohortsRequest) returns (ListCohortsResponse);
+}
+
+message Event {
+  string id = 1;
+  string event_name = 2;
+  string user_id = 3;
+  string session_id = 4;
+  google.protobuf.Timestamp timestamp = 5;
+  map<string, EventProperty> properties = 6;
+  map<string, EventProperty> user_properties = 7;
+  DeviceInfo device_info = 8;
+  LocationInfo location_info = 9;
+}
+
+message EventProperty {
+  oneof value {
+    string string_value = 1;
+    int64 int_value = 2;
+    double double_value = 3;
+    bool bool_value = 4;
+    google.protobuf.Timestamp timestamp_value = 5;
+  }
+}
+
+message DeviceInfo {
+  string device_id = 1;
+  string device_type = 2;
+  string os_name = 3;
+  string os_version = 4;
+  string app_version = 5;
+  string browser = 6;
+  string browser_version = 7;
+  int32 screen_width = 8;
+  int32 screen_height = 9;
+}
+
+message LocationInfo {
+  string country = 1;
+  string region = 2;
+  string city = 3;
+  double latitude = 4;
+  double longitude = 5;
+  string timezone = 6;
+}
+
+message TrackEventRequest {
+  string event_name = 1;
+  string user_id = 2;
+  string session_id = 3;
+  map<string, EventProperty> properties = 4;
+  map<string, EventProperty> user_properties = 5;
+  DeviceInfo device_info = 6;
+  LocationInfo location_info = 7;
+  google.protobuf.Timestamp timestamp = 8;
+}
+
+message TrackEventResponse {
+  string event_id = 1;
+  int32 events_tracked = 2;
+}
+
+message GetEventRequest {
+  string event_id = 1;
+}
+
+message QueryEventsRequest {
+  repeated string event_names = 1;
+  repeated string user_ids = 2;
+  google.protobuf.Timestamp start_time = 3;
+  google.protobuf.Timestamp end_time = 4;
+  repeated Filter filters = 5;
+  string group_by = 6;
+  repeated Aggregation aggregations = 7;
+  int32 limit = 8;
+  string page_token = 9;
+}
+
+message Filter {
+  string property = 1;
+  FilterOperator operator = 2;
+  EventProperty value = 3;
+}
+
+enum FilterOperator {
+  OPERATOR_UNSPECIFIED = 0;
+  EQUALS = 1;
+  NOT_EQUALS = 2;
+  GREATER_THAN = 3;
+  LESS_THAN = 4;
+  CONTAINS = 5;
+  IN = 6;
+  NOT_IN = 7;
+}
+
+message Aggregation {
+  AggregationType type = 1;
+  string property = 2;
+  string alias = 3;
+}
+
+enum AggregationType {
+  AGGREGATION_UNSPECIFIED = 0;
+  COUNT = 1;
+  SUM = 2;
+  AVG = 3;
+  MIN = 4;
+  MAX = 5;
+  COUNT_DISTINCT = 6;
+}
+
+message QueryEventsResponse {
+  repeated EventGroup groups = 1;
+  int32 total_count = 2;
+  string next_page_token = 3;
+}
+
+message EventGroup {
+  map<string, EventProperty> dimensions = 1;
+  map<string, double> metrics = 2;
+  int32 count = 3;
+}
+
+message Report {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  ReportType type = 4;
+  ReportConfiguration configuration = 5;
+  ReportSchedule schedule = 6;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp updated_at = 8;
+}
+
+enum ReportType {
+  REPORT_TYPE_UNSPECIFIED = 0;
+  EVENT_COUNT = 1;
+  USER_ACTIVITY = 2;
+  RETENTION = 3;
+  REVENUE = 4;
+  CUSTOM = 5;
+}
+
+message ReportConfiguration {
+  repeated string event_names = 1;
+  repeated string dimensions = 2;
+  repeated Aggregation metrics = 3;
+  repeated Filter filters = 4;
+  google.protobuf.Duration time_range = 5;
+}
+
+message ReportSchedule {
+  bool enabled = 1;
+  ScheduleFrequency frequency = 2;
+  string cron_expression = 3;
+  repeated string recipients = 4;
+}
+
+enum ScheduleFrequency {
+  FREQUENCY_UNSPECIFIED = 0;
+  HOURLY = 1;
+  DAILY = 2;
+  WEEKLY = 3;
+  MONTHLY = 4;
+}
+
+message CreateReportRequest {
+  string name = 1;
+  string description = 2;
+  ReportType type = 3;
+  ReportConfiguration configuration = 4;
+  ReportSchedule schedule = 5;
+}
+
+message GetReportRequest {
+  string id = 1;
+}
+
+message RunReportRequest {
+  string id = 1;
+  google.protobuf.Timestamp start_time = 2;
+  google.protobuf.Timestamp end_time = 3;
+}
+
+message ReportResult {
+  string report_id = 1;
+  repeated ReportRow rows = 2;
+  int32 total_rows = 3;
+  google.protobuf.Timestamp generated_at = 4;
+}
+
+message ReportRow {
+  map<string, EventProperty> dimensions = 1;
+  map<string, double> metrics = 2;
+}
+
+message ListReportsRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+}
+
+message ListReportsResponse {
+  repeated Report reports = 1;
+  string next_page_token = 2;
+}
+
+message DeleteReportRequest {
+  string id = 1;
+}
+
+message Funnel {
+  string id = 1;
+  string name = 2;
+  repeated FunnelStep steps = 3;
+  google.protobuf.Duration conversion_window = 4;
+  google.protobuf.Timestamp created_at = 5;
+}
+
+message FunnelStep {
+  int32 order = 1;
+  string event_name = 2;
+  repeated Filter filters = 3;
+}
+
+message CreateFunnelRequest {
+  string name = 1;
+  repeated FunnelStep steps = 2;
+  google.protobuf.Duration conversion_window = 3;
+}
+
+message GetFunnelRequest {
+  string id = 1;
+}
+
+message AnalyzeFunnelRequest {
+  string id = 1;
+  google.protobuf.Timestamp start_time = 2;
+  google.protobuf.Timestamp end_time = 3;
+  repeated string segment_by = 4;
+}
+
+message FunnelAnalysis {
+  string funnel_id = 1;
+  repeated FunnelStepResult steps = 2;
+  double overall_conversion_rate = 3;
+  int32 total_users = 4;
+}
+
+message FunnelStepResult {
+  int32 step_order = 1;
+  string step_name = 2;
+  int32 user_count = 3;
+  double conversion_rate = 4;
+  double drop_off_rate = 5;
+  google.protobuf.Duration average_time_to_convert = 6;
+}
+
+message ListFunnelsRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+}
+
+message ListFunnelsResponse {
+  repeated Funnel funnels = 1;
+  string next_page_token = 2;
+}
+
+message Cohort {
+  string id = 1;
+  string name = 2;
+  CohortDefinition definition = 3;
+  google.protobuf.Timestamp created_at = 4;
+}
+
+message CohortDefinition {
+  string event_name = 1;
+  repeated Filter filters = 2;
+  google.protobuf.Timestamp start_date = 3;
+  google.protobuf.Timestamp end_date = 4;
+}
+
+message CreateCohortRequest {
+  string name = 1;
+  CohortDefinition definition = 2;
+}
+
+message GetCohortRequest {
+  string id = 1;
+}
+
+message AnalyzeCohortRequest {
+  string id = 1;
+  string metric_event = 2;
+  int32 periods = 3;
+  PeriodType period_type = 4;
+}
+
+enum PeriodType {
+  PERIOD_TYPE_UNSPECIFIED = 0;
+  DAY = 1;
+  WEEK = 2;
+  MONTH = 3;
+}
+
+message CohortAnalysis {
+  string cohort_id = 1;
+  repeated CohortPeriod periods = 2;
+  int32 total_users = 3;
+}
+
+message CohortPeriod {
+  int32 period_number = 1;
+  int32 active_users = 2;
+  double retention_rate = 3;
+}
+
+message ListCohortsRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+}
+
+message ListCohortsResponse {
+  repeated Cohort cohorts = 1;
+  string next_page_token = 2;
+}

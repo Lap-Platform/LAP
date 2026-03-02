@@ -1,0 +1,100 @@
+syntax = "proto3";
+
+package user.v1;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// User management service.
+service UserService {
+  // Create a new user.
+  rpc CreateUser(CreateUserRequest) returns (User);
+
+  // Get user by ID.
+  rpc GetUser(GetUserRequest) returns (User);
+
+  // Update an existing user.
+  rpc UpdateUser(UpdateUserRequest) returns (User);
+
+  // Delete a user.
+  rpc DeleteUser(DeleteUserRequest) returns (google.protobuf.Empty);
+
+  // List users with pagination.
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse);
+
+  // Bulk import users (client streaming).
+  rpc BulkImportUsers(stream CreateUserRequest) returns (BulkImportResponse);
+}
+
+enum UserRole {
+  USER_ROLE_UNSPECIFIED = 0;
+  USER_ROLE_ADMIN = 1;
+  USER_ROLE_EDITOR = 2;
+  USER_ROLE_VIEWER = 3;
+}
+
+message Address {
+  string street = 1;
+  string city = 2;
+  string state = 3;
+  string zip_code = 4;
+  string country = 5;
+}
+
+message User {
+  string id = 1;
+  string email = 2;
+  string display_name = 3;
+  UserRole role = 4;
+  Address address = 5;
+  map<string, string> metadata = 6;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp updated_at = 8;
+
+  oneof avatar {
+    string avatar_url = 9;
+    bytes avatar_data = 10;
+  }
+}
+
+message CreateUserRequest {
+  string email = 1;
+  string display_name = 2;
+  UserRole role = 3;
+  Address address = 4;
+  map<string, string> metadata = 5;
+}
+
+message GetUserRequest {
+  string id = 1;
+}
+
+message UpdateUserRequest {
+  string id = 1;
+  string email = 2;
+  string display_name = 3;
+  UserRole role = 4;
+  Address address = 5;
+}
+
+message DeleteUserRequest {
+  string id = 1;
+}
+
+message ListUsersRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+  string filter = 3;
+}
+
+message ListUsersResponse {
+  repeated User users = 1;
+  string next_page_token = 2;
+  int32 total_count = 3;
+}
+
+message BulkImportResponse {
+  int32 imported_count = 1;
+  int32 failed_count = 2;
+  repeated string errors = 3;
+}

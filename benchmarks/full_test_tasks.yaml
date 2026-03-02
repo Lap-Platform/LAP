@@ -1,0 +1,1781 @@
+# Full Multi-Protocol Agent Benchmark Tasks
+# 10 tasks per doc, covering 5 protocol types
+
+protocols:
+  openapi:
+    docs:
+      - spec: examples/stripe-charges.yaml
+        api: Stripe Charges
+        tasks:
+          - task: "Create a charge for $50.00 USD with token tok_visa"
+            expect_endpoint: "POST /v1/charges"
+            expect_params: ["amount", "currency", "source"]
+          - task: "Create a charge for €25.50 EUR with customer cus_abc123 and description 'Monthly subscription'"
+            expect_endpoint: "POST /v1/charges"
+            expect_params: ["amount", "currency", "customer", "description"]
+          - task: "Retrieve charge details for ch_abc123xyz"
+            expect_endpoint: "GET /v1/charges/{charge}"
+            expect_params: ["charge"]
+          - task: "List all charges with limit of 10"
+            expect_endpoint: "GET /v1/charges"
+            expect_params: ["limit"]
+          - task: "List charges created after timestamp 1609459200 for customer cus_xyz789"
+            expect_endpoint: "GET /v1/charges"
+            expect_params: ["created", "customer"]
+          - task: "Update charge ch_abc123xyz with description 'Updated charge' and metadata order_id=ORD-999"
+            expect_endpoint: "POST /v1/charges/{charge}"
+            expect_params: ["charge", "description", "metadata"]
+          - task: "Capture charge ch_abc123xyz for full amount with receipt email customer@example.com"
+            expect_endpoint: "POST /v1/charges/{charge}/capture"
+            expect_params: ["charge", "receipt_email"]
+          - task: "List charges for customer cus_abc123 with starting_after cursor ch_prev123"
+            expect_endpoint: "GET /v1/charges"
+            expect_params: ["customer", "starting_after"]
+          - task: "Create a charge with amount 1000 cents in USD, capture false, and statement_descriptor 'MYCOMPANY'"
+            expect_endpoint: "POST /v1/charges"
+            expect_params: ["amount", "currency", "capture", "statement_descriptor"]
+          - task: "Update charge ch_xyz789 with shipping address name 'John Doe' and fraud_details report 'safe'"
+            expect_endpoint: "POST /v1/charges/{charge}"
+            expect_params: ["charge", "shipping", "fraud_details"]
+
+      - spec: examples/github-core.yaml
+        api: GitHub Core
+        tasks:
+          - task: "List issues for repository octocat/Hello-World"
+            expect_endpoint: "GET /repos/{owner}/{repo}/issues"
+            expect_params: ["owner", "repo"]
+          - task: "Create issue 'Bug: Login fails' in repo octocat/Hello-World with body 'Steps to reproduce...'"
+            expect_endpoint: "POST /repos/{owner}/{repo}/issues"
+            expect_params: ["owner", "repo", "title", "body"]
+          - task: "List open issues for octocat/Hello-World with label 'bug' sorted by created date"
+            expect_endpoint: "GET /repos/{owner}/{repo}/issues"
+            expect_params: ["owner", "repo", "labels", "state", "sort"]
+          - task: "List issues with state 'closed' and per_page 25 for octocat/Hello-World"
+            expect_endpoint: "GET /repos/{owner}/{repo}/issues"
+            expect_params: ["owner", "repo", "state", "per_page"]
+          - task: "Get repository details for octocat/Hello-World"
+            expect_endpoint: "GET /repos/{owner}/{repo}"
+            expect_params: ["owner", "repo"]
+          - task: "Create issue in octocat/Hello-World with title 'Feature request' assigned to user1 and user2"
+            expect_endpoint: "POST /repos/{owner}/{repo}/issues"
+            expect_params: ["owner", "repo", "title", "assignees"]
+          - task: "List pull requests for octocat/Hello-World with state 'open' sorted by updated"
+            expect_endpoint: "GET /repos/{owner}/{repo}/pulls"
+            expect_params: ["owner", "repo", "state", "sort"]
+          - task: "Create pull request in octocat/Hello-World from feature-branch to main with title 'Add new feature'"
+            expect_endpoint: "POST /repos/{owner}/{repo}/pulls"
+            expect_params: ["owner", "repo", "title", "head", "base"]
+          - task: "Merge pull request #42 in octocat/Hello-World with squash merge method"
+            expect_endpoint: "PUT /repos/{owner}/{repo}/pulls/{pull_number}/merge"
+            expect_params: ["owner", "repo", "pull_number", "merge_method"]
+          - task: "List pull requests with base branch 'develop' and direction descending"
+            expect_endpoint: "GET /repos/{owner}/{repo}/pulls"
+            expect_params: ["owner", "repo", "base", "direction"]
+
+      - spec: examples/openai-core.yaml
+        api: OpenAI Core
+        tasks:
+          - task: "Create chat completion with gpt-4 and message 'Explain quantum computing'"
+            expect_endpoint: "POST /v1/chat/completions"
+            expect_params: ["model", "messages"]
+          - task: "Create chat completion with gpt-3.5-turbo, temperature 0.7, and message 'Write a poem'"
+            expect_endpoint: "POST /v1/chat/completions"
+            expect_params: ["model", "messages", "temperature"]
+          - task: "List all available models"
+            expect_endpoint: "GET /v1/models"
+            expect_params: []
+          - task: "Get details for model gpt-4"
+            expect_endpoint: "GET /v1/models/{model}"
+            expect_params: ["model"]
+          - task: "Create embedding for text 'Hello world' using text-embedding-ada-002"
+            expect_endpoint: "POST /v1/embeddings"
+            expect_params: ["model", "input"]
+          - task: "Create embeddings for list of texts ['cat', 'dog', 'bird'] using ada-002"
+            expect_endpoint: "POST /v1/embeddings"
+            expect_params: ["model", "input"]
+          - task: "Create completion with gpt-3.5-turbo-instruct for prompt 'Once upon a time'"
+            expect_endpoint: "POST /v1/completions"
+            expect_params: ["model", "prompt"]
+          - task: "Create chat completion with system message 'You are helpful' and user message 'Hello'"
+            expect_endpoint: "POST /v1/chat/completions"
+            expect_params: ["model", "messages"]
+          - task: "Create chat completion with max_tokens 100 and stop sequence '\\n\\n'"
+            expect_endpoint: "POST /v1/chat/completions"
+            expect_params: ["model", "messages", "max_tokens", "stop"]
+          - task: "Create streaming chat completion with stream=true"
+            expect_endpoint: "POST /v1/chat/completions"
+            expect_params: ["model", "messages", "stream"]
+
+      - spec: examples/twilio-core.yaml
+        api: Twilio Core
+        tasks:
+          - task: "Send SMS from +15551234567 to +15559876543 with body 'Hello from Twilio'"
+            expect_endpoint: "POST /2010-04-01/Accounts/{AccountSid}/Messages.json"
+            expect_params: ["To", "From", "Body"]
+          - task: "Send MMS with image URL http://example.com/image.jpg from +15551234567 to +15559876543"
+            expect_endpoint: "POST /2010-04-01/Accounts/{AccountSid}/Messages.json"
+            expect_params: ["To", "From", "MediaUrl"]
+          - task: "List all messages for account"
+            expect_endpoint: "GET /2010-04-01/Accounts/{AccountSid}/Messages.json"
+            expect_params: []
+          - task: "Get message details for message SM123abc456def"
+            expect_endpoint: "GET /2010-04-01/Accounts/{AccountSid}/Messages/{MessageSid}.json"
+            expect_params: ["MessageSid"]
+          - task: "Make voice call from +15551234567 to +15559876543 with TwiML URL http://example.com/twiml.xml"
+            expect_endpoint: "POST /2010-04-01/Accounts/{AccountSid}/Calls.json"
+            expect_params: ["To", "From", "Url"]
+          - task: "List all calls with status 'completed'"
+            expect_endpoint: "GET /2010-04-01/Accounts/{AccountSid}/Calls.json"
+            expect_params: []
+          - task: "Get call details for call CA123abc456def"
+            expect_endpoint: "GET /2010-04-01/Accounts/{AccountSid}/Calls/{CallSid}.json"
+            expect_params: ["CallSid"]
+          - task: "Update call CA123abc456def with status 'completed'"
+            expect_endpoint: "POST /2010-04-01/Accounts/{AccountSid}/Calls/{CallSid}.json"
+            expect_params: ["CallSid", "Status"]
+          - task: "Send SMS with status callback URL http://example.com/callback"
+            expect_endpoint: "POST /2010-04-01/Accounts/{AccountSid}/Messages.json"
+            expect_params: ["To", "From", "Body", "StatusCallback"]
+          - task: "List messages sent to +15559876543"
+            expect_endpoint: "GET /2010-04-01/Accounts/{AccountSid}/Messages.json"
+            expect_params: ["To"]
+
+      - spec: examples/slack.yaml
+        api: Slack
+        tasks:
+          - task: "Post message 'Hello team!' to channel #general"
+            expect_endpoint: "POST /chat.postMessage"
+            expect_params: ["channel", "text"]
+          - task: "Update message with timestamp 1234567890.123456 in channel C123ABC to 'Updated message'"
+            expect_endpoint: "POST /chat.update"
+            expect_params: ["channel", "ts", "text"]
+          - task: "Delete message with timestamp 1234567890.123456 from channel C123ABC"
+            expect_endpoint: "POST /chat.delete"
+            expect_params: ["channel", "ts"]
+          - task: "List channels with limit 10"
+            expect_endpoint: "GET /conversations.list"
+            expect_params: ["limit"]
+          - task: "Get channel info for channel C123ABC"
+            expect_endpoint: "GET /conversations.info"
+            expect_params: ["channel"]
+          - task: "Post ephemeral message to user U123ABC in channel C123ABC"
+            expect_endpoint: "POST /chat.postEphemeral"
+            expect_params: ["channel", "user", "text"]
+          - task: "Add reaction 'thumbsup' to message 1234567890.123456 in channel C123ABC"
+            expect_endpoint: "POST /reactions.add"
+            expect_params: ["channel", "timestamp", "name"]
+          - task: "Get user info for user U123ABC"
+            expect_endpoint: "GET /users.info"
+            expect_params: ["user"]
+          - task: "List users with limit 20"
+            expect_endpoint: "GET /users.list"
+            expect_params: ["limit"]
+          - task: "Upload file 'report.pdf' to channel C123ABC"
+            expect_endpoint: "POST /files.upload"
+            expect_params: ["channels", "file"]
+
+      - spec: examples/discord.yaml
+        api: Discord
+        tasks:
+          - task: "Send message 'Hello Discord!' to channel 123456789012345678"
+            expect_endpoint: "POST /channels/{channel_id}/messages"
+            expect_params: ["channel_id", "content"]
+          - task: "Get message 987654321098765432 from channel 123456789012345678"
+            expect_endpoint: "GET /channels/{channel_id}/messages/{message_id}"
+            expect_params: ["channel_id", "message_id"]
+          - task: "Delete message 987654321098765432 from channel 123456789012345678"
+            expect_endpoint: "DELETE /channels/{channel_id}/messages/{message_id}"
+            expect_params: ["channel_id", "message_id"]
+          - task: "Edit message 987654321098765432 in channel 123456789012345678 to 'Updated content'"
+            expect_endpoint: "PATCH /channels/{channel_id}/messages/{message_id}"
+            expect_params: ["channel_id", "message_id", "content"]
+          - task: "Get channel details for channel 123456789012345678"
+            expect_endpoint: "GET /channels/{channel_id}"
+            expect_params: ["channel_id"]
+          - task: "List 50 messages from channel 123456789012345678"
+            expect_endpoint: "GET /channels/{channel_id}/messages"
+            expect_params: ["channel_id", "limit"]
+          - task: "Create reaction '👍' on message 987654321098765432 in channel 123456789012345678"
+            expect_endpoint: "PUT /channels/{channel_id}/messages/{message_id}/reactions/{emoji}/@me"
+            expect_params: ["channel_id", "message_id", "emoji"]
+          - task: "Pin message 987654321098765432 in channel 123456789012345678"
+            expect_endpoint: "PUT /channels/{channel_id}/pins/{message_id}"
+            expect_params: ["channel_id", "message_id"]
+          - task: "Get guild details for guild 123456789012345678"
+            expect_endpoint: "GET /guilds/{guild_id}"
+            expect_params: ["guild_id"]
+          - task: "Send embed message with title 'Alert' and description 'System update' to channel 123456789012345678"
+            expect_endpoint: "POST /channels/{channel_id}/messages"
+            expect_params: ["channel_id", "embeds"]
+
+      - spec: examples/spotify.yaml
+        api: Spotify
+        tasks:
+          - task: "Search for tracks matching 'Bohemian Rhapsody'"
+            expect_endpoint: "GET /v1/search"
+            expect_params: ["q", "type"]
+          - task: "Get track details for track ID 3n3Ppam7vgaVa1iaRUc9Lp"
+            expect_endpoint: "GET /v1/tracks/{id}"
+            expect_params: ["id"]
+          - task: "Get album details for album ID 4aawyAB9vmqN3uQ7FjRGTy"
+            expect_endpoint: "GET /v1/albums/{id}"
+            expect_params: ["id"]
+          - task: "Get artist details for artist ID 1dfeR4HaWDbWqFHLkxsg1d"
+            expect_endpoint: "GET /v1/artists/{id}"
+            expect_params: ["id"]
+          - task: "Get user's saved tracks with limit 20"
+            expect_endpoint: "GET /v1/me/tracks"
+            expect_params: ["limit"]
+          - task: "Get user's playlists with limit 10"
+            expect_endpoint: "GET /v1/me/playlists"
+            expect_params: ["limit"]
+          - task: "Get playlist details for playlist ID 37i9dQZF1DXcBWIGoYBM5M"
+            expect_endpoint: "GET /v1/playlists/{playlist_id}"
+            expect_params: ["playlist_id"]
+          - task: "Search for artists matching 'Queen' with limit 5"
+            expect_endpoint: "GET /v1/search"
+            expect_params: ["q", "type", "limit"]
+          - task: "Get currently playing track for user"
+            expect_endpoint: "GET /v1/me/player/currently-playing"
+            expect_params: []
+          - task: "Get user profile"
+            expect_endpoint: "GET /v1/me"
+            expect_params: []
+
+      - spec: examples/cloudflare.yaml
+        api: Cloudflare DNS
+        tasks:
+          - task: "List DNS records for zone abc123"
+            expect_endpoint: "GET /zones/{zone_id}/dns_records"
+            expect_params: ["zone_id"]
+          - task: "Create A record for subdomain.example.com pointing to 192.0.2.1"
+            expect_endpoint: "POST /zones/{zone_id}/dns_records"
+            expect_params: ["zone_id", "type", "name", "content"]
+          - task: "Get DNS record details for record xyz789 in zone abc123"
+            expect_endpoint: "GET /zones/{zone_id}/dns_records/{id}"
+            expect_params: ["zone_id", "id"]
+          - task: "Update DNS record xyz789 in zone abc123 to point to 192.0.2.2"
+            expect_endpoint: "PUT /zones/{zone_id}/dns_records/{id}"
+            expect_params: ["zone_id", "id", "content"]
+          - task: "Delete DNS record xyz789 from zone abc123"
+            expect_endpoint: "DELETE /zones/{zone_id}/dns_records/{id}"
+            expect_params: ["zone_id", "id"]
+          - task: "List zones with status active"
+            expect_endpoint: "GET /zones"
+            expect_params: ["status"]
+          - task: "Get zone details for zone abc123"
+            expect_endpoint: "GET /zones/{zone_id}"
+            expect_params: ["zone_id"]
+          - task: "Create CNAME record for www.example.com pointing to example.com"
+            expect_endpoint: "POST /zones/{zone_id}/dns_records"
+            expect_params: ["zone_id", "type", "name", "content"]
+          - task: "List DNS records of type MX for zone abc123"
+            expect_endpoint: "GET /zones/{zone_id}/dns_records"
+            expect_params: ["zone_id", "type"]
+          - task: "Create TXT record for _dmarc.example.com with value 'v=DMARC1; p=none'"
+            expect_endpoint: "POST /zones/{zone_id}/dns_records"
+            expect_params: ["zone_id", "type", "name", "content"]
+
+      - spec: examples/sendgrid.yaml
+        api: SendGrid
+        tasks:
+          - task: "Send email from sender@example.com to recipient@example.com with subject 'Hello' and body 'World'"
+            expect_endpoint: "POST /v3/mail/send"
+            expect_params: ["personalizations", "from", "subject", "content"]
+          - task: "Send email with HTML content '<h1>Hello</h1>'"
+            expect_endpoint: "POST /v3/mail/send"
+            expect_params: ["personalizations", "from", "subject", "content"]
+          - task: "Send email with attachment 'document.pdf'"
+            expect_endpoint: "POST /v3/mail/send"
+            expect_params: ["personalizations", "from", "subject", "content", "attachments"]
+          - task: "Send email to multiple recipients with CC and BCC"
+            expect_endpoint: "POST /v3/mail/send"
+            expect_params: ["personalizations", "from", "subject", "content"]
+          - task: "Send email with custom headers X-Custom-Header: value"
+            expect_endpoint: "POST /v3/mail/send"
+            expect_params: ["personalizations", "from", "subject", "content", "headers"]
+          - task: "Get email statistics for last 7 days"
+            expect_endpoint: "GET /v3/stats"
+            expect_params: ["start_date"]
+          - task: "Send email with template ID abc123"
+            expect_endpoint: "POST /v3/mail/send"
+            expect_params: ["personalizations", "from", "template_id"]
+          - task: "Send email with send_at timestamp for scheduled delivery"
+            expect_endpoint: "POST /v3/mail/send"
+            expect_params: ["personalizations", "from", "subject", "content", "send_at"]
+          - task: "List all sender identities"
+            expect_endpoint: "GET /v3/senders"
+            expect_params: []
+          - task: "Send email with reply_to address support@example.com"
+            expect_endpoint: "POST /v3/mail/send"
+            expect_params: ["personalizations", "from", "subject", "content", "reply_to"]
+
+      - spec: examples/snyk.yaml
+        api: Snyk
+        tasks:
+          - task: "List all organizations"
+            expect_endpoint: "GET /orgs"
+            expect_params: []
+          - task: "Get organization details for org ID abc123"
+            expect_endpoint: "GET /orgs/{org_id}"
+            expect_params: ["org_id"]
+          - task: "List projects for organization abc123"
+            expect_endpoint: "GET /orgs/{org_id}/projects"
+            expect_params: ["org_id"]
+          - task: "Get project details for project ID xyz789"
+            expect_endpoint: "GET /orgs/{org_id}/projects/{project_id}"
+            expect_params: ["org_id", "project_id"]
+          - task: "Test npm package express@4.17.1 for vulnerabilities"
+            expect_endpoint: "POST /test/npm"
+            expect_params: ["packageName", "version"]
+          - task: "Test Maven package org.springframework:spring-core:5.3.0"
+            expect_endpoint: "POST /test/maven"
+            expect_params: ["groupId", "artifactId", "version"]
+          - task: "List issues for project xyz789 in org abc123"
+            expect_endpoint: "GET /orgs/{org_id}/projects/{project_id}/issues"
+            expect_params: ["org_id", "project_id"]
+          - task: "Get issue details for issue ID issue123 in project xyz789"
+            expect_endpoint: "GET /orgs/{org_id}/projects/{project_id}/issues/{issue_id}"
+            expect_params: ["org_id", "project_id", "issue_id"]
+          - task: "Monitor GitHub repo owner/repo for organization abc123"
+            expect_endpoint: "POST /orgs/{org_id}/projects"
+            expect_params: ["org_id"]
+          - task: "List dependencies for project xyz789"
+            expect_endpoint: "GET /orgs/{org_id}/projects/{project_id}/dependencies"
+            expect_params: ["org_id", "project_id"]
+
+  graphql:
+    docs:
+      - spec: examples/graphql/github.graphql
+        api: GitHub GraphQL
+        tasks:
+          - task: "Query viewer's login name and email"
+            expect_query: "viewer"
+            expect_params: ["login", "email"]
+          - task: "Query repository octocat/Hello-World with name and description"
+            expect_query: "repository"
+            expect_params: ["owner", "name", "description"]
+          - task: "Query user octocat with bio and avatarUrl"
+            expect_query: "user"
+            expect_params: ["login", "bio", "avatarUrl"]
+          - task: "Search repositories with query 'machine learning' and first 10 results"
+            expect_query: "searchRepositories"
+            expect_params: ["query", "first"]
+          - task: "Create issue with title 'Bug report' in repository ID abc123 with body 'Description...'"
+            expect_mutation: "createIssue"
+            expect_params: ["repositoryId", "title", "body"]
+          - task: "Update issue ID xyz789 with new title 'Updated Bug' and state CLOSED"
+            expect_mutation: "updateIssue"
+            expect_params: ["id", "title", "state"]
+          - task: "Add star to repository ID repo_abc123"
+            expect_mutation: "addStar"
+            expect_params: ["repositoryId"]
+          - task: "Remove star from repository ID repo_xyz789"
+            expect_mutation: "removeStar"
+            expect_params: ["repositoryId"]
+          - task: "Subscribe to issueCreated events for repository ID repo_123"
+            expect_subscription: "issueCreated"
+            expect_params: ["repositoryId"]
+          - task: "Subscribe to pullRequestUpdated events for repository ID repo_456"
+            expect_subscription: "pullRequestUpdated"
+            expect_params: ["repositoryId"]
+
+      - spec: examples/graphql/stripe.graphql
+        api: Stripe GraphQL
+        tasks:
+          - task: "Query customer by ID cus_abc123 with email and metadata"
+            expect_query: "customer"
+            expect_params: ["id"]
+          - task: "Query first 10 customers with email filter customer@example.com"
+            expect_query: "customers"
+            expect_params: ["first", "email"]
+          - task: "Query charge by ID ch_abc123 with amount and status"
+            expect_query: "charge"
+            expect_params: ["id"]
+          - task: "Query first 20 charges for customer ID cus_xyz with after cursor"
+            expect_query: "charges"
+            expect_params: ["first", "customerId", "after"]
+          - task: "Create customer with email new@example.com and name 'John Doe'"
+            expect_mutation: "customerCreate"
+            expect_params: ["email", "name"]
+          - task: "Update customer cus_abc123 with new email updated@example.com"
+            expect_mutation: "customerUpdate"
+            expect_params: ["id", "email"]
+          - task: "Create charge for customer cus_abc123 with amount 5000 in USD using payment method pm_123"
+            expect_mutation: "chargeCreate"
+            expect_params: ["amount", "currency", "customerId", "paymentMethodId"]
+          - task: "Create refund for charge ch_abc123 with amount 1000 and reason 'duplicate'"
+            expect_mutation: "refundCreate"
+            expect_params: ["chargeId", "amount", "reason"]
+          - task: "Query invoice by ID inv_123 with status and total"
+            expect_query: "invoice"
+            expect_params: ["id"]
+          - task: "Finalize invoice inv_456 to make it payable"
+            expect_mutation: "invoiceFinalize"
+            expect_params: ["id"]
+
+      - spec: examples/graphql/shopify.graphql
+        api: Shopify GraphQL
+        tasks:
+          - task: "Query shop name and email"
+            expect_query: "shop"
+            expect_params: ["name", "email"]
+          - task: "Query first 10 products with title and variants"
+            expect_query: "products"
+            expect_params: ["first", "title", "variants"]
+          - task: "Query product by ID gid://shopify/Product/123 with price"
+            expect_query: "product"
+            expect_params: ["id", "priceRange"]
+          - task: "Create product with title 'New Product' and variants"
+            expect_mutation: "productCreate"
+            expect_params: ["title", "variants"]
+          - task: "Update product gid://shopify/Product/123 with description"
+            expect_mutation: "productUpdate"
+            expect_params: ["id", "descriptionHtml"]
+          - task: "Query first 20 orders with order number and total"
+            expect_query: "orders"
+            expect_params: ["first", "name", "totalPrice"]
+          - task: "Query order by ID gid://shopify/Order/456 with line items"
+            expect_query: "order"
+            expect_params: ["id", "lineItems"]
+          - task: "Create draft order with line items"
+            expect_mutation: "draftOrderCreate"
+            expect_params: ["lineItems"]
+          - task: "Query customer by ID gid://shopify/Customer/789 with orders"
+            expect_query: "customer"
+            expect_params: ["id", "orders"]
+          - task: "Query first 10 collections with title"
+            expect_query: "collections"
+            expect_params: ["first", "title"]
+
+      - spec: examples/graphql/slack.graphql
+        api: Slack GraphQL
+        tasks:
+          - task: "Query workspace name and domain"
+            expect_query: "workspace"
+            expect_params: ["name", "domain"]
+          - task: "Query user by ID U123ABC with name and email"
+            expect_query: "user"
+            expect_params: ["id", "name", "email"]
+          - task: "Query first 20 channels with name and topic"
+            expect_query: "channels"
+            expect_params: ["first", "name", "topic"]
+          - task: "Query messages from channel C123ABC with limit 50"
+            expect_query: "channel"
+            expect_params: ["id", "messages", "first"]
+          - task: "Send message 'Hello' to channel C123ABC"
+            expect_mutation: "postMessage"
+            expect_params: ["channelId", "text"]
+          - task: "Update message with timestamp 1234567890.123456 in channel C123ABC"
+            expect_mutation: "updateMessage"
+            expect_params: ["channelId", "ts", "text"]
+          - task: "Delete message with timestamp 1234567890.123456 from channel C123ABC"
+            expect_mutation: "deleteMessage"
+            expect_params: ["channelId", "ts"]
+          - task: "Add reaction emoji to message"
+            expect_mutation: "addReaction"
+            expect_params: ["channelId", "timestamp", "name"]
+          - task: "Query channel members for channel C123ABC"
+            expect_query: "channel"
+            expect_params: ["id", "members"]
+          - task: "Create channel with name 'new-channel'"
+            expect_mutation: "createChannel"
+            expect_params: ["name"]
+
+      - spec: examples/graphql/twitter.graphql
+        api: Twitter GraphQL
+        tasks:
+          - task: "Query user by username elonmusk with followers count"
+            expect_query: "user"
+            expect_params: ["username", "followersCount"]
+          - task: "Query tweet by ID 1234567890 with text and likes"
+            expect_query: "tweet"
+            expect_params: ["id", "text", "likeCount"]
+          - task: "Query first 20 tweets from user timeline"
+            expect_query: "user"
+            expect_params: ["tweets", "first"]
+          - task: "Create tweet with text 'Hello Twitter!'"
+            expect_mutation: "createTweet"
+            expect_params: ["text"]
+          - task: "Reply to tweet 1234567890 with text 'Great point!'"
+            expect_mutation: "createTweet"
+            expect_params: ["text", "replyToTweetId"]
+          - task: "Like tweet 1234567890"
+            expect_mutation: "likeTweet"
+            expect_params: ["tweetId"]
+          - task: "Retweet tweet 1234567890"
+            expect_mutation: "retweet"
+            expect_params: ["tweetId"]
+          - task: "Follow user with ID 9876543210"
+            expect_mutation: "follow"
+            expect_params: ["userId"]
+          - task: "Search tweets with query 'artificial intelligence' and limit 10"
+            expect_query: "searchTweets"
+            expect_params: ["query", "first"]
+          - task: "Query user's direct messages with limit 30"
+            expect_query: "viewer"
+            expect_params: ["directMessages", "first"]
+
+      - spec: examples/graphql/spotify.graphql
+        api: Spotify GraphQL
+        tasks:
+          - task: "Query track by ID 3n3Ppam7vgaVa1iaRUc9Lp with name and artists"
+            expect_query: "track"
+            expect_params: ["id", "name", "artists"]
+          - task: "Search tracks with query 'Bohemian Rhapsody' limit 10"
+            expect_query: "search"
+            expect_params: ["query", "type", "limit"]
+          - task: "Query album by ID 4aawyAB9vmqN3uQ7FjRGTy with tracks"
+            expect_query: "album"
+            expect_params: ["id", "tracks"]
+          - task: "Query artist by ID 1dfeR4HaWDbWqFHLkxsg1d with top tracks"
+            expect_query: "artist"
+            expect_params: ["id", "topTracks"]
+          - task: "Query current user's playlists with limit 20"
+            expect_query: "me"
+            expect_params: ["playlists", "limit"]
+          - task: "Query playlist by ID 37i9dQZF1DXcBWIGoYBM5M with tracks"
+            expect_query: "playlist"
+            expect_params: ["id", "tracks"]
+          - task: "Add track 3n3Ppam7vgaVa1iaRUc9Lp to playlist 37i9dQZF1DXcBWIGoYBM5M"
+            expect_mutation: "addToPlaylist"
+            expect_params: ["playlistId", "trackId"]
+          - task: "Create playlist with name 'My Favorites'"
+            expect_mutation: "createPlaylist"
+            expect_params: ["name"]
+          - task: "Query currently playing track"
+            expect_query: "me"
+            expect_params: ["currentlyPlaying"]
+          - task: "Save track 3n3Ppam7vgaVa1iaRUc9Lp to library"
+            expect_mutation: "saveTrack"
+            expect_params: ["trackId"]
+
+      - spec: examples/graphql/gitlab.graphql
+        api: GitLab GraphQL
+        tasks:
+          - task: "Query project by path group/project with name and description"
+            expect_query: "project"
+            expect_params: ["fullPath", "name", "description"]
+          - task: "Query first 20 issues from project with state 'opened'"
+            expect_query: "project"
+            expect_params: ["issues", "first", "state"]
+          - task: "Query merge request by IID 42 from project"
+            expect_query: "project"
+            expect_params: ["mergeRequest", "iid"]
+          - task: "Create issue in project gid://gitlab/Project/123 with title 'Bug report'"
+            expect_mutation: "createIssue"
+            expect_params: ["projectPath", "title"]
+          - task: "Add comment 'LGTM' to merge request gid://gitlab/MergeRequest/456"
+            expect_mutation: "createNote"
+            expect_params: ["noteableId", "body"]
+          - task: "Close issue gid://gitlab/Issue/789"
+            expect_mutation: "updateIssue"
+            expect_params: ["iid", "projectPath", "stateEvent"]
+          - task: "Query current user with username and email"
+            expect_query: "currentUser"
+            expect_params: ["username", "email"]
+          - task: "Query group by path mygroup with projects"
+            expect_query: "group"
+            expect_params: ["fullPath", "projects"]
+          - task: "Query first 10 pipelines for project with status"
+            expect_query: "project"
+            expect_params: ["pipelines", "first", "status"]
+          - task: "Merge merge request gid://gitlab/MergeRequest/456"
+            expect_mutation: "mergeRequestMerge"
+            expect_params: ["iid", "projectPath"]
+
+      - spec: examples/graphql/notion.graphql
+        api: Notion GraphQL
+        tasks:
+          - task: "Query page by ID abc-123-xyz with title and content"
+            expect_query: "page"
+            expect_params: ["id", "title", "content"]
+          - task: "Query database by ID db-456 with schema"
+            expect_query: "database"
+            expect_params: ["id", "schema"]
+          - task: "Query pages in database db-456 with limit 20"
+            expect_query: "database"
+            expect_params: ["id", "pages", "first"]
+          - task: "Create page with title 'New Document' in parent page-789"
+            expect_mutation: "createPage"
+            expect_params: ["parentId", "title"]
+          - task: "Update page abc-123-xyz with new content"
+            expect_mutation: "updatePage"
+            expect_params: ["pageId", "content"]
+          - task: "Delete page abc-123-xyz"
+            expect_mutation: "deletePage"
+            expect_params: ["pageId"]
+          - task: "Search pages with query 'meeting notes'"
+            expect_query: "search"
+            expect_params: ["query"]
+          - task: "Create database with title 'Tasks' in page page-789"
+            expect_mutation: "createDatabase"
+            expect_params: ["parentId", "title"]
+          - task: "Query workspace with name and members"
+            expect_query: "workspace"
+            expect_params: ["name", "members"]
+          - task: "Add row to database db-456 with properties"
+            expect_mutation: "createPage"
+            expect_params: ["parentId", "properties"]
+
+      - spec: examples/graphql/linear.graphql
+        api: Linear GraphQL
+        tasks:
+          - task: "Query viewer with name and email"
+            expect_query: "viewer"
+            expect_params: ["name", "email"]
+          - task: "Query first 20 issues with title and state"
+            expect_query: "issues"
+            expect_params: ["first", "title", "state"]
+          - task: "Query issue by ID abc-123 with description and assignee"
+            expect_query: "issue"
+            expect_params: ["id", "description", "assignee"]
+          - task: "Create issue with title 'Bug: Login fails' in team TEAM-123"
+            expect_mutation: "issueCreate"
+            expect_params: ["title", "teamId"]
+          - task: "Update issue abc-123 with state 'In Progress'"
+            expect_mutation: "issueUpdate"
+            expect_params: ["id", "stateId"]
+          - task: "Add comment 'Working on it' to issue abc-123"
+            expect_mutation: "commentCreate"
+            expect_params: ["issueId", "body"]
+          - task: "Query team by ID TEAM-123 with name and members"
+            expect_query: "team"
+            expect_params: ["id", "name", "members"]
+          - task: "Query projects with limit 10"
+            expect_query: "projects"
+            expect_params: ["first", "name"]
+          - task: "Assign issue abc-123 to user user-456"
+            expect_mutation: "issueUpdate"
+            expect_params: ["id", "assigneeId"]
+          - task: "Search issues with query 'authentication' limit 15"
+            expect_query: "issueSearch"
+            expect_params: ["query", "first"]
+
+      - spec: examples/graphql/ecommerce.graphql
+        api: E-commerce GraphQL
+        tasks:
+          - task: "Query product by ID prod-123 with name, price, and stock"
+            expect_query: "product"
+            expect_params: ["id", "name", "price", "stock"]
+          - task: "Query first 20 products with category filter"
+            expect_query: "products"
+            expect_params: ["first", "category"]
+          - task: "Search products with query 'laptop' limit 10"
+            expect_query: "searchProducts"
+            expect_params: ["query", "first"]
+          - task: "Add product prod-123 to cart with quantity 2"
+            expect_mutation: "addToCart"
+            expect_params: ["productId", "quantity"]
+          - task: "Query shopping cart with items and total"
+            expect_query: "cart"
+            expect_params: ["items", "total"]
+          - task: "Update cart item quantity to 5"
+            expect_mutation: "updateCartItem"
+            expect_params: ["itemId", "quantity"]
+          - task: "Remove item from cart"
+            expect_mutation: "removeFromCart"
+            expect_params: ["itemId"]
+          - task: "Create order from cart with shipping address"
+            expect_mutation: "createOrder"
+            expect_params: ["shippingAddress"]
+          - task: "Query order by ID order-789 with status and items"
+            expect_query: "order"
+            expect_params: ["id", "status", "items"]
+          - task: "Query user's order history with limit 10"
+            expect_query: "me"
+            expect_params: ["orders", "first"]
+
+      - spec: examples/graphql/contentful.graphql
+        api: Contentful GraphQL
+        tasks:
+          - task: "Query entry by ID entry-123 with all fields"
+            expect_query: "entry"
+            expect_params: ["id", "fields"]
+          - task: "Query collection of blog posts with limit 10"
+            expect_query: "blogPostCollection"
+            expect_params: ["limit", "title"]
+          - task: "Query asset by ID asset-456 with URL and title"
+            expect_query: "asset"
+            expect_params: ["id", "url", "title"]
+          - task: "Query blog post by slug 'hello-world'"
+            expect_query: "blogPostCollection"
+            expect_params: ["slug", "title", "content"]
+          - task: "Query linked entries for entry-123"
+            expect_query: "entry"
+            expect_params: ["id", "linkedFrom"]
+          - task: "Search entries with query 'tutorial' limit 20"
+            expect_query: "entryCollection"
+            expect_params: ["title_contains", "limit"]
+          - task: "Query content type by ID 'blogPost' with fields"
+            expect_query: "contentType"
+            expect_params: ["id", "name", "fields"]
+          - task: "Query entries ordered by creation date descending"
+            expect_query: "entryCollection"
+            expect_params: ["order"]
+          - task: "Query entries with multiple filters (locale and content type)"
+            expect_query: "entryCollection"
+            expect_params: ["locale", "contentType"]
+          - task: "Query total count of blog posts"
+            expect_query: "blogPostCollection"
+            expect_params: ["total"]
+
+  asyncapi:
+    docs:
+      - spec: examples/asyncapi/stripe-webhooks.yaml
+        api: Stripe Webhooks
+        tasks:
+          - task: "Subscribe to payment_intent/succeeded event for successful payment intents"
+            expect_channel: "payment_intent/succeeded"
+            expect_params: ["payment_intent"]
+          - task: "Subscribe to payment_intent/failed event for failed payment attempts"
+            expect_channel: "payment_intent/failed"
+            expect_params: ["payment_intent"]
+          - task: "Subscribe to charge/refunded event for charge refunds"
+            expect_channel: "charge/refunded"
+            expect_params: ["charge"]
+          - task: "Subscribe to invoice/paid event for paid invoices"
+            expect_channel: "invoice/paid"
+            expect_params: ["invoice"]
+          - task: "Handle payment_intent/succeeded webhook with amount, currency, and customer fields"
+            expect_channel: "payment_intent/succeeded"
+            expect_params: ["amount", "currency", "customer"]
+          - task: "Handle payment_intent/failed webhook and parse error message and code"
+            expect_channel: "payment_intent/failed"
+            expect_params: ["error", "message", "code"]
+          - task: "Handle charge/refunded webhook with refund amount and reason"
+            expect_channel: "charge/refunded"
+            expect_params: ["amount", "reason"]
+          - task: "Handle invoice/paid webhook and extract invoice number and total"
+            expect_channel: "invoice/paid"
+            expect_params: ["invoice", "number", "total"]
+          - task: "Verify webhook signature for payment_intent/succeeded using stripe-signature header"
+            expect_channel: "payment_intent/succeeded"
+            expect_params: ["signature", "secret"]
+          - task: "Filter charge/refunded events for amounts greater than $50"
+            expect_channel: "charge/refunded"
+            expect_params: ["amount"]
+
+      - spec: examples/asyncapi/slack-events.yaml
+        api: Slack Events
+        tasks:
+          - task: "Subscribe to message event for new messages in channels"
+            expect_channel: "message"
+            expect_params: ["message"]
+          - task: "Subscribe to reaction_added event for emoji reactions"
+            expect_channel: "reaction_added"
+            expect_params: ["reaction_added"]
+          - task: "Subscribe to presence_change event for user status updates"
+            expect_channel: "presence_change"
+            expect_params: ["presence_change"]
+          - task: "Subscribe to channel_created event for new channel creation"
+            expect_channel: "channel_created"
+            expect_params: ["channel_created"]
+          - task: "Handle message event with channel, user, text, and timestamp fields"
+            expect_channel: "message"
+            expect_params: ["channel", "user", "text", "ts"]
+          - task: "Handle reaction_added event with reaction name, user, and item details"
+            expect_channel: "reaction_added"
+            expect_params: ["reaction", "user", "item"]
+          - task: "Handle presence_change event with user ID and new presence status"
+            expect_channel: "presence_change"
+            expect_params: ["user", "presence"]
+          - task: "Handle channel_created event and extract channel ID and name"
+            expect_channel: "channel_created"
+            expect_params: ["channel", "id", "name"]
+          - task: "Verify event challenge for Slack URL verification in message channel"
+            expect_channel: "message"
+            expect_params: ["challenge"]
+          - task: "Filter message events for specific channel C123ABC and parse text content"
+            expect_channel: "message"
+            expect_params: ["channel", "text"]
+
+      - spec: examples/asyncapi/kafka-ecommerce.yaml
+        api: Kafka E-commerce
+        tasks:
+          - task: "Publish order-created event to orders topic"
+            expect_channel: "orders"
+            expect_params: ["orderId", "customerId", "total"]
+          - task: "Consume order-created events from orders topic"
+            expect_channel: "orders"
+            expect_params: ["orders"]
+          - task: "Publish payment-processed event to payments topic"
+            expect_channel: "payments"
+            expect_params: ["paymentId", "orderId", "status"]
+          - task: "Subscribe to inventory-updated events"
+            expect_channel: "inventory"
+            expect_params: ["inventory"]
+          - task: "Publish shipment-dispatched event with tracking number"
+            expect_channel: "shipments"
+            expect_params: ["shipmentId", "orderId", "trackingNumber"]
+          - task: "Consume customer-registered events from users topic"
+            expect_channel: "users"
+            expect_params: ["users"]
+          - task: "Publish product-updated event to catalog topic"
+            expect_channel: "catalog"
+            expect_params: ["productId", "price", "stock"]
+          - task: "Subscribe to refund-processed events from payments topic"
+            expect_channel: "payments"
+            expect_params: ["payments"]
+          - task: "Set consumer group for order processing"
+            expect_channel: "orders"
+            expect_params: ["group.id"]
+          - task: "Publish order-cancelled event with reason"
+            expect_channel: "orders"
+            expect_params: ["orderId", "reason"]
+
+      - spec: examples/asyncapi/github-webhooks.yaml
+        api: GitHub Webhooks
+        tasks:
+          - task: "Subscribe to push events"
+            expect_channel: "push"
+            expect_params: ["push"]
+          - task: "Subscribe to pull_request events"
+            expect_channel: "pull_request"
+            expect_params: ["pull_request"]
+          - task: "Handle push event with commits and ref"
+            expect_channel: "push"
+            expect_params: ["commits", "ref", "repository"]
+          - task: "Handle pull_request opened action"
+            expect_channel: "pull_request"
+            expect_params: ["action", "pull_request"]
+          - task: "Subscribe to issues events"
+            expect_channel: "issues"
+            expect_params: ["issues"]
+          - task: "Handle issue created with title and body"
+            expect_channel: "issues"
+            expect_params: ["action", "issue", "title"]
+          - task: "Subscribe to release published events"
+            expect_channel: "release"
+            expect_params: ["release"]
+          - task: "Handle pull_request review comment"
+            expect_channel: "pull_request_review_comment"
+            expect_params: ["comment", "pull_request"]
+          - task: "Verify webhook signature with secret"
+            expect_channel: "push"
+            expect_params: ["X-Hub-Signature"]
+          - task: "Subscribe to workflow_run completed events"
+            expect_channel: "workflow_run"
+            expect_params: ["workflow_run"]
+
+      - spec: examples/asyncapi/slack-rtm-asyncapi.yml
+        api: Slack RTM
+        tasks:
+          - task: "Connect to RTM API with token"
+            expect_channel: "rtm/connect"
+            expect_params: ["token"]
+          - task: "Send message to channel C123ABC"
+            expect_channel: "message"
+            expect_params: ["channel", "text"]
+          - task: "Subscribe to message events"
+            expect_channel: "message"
+            expect_params: ["type"]
+          - task: "Handle incoming message with channel and user"
+            expect_channel: "message"
+            expect_params: ["channel", "user", "text"]
+          - task: "Update message with new text"
+            expect_channel: "message/update"
+            expect_params: ["channel", "ts", "text"]
+          - task: "Subscribe to presence_change events"
+            expect_channel: "presence_change"
+            expect_params: ["presence_change"]
+          - task: "Send typing indicator to channel"
+            expect_channel: "typing"
+            expect_params: ["channel"]
+          - task: "Handle reaction_added event"
+            expect_channel: "reaction_added"
+            expect_params: ["reaction", "item"]
+          - task: "Ping server to keep connection alive"
+            expect_channel: "ping"
+            expect_params: []
+          - task: "Subscribe to user_typing events"
+            expect_channel: "user_typing"
+            expect_params: ["user_typing"]
+
+      - spec: examples/asyncapi/chat-websocket.yaml
+        api: Chat WebSocket
+        tasks:
+          - task: "Connect to chat WebSocket at wss://chat.example.com"
+            expect_channel: "connect"
+            expect_params: []
+          - task: "Authenticate with JWT token"
+            expect_channel: "authenticate"
+            expect_params: ["token"]
+          - task: "Join chat room 'general'"
+            expect_channel: "join_room"
+            expect_params: ["roomId"]
+          - task: "Send message 'Hello everyone!' to room"
+            expect_channel: "send_message"
+            expect_params: ["roomId", "text"]
+          - task: "Subscribe to new messages in room"
+            expect_channel: "messages"
+            expect_params: ["roomId"]
+          - task: "Leave chat room 'general'"
+            expect_channel: "leave_room"
+            expect_params: ["roomId"]
+          - task: "Handle incoming message with sender and timestamp"
+            expect_channel: "message_received"
+            expect_params: ["sender", "text", "timestamp"]
+          - task: "Send typing indicator"
+            expect_channel: "typing"
+            expect_params: ["roomId"]
+          - task: "Subscribe to user presence updates"
+            expect_channel: "presence"
+            expect_params: ["presence"]
+          - task: "Handle user joined event"
+            expect_channel: "user_joined"
+            expect_params: ["userId", "roomId"]
+
+      - spec: examples/asyncapi/aws-sns-sqs.yaml
+        api: AWS SNS/SQS
+        tasks:
+          - task: "Publish message to SNS topic arn:aws:sns:us-east-1:123:topic"
+            expect_channel: "sns/publish"
+            expect_params: ["TopicArn", "Message"]
+          - task: "Subscribe SQS queue to SNS topic"
+            expect_channel: "sns/subscribe"
+            expect_params: ["TopicArn", "Protocol", "Endpoint"]
+          - task: "Send message to SQS queue with message body"
+            expect_channel: "sqs/send"
+            expect_params: ["QueueUrl", "MessageBody"]
+          - task: "Receive messages from SQS queue with max 10 messages"
+            expect_channel: "sqs/receive"
+            expect_params: ["QueueUrl", "MaxNumberOfMessages"]
+          - task: "Delete message from SQS queue using receipt handle"
+            expect_channel: "sqs/delete"
+            expect_params: ["QueueUrl", "ReceiptHandle"]
+          - task: "Publish message with attributes to SNS"
+            expect_channel: "sns/publish"
+            expect_params: ["TopicArn", "Message", "MessageAttributes"]
+          - task: "Set message retention period to 4 days for SQS queue"
+            expect_channel: "sqs/set_attributes"
+            expect_params: ["QueueUrl", "MessageRetentionPeriod"]
+          - task: "Publish batch of messages to SNS topic"
+            expect_channel: "sns/publish_batch"
+            expect_params: ["TopicArn", "PublishBatchRequestEntries"]
+          - task: "Configure dead letter queue for SQS"
+            expect_channel: "sqs/set_dlq"
+            expect_params: ["QueueUrl", "RedrivePolicy"]
+          - task: "Get queue attributes including message count"
+            expect_channel: "sqs/get_attributes"
+            expect_params: ["QueueUrl", "AttributeNames"]
+
+      - spec: examples/asyncapi/iot-mqtt.yaml
+        api: IoT MQTT
+        tasks:
+          - task: "Connect to MQTT broker at mqtt://broker.example.com"
+            expect_channel: "mqtt/connect"
+            expect_params: ["clientId"]
+          - task: "Subscribe to topic 'sensors/temperature'"
+            expect_channel: "sensors/temperature"
+            expect_params: ["topic"]
+          - task: "Publish temperature reading 23.5 to sensors/temperature"
+            expect_channel: "sensors/temperature"
+            expect_params: ["topic", "payload"]
+          - task: "Subscribe to wildcard topic 'sensors/#'"
+            expect_channel: "sensors/#"
+            expect_params: ["topic"]
+          - task: "Publish device status with QoS level 1"
+            expect_channel: "devices/status"
+            expect_params: ["topic", "payload", "qos"]
+          - task: "Subscribe to actuators/lights with QoS 2"
+            expect_channel: "actuators/lights"
+            expect_params: ["topic", "qos"]
+          - task: "Publish retained message to config topic"
+            expect_channel: "config/device"
+            expect_params: ["topic", "payload", "retain"]
+          - task: "Unsubscribe from topic 'sensors/humidity'"
+            expect_channel: "sensors/humidity"
+            expect_params: ["topic"]
+          - task: "Set last will message for device disconnect"
+            expect_channel: "mqtt/lastwill"
+            expect_params: ["topic", "payload"]
+          - task: "Publish JSON payload with sensor data"
+            expect_channel: "sensors/data"
+            expect_params: ["topic", "payload"]
+
+      - spec: examples/asyncapi/notifications.yaml
+        api: Notifications
+        tasks:
+          - task: "Send push notification to device token abc123"
+            expect_channel: "push"
+            expect_params: ["deviceToken", "title", "body"]
+          - task: "Send email notification to user@example.com"
+            expect_channel: "email"
+            expect_params: ["to", "subject", "body"]
+          - task: "Send SMS notification to +15551234567"
+            expect_channel: "sms"
+            expect_params: ["to", "message"]
+          - task: "Subscribe user to notification topic 'updates'"
+            expect_channel: "subscribe"
+            expect_params: ["userId", "topic"]
+          - task: "Unsubscribe from notification topic 'marketing'"
+            expect_channel: "unsubscribe"
+            expect_params: ["userId", "topic"]
+          - task: "Send in-app notification to user user-123"
+            expect_channel: "in-app"
+            expect_params: ["userId", "title", "body"]
+          - task: "Schedule notification for delivery at timestamp"
+            expect_channel: "schedule"
+            expect_params: ["userId", "scheduledTime", "message"]
+          - task: "Send notification with custom data payload"
+            expect_channel: "notification"
+            expect_params: ["userId", "type", "data"]
+          - task: "Mark notification as read"
+            expect_channel: "mark_read"
+            expect_params: ["notificationId"]
+          - task: "Get unread notifications for user"
+            expect_channel: "get_unread"
+            expect_params: ["userId"]
+
+      - spec: examples/asyncapi/stock-market-feed.yaml
+        api: Stock Market Feed
+        tasks:
+          - task: "Subscribe to real-time quotes for ticker AAPL"
+            expect_channel: "quotes/AAPL"
+            expect_params: ["ticker"]
+          - task: "Subscribe to trade updates for ticker MSFT"
+            expect_channel: "trades/MSFT"
+            expect_params: ["ticker"]
+          - task: "Unsubscribe from quotes for ticker GOOGL"
+            expect_channel: "quotes/GOOGL"
+            expect_params: ["ticker"]
+          - task: "Subscribe to market depth for ticker TSLA"
+            expect_channel: "depth/TSLA"
+            expect_params: ["ticker"]
+          - task: "Handle quote update with bid, ask, and last price"
+            expect_channel: "quotes"
+            expect_params: ["ticker", "bid", "ask", "last"]
+          - task: "Subscribe to all tech sector tickers"
+            expect_channel: "sector/tech"
+            expect_params: ["sector"]
+          - task: "Handle trade execution with volume and price"
+            expect_channel: "trades"
+            expect_params: ["ticker", "price", "volume"]
+          - task: "Subscribe to order book updates for ticker AMZN"
+            expect_channel: "orderbook/AMZN"
+            expect_params: ["ticker"]
+          - task: "Request historical data for ticker FB"
+            expect_channel: "history/FB"
+            expect_params: ["ticker", "from", "to"]
+          - task: "Subscribe to market status events"
+            expect_channel: "market/status"
+            expect_params: ["market"]
+
+  postman:
+    docs:
+      - spec: examples/postman/stripe-payments.json
+        api: Stripe Payments (Postman)
+        tasks:
+          - task: "Create charge for $2000 USD with source tok_visa"
+            expect_endpoint: "POST /charges"
+            expect_params: ["amount", "currency", "source"]
+          - task: "Get charge details for ch_abc123"
+            expect_endpoint: "GET /charges/:id"
+            expect_params: ["id"]
+          - task: "List all charges with limit 10"
+            expect_endpoint: "GET /charges"
+            expect_params: ["limit"]
+          - task: "Capture uncaptured charge ch_xyz789 for full amount"
+            expect_endpoint: "POST /charges/:id/capture"
+            expect_params: ["id"]
+          - task: "Create customer with email customer@example.com and name 'Jane Doe'"
+            expect_endpoint: "POST /customers"
+            expect_params: ["email", "name"]
+          - task: "Get customer details for cus_abc123"
+            expect_endpoint: "GET /customers/:id"
+            expect_params: ["id"]
+          - task: "List customers with limit 20 and created after timestamp"
+            expect_endpoint: "GET /customers"
+            expect_params: ["limit", "created"]
+          - task: "Create charge for customer cus_abc123 with amount 5000 and description 'Service fee'"
+            expect_endpoint: "POST /charges"
+            expect_params: ["amount", "customer", "description"]
+          - task: "Capture charge ch_test123 for partial amount 1000 with receipt email"
+            expect_endpoint: "POST /charges/:id/capture"
+            expect_params: ["id", "amount", "receipt_email"]
+          - task: "List charges for customer cus_xyz789 with starting_after cursor"
+            expect_endpoint: "GET /charges"
+            expect_params: ["customer", "starting_after"]
+
+      - spec: examples/postman/github-repos.json
+        api: GitHub Repos (Postman)
+        tasks:
+          - task: "List repositories for current user with type 'owner' and sort by 'updated'"
+            expect_endpoint: "GET /user/repos"
+            expect_params: ["type", "sort"]
+          - task: "Get repository octocat/Hello-World details"
+            expect_endpoint: "GET /repos/:owner/:repo"
+            expect_params: ["owner", "repo"]
+          - task: "Create repository with name 'new-repo' and description 'My new project'"
+            expect_endpoint: "POST /user/repos"
+            expect_params: ["name", "description"]
+          - task: "List issues for repository octocat/Hello-World with state 'open'"
+            expect_endpoint: "GET /repos/:owner/:repo/issues"
+            expect_params: ["owner", "repo", "state"]
+          - task: "Create issue in octocat/Hello-World with title 'Bug found' and labels"
+            expect_endpoint: "POST /repos/:owner/:repo/issues"
+            expect_params: ["owner", "repo", "title", "labels"]
+          - task: "Update issue #42 in octocat/Hello-World with new title and state 'closed'"
+            expect_endpoint: "PATCH /repos/:owner/:repo/issues/:issue_number"
+            expect_params: ["owner", "repo", "issue_number", "title", "state"]
+          - task: "List issues with milestone filter and per_page 25"
+            expect_endpoint: "GET /repos/:owner/:repo/issues"
+            expect_params: ["owner", "repo", "milestone", "per_page"]
+          - task: "Create repository with name 'private-repo' and private flag true"
+            expect_endpoint: "POST /user/repos"
+            expect_params: ["name", "private"]
+          - task: "List user repositories with visibility 'public' and affiliation 'owner,collaborator'"
+            expect_endpoint: "GET /user/repos"
+            expect_params: ["visibility", "affiliation"]
+          - task: "Create issue with title 'Feature request', body text, and assignees list"
+            expect_endpoint: "POST /repos/:owner/:repo/issues"
+            expect_params: ["owner", "repo", "title", "body", "assignees"]
+
+      - spec: examples/postman/slack-api.json
+        api: Slack API (Postman)
+        tasks:
+          - task: "Post message 'Hello Slack!' to channel #general"
+            expect_endpoint: "POST /chat.postMessage"
+            expect_params: ["channel", "text"]
+          - task: "Update message ts 1234567890.123456 in channel C123ABC"
+            expect_endpoint: "POST /chat.update"
+            expect_params: ["channel", "ts", "text"]
+          - task: "Delete message ts 1234567890.123456 from channel C123ABC"
+            expect_endpoint: "POST /chat.delete"
+            expect_params: ["channel", "ts"]
+          - task: "List conversations with limit 20"
+            expect_endpoint: "GET /conversations.list"
+            expect_params: ["limit"]
+          - task: "Get conversation info for channel C123ABC"
+            expect_endpoint: "GET /conversations.info"
+            expect_params: ["channel"]
+          - task: "Create conversation with name 'project-team'"
+            expect_endpoint: "POST /conversations.create"
+            expect_params: ["name"]
+          - task: "Invite user U123ABC to channel C123ABC"
+            expect_endpoint: "POST /conversations.invite"
+            expect_params: ["channel", "users"]
+          - task: "List users with limit 50"
+            expect_endpoint: "GET /users.list"
+            expect_params: ["limit"]
+          - task: "Get user info for U123ABC"
+            expect_endpoint: "GET /users.info"
+            expect_params: ["user"]
+          - task: "Upload file 'report.pdf' to channel C123ABC"
+            expect_endpoint: "POST /files.upload"
+            expect_params: ["channels", "file"]
+
+      - spec: examples/postman/twilio-messaging.json
+        api: Twilio Messaging (Postman)
+        tasks:
+          - task: "Send SMS from +15551234567 to +15559876543 with body 'Hello'"
+            expect_endpoint: "POST /2010-04-01/Accounts/{AccountSid}/Messages.json"
+            expect_params: ["To", "From", "Body"]
+          - task: "Send MMS with image from +15551234567 to +15559876543"
+            expect_endpoint: "POST /2010-04-01/Accounts/{AccountSid}/Messages.json"
+            expect_params: ["To", "From", "MediaUrl"]
+          - task: "List messages for account with page size 20"
+            expect_endpoint: "GET /2010-04-01/Accounts/{AccountSid}/Messages.json"
+            expect_params: ["PageSize"]
+          - task: "Get message details for SM123abc"
+            expect_endpoint: "GET /2010-04-01/Accounts/{AccountSid}/Messages/{MessageSid}.json"
+            expect_params: ["MessageSid"]
+          - task: "Delete message SM123abc"
+            expect_endpoint: "DELETE /2010-04-01/Accounts/{AccountSid}/Messages/{MessageSid}.json"
+            expect_params: ["MessageSid"]
+          - task: "List messages sent to +15559876543"
+            expect_endpoint: "GET /2010-04-01/Accounts/{AccountSid}/Messages.json"
+            expect_params: ["To"]
+          - task: "List messages from +15551234567"
+            expect_endpoint: "GET /2010-04-01/Accounts/{AccountSid}/Messages.json"
+            expect_params: ["From"]
+          - task: "Send SMS with status callback URL"
+            expect_endpoint: "POST /2010-04-01/Accounts/{AccountSid}/Messages.json"
+            expect_params: ["To", "From", "Body", "StatusCallback"]
+          - task: "Get message media for message SM123abc"
+            expect_endpoint: "GET /2010-04-01/Accounts/{AccountSid}/Messages/{MessageSid}/Media.json"
+            expect_params: ["MessageSid"]
+          - task: "Schedule SMS for future delivery with SendAt"
+            expect_endpoint: "POST /2010-04-01/Accounts/{AccountSid}/Messages.json"
+            expect_params: ["To", "From", "Body", "SendAt"]
+
+      - spec: examples/postman/sendgrid-email.json
+        api: SendGrid Email (Postman)
+        tasks:
+          - task: "Send email from sender@example.com to recipient@example.com"
+            expect_endpoint: "POST /v3/mail/send"
+            expect_params: ["personalizations", "from", "subject", "content"]
+          - task: "Send email with HTML content and plain text alternative"
+            expect_endpoint: "POST /v3/mail/send"
+            expect_params: ["personalizations", "from", "subject", "content"]
+          - task: "Send email with attachment document.pdf"
+            expect_endpoint: "POST /v3/mail/send"
+            expect_params: ["personalizations", "from", "subject", "content", "attachments"]
+          - task: "Send email to multiple recipients with BCC"
+            expect_endpoint: "POST /v3/mail/send"
+            expect_params: ["personalizations", "from", "subject", "content"]
+          - task: "Send template email with template_id abc123"
+            expect_endpoint: "POST /v3/mail/send"
+            expect_params: ["personalizations", "from", "template_id"]
+          - task: "Schedule email for send_at timestamp 1704067200"
+            expect_endpoint: "POST /v3/mail/send"
+            expect_params: ["personalizations", "from", "subject", "content", "send_at"]
+          - task: "Get email activity for message ID"
+            expect_endpoint: "GET /v3/messages/{msg_id}"
+            expect_params: ["msg_id"]
+          - task: "List suppressions for email address"
+            expect_endpoint: "GET /v3/suppression/bounces/{email}"
+            expect_params: ["email"]
+          - task: "Add sender identity with email and name"
+            expect_endpoint: "POST /v3/senders"
+            expect_params: ["nickname", "from"]
+          - task: "Get email statistics for date range"
+            expect_endpoint: "GET /v3/stats"
+            expect_params: ["start_date", "end_date"]
+
+      - spec: examples/postman/discord-bot.json
+        api: Discord Bot (Postman)
+        tasks:
+          - task: "Send message 'Hello Discord!' to channel 123456789"
+            expect_endpoint: "POST /channels/{channel_id}/messages"
+            expect_params: ["channel_id", "content"]
+          - task: "Send embed message with title and description"
+            expect_endpoint: "POST /channels/{channel_id}/messages"
+            expect_params: ["channel_id", "embeds"]
+          - task: "Edit message 987654321 in channel 123456789"
+            expect_endpoint: "PATCH /channels/{channel_id}/messages/{message_id}"
+            expect_params: ["channel_id", "message_id", "content"]
+          - task: "Delete message 987654321 from channel 123456789"
+            expect_endpoint: "DELETE /channels/{channel_id}/messages/{message_id}"
+            expect_params: ["channel_id", "message_id"]
+          - task: "Get messages from channel 123456789 with limit 50"
+            expect_endpoint: "GET /channels/{channel_id}/messages"
+            expect_params: ["channel_id", "limit"]
+          - task: "Create reaction emoji 👍 on message 987654321"
+            expect_endpoint: "PUT /channels/{channel_id}/messages/{message_id}/reactions/{emoji}/@me"
+            expect_params: ["channel_id", "message_id", "emoji"]
+          - task: "Delete own reaction from message"
+            expect_endpoint: "DELETE /channels/{channel_id}/messages/{message_id}/reactions/{emoji}/@me"
+            expect_params: ["channel_id", "message_id", "emoji"]
+          - task: "Pin message 987654321 in channel 123456789"
+            expect_endpoint: "PUT /channels/{channel_id}/pins/{message_id}"
+            expect_params: ["channel_id", "message_id"]
+          - task: "Get guild 111222333 details"
+            expect_endpoint: "GET /guilds/{guild_id}"
+            expect_params: ["guild_id"]
+          - task: "Create DM channel with user 555666777"
+            expect_endpoint: "POST /users/@me/channels"
+            expect_params: ["recipient_id"]
+
+      - spec: examples/postman/notion-workspace.json
+        api: Notion Workspace (Postman)
+        tasks:
+          - task: "Get page abc-123-xyz details"
+            expect_endpoint: "GET /v1/pages/{page_id}"
+            expect_params: ["page_id"]
+          - task: "Update page abc-123-xyz with new properties"
+            expect_endpoint: "PATCH /v1/pages/{page_id}"
+            expect_params: ["page_id", "properties"]
+          - task: "Create page in database db-456 with title 'New Entry'"
+            expect_endpoint: "POST /v1/pages"
+            expect_params: ["parent", "properties"]
+          - task: "Query database db-456 with filter"
+            expect_endpoint: "POST /v1/databases/{database_id}/query"
+            expect_params: ["database_id"]
+          - task: "Get database db-456 schema"
+            expect_endpoint: "GET /v1/databases/{database_id}"
+            expect_params: ["database_id"]
+          - task: "Search pages with query 'meeting notes'"
+            expect_endpoint: "POST /v1/search"
+            expect_params: ["query"]
+          - task: "Get block children for block xyz-789"
+            expect_endpoint: "GET /v1/blocks/{block_id}/children"
+            expect_params: ["block_id"]
+          - task: "Append block children to block xyz-789"
+            expect_endpoint: "PATCH /v1/blocks/{block_id}/children"
+            expect_params: ["block_id", "children"]
+          - task: "Delete block xyz-789"
+            expect_endpoint: "DELETE /v1/blocks/{block_id}"
+            expect_params: ["block_id"]
+          - task: "Get user details for user-123"
+            expect_endpoint: "GET /v1/users/{user_id}"
+            expect_params: ["user_id"]
+
+      - spec: examples/postman/jira-projects.json
+        api: Jira Projects (Postman)
+        tasks:
+          - task: "Get project details for project key PROJ"
+            expect_endpoint: "GET /rest/api/3/project/{projectIdOrKey}"
+            expect_params: ["projectIdOrKey"]
+          - task: "List all projects"
+            expect_endpoint: "GET /rest/api/3/project"
+            expect_params: []
+          - task: "Create issue in project PROJ with summary 'Bug report'"
+            expect_endpoint: "POST /rest/api/3/issue"
+            expect_params: ["fields", "project", "summary", "issuetype"]
+          - task: "Get issue details for PROJ-123"
+            expect_endpoint: "GET /rest/api/3/issue/{issueIdOrKey}"
+            expect_params: ["issueIdOrKey"]
+          - task: "Update issue PROJ-123 with new description"
+            expect_endpoint: "PUT /rest/api/3/issue/{issueIdOrKey}"
+            expect_params: ["issueIdOrKey", "fields"]
+          - task: "Transition issue PROJ-123 to 'In Progress'"
+            expect_endpoint: "POST /rest/api/3/issue/{issueIdOrKey}/transitions"
+            expect_params: ["issueIdOrKey", "transition"]
+          - task: "Add comment to issue PROJ-123"
+            expect_endpoint: "POST /rest/api/3/issue/{issueIdOrKey}/comment"
+            expect_params: ["issueIdOrKey", "body"]
+          - task: "Search issues with JQL 'project = PROJ AND status = Open'"
+            expect_endpoint: "GET /rest/api/3/search"
+            expect_params: ["jql"]
+          - task: "Get issue transitions for PROJ-123"
+            expect_endpoint: "GET /rest/api/3/issue/{issueIdOrKey}/transitions"
+            expect_params: ["issueIdOrKey"]
+          - task: "Delete issue PROJ-123"
+            expect_endpoint: "DELETE /rest/api/3/issue/{issueIdOrKey}"
+            expect_params: ["issueIdOrKey"]
+
+      - spec: examples/postman/shopify-ecommerce.json
+        api: Shopify E-commerce (Postman)
+        tasks:
+          - task: "Get product details for product ID 123456789"
+            expect_endpoint: "GET /admin/api/2023-10/products/{product_id}.json"
+            expect_params: ["product_id"]
+          - task: "List all products with limit 20"
+            expect_endpoint: "GET /admin/api/2023-10/products.json"
+            expect_params: ["limit"]
+          - task: "Create product with title 'New Product'"
+            expect_endpoint: "POST /admin/api/2023-10/products.json"
+            expect_params: ["product"]
+          - task: "Update product 123456789 with new price"
+            expect_endpoint: "PUT /admin/api/2023-10/products/{product_id}.json"
+            expect_params: ["product_id", "product"]
+          - task: "Delete product 123456789"
+            expect_endpoint: "DELETE /admin/api/2023-10/products/{product_id}.json"
+            expect_params: ["product_id"]
+          - task: "Get order details for order ID 987654321"
+            expect_endpoint: "GET /admin/api/2023-10/orders/{order_id}.json"
+            expect_params: ["order_id"]
+          - task: "List orders with status 'open'"
+            expect_endpoint: "GET /admin/api/2023-10/orders.json"
+            expect_params: ["status"]
+          - task: "Create draft order with line items"
+            expect_endpoint: "POST /admin/api/2023-10/draft_orders.json"
+            expect_params: ["draft_order"]
+          - task: "Get customer details for customer ID 555666777"
+            expect_endpoint: "GET /admin/api/2023-10/customers/{customer_id}.json"
+            expect_params: ["customer_id"]
+          - task: "List inventory levels for location 111222333"
+            expect_endpoint: "GET /admin/api/2023-10/inventory_levels.json"
+            expect_params: ["location_ids"]
+
+      - spec: examples/postman/hubspot-crm.json
+        api: HubSpot CRM (Postman)
+        tasks:
+          - task: "Get contact by ID 12345"
+            expect_endpoint: "GET /crm/v3/objects/contacts/{contactId}"
+            expect_params: ["contactId"]
+          - task: "Create contact with email contact@example.com"
+            expect_endpoint: "POST /crm/v3/objects/contacts"
+            expect_params: ["properties"]
+          - task: "Update contact 12345 with new phone number"
+            expect_endpoint: "PATCH /crm/v3/objects/contacts/{contactId}"
+            expect_params: ["contactId", "properties"]
+          - task: "Delete contact 12345"
+            expect_endpoint: "DELETE /crm/v3/objects/contacts/{contactId}"
+            expect_params: ["contactId"]
+          - task: "List contacts with limit 50"
+            expect_endpoint: "GET /crm/v3/objects/contacts"
+            expect_params: ["limit"]
+          - task: "Get company by ID 67890"
+            expect_endpoint: "GET /crm/v3/objects/companies/{companyId}"
+            expect_params: ["companyId"]
+          - task: "Create deal with amount $5000"
+            expect_endpoint: "POST /crm/v3/objects/deals"
+            expect_params: ["properties"]
+          - task: "Search contacts with email contains '@example.com'"
+            expect_endpoint: "POST /crm/v3/objects/contacts/search"
+            expect_params: ["filterGroups"]
+          - task: "Associate contact 12345 with company 67890"
+            expect_endpoint: "PUT /crm/v3/objects/contacts/{contactId}/associations/companies/{toObjectId}/{associationTypeId}"
+            expect_params: ["contactId", "toObjectId", "associationTypeId"]
+          - task: "List deals with pipeline stage 'closedwon'"
+            expect_endpoint: "GET /crm/v3/objects/deals"
+            expect_params: []
+
+      - spec: examples/postman/zoom-meetings.json
+        api: Zoom Meetings (Postman)
+        tasks:
+          - task: "Get user details for user ID abc123@email.com"
+            expect_endpoint: "GET /v2/users/{userId}"
+            expect_params: ["userId"]
+          - task: "List users with status 'active' and page size 30"
+            expect_endpoint: "GET /v2/users"
+            expect_params: ["status", "page_size"]
+          - task: "Create meeting for user abc123@email.com with topic 'Team Sync'"
+            expect_endpoint: "POST /v2/users/{userId}/meetings"
+            expect_params: ["userId", "topic"]
+          - task: "Get meeting details for meeting ID 987654321"
+            expect_endpoint: "GET /v2/meetings/{meetingId}"
+            expect_params: ["meetingId"]
+          - task: "Update meeting 987654321 with new start time"
+            expect_endpoint: "PATCH /v2/meetings/{meetingId}"
+            expect_params: ["meetingId", "start_time"]
+          - task: "Delete meeting 987654321"
+            expect_endpoint: "DELETE /v2/meetings/{meetingId}"
+            expect_params: ["meetingId"]
+          - task: "List meetings for user abc123@email.com"
+            expect_endpoint: "GET /v2/users/{userId}/meetings"
+            expect_params: ["userId"]
+          - task: "Get meeting participants for meeting 987654321"
+            expect_endpoint: "GET /v2/metrics/meetings/{meetingId}/participants"
+            expect_params: ["meetingId"]
+          - task: "Create webinar for user with topic 'Product Launch'"
+            expect_endpoint: "POST /v2/users/{userId}/webinars"
+            expect_params: ["userId", "topic"]
+          - task: "Get cloud recordings for user abc123@email.com"
+            expect_endpoint: "GET /v2/users/{userId}/recordings"
+            expect_params: ["userId"]
+
+  protobuf:
+    docs:
+      - spec: examples/protobuf/user.proto
+        api: User Service (gRPC)
+        tasks:
+          - task: "Call GetUser RPC with user ID 'user-123'"
+            expect_rpc: "GetUser"
+            expect_params: ["user_id"]
+          - task: "Call CreateUser RPC with name 'John Doe' and email 'john@example.com'"
+            expect_rpc: "CreateUser"
+            expect_params: ["name", "email"]
+          - task: "Call UpdateUser RPC to change user-123's email to 'newemail@example.com'"
+            expect_rpc: "UpdateUser"
+            expect_params: ["user_id", "email"]
+          - task: "Call DeleteUser RPC for user ID 'user-456'"
+            expect_rpc: "DeleteUser"
+            expect_params: ["user_id"]
+          - task: "Call ListUsers RPC with page size 20 and page token"
+            expect_rpc: "ListUsers"
+            expect_params: ["page_size", "page_token"]
+          - task: "Call BulkImportUsers RPC with array of user records"
+            expect_rpc: "BulkImportUsers"
+            expect_params: ["users"]
+          - task: "Call CreateUser RPC with name, email, phone, and metadata fields"
+            expect_rpc: "CreateUser"
+            expect_params: ["name", "email", "phone", "metadata"]
+          - task: "Call UpdateUser RPC to update user-789 with new name and bio"
+            expect_rpc: "UpdateUser"
+            expect_params: ["user_id", "name", "bio"]
+          - task: "Call GetUser RPC for user-999 with field mask for specific fields"
+            expect_rpc: "GetUser"
+            expect_params: ["user_id", "field_mask"]
+          - task: "Call ListUsers RPC with filter by created_after timestamp"
+            expect_rpc: "ListUsers"
+            expect_params: ["page_size", "created_after"]
+
+      - spec: examples/protobuf/chat.proto
+        api: Chat Service (gRPC)
+        tasks:
+          - task: "Call SendMessage RPC with text 'Hello!' to room 'general'"
+            expect_rpc: "SendMessage"
+            expect_params: ["room_id", "text"]
+          - task: "Call SendMessage RPC with text and user_id to room 'project-team'"
+            expect_rpc: "SendMessage"
+            expect_params: ["room_id", "user_id", "text"]
+          - task: "Call StreamMessages RPC to subscribe to room 'general' for real-time messages"
+            expect_rpc: "StreamMessages"
+            expect_params: ["room_id"]
+          - task: "Call Chat RPC for bidirectional streaming chat in room 'support'"
+            expect_rpc: "Chat"
+            expect_params: ["room_id"]
+          - task: "Call ListRooms RPC to get all available chat rooms"
+            expect_rpc: "ListRooms"
+            expect_params: []
+          - task: "Call ListRooms RPC with page size 10 and page token"
+            expect_rpc: "ListRooms"
+            expect_params: ["page_size", "page_token"]
+          - task: "Call GetHistory RPC for room 'general' with limit 50"
+            expect_rpc: "GetHistory"
+            expect_params: ["room_id", "limit"]
+          - task: "Call GetHistory RPC for room 'project-team' with before timestamp"
+            expect_rpc: "GetHistory"
+            expect_params: ["room_id", "before"]
+          - task: "Call StreamMessages RPC for room 'announcements' with user filter"
+            expect_rpc: "StreamMessages"
+            expect_params: ["room_id", "user_id"]
+          - task: "Call SendMessage RPC with text, user_id, and attachment metadata"
+            expect_rpc: "SendMessage"
+            expect_params: ["room_id", "user_id", "text", "attachments"]
+
+      - spec: examples/protobuf/payments.proto
+        api: Payments Service (gRPC)
+        tasks:
+          - task: "Call CreatePayment RPC with amount 5000 and currency USD"
+            expect_rpc: "CreatePayment"
+            expect_params: ["amount", "currency"]
+          - task: "Call GetPayment RPC for payment ID 'pay-abc123'"
+            expect_rpc: "GetPayment"
+            expect_params: ["payment_id"]
+          - task: "Call CapturePayment RPC for payment 'pay-abc123'"
+            expect_rpc: "CapturePayment"
+            expect_params: ["payment_id"]
+          - task: "Call RefundPayment RPC for payment 'pay-abc123' with amount 1000"
+            expect_rpc: "RefundPayment"
+            expect_params: ["payment_id", "amount"]
+          - task: "Call ListPayments RPC with status 'succeeded' and limit 20"
+            expect_rpc: "ListPayments"
+            expect_params: ["status", "page_size"]
+          - task: "Call CancelPayment RPC for payment 'pay-abc123'"
+            expect_rpc: "CancelPayment"
+            expect_params: ["payment_id"]
+          - task: "Call CreateCustomer RPC with email 'customer@example.com'"
+            expect_rpc: "CreateCustomer"
+            expect_params: ["email"]
+          - task: "Call GetCustomer RPC for customer 'cus-xyz789'"
+            expect_rpc: "GetCustomer"
+            expect_params: ["customer_id"]
+          - task: "Call ListPaymentMethods RPC for customer 'cus-xyz789'"
+            expect_rpc: "ListPaymentMethods"
+            expect_params: ["customer_id"]
+          - task: "Call StreamPaymentEvents RPC to subscribe to payment updates"
+            expect_rpc: "StreamPaymentEvents"
+            expect_params: []
+
+      - spec: examples/protobuf/health.proto
+        api: Health Service (gRPC)
+        tasks:
+          - task: "Call Check RPC to verify service health"
+            expect_rpc: "Check"
+            expect_params: ["service"]
+          - task: "Call Watch RPC to stream health status updates"
+            expect_rpc: "Watch"
+            expect_params: ["service"]
+          - task: "Check health for service 'user-service'"
+            expect_rpc: "Check"
+            expect_params: ["service"]
+          - task: "Watch health status for all services"
+            expect_rpc: "Watch"
+            expect_params: []
+          - task: "Check health for service 'payment-service'"
+            expect_rpc: "Check"
+            expect_params: ["service"]
+          - task: "Verify overall system health"
+            expect_rpc: "Check"
+            expect_params: []
+          - task: "Monitor health status changes for 'chat-service'"
+            expect_rpc: "Watch"
+            expect_params: ["service"]
+          - task: "Get health status for 'api-gateway'"
+            expect_rpc: "Check"
+            expect_params: ["service"]
+          - task: "Stream continuous health updates for 'database-service'"
+            expect_rpc: "Watch"
+            expect_params: ["service"]
+          - task: "Perform health check on 'cache-service'"
+            expect_rpc: "Check"
+            expect_params: ["service"]
+
+      - spec: examples/protobuf/google_pubsub.proto
+        api: Google Pub/Sub (gRPC)
+        tasks:
+          - task: "Call CreateTopic RPC with topic name 'projects/my-project/topics/notifications'"
+            expect_rpc: "CreateTopic"
+            expect_params: ["name"]
+          - task: "Call Publish RPC to send message to topic 'notifications'"
+            expect_rpc: "Publish"
+            expect_params: ["topic", "messages"]
+          - task: "Call GetTopic RPC for topic 'projects/my-project/topics/events'"
+            expect_rpc: "GetTopic"
+            expect_params: ["topic"]
+          - task: "Call ListTopics RPC for project 'projects/my-project'"
+            expect_rpc: "ListTopics"
+            expect_params: ["project"]
+          - task: "Call DeleteTopic RPC for topic 'notifications'"
+            expect_rpc: "DeleteTopic"
+            expect_params: ["topic"]
+          - task: "Call CreateSubscription RPC for topic 'events'"
+            expect_rpc: "CreateSubscription"
+            expect_params: ["name", "topic"]
+          - task: "Call Pull RPC to receive messages from subscription 'my-subscription'"
+            expect_rpc: "Pull"
+            expect_params: ["subscription", "max_messages"]
+          - task: "Call Acknowledge RPC for message ack IDs"
+            expect_rpc: "Acknowledge"
+            expect_params: ["subscription", "ack_ids"]
+          - task: "Call StreamingPull RPC for subscription 'events-sub'"
+            expect_rpc: "StreamingPull"
+            expect_params: ["subscription"]
+          - task: "Call ModifyAckDeadline RPC to extend ack deadline by 60 seconds"
+            expect_rpc: "ModifyAckDeadline"
+            expect_params: ["subscription", "ack_ids", "ack_deadline_seconds"]
+
+      - spec: examples/protobuf/google_firestore.proto
+        api: Google Firestore (gRPC)
+        tasks:
+          - task: "Call GetDocument RPC for document 'projects/my-project/databases/(default)/documents/users/user-123'"
+            expect_rpc: "GetDocument"
+            expect_params: ["name"]
+          - task: "Call CreateDocument RPC in collection 'users' with fields"
+            expect_rpc: "CreateDocument"
+            expect_params: ["parent", "collection_id", "document"]
+          - task: "Call UpdateDocument RPC for document 'users/user-123'"
+            expect_rpc: "UpdateDocument"
+            expect_params: ["document", "update_mask"]
+          - task: "Call DeleteDocument RPC for document 'users/user-123'"
+            expect_rpc: "DeleteDocument"
+            expect_params: ["name"]
+          - task: "Call ListDocuments RPC for collection 'users' with page size 50"
+            expect_rpc: "ListDocuments"
+            expect_params: ["parent", "collection_id", "page_size"]
+          - task: "Call RunQuery RPC with structured query on 'users' collection"
+            expect_rpc: "RunQuery"
+            expect_params: ["parent", "structured_query"]
+          - task: "Call BatchGetDocuments RPC for multiple documents"
+            expect_rpc: "BatchGetDocuments"
+            expect_params: ["database", "documents"]
+          - task: "Call BeginTransaction RPC for database"
+            expect_rpc: "BeginTransaction"
+            expect_params: ["database"]
+          - task: "Call Commit RPC with writes for transaction"
+            expect_rpc: "Commit"
+            expect_params: ["database", "writes"]
+          - task: "Call Listen RPC to stream document changes"
+            expect_rpc: "Listen"
+            expect_params: []
+
+      - spec: examples/protobuf/google_storage.proto
+        api: Google Cloud Storage (gRPC)
+        tasks:
+          - task: "Call GetBucket RPC for bucket 'my-bucket'"
+            expect_rpc: "GetBucket"
+            expect_params: ["bucket"]
+          - task: "Call CreateBucket RPC with name 'new-bucket' in project 'my-project'"
+            expect_rpc: "CreateBucket"
+            expect_params: ["bucket", "bucket_id", "project"]
+          - task: "Call ListBuckets RPC for project 'my-project'"
+            expect_rpc: "ListBuckets"
+            expect_params: ["project"]
+          - task: "Call DeleteBucket RPC for bucket 'old-bucket'"
+            expect_rpc: "DeleteBucket"
+            expect_params: ["bucket"]
+          - task: "Call GetObject RPC for object 'my-bucket/file.txt'"
+            expect_rpc: "GetObject"
+            expect_params: ["bucket", "object"]
+          - task: "Call InsertObject RPC to upload file to bucket 'my-bucket'"
+            expect_rpc: "InsertObject"
+            expect_params: ["bucket", "object"]
+          - task: "Call ListObjects RPC for bucket 'my-bucket' with prefix 'images/'"
+            expect_rpc: "ListObjects"
+            expect_params: ["bucket", "prefix"]
+          - task: "Call DeleteObject RPC for 'my-bucket/file.txt'"
+            expect_rpc: "DeleteObject"
+            expect_params: ["bucket", "object"]
+          - task: "Call CopyObject RPC from 'bucket-a/file.txt' to 'bucket-b/copy.txt'"
+            expect_rpc: "CopyObject"
+            expect_params: ["source_bucket", "source_object", "destination_bucket", "destination_object"]
+          - task: "Call UpdateObject RPC to change metadata for 'my-bucket/file.txt'"
+            expect_rpc: "UpdateObject"
+            expect_params: ["bucket", "object", "metadata"]
+
+      - spec: examples/protobuf/auth_service.proto
+        api: Auth Service (gRPC)
+        tasks:
+          - task: "Call Login RPC with username 'john' and password 'secret123'"
+            expect_rpc: "Login"
+            expect_params: ["username", "password"]
+          - task: "Call Logout RPC with access token"
+            expect_rpc: "Logout"
+            expect_params: ["token"]
+          - task: "Call RefreshToken RPC with refresh token to get new access token"
+            expect_rpc: "RefreshToken"
+            expect_params: ["refresh_token"]
+          - task: "Call ValidateToken RPC to verify access token"
+            expect_rpc: "ValidateToken"
+            expect_params: ["token"]
+          - task: "Call Register RPC with username 'alice' and email 'alice@example.com'"
+            expect_rpc: "Register"
+            expect_params: ["username", "email", "password"]
+          - task: "Call ResetPassword RPC with email 'john@example.com'"
+            expect_rpc: "ResetPassword"
+            expect_params: ["email"]
+          - task: "Call ChangePassword RPC for user with old and new password"
+            expect_rpc: "ChangePassword"
+            expect_params: ["user_id", "old_password", "new_password"]
+          - task: "Call VerifyEmail RPC with verification token"
+            expect_rpc: "VerifyEmail"
+            expect_params: ["token"]
+          - task: "Call GetCurrentUser RPC with access token"
+            expect_rpc: "GetCurrentUser"
+            expect_params: ["token"]
+          - task: "Call RevokeToken RPC to invalidate refresh token"
+            expect_rpc: "RevokeToken"
+            expect_params: ["token"]
+
+      - spec: examples/protobuf/search_service.proto
+        api: Search Service (gRPC)
+        tasks:
+          - task: "Call Search RPC with query 'artificial intelligence' and limit 10"
+            expect_rpc: "Search"
+            expect_params: ["query", "limit"]
+          - task: "Call SearchWithFilters RPC for query 'laptop' with category 'electronics'"
+            expect_rpc: "SearchWithFilters"
+            expect_params: ["query", "filters"]
+          - task: "Call AutoComplete RPC with prefix 'pyt'"
+            expect_rpc: "AutoComplete"
+            expect_params: ["prefix"]
+          - task: "Call IndexDocument RPC with document ID 'doc-123' and content"
+            expect_rpc: "IndexDocument"
+            expect_params: ["document_id", "content"]
+          - task: "Call DeleteDocument RPC for document 'doc-123' from index"
+            expect_rpc: "DeleteDocument"
+            expect_params: ["document_id"]
+          - task: "Call UpdateDocument RPC to modify indexed document 'doc-123'"
+            expect_rpc: "UpdateDocument"
+            expect_params: ["document_id", "content"]
+          - task: "Call SearchFaceted RPC with query and facet fields ['category', 'brand']"
+            expect_rpc: "SearchFaceted"
+            expect_params: ["query", "facets"]
+          - task: "Call GetSuggestions RPC for query 'machine learn'"
+            expect_rpc: "GetSuggestions"
+            expect_params: ["query"]
+          - task: "Call SearchWithHighlight RPC for query with highlighted matches"
+            expect_rpc: "SearchWithHighlight"
+            expect_params: ["query", "highlight_fields"]
+          - task: "Call RankDocuments RPC with scoring algorithm"
+            expect_rpc: "RankDocuments"
+            expect_params: ["query", "documents", "ranking_model"]
+
+      - spec: examples/protobuf/notification_service.proto
+        api: Notification Service (gRPC)
+        tasks:
+          - task: "Call SendNotification RPC to user 'user-123' with message 'Hello!'"
+            expect_rpc: "SendNotification"
+            expect_params: ["user_id", "message"]
+          - task: "Call SendPushNotification RPC with device token and payload"
+            expect_rpc: "SendPushNotification"
+            expect_params: ["device_token", "title", "body"]
+          - task: "Call SendEmailNotification RPC to 'user@example.com' with subject"
+            expect_rpc: "SendEmailNotification"
+            expect_params: ["to", "subject", "body"]
+          - task: "Call GetNotifications RPC for user 'user-123' with page size 20"
+            expect_rpc: "GetNotifications"
+            expect_params: ["user_id", "page_size"]
+          - task: "Call MarkAsRead RPC for notification 'notif-456'"
+            expect_rpc: "MarkAsRead"
+            expect_params: ["notification_id"]
+          - task: "Call DeleteNotification RPC for notification 'notif-456'"
+            expect_rpc: "DeleteNotification"
+            expect_params: ["notification_id"]
+          - task: "Call SubscribeToTopic RPC for user 'user-123' to topic 'updates'"
+            expect_rpc: "SubscribeToTopic"
+            expect_params: ["user_id", "topic"]
+          - task: "Call UnsubscribeFromTopic RPC for user and topic 'marketing'"
+            expect_rpc: "UnsubscribeFromTopic"
+            expect_params: ["user_id", "topic"]
+          - task: "Call StreamNotifications RPC to receive real-time notifications"
+            expect_rpc: "StreamNotifications"
+            expect_params: ["user_id"]
+          - task: "Call SendBulkNotifications RPC to multiple users"
+            expect_rpc: "SendBulkNotifications"
+            expect_params: ["user_ids", "message"]

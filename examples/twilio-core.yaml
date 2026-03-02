@@ -1,0 +1,418 @@
+openapi: "3.0.0"
+info:
+  title: Twilio REST API
+  version: "2010-04-01"
+servers:
+  - url: https://api.twilio.com/2010-04-01
+security:
+  - basicAuth: []
+components:
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+paths:
+  /Accounts/{AccountSid}/Messages.json:
+    post:
+      summary: Send an SMS or MMS message
+      description: Send a message from the account specified by AccountSid.
+      parameters:
+        - name: AccountSid
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The SID of the Account creating the Message resource
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - To
+                - Body
+              properties:
+                To:
+                  type: string
+                  description: The recipient phone number in E.164 format
+                From:
+                  type: string
+                  description: A Twilio phone number in E.164 format, an alphanumeric sender ID, or a Channel Address
+                MessagingServiceSid:
+                  type: string
+                  description: The SID of the Messaging Service you want to associate with the Message
+                Body:
+                  type: string
+                  description: The text content of the message (max 1600 characters)
+                MediaUrl:
+                  type: array
+                  items:
+                    type: string
+                  description: URL of media to include in the message. Up to 10 MediaUrl values.
+                StatusCallback:
+                  type: string
+                  description: The URL Twilio will POST to each time your message status changes
+                MaxPrice:
+                  type: number
+                  description: The maximum price in US dollars acceptable for the message
+                ValidityPeriod:
+                  type: integer
+                  description: The number of seconds the message can remain in queue (1-14400)
+                SendAt:
+                  type: string
+                  format: date-time
+                  description: The time Twilio will send the message (ISO 8601 format, for scheduled messages)
+                ContentSid:
+                  type: string
+                  description: The SID of the content template for the message
+      responses:
+        "201":
+          description: Message created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sid:
+                    type: string
+                  account_sid:
+                    type: string
+                  to:
+                    type: string
+                  from:
+                    type: string
+                  body:
+                    type: string
+                  status:
+                    type: string
+                  direction:
+                    type: string
+                  price:
+                    type: string
+                    nullable: true
+                  date_created:
+                    type: string
+                  date_sent:
+                    type: string
+                    nullable: true
+                  error_code:
+                    type: integer
+                    nullable: true
+                  error_message:
+                    type: string
+                    nullable: true
+                  num_segments:
+                    type: string
+                  num_media:
+                    type: string
+        "400":
+          description: Invalid request
+        "401":
+          description: Authentication error
+    get:
+      summary: List messages
+      description: Retrieve a list of Messages associated with your account.
+      parameters:
+        - name: AccountSid
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The SID of the Account
+        - name: To
+          in: query
+          schema:
+            type: string
+          description: Filter by recipient phone number
+        - name: From
+          in: query
+          schema:
+            type: string
+          description: Filter by sender phone number
+        - name: DateSent
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Filter by date sent (YYYY-MM-DD)
+        - name: PageSize
+          in: query
+          schema:
+            type: integer
+            default: "50"
+          description: Number of records to return per page (max 1000)
+      responses:
+        "200":
+          description: List of messages
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                  page:
+                    type: integer
+                  page_size:
+                    type: integer
+                  num_pages:
+                    type: integer
+        "401":
+          description: Authentication error
+  /Accounts/{AccountSid}/Messages/{MessageSid}.json:
+    get:
+      summary: Fetch a message
+      description: Fetch a specific message by its SID.
+      parameters:
+        - name: AccountSid
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The SID of the Account
+        - name: MessageSid
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The SID of the Message resource to fetch
+      responses:
+        "200":
+          description: Message details
+        "404":
+          description: Message not found
+    delete:
+      summary: Delete a message
+      description: Delete a message record from your account.
+      parameters:
+        - name: AccountSid
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The SID of the Account
+        - name: MessageSid
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The SID of the Message resource to delete
+      responses:
+        "204":
+          description: Message deleted
+        "404":
+          description: Message not found
+  /Accounts/{AccountSid}/Calls.json:
+    post:
+      summary: Make a phone call
+      description: Create a new outgoing call to phones, SIP-enabled endpoints, or Twilio Client connections.
+      parameters:
+        - name: AccountSid
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The SID of the Account creating the Call
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - To
+                - From
+              properties:
+                To:
+                  type: string
+                  description: The phone number, SIP address, or Client identifier to call
+                From:
+                  type: string
+                  description: The phone number or Client identifier to use as the caller ID
+                Url:
+                  type: string
+                  description: The URL that returns TwiML instructions for the call
+                Twiml:
+                  type: string
+                  description: TwiML instructions for the call (alternative to Url)
+                ApplicationSid:
+                  type: string
+                  description: The SID of the Application resource to handle the call
+                Method:
+                  type: string
+                  enum: [GET, POST]
+                  description: The HTTP method Twilio should use to request the Url
+                  default: POST
+                StatusCallback:
+                  type: string
+                  description: The URL Twilio will send call state change webhooks to
+                StatusCallbackMethod:
+                  type: string
+                  enum: [GET, POST]
+                  description: HTTP method for StatusCallback requests
+                  default: POST
+                Timeout:
+                  type: integer
+                  description: Number of seconds Twilio will wait for the call to be answered (5-600)
+                  default: "60"
+                Record:
+                  type: boolean
+                  description: Whether to record the call
+                  default: "false"
+                MachineDetection:
+                  type: string
+                  enum: [Enable, DetectMessageEnd]
+                  description: Enable answering machine detection
+                CallerId:
+                  type: string
+                  description: The phone number to display as the caller ID (for verified numbers)
+      responses:
+        "201":
+          description: Call initiated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sid:
+                    type: string
+                  account_sid:
+                    type: string
+                  to:
+                    type: string
+                  from:
+                    type: string
+                  status:
+                    type: string
+                  direction:
+                    type: string
+                  price:
+                    type: string
+                    nullable: true
+                  duration:
+                    type: string
+                    nullable: true
+                  date_created:
+                    type: string
+                  start_time:
+                    type: string
+                    nullable: true
+                  end_time:
+                    type: string
+                    nullable: true
+        "400":
+          description: Invalid request
+        "401":
+          description: Authentication error
+    get:
+      summary: List calls
+      description: Retrieve a list of calls made to and from your account.
+      parameters:
+        - name: AccountSid
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The SID of the Account
+        - name: To
+          in: query
+          schema:
+            type: string
+          description: Filter by recipient
+        - name: From
+          in: query
+          schema:
+            type: string
+          description: Filter by caller
+        - name: Status
+          in: query
+          schema:
+            type: string
+            enum: [queued, ringing, in-progress, canceled, completed, failed, busy, no-answer]
+          description: Filter by call status
+        - name: StartTime
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Filter by start time (YYYY-MM-DD)
+        - name: PageSize
+          in: query
+          schema:
+            type: integer
+            default: "50"
+          description: Number of records per page (max 1000)
+      responses:
+        "200":
+          description: List of calls
+        "401":
+          description: Authentication error
+  /Accounts/{AccountSid}/Calls/{CallSid}.json:
+    get:
+      summary: Fetch a call
+      description: Fetch a specific call by its SID.
+      parameters:
+        - name: AccountSid
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The SID of the Account
+        - name: CallSid
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The SID of the Call resource to fetch
+      responses:
+        "200":
+          description: Call details
+        "404":
+          description: Call not found
+    post:
+      summary: Update a call
+      description: Update the properties of a call (e.g. to redirect or end it).
+      parameters:
+        - name: AccountSid
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The SID of the Account
+        - name: CallSid
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The SID of the Call to update
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                Url:
+                  type: string
+                  description: The URL for new TwiML instructions
+                Method:
+                  type: string
+                  enum: [GET, POST]
+                  description: HTTP method for the Url request
+                Status:
+                  type: string
+                  enum: [canceled, completed]
+                  description: Set to canceled or completed to end the call
+                Twiml:
+                  type: string
+                  description: TwiML instructions for modifying the call
+                StatusCallback:
+                  type: string
+                  description: URL for call status webhooks
+      responses:
+        "200":
+          description: Call updated
+        "404":
+          description: Call not found

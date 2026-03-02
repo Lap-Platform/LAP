@@ -1,0 +1,220 @@
+enum PostStatusEnum { PUBLISH DRAFT PENDING PRIVATE TRASH FUTURE AUTO_DRAFT INHERIT }
+enum CommentStatusEnum { APPROVE HOLD SPAM TRASH }
+enum OrderEnum { ASC DESC }
+enum PostObjectsConnectionOrderbyEnum { DATE MODIFIED TITLE AUTHOR MENU_ORDER COMMENT_COUNT }
+enum MediaItemSizeEnum { THUMBNAIL MEDIUM MEDIUM_LARGE LARGE FULL }
+enum AvatarRatingEnum { G PG R X }
+enum RelationEnum { AND OR }
+enum TaxonomyEnum { CATEGORY TAG }
+
+interface Node { id: ID! }
+interface ContentNode { id: ID! databaseId: Int! slug: String status: String date: String modified: String uri: String }
+interface NodeWithTitle { title(format: String): String }
+interface NodeWithContentEditor { content(format: String): String }
+interface NodeWithExcerpt { excerpt(format: String): String }
+interface NodeWithFeaturedImage { featuredImage: NodeWithFeaturedImageToMediaItemConnectionEdge }
+interface NodeWithAuthor { authorId: ID authorDatabaseId: Int }
+interface NodeWithComments { commentCount: Int commentStatus: String }
+
+type Post implements Node & ContentNode & NodeWithTitle & NodeWithContentEditor & NodeWithExcerpt & NodeWithFeaturedImage & NodeWithAuthor & NodeWithComments {
+  id: ID!
+  databaseId: Int!
+  slug: String
+  status: String
+  date: String
+  modified: String
+  uri: String
+  title(format: String): String
+  content(format: String): String
+  excerpt(format: String): String
+  featuredImage: NodeWithFeaturedImageToMediaItemConnectionEdge
+  authorId: ID
+  authorDatabaseId: Int
+  author: NodeWithAuthorToUserConnectionEdge
+  categories(first: Int, after: String, where: PostToCategoryConnectionWhereArgs): PostToCategoryConnection
+  tags(first: Int, after: String): PostToTagConnection
+  comments(first: Int, after: String, where: PostToCommentConnectionWhereArgs): PostToCommentConnection
+  commentCount: Int
+  commentStatus: String
+  isSticky: Boolean!
+  pingStatus: String
+  toPing: [String]
+  pinged: [String]
+}
+
+type Page implements Node & ContentNode & NodeWithTitle & NodeWithContentEditor & NodeWithFeaturedImage {
+  id: ID!
+  databaseId: Int!
+  slug: String
+  status: String
+  date: String
+  modified: String
+  uri: String
+  title(format: String): String
+  content(format: String): String
+  featuredImage: NodeWithFeaturedImageToMediaItemConnectionEdge
+  parentId: ID
+  parent: Page
+  children(first: Int, after: String): PageToPageConnection
+  menuOrder: Int
+  isFrontPage: Boolean!
+  isPrivacyPage: Boolean!
+}
+
+type MediaItem implements Node & ContentNode {
+  id: ID!
+  databaseId: Int!
+  slug: String
+  status: String
+  date: String
+  modified: String
+  uri: String
+  title(format: String): String
+  altText: String
+  caption(format: String): String
+  description(format: String): String
+  mediaItemUrl: String
+  sourceUrl(size: MediaItemSizeEnum): String
+  srcSet(size: MediaItemSizeEnum): String
+  sizes(size: MediaItemSizeEnum): String
+  mimeType: String
+  mediaType: String
+  fileSize: Int
+  mediaDetails: MediaDetails
+}
+
+type MediaDetails { width: Int height: Int file: String sizes: [MediaSize!] }
+type MediaSize { name: String! width: String height: String sourceUrl: String mimeType: String }
+
+type User implements Node {
+  id: ID!
+  databaseId: Int!
+  name: String
+  slug: String
+  email: String
+  url: String
+  description: String
+  avatar(size: Int, rating: AvatarRatingEnum): Avatar
+  roles: UserToUserRoleConnection
+  posts(first: Int, after: String): UserToPostConnection
+  pages(first: Int, after: String): UserToPageConnection
+}
+
+type Avatar { url: String size: Int foundAvatar: Boolean! }
+
+type Category implements Node {
+  id: ID!
+  databaseId: Int!
+  name: String
+  slug: String
+  description: String
+  count: Int
+  parentId: ID
+  parent: Category
+  children(first: Int, after: String): CategoryToCategoryConnection
+  posts(first: Int, after: String): CategoryToPostConnection
+}
+
+type Tag implements Node { id: ID! databaseId: Int! name: String slug: String description: String count: Int posts(first: Int, after: String): TagToPostConnection }
+
+type Comment implements Node {
+  id: ID!
+  databaseId: Int!
+  content(format: String): String
+  date: String
+  status: CommentStatusEnum
+  author: CommentAuthor
+  parentId: ID
+  parent: Comment
+  replies(first: Int, after: String): CommentToCommentConnection
+  commentedOn: ContentNode
+}
+
+union CommentAuthor = User | CommentAuthorExternal
+type CommentAuthorExternal { name: String email: String url: String }
+
+type Menu implements Node { id: ID! databaseId: Int! name: String slug: String locations: [String] menuItems(first: Int, after: String): MenuToMenuItemConnection }
+type MenuItem implements Node { id: ID! databaseId: Int! label: String url: String parentId: ID order: Int target: String cssClasses: [String] connectedNode: MenuItemToMenuItemLinkableConnectionEdge }
+type MenuItemToMenuItemLinkableConnectionEdge { node: ContentNode }
+
+type GeneralSettings { title: String description: String url: String language: String timezone: String dateFormat: String timeFormat: String }
+
+# Connections
+type PageInfo { hasNextPage: Boolean! hasPreviousPage: Boolean! startCursor: String endCursor: String }
+type RootQueryToPostConnection { edges: [RootQueryToPostConnectionEdge!] pageInfo: PageInfo! }
+type RootQueryToPostConnectionEdge { cursor: String node: Post }
+type RootQueryToPageConnection { edges: [RootQueryToPageConnectionEdge!] pageInfo: PageInfo! }
+type RootQueryToPageConnectionEdge { cursor: String node: Page }
+type PostToCategoryConnection { edges: [PostToCategoryConnectionEdge!] pageInfo: PageInfo! }
+type PostToCategoryConnectionEdge { cursor: String node: Category }
+type PostToTagConnection { edges: [PostToTagConnectionEdge!] pageInfo: PageInfo! }
+type PostToTagConnectionEdge { cursor: String node: Tag }
+type PostToCommentConnection { edges: [PostToCommentConnectionEdge!] pageInfo: PageInfo! }
+type PostToCommentConnectionEdge { cursor: String node: Comment }
+type CategoryToCategoryConnection { edges: [CategoryToCategoryConnectionEdge!] pageInfo: PageInfo! }
+type CategoryToCategoryConnectionEdge { cursor: String node: Category }
+type CategoryToPostConnection { edges: [CategoryToPostConnectionEdge!] pageInfo: PageInfo! }
+type CategoryToPostConnectionEdge { cursor: String node: Post }
+type TagToPostConnection { edges: [TagToPostConnectionEdge!] pageInfo: PageInfo! }
+type TagToPostConnectionEdge { cursor: String node: Post }
+type CommentToCommentConnection { edges: [CommentToCommentConnectionEdge!] pageInfo: PageInfo! }
+type CommentToCommentConnectionEdge { cursor: String node: Comment }
+type UserToPostConnection { edges: [UserToPostConnectionEdge!] pageInfo: PageInfo! }
+type UserToPostConnectionEdge { cursor: String node: Post }
+type UserToPageConnection { edges: [UserToPageConnectionEdge!] pageInfo: PageInfo! }
+type UserToPageConnectionEdge { cursor: String node: Page }
+type UserToUserRoleConnection { edges: [UserToUserRoleConnectionEdge!] }
+type UserToUserRoleConnectionEdge { node: UserRole }
+type UserRole { name: String displayName: String }
+type NodeWithFeaturedImageToMediaItemConnectionEdge { node: MediaItem }
+type NodeWithAuthorToUserConnectionEdge { node: User }
+type MenuToMenuItemConnection { edges: [MenuToMenuItemConnectionEdge!] pageInfo: PageInfo! }
+type MenuToMenuItemConnectionEdge { cursor: String node: MenuItem }
+type PageToPageConnection { edges: [PageToPageConnectionEdge!] pageInfo: PageInfo! }
+type PageToPageConnectionEdge { cursor: String node: Page }
+type RootQueryToCategoryConnection { edges: [RootQueryToCategoryConnectionEdge!] pageInfo: PageInfo! }
+type RootQueryToCategoryConnectionEdge { cursor: String node: Category }
+type RootQueryToTagConnection { edges: [RootQueryToTagConnectionEdge!] pageInfo: PageInfo! }
+type RootQueryToTagConnectionEdge { cursor: String node: Tag }
+type RootQueryToMediaItemConnection { edges: [RootQueryToMediaItemConnectionEdge!] pageInfo: PageInfo! }
+type RootQueryToMediaItemConnectionEdge { cursor: String node: MediaItem }
+
+input RootQueryToPostConnectionWhereArgs { status: PostStatusEnum categoryName: String tag: String search: String author: Int authorName: String orderby: [PostObjectsConnectionOrderbyInput!] dateQuery: DateQueryInput }
+input PostToCategoryConnectionWhereArgs { search: String }
+input PostToCommentConnectionWhereArgs { status: CommentStatusEnum }
+input PostObjectsConnectionOrderbyInput { field: PostObjectsConnectionOrderbyEnum! order: OrderEnum! }
+input DateQueryInput { after: DateInput before: DateInput }
+input DateInput { year: Int! month: Int day: Int }
+input CreatePostInput { title: String! content: String excerpt: String status: PostStatusEnum categoryIds: [ID!] tagIds: [ID!] }
+input UpdatePostInput { title: String content: String excerpt: String status: PostStatusEnum categoryIds: [ID!] tagIds: [ID!] }
+input CreateCommentInput { commentOn: Int! content: String! author: String authorEmail: String parentId: ID }
+
+type CreatePostPayload { post: Post }
+type UpdatePostPayload { post: Post }
+type DeletePostPayload { deletedId: ID post: Post }
+type CreateCommentPayload { comment: Comment }
+
+type Query {
+  post(id: ID!, idType: String): Post
+  posts(first: Int, after: String, where: RootQueryToPostConnectionWhereArgs): RootQueryToPostConnection
+  page(id: ID!, idType: String): Page
+  pages(first: Int, after: String): RootQueryToPageConnection
+  mediaItem(id: ID!): MediaItem
+  mediaItems(first: Int, after: String): RootQueryToMediaItemConnection
+  category(id: ID!): Category
+  categories(first: Int, after: String): RootQueryToCategoryConnection
+  tag(id: ID!): Tag
+  tags(first: Int, after: String): RootQueryToTagConnection
+  user(id: ID!): User
+  viewer: User
+  menu(id: ID!): Menu
+  generalSettings: GeneralSettings
+  node(id: ID!): Node
+}
+
+type Mutation {
+  createPost(input: CreatePostInput!): CreatePostPayload
+  updatePost(id: ID!, input: UpdatePostInput!): UpdatePostPayload
+  deletePost(id: ID!, forceDelete: Boolean): DeletePostPayload
+  createComment(input: CreateCommentInput!): CreateCommentPayload
+}

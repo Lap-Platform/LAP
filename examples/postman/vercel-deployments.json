@@ -1,0 +1,186 @@
+{
+  "info": {
+    "name": "Vercel Deployment API",
+    "_postman_id": "vercel-001",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://api.vercel.com"
+    }
+  ],
+  "item": [
+    {
+      "name": "List Deployments",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/v6/deployments",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "v6",
+            "deployments"
+          ],
+          "query": [
+            {
+              "key": "limit",
+              "value": "20",
+              "description": ""
+            },
+            {
+              "key": "projectId",
+              "value": "",
+              "description": "Filter"
+            },
+            {
+              "key": "state",
+              "value": "",
+              "description": "READY|ERROR|BUILDING"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"deployments\": [{\"uid\": \"dpl_1\", \"url\": \"my-app-abc.vercel.app\", \"state\": \"READY\", \"created\": 1704067200}]}"
+        }
+      ]
+    },
+    {
+      "name": "Create Deployment",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/v13/deployments",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "v13",
+            "deployments"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"name\": \"my-app\", \"gitSource\": {\"type\": \"github\", \"ref\": \"main\", \"repoId\": 12345}}"
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"id\": \"dpl_2\", \"url\": \"my-app-def.vercel.app\", \"readyState\": \"QUEUED\"}"
+        }
+      ]
+    },
+    {
+      "name": "Get Deployment",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/v13/deployments/:id",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "v13",
+            "deployments",
+            ":id"
+          ],
+          "variable": [
+            {
+              "key": "id",
+              "value": "dpl_1"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"id\": \"dpl_1\", \"readyState\": \"READY\", \"url\": \"my-app-abc.vercel.app\"}"
+        }
+      ]
+    },
+    {
+      "name": "List Projects",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/v9/projects",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "v9",
+            "projects"
+          ],
+          "query": [
+            {
+              "key": "limit",
+              "value": "20",
+              "description": ""
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"projects\": [{\"id\": \"prj_1\", \"name\": \"my-app\", \"framework\": \"nextjs\"}]}"
+        }
+      ]
+    },
+    {
+      "name": "Add Env Var",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/v10/projects/:projectId/env",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "v10",
+            "projects",
+            ":projectId",
+            "env"
+          ],
+          "variable": [
+            {
+              "key": "projectId",
+              "value": "prj_1"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"key\": \"DATABASE_URL\", \"value\": \"postgres://...\", \"target\": [\"production\"], \"type\": \"encrypted\"}"
+        }
+      },
+      "response": [
+        {
+          "name": "Created",
+          "code": 200,
+          "body": "{\"id\": \"env_1\", \"key\": \"DATABASE_URL\"}"
+        }
+      ]
+    }
+  ]
+}

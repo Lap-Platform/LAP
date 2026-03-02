@@ -1,0 +1,92 @@
+asyncapi: 2.6.0
+info:
+  title: Real-time Sports Scores
+  version: 1.0.0
+  description: Live sports score updates
+
+servers:
+  production:
+    url: wss://scores.sportsdata.example.com
+    protocol: ws
+
+channels:
+  games/{gameId}/score:
+    parameters:
+      gameId:
+        schema: {type: string}
+    subscribe:
+      summary: Live score update
+      message:
+        name: ScoreUpdate
+        payload:
+          type: object
+          required: [gameId, homeScore, awayScore]
+          properties:
+            gameId: {type: string}
+            homeTeam: {type: string}
+            awayTeam: {type: string}
+            homeScore: {type: integer}
+            awayScore: {type: integer}
+            period: {type: string}
+            clock: {type: string}
+            status: {type: string, enum: [scheduled, live, halftime, final]}
+
+  games/{gameId}/plays:
+    parameters:
+      gameId:
+        schema: {type: string}
+    subscribe:
+      summary: Play-by-play updates
+      message:
+        name: PlayEvent
+        payload:
+          type: object
+          required: [playId, description]
+          properties:
+            playId: {type: string}
+            description: {type: string}
+            team: {type: string}
+            player: {type: string}
+            type: {type: string, enum: [goal, foul, substitution, timeout, penalty]}
+            timestamp: {type: string, format: date-time}
+
+  schedule:
+    subscribe:
+      summary: Schedule updates
+      message:
+        name: ScheduleUpdate
+        payload:
+          type: object
+          required: [games]
+          properties:
+            date: {type: string, format: date}
+            games:
+              type: array
+              items:
+                type: object
+                properties:
+                  gameId: {type: string}
+                  homeTeam: {type: string}
+                  awayTeam: {type: string}
+                  startTime: {type: string, format: date-time}
+                  venue: {type: string}
+
+  standings:
+    subscribe:
+      summary: Standings update
+      message:
+        name: StandingsUpdate
+        payload:
+          type: object
+          required: [league, teams]
+          properties:
+            league: {type: string}
+            teams:
+              type: array
+              items:
+                type: object
+                properties:
+                  name: {type: string}
+                  wins: {type: integer}
+                  losses: {type: integer}
+                  points: {type: integer}

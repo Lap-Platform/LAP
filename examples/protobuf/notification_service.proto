@@ -1,0 +1,192 @@
+syntax = "proto3";
+
+package notification.v1;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+service NotificationService {
+  rpc SendNotification(SendNotificationRequest) returns (SendNotificationResponse);
+  rpc SendBulkNotifications(SendBulkNotificationsRequest) returns (SendBulkNotificationsResponse);
+  rpc GetNotification(GetNotificationRequest) returns (Notification);
+  rpc ListNotifications(ListNotificationsRequest) returns (ListNotificationsResponse);
+  rpc MarkAsRead(MarkAsReadRequest) returns (google.protobuf.Empty);
+  rpc DeleteNotification(DeleteNotificationRequest) returns (google.protobuf.Empty);
+  rpc Subscribe(SubscribeRequest) returns (SubscribeResponse);
+  rpc Unsubscribe(UnsubscribeRequest) returns (google.protobuf.Empty);
+  rpc GetUserPreferences(GetUserPreferencesRequest) returns (UserPreferences);
+  rpc UpdateUserPreferences(UpdateUserPreferencesRequest) returns (UserPreferences);
+}
+
+message Notification {
+  string id = 1;
+  string user_id = 2;
+  string title = 3;
+  string message = 4;
+  NotificationType type = 5;
+  NotificationPriority priority = 6;
+  map<string, string> data = 7;
+  string action_url = 8;
+  string image_url = 9;
+  bool read = 10;
+  google.protobuf.Timestamp created_at = 11;
+  google.protobuf.Timestamp read_at = 12;
+  google.protobuf.Timestamp expires_at = 13;
+  repeated DeliveryChannel delivery_channels = 14;
+  DeliveryStatus delivery_status = 15;
+}
+
+enum NotificationType {
+  TYPE_UNSPECIFIED = 0;
+  SYSTEM = 1;
+  USER_MESSAGE = 2;
+  ALERT = 3;
+  REMINDER = 4;
+  PROMOTION = 5;
+  UPDATE = 6;
+}
+
+enum NotificationPriority {
+  PRIORITY_UNSPECIFIED = 0;
+  LOW = 1;
+  NORMAL = 2;
+  HIGH = 3;
+  URGENT = 4;
+}
+
+enum DeliveryChannel {
+  CHANNEL_UNSPECIFIED = 0;
+  PUSH = 1;
+  EMAIL = 2;
+  SMS = 3;
+  IN_APP = 4;
+  WEBHOOK = 5;
+}
+
+message DeliveryStatus {
+  map<string, ChannelDeliveryStatus> channels = 1;
+}
+
+message ChannelDeliveryStatus {
+  DeliveryState state = 1;
+  string error = 2;
+  google.protobuf.Timestamp delivered_at = 3;
+}
+
+enum DeliveryState {
+  STATE_UNSPECIFIED = 0;
+  PENDING = 1;
+  SENT = 2;
+  DELIVERED = 3;
+  FAILED = 4;
+}
+
+message SendNotificationRequest {
+  string user_id = 1;
+  string title = 2;
+  string message = 3;
+  NotificationType type = 4;
+  NotificationPriority priority = 5;
+  map<string, string> data = 6;
+  string action_url = 7;
+  string image_url = 8;
+  repeated DeliveryChannel delivery_channels = 9;
+  google.protobuf.Timestamp schedule_at = 10;
+  google.protobuf.Timestamp expires_at = 11;
+}
+
+message SendNotificationResponse {
+  string notification_id = 1;
+  DeliveryStatus delivery_status = 2;
+}
+
+message SendBulkNotificationsRequest {
+  repeated SendNotificationRequest notifications = 1;
+  bool fail_fast = 2;
+}
+
+message SendBulkNotificationsResponse {
+  repeated SendNotificationResponse results = 1;
+  int32 success_count = 2;
+  int32 failure_count = 3;
+}
+
+message GetNotificationRequest {
+  string notification_id = 1;
+}
+
+message ListNotificationsRequest {
+  string user_id = 1;
+  bool unread_only = 2;
+  NotificationType type = 3;
+  int32 page_size = 4;
+  string page_token = 5;
+}
+
+message ListNotificationsResponse {
+  repeated Notification notifications = 1;
+  string next_page_token = 2;
+  int32 total_count = 3;
+  int32 unread_count = 4;
+}
+
+message MarkAsReadRequest {
+  repeated string notification_ids = 1;
+  string user_id = 2;
+}
+
+message DeleteNotificationRequest {
+  string notification_id = 1;
+}
+
+message SubscribeRequest {
+  string user_id = 1;
+  string topic = 2;
+  repeated DeliveryChannel channels = 3;
+}
+
+message SubscribeResponse {
+  string subscription_id = 1;
+}
+
+message UnsubscribeRequest {
+  string subscription_id = 1;
+}
+
+message UserPreferences {
+  string user_id = 1;
+  map<string, ChannelPreferences> channel_preferences = 2;
+  map<string, TopicPreferences> topic_preferences = 3;
+  QuietHours quiet_hours = 4;
+  google.protobuf.Timestamp updated_at = 5;
+}
+
+message ChannelPreferences {
+  bool enabled = 1;
+  map<string, string> settings = 2;
+}
+
+message TopicPreferences {
+  bool enabled = 1;
+  repeated DeliveryChannel allowed_channels = 2;
+  NotificationPriority minimum_priority = 3;
+}
+
+message QuietHours {
+  bool enabled = 1;
+  string start_time = 2;
+  string end_time = 3;
+  string timezone = 4;
+  repeated int32 days_of_week = 5;
+}
+
+message GetUserPreferencesRequest {
+  string user_id = 1;
+}
+
+message UpdateUserPreferencesRequest {
+  string user_id = 1;
+  map<string, ChannelPreferences> channel_preferences = 2;
+  map<string, TopicPreferences> topic_preferences = 3;
+  QuietHours quiet_hours = 4;
+}

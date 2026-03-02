@@ -1,0 +1,186 @@
+asyncapi: 2.6.0
+info:
+  title: E-Commerce Event Stream
+  version: 3.0.0
+  description: Kafka-based event streaming for e-commerce platform
+
+servers:
+  production:
+    url: kafka://kafka.example.com:9092
+    protocol: kafka
+
+channels:
+  orders.created:
+    subscribe:
+      summary: New order placed
+      message:
+        name: OrderCreated
+        headers:
+          type: object
+          properties:
+            correlationId:
+              type: string
+            partitionKey:
+              type: string
+        payload:
+          type: object
+          required:
+            - orderId
+            - customerId
+            - items
+            - total
+          properties:
+            orderId:
+              type: string
+            customerId:
+              type: string
+            items:
+              type: array
+              items:
+                type: object
+                properties:
+                  productId:
+                    type: string
+                  quantity:
+                    type: integer
+                  price:
+                    type: number
+            total:
+              type: number
+              format: double
+            currency:
+              type: string
+              default: USD
+            shippingAddress:
+              type: object
+              properties:
+                street:
+                  type: string
+                city:
+                  type: string
+                country:
+                  type: string
+                zip:
+                  type: string
+      bindings:
+        kafka:
+          groupId: order-processors
+          clientId: ecommerce-service
+
+  orders.updated:
+    subscribe:
+      summary: Order status changed
+      message:
+        name: OrderUpdated
+        payload:
+          type: object
+          required:
+            - orderId
+            - status
+          properties:
+            orderId:
+              type: string
+            status:
+              type: string
+              enum:
+                - pending
+                - confirmed
+                - shipped
+                - delivered
+                - cancelled
+            updatedAt:
+              type: string
+              format: date-time
+            trackingNumber:
+              type: string
+
+  payments.processed:
+    subscribe:
+      summary: Payment processed
+      message:
+        name: PaymentProcessed
+        payload:
+          type: object
+          required:
+            - paymentId
+            - orderId
+            - status
+            - amount
+          properties:
+            paymentId:
+              type: string
+            orderId:
+              type: string
+            status:
+              type: string
+              enum:
+                - success
+                - failed
+                - refunded
+            amount:
+              type: number
+              format: double
+            method:
+              type: string
+              enum:
+                - credit_card
+                - paypal
+                - bank_transfer
+            transactionRef:
+              type: string
+      bindings:
+        kafka:
+          groupId: payment-consumers
+
+  inventory.updated:
+    publish:
+      summary: Publish inventory changes
+      message:
+        name: InventoryUpdate
+        payload:
+          type: object
+          required:
+            - productId
+            - quantity
+          properties:
+            productId:
+              type: string
+            quantity:
+              type: integer
+            warehouse:
+              type: string
+            reserved:
+              type: integer
+      bindings:
+        kafka:
+          key: productId
+
+  customers.events:
+    subscribe:
+      summary: Customer lifecycle events
+      message:
+        oneOf:
+          - name: CustomerRegistered
+            payload:
+              type: object
+              required:
+                - customerId
+                - email
+              properties:
+                customerId:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                name:
+                  type: string
+          - name: CustomerUpdated
+            payload:
+              type: object
+              required:
+                - customerId
+              properties:
+                customerId:
+                  type: string
+                changes:
+                  type: object

@@ -1,0 +1,171 @@
+scalar Time
+scalar Date
+scalar Long
+
+type Collection {
+  name: String!
+  ts: Long!
+  historyDays: Int
+  ttlDays: Int
+  data: JSON
+}
+
+scalar JSON
+
+type Index {
+  name: String!
+  source: String!
+  terms: [IndexTerm!]
+  values: [IndexValue!]
+  unique: Boolean!
+  serialized: Boolean!
+  ts: Long!
+}
+
+type IndexTerm { field: [String!]! }
+type IndexValue { field: [String!]! reverse: Boolean }
+
+type DatabaseInfo {
+  name: String!
+  globalId: String!
+  collections: [Collection!]!
+  indexes: [Index!]!
+  functions: [UDF!]!
+}
+
+type UDF {
+  name: String!
+  body: String!
+  role: String
+  ts: Long!
+  data: JSON
+}
+
+# Example domain: multi-tenant project management
+type Tenant {
+  id: ID!
+  name: String!
+  slug: String!
+  plan: TenantPlan!
+  owner: TenantUser!
+  members(first: Int, after: String): TenantUserConnection!
+  projects(first: Int, after: String): ProjectConnection!
+  createdAt: Time!
+}
+
+enum TenantPlan { FREE STARTER BUSINESS ENTERPRISE }
+enum TaskStatus { TODO IN_PROGRESS REVIEW DONE ARCHIVED }
+enum TaskPriority { LOW MEDIUM HIGH CRITICAL }
+enum MemberRole { OWNER ADMIN MEMBER VIEWER }
+
+type TenantUser {
+  id: ID!
+  email: String!
+  name: String!
+  avatarUrl: String
+  role: MemberRole!
+  tenant: Tenant!
+  assignedTasks(first: Int, after: String, status: TaskStatus): TaskConnection!
+  createdAt: Time!
+  lastActiveAt: Time
+}
+
+type Project {
+  id: ID!
+  name: String!
+  description: String
+  tenant: Tenant!
+  owner: TenantUser!
+  tasks(first: Int, after: String, status: TaskStatus, priority: TaskPriority): TaskConnection!
+  taskCount: Int!
+  completedTaskCount: Int!
+  tags: [ProjectTag!]!
+  isArchived: Boolean!
+  createdAt: Time!
+  updatedAt: Time!
+}
+
+type Task {
+  id: ID!
+  title: String!
+  description: String
+  status: TaskStatus!
+  priority: TaskPriority!
+  project: Project!
+  assignee: TenantUser
+  reporter: TenantUser!
+  parent: Task
+  subtasks(first: Int): TaskConnection!
+  tags: [ProjectTag!]!
+  dueDate: Date
+  completedAt: Time
+  comments(first: Int, after: String): TaskCommentConnection!
+  attachments: [TaskAttachment!]!
+  history: [TaskHistoryEntry!]!
+  createdAt: Time!
+  updatedAt: Time!
+}
+
+type TaskComment {
+  id: ID!
+  body: String!
+  author: TenantUser!
+  task: Task!
+  createdAt: Time!
+  updatedAt: Time
+}
+
+type TaskAttachment { id: ID! filename: String! url: String! size: Int! mimeType: String! uploadedBy: TenantUser! createdAt: Time! }
+type TaskHistoryEntry { field: String! oldValue: String newValue: String changedBy: TenantUser! changedAt: Time! }
+type ProjectTag { id: ID! name: String! color: String! }
+
+type PageInfo { hasNextPage: Boolean! hasPreviousPage: Boolean! startCursor: String endCursor: String }
+type TenantUserConnection { edges: [TenantUserEdge!]! pageInfo: PageInfo! }
+type TenantUserEdge { cursor: String! node: TenantUser! }
+type ProjectConnection { edges: [ProjectEdge!]! pageInfo: PageInfo! }
+type ProjectEdge { cursor: String! node: Project! }
+type TaskConnection { edges: [TaskEdge!]! pageInfo: PageInfo! totalCount: Int! }
+type TaskEdge { cursor: String! node: Task! }
+type TaskCommentConnection { edges: [TaskCommentEdge!]! pageInfo: PageInfo! }
+type TaskCommentEdge { cursor: String! node: TaskComment! }
+
+input CreateTenantInput { name: String! slug: String! plan: TenantPlan }
+input CreateProjectInput { tenantId: ID! name: String! description: String }
+input CreateTaskInput { projectId: ID! title: String! description: String status: TaskStatus priority: TaskPriority assigneeId: ID parentId: ID dueDate: Date tagIds: [ID!] }
+input UpdateTaskInput { title: String description: String status: TaskStatus priority: TaskPriority assigneeId: ID dueDate: Date tagIds: [ID!] }
+input AddCommentInput { taskId: ID! body: String! }
+input InviteMemberInput { tenantId: ID! email: String! role: MemberRole! }
+
+type TenantPayload { tenant: Tenant }
+type ProjectPayload { project: Project }
+type TaskPayload { task: Task }
+type CommentPayload { comment: TaskComment }
+type MemberPayload { member: TenantUser }
+type DeletePayload { success: Boolean! }
+
+type Query {
+  tenant(id: ID!): Tenant
+  tenantBySlug(slug: String!): Tenant
+  project(id: ID!): Project
+  task(id: ID!): Task
+  me: TenantUser!
+  myTenants: [Tenant!]!
+  searchTasks(tenantId: ID!, query: String!, status: TaskStatus, priority: TaskPriority, first: Int, after: String): TaskConnection!
+  databaseInfo: DatabaseInfo!
+  collections: [Collection!]!
+  indexes: [Index!]!
+  functions: [UDF!]!
+}
+
+type Mutation {
+  createTenant(input: CreateTenantInput!): TenantPayload!
+  createProject(input: CreateProjectInput!): ProjectPayload!
+  archiveProject(id: ID!): ProjectPayload!
+  createTask(input: CreateTaskInput!): TaskPayload!
+  updateTask(id: ID!, input: UpdateTaskInput!): TaskPayload!
+  deleteTask(id: ID!): DeletePayload!
+  addComment(input: AddCommentInput!): CommentPayload!
+  inviteMember(input: InviteMemberInput!): MemberPayload!
+  removeMember(tenantId: ID!, userId: ID!): DeletePayload!
+  callFunction(name: String!, args: JSON): JSON
+}

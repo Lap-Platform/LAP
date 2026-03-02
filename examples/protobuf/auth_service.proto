@@ -1,0 +1,316 @@
+syntax = "proto3";
+
+package auth.v1;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/empty.proto";
+
+service AuthService {
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+  rpc Login(LoginRequest) returns (LoginResponse);
+  rpc Logout(LogoutRequest) returns (google.protobuf.Empty);
+  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
+  rpc VerifyToken(VerifyTokenRequest) returns (VerifyTokenResponse);
+  rpc RevokeToken(RevokeTokenRequest) returns (google.protobuf.Empty);
+  rpc ResetPassword(ResetPasswordRequest) returns (google.protobuf.Empty);
+  rpc ChangePassword(ChangePasswordRequest) returns (google.protobuf.Empty);
+  rpc VerifyEmail(VerifyEmailRequest) returns (google.protobuf.Empty);
+  rpc ResendVerification(ResendVerificationRequest) returns (google.protobuf.Empty);
+}
+
+service UserService {
+  rpc GetUser(GetUserRequest) returns (User);
+  rpc UpdateUser(UpdateUserRequest) returns (User);
+  rpc DeleteUser(DeleteUserRequest) returns (google.protobuf.Empty);
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse);
+}
+
+service RoleService {
+  rpc CreateRole(CreateRoleRequest) returns (Role);
+  rpc GetRole(GetRoleRequest) returns (Role);
+  rpc UpdateRole(UpdateRoleRequest) returns (Role);
+  rpc DeleteRole(DeleteRoleRequest) returns (google.protobuf.Empty);
+  rpc ListRoles(ListRolesRequest) returns (ListRolesResponse);
+  rpc AssignRole(AssignRoleRequest) returns (google.protobuf.Empty);
+  rpc RevokeRole(RevokeRoleRequest) returns (google.protobuf.Empty);
+}
+
+service PermissionService {
+  rpc CheckPermission(CheckPermissionRequest) returns (CheckPermissionResponse);
+  rpc GrantPermission(GrantPermissionRequest) returns (google.protobuf.Empty);
+  rpc RevokePermission(RevokePermissionRequest) returns (google.protobuf.Empty);
+  rpc ListPermissions(ListPermissionsRequest) returns (ListPermissionsResponse);
+}
+
+message RegisterRequest {
+  string email = 1;
+  string username = 2;
+  string password = 3;
+  string first_name = 4;
+  string last_name = 5;
+  map<string, string> metadata = 6;
+}
+
+message RegisterResponse {
+  string user_id = 1;
+  string email = 2;
+  bool email_verified = 3;
+  string verification_token = 4;
+}
+
+message LoginRequest {
+  oneof identifier {
+    string email = 1;
+    string username = 2;
+  }
+  string password = 3;
+  string mfa_code = 4;
+  string device_id = 5;
+}
+
+message LoginResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+  google.protobuf.Duration expires_in = 3;
+  string token_type = 4;
+  User user = 5;
+  repeated string scopes = 6;
+}
+
+message LogoutRequest {
+  string refresh_token = 1;
+  bool all_devices = 2;
+}
+
+message RefreshTokenRequest {
+  string refresh_token = 1;
+}
+
+message RefreshTokenResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+  google.protobuf.Duration expires_in = 3;
+}
+
+message VerifyTokenRequest {
+  string token = 1;
+  repeated string required_scopes = 2;
+}
+
+message VerifyTokenResponse {
+  bool valid = 1;
+  string user_id = 2;
+  repeated string scopes = 3;
+  google.protobuf.Timestamp expires_at = 4;
+}
+
+message RevokeTokenRequest {
+  string token = 1;
+  TokenType token_type = 2;
+}
+
+enum TokenType {
+  TOKEN_TYPE_UNSPECIFIED = 0;
+  ACCESS_TOKEN = 1;
+  REFRESH_TOKEN = 2;
+}
+
+message ResetPasswordRequest {
+  string email = 1;
+  string reset_url = 2;
+}
+
+message ChangePasswordRequest {
+  string user_id = 1;
+  string old_password = 2;
+  string new_password = 3;
+}
+
+message VerifyEmailRequest {
+  string token = 1;
+}
+
+message ResendVerificationRequest {
+  string email = 1;
+}
+
+message User {
+  string id = 1;
+  string email = 2;
+  string username = 3;
+  string first_name = 4;
+  string last_name = 5;
+  bool email_verified = 6;
+  UserStatus status = 7;
+  repeated string roles = 8;
+  map<string, string> metadata = 9;
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp updated_at = 11;
+  google.protobuf.Timestamp last_login = 12;
+  MFASettings mfa_settings = 13;
+}
+
+enum UserStatus {
+  USER_STATUS_UNSPECIFIED = 0;
+  ACTIVE = 1;
+  INACTIVE = 2;
+  SUSPENDED = 3;
+  DELETED = 4;
+}
+
+message MFASettings {
+  bool enabled = 1;
+  MFAMethod method = 2;
+  bool backup_codes_generated = 3;
+}
+
+enum MFAMethod {
+  MFA_METHOD_UNSPECIFIED = 0;
+  TOTP = 1;
+  SMS = 2;
+  EMAIL = 3;
+}
+
+message GetUserRequest {
+  string id = 1;
+}
+
+message UpdateUserRequest {
+  string id = 1;
+  string email = 2;
+  string username = 3;
+  string first_name = 4;
+  string last_name = 5;
+  map<string, string> metadata = 6;
+  MFASettings mfa_settings = 7;
+}
+
+message DeleteUserRequest {
+  string id = 1;
+  bool hard_delete = 2;
+}
+
+message ListUsersRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+  string filter = 3;
+  string order_by = 4;
+}
+
+message ListUsersResponse {
+  repeated User users = 1;
+  string next_page_token = 2;
+  int32 total_count = 3;
+}
+
+message Role {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  repeated Permission permissions = 4;
+  map<string, string> metadata = 5;
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp updated_at = 7;
+}
+
+message Permission {
+  string resource = 1;
+  string action = 2;
+  repeated Condition conditions = 3;
+}
+
+message Condition {
+  string field = 1;
+  ConditionOperator operator = 2;
+  string value = 3;
+}
+
+enum ConditionOperator {
+  OPERATOR_UNSPECIFIED = 0;
+  EQUALS = 1;
+  NOT_EQUALS = 2;
+  IN = 3;
+  NOT_IN = 4;
+  CONTAINS = 5;
+  STARTS_WITH = 6;
+  ENDS_WITH = 7;
+}
+
+message CreateRoleRequest {
+  string name = 1;
+  string description = 2;
+  repeated Permission permissions = 3;
+  map<string, string> metadata = 4;
+}
+
+message GetRoleRequest {
+  string id = 1;
+}
+
+message UpdateRoleRequest {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  repeated Permission permissions = 4;
+  map<string, string> metadata = 5;
+}
+
+message DeleteRoleRequest {
+  string id = 1;
+}
+
+message ListRolesRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+  string filter = 3;
+}
+
+message ListRolesResponse {
+  repeated Role roles = 1;
+  string next_page_token = 2;
+}
+
+message AssignRoleRequest {
+  string user_id = 1;
+  string role_id = 2;
+}
+
+message RevokeRoleRequest {
+  string user_id = 1;
+  string role_id = 2;
+}
+
+message CheckPermissionRequest {
+  string user_id = 1;
+  string resource = 2;
+  string action = 3;
+  map<string, string> context = 4;
+}
+
+message CheckPermissionResponse {
+  bool allowed = 1;
+  string reason = 2;
+  repeated string required_roles = 3;
+}
+
+message GrantPermissionRequest {
+  string user_id = 1;
+  Permission permission = 2;
+  google.protobuf.Duration ttl = 3;
+}
+
+message RevokePermissionRequest {
+  string user_id = 1;
+  string resource = 2;
+  string action = 3;
+}
+
+message ListPermissionsRequest {
+  string user_id = 1;
+  string resource = 2;
+}
+
+message ListPermissionsResponse {
+  repeated Permission permissions = 1;
+}

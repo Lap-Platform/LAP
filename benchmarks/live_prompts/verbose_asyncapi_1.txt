@@ -1,0 +1,107 @@
+You are an API integration assistant. You will be given API documentation and a series of tasks.
+For each task, write the exact API call (curl command for REST, GraphQL query, protobuf RPC call, etc).
+
+Format your response as:
+TASK 1: <your api call>
+TASK 2: <your api call>
+... etc
+
+--- API DOCUMENTATION ---
+asyncapi: 2.6.0
+info:
+  title: Slack Events API
+  version: 1.0.0
+  description: Slack real-time events
+
+servers:
+  production:
+    url: wss://wss-primary.slack.com/websocket
+    protocol: ws
+
+channels:
+  message:
+    subscribe:
+      summary: New message in channel
+      message:
+        name: MessageEvent
+        payload:
+          type: object
+          required: [type, channel, user, text, ts]
+          properties:
+            type: {type: string, enum: [message]}
+            channel: {type: string}
+            user: {type: string}
+            text: {type: string}
+            ts: {type: string}
+            thread_ts: {type: string}
+            blocks:
+              type: array
+              items:
+                type: object
+                properties:
+                  type: {type: string}
+                  block_id: {type: string}
+
+  reaction_added:
+    subscribe:
+      summary: Reaction added to message
+      message:
+        name: ReactionAdded
+        payload:
+          type: object
+          required: [type, user, reaction, item]
+          properties:
+            type: {type: string}
+            user: {type: string}
+            reaction: {type: string}
+            item:
+              type: object
+              properties:
+                type: {type: string}
+                channel: {type: string}
+                ts: {type: string}
+
+  presence_change:
+    subscribe:
+      summary: User presence changed
+      message:
+        name: PresenceChange
+        payload:
+          type: object
+          required: [type, user, presence]
+          properties:
+            type: {type: string}
+            user: {type: string}
+            presence: {type: string, enum: [active, away]}
+
+  channel_created:
+    subscribe:
+      summary: Channel created
+      message:
+        name: ChannelCreated
+        payload:
+          type: object
+          required: [type, channel]
+          properties:
+            type: {type: string}
+            channel:
+              type: object
+              properties:
+                id: {type: string}
+                name: {type: string}
+                creator: {type: string}
+                created: {type: integer}
+
+--- END DOCUMENTATION ---
+
+TASKS:
+1. Subscribe to message event for new messages in channels
+2. Subscribe to reaction_added event for emoji reactions
+3. Subscribe to presence_change event for user status updates
+4. Subscribe to channel_created event for new channel creation
+5. Handle message event with channel, user, text, and timestamp fields
+6. Handle reaction_added event with reaction name, user, and item details
+7. Handle presence_change event with user ID and new presence status
+8. Handle channel_created event and extract channel ID and name
+9. Verify event challenge for Slack URL verification in message channel
+10. Filter message events for specific channel C123ABC and parse text content

@@ -1,0 +1,227 @@
+syntax = "proto3";
+
+package k8s.api.core.v1;
+
+// Kubernetes Pod management service.
+// Modeled after the Kubernetes API server gRPC interface.
+service PodService {
+  // Create a new pod in the specified namespace.
+  rpc CreatePod(CreatePodRequest) returns (Pod);
+
+  // Get a pod by name and namespace.
+  rpc GetPod(GetPodRequest) returns (Pod);
+
+  // List pods matching the given criteria.
+  rpc ListPods(ListPodsRequest) returns (PodList);
+
+  // Update an existing pod.
+  rpc UpdatePod(UpdatePodRequest) returns (Pod);
+
+  // Delete a pod.
+  rpc DeletePod(DeletePodRequest) returns (DeletePodResponse);
+
+  // Watch for pod changes (server streaming).
+  rpc WatchPods(WatchPodsRequest) returns (stream WatchEvent);
+
+  // Get pod logs.
+  rpc GetPodLogs(GetPodLogsRequest) returns (stream LogEntry);
+
+  // Execute a command in a container.
+  rpc ExecInPod(ExecRequest) returns (stream ExecResponse);
+}
+
+message ObjectMeta {
+  string name = 1;
+  string namespace = 2;
+  string uid = 3;
+  string resource_version = 4;
+  int64 creation_timestamp = 5;
+  map<string, string> labels = 6;
+  map<string, string> annotations = 7;
+  repeated OwnerReference owner_references = 8;
+}
+
+message OwnerReference {
+  string api_version = 1;
+  string kind = 2;
+  string name = 3;
+  string uid = 4;
+  bool controller = 5;
+}
+
+// Container port configuration.
+message ContainerPort {
+  string name = 1;
+  int32 container_port = 2;
+  string protocol = 3;
+  int32 host_port = 4;
+}
+
+// Environment variable for a container.
+message EnvVar {
+  string name = 1;
+  string value = 2;
+}
+
+// Resource requirements for a container.
+message ResourceRequirements {
+  map<string, string> limits = 1;
+  map<string, string> requests = 2;
+}
+
+// Volume mount within a container.
+message VolumeMount {
+  string name = 1;
+  string mount_path = 2;
+  bool read_only = 3;
+  string sub_path = 4;
+}
+
+message Container {
+  string name = 1;
+  string image = 2;
+  repeated string command = 3;
+  repeated string args = 4;
+  repeated ContainerPort ports = 5;
+  repeated EnvVar env = 6;
+  ResourceRequirements resources = 7;
+  repeated VolumeMount volume_mounts = 8;
+  string image_pull_policy = 9;
+}
+
+// Restart policy for all containers within the pod.
+enum RestartPolicy {
+  ALWAYS = 0;
+  ON_FAILURE = 1;
+  NEVER = 2;
+}
+
+message PodSpec {
+  repeated Container containers = 1;
+  repeated Container init_containers = 2;
+  RestartPolicy restart_policy = 3;
+  string service_account_name = 4;
+  string node_name = 5;
+  map<string, string> node_selector = 6;
+  int64 termination_grace_period_seconds = 7;
+}
+
+enum PodPhase {
+  PENDING = 0;
+  RUNNING = 1;
+  SUCCEEDED = 2;
+  FAILED = 3;
+  UNKNOWN = 4;
+}
+
+message ContainerStatus {
+  string name = 1;
+  bool ready = 2;
+  int32 restart_count = 3;
+  string image = 4;
+  string container_id = 5;
+  bool started = 6;
+}
+
+message PodStatus {
+  PodPhase phase = 1;
+  string host_ip = 2;
+  string pod_ip = 3;
+  int64 start_time = 4;
+  repeated ContainerStatus container_statuses = 5;
+}
+
+message Pod {
+  ObjectMeta metadata = 1;
+  PodSpec spec = 2;
+  PodStatus status = 3;
+}
+
+message CreatePodRequest {
+  string namespace = 1;
+  Pod pod = 2;
+}
+
+message GetPodRequest {
+  string namespace = 1;
+  string name = 2;
+}
+
+message ListPodsRequest {
+  string namespace = 1;
+  string label_selector = 2;
+  string field_selector = 3;
+  int32 limit = 4;
+  string continue_token = 5;
+}
+
+message PodList {
+  repeated Pod items = 1;
+  string continue_token = 2;
+  int64 total_count = 3;
+}
+
+message UpdatePodRequest {
+  string namespace = 1;
+  Pod pod = 2;
+}
+
+message DeletePodRequest {
+  string namespace = 1;
+  string name = 2;
+  int64 grace_period_seconds = 3;
+}
+
+message DeletePodResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message WatchPodsRequest {
+  string namespace = 1;
+  string label_selector = 2;
+  string resource_version = 3;
+}
+
+message WatchEvent {
+  enum EventType {
+    ADDED = 0;
+    MODIFIED = 1;
+    DELETED = 2;
+    ERROR = 3;
+  }
+  EventType type = 1;
+  Pod object = 2;
+}
+
+message GetPodLogsRequest {
+  string namespace = 1;
+  string name = 2;
+  string container = 3;
+  bool follow = 4;
+  int64 tail_lines = 5;
+  int64 since_seconds = 6;
+  bool timestamps = 7;
+}
+
+message LogEntry {
+  string content = 1;
+  int64 timestamp = 2;
+}
+
+message ExecRequest {
+  string namespace = 1;
+  string name = 2;
+  string container = 3;
+  repeated string command = 4;
+  bool stdin = 5;
+  bool stdout = 6;
+  bool stderr = 7;
+  bool tty = 8;
+}
+
+message ExecResponse {
+  bytes stdout_data = 1;
+  bytes stderr_data = 2;
+  int32 exit_code = 3;
+}

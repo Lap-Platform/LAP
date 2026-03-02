@@ -1,0 +1,100 @@
+"""Analytics API"""
+
+enum TimeGranularity {
+  HOUR
+  DAY
+  WEEK
+  MONTH
+}
+
+enum MetricType {
+  PAGEVIEWS
+  UNIQUE_VISITORS
+  BOUNCE_RATE
+  SESSION_DURATION
+  CONVERSION_RATE
+}
+
+type TimeSeries {
+  timestamp: String!
+  value: Float!
+}
+
+type MetricResult {
+  metric: MetricType!
+  total: Float!
+  average: Float!
+  timeSeries: [TimeSeries!]!
+}
+
+type TopPage {
+  path: String!
+  views: Int!
+  uniqueVisitors: Int!
+  avgDuration: Float!
+}
+
+type TrafficSource {
+  source: String!
+  medium: String!
+  visits: Int!
+  conversionRate: Float!
+}
+
+type Dashboard {
+  id: ID!
+  name: String!
+  widgets: [Widget!]!
+  createdAt: String!
+}
+
+type Widget {
+  id: ID!
+  type: String!
+  metric: MetricType!
+  granularity: TimeGranularity!
+  data: MetricResult!
+}
+
+input DateRange {
+  start: String!
+  end: String!
+}
+
+input CreateDashboardInput {
+  name: String!
+  widgetIds: [ID!]
+}
+
+type Query {
+  """Get metrics for a date range"""
+  metrics(siteId: ID!, metrics: [MetricType!]!, dateRange: DateRange!, granularity: TimeGranularity = DAY): [MetricResult!]!
+
+  """Get top pages"""
+  topPages(siteId: ID!, dateRange: DateRange!, limit: Int = 10): [TopPage!]!
+
+  """Get traffic sources"""
+  trafficSources(siteId: ID!, dateRange: DateRange!): [TrafficSource!]!
+
+  """Get a dashboard"""
+  dashboard(id: ID!): Dashboard
+
+  """List dashboards"""
+  dashboards: [Dashboard!]!
+}
+
+type Mutation {
+  """Create a dashboard"""
+  createDashboard(input: CreateDashboardInput!): Dashboard!
+
+  """Delete a dashboard"""
+  deleteDashboard(id: ID!): Boolean!
+
+  """Track a page view event"""
+  trackPageView(siteId: ID!, path: String!, referrer: String): Boolean!
+}
+
+type Subscription {
+  """Real-time metrics stream"""
+  realtimeMetrics(siteId: ID!, metric: MetricType!): TimeSeries!
+}

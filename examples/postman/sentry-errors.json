@@ -1,0 +1,207 @@
+{
+  "info": {
+    "name": "Sentry Error Tracking API",
+    "_postman_id": "sentry-001",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://sentry.io/api/0"
+    }
+  ],
+  "item": [
+    {
+      "name": "List Issues",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/projects/:orgSlug/:projectSlug/issues/",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "projects",
+            ":orgSlug",
+            ":projectSlug",
+            "issues"
+          ],
+          "query": [
+            {
+              "key": "query",
+              "value": "is:unresolved",
+              "description": ""
+            },
+            {
+              "key": "sort",
+              "value": "date",
+              "description": ""
+            },
+            {
+              "key": "limit",
+              "value": "25",
+              "description": ""
+            }
+          ],
+          "variable": [
+            {
+              "key": "orgSlug",
+              "value": "my-org"
+            },
+            {
+              "key": "projectSlug",
+              "value": "my-app"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "[{\"id\": \"1\", \"title\": \"TypeError: null is not an object\", \"count\": 42, \"firstSeen\": \"2024-01-01T00:00:00Z\"}]"
+        }
+      ]
+    },
+    {
+      "name": "Get Issue",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/issues/:issueId/",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "issues",
+            ":issueId"
+          ],
+          "variable": [
+            {
+              "key": "issueId",
+              "value": "1"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"id\": \"1\", \"title\": \"TypeError\", \"metadata\": {\"type\": \"TypeError\", \"value\": \"null is not an object\"}, \"count\": 42}"
+        }
+      ]
+    },
+    {
+      "name": "Resolve Issue",
+      "request": {
+        "method": "PUT",
+        "url": {
+          "raw": "{{baseUrl}}/issues/:issueId/",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "issues",
+            ":issueId"
+          ],
+          "variable": [
+            {
+              "key": "issueId",
+              "value": "1"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"status\": \"resolved\"}"
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"id\": \"1\", \"status\": \"resolved\"}"
+        }
+      ]
+    },
+    {
+      "name": "List Events",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/issues/:issueId/events/",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "issues",
+            ":issueId",
+            "events"
+          ],
+          "variable": [
+            {
+              "key": "issueId",
+              "value": "1"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "[{\"eventID\": \"ev1\", \"dateCreated\": \"2024-01-15T10:00:00Z\", \"tags\": [{\"key\": \"browser\", \"value\": \"Chrome\"}]}]"
+        }
+      ]
+    },
+    {
+      "name": "Create Alert Rule",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/projects/:orgSlug/:projectSlug/rules/",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "projects",
+            ":orgSlug",
+            ":projectSlug",
+            "rules"
+          ],
+          "variable": [
+            {
+              "key": "orgSlug",
+              "value": "my-org"
+            },
+            {
+              "key": "projectSlug",
+              "value": "my-app"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"name\": \"High Error Rate\", \"conditions\": [{\"id\": \"sentry.rules.conditions.event_frequency.EventFrequencyCondition\", \"value\": 100, \"interval\": \"1h\"}], \"actions\": [{\"id\": \"sentry.integrations.slack.notify_action.SlackNotifyServiceAction\", \"channel\": \"#alerts\"}]}"
+        }
+      },
+      "response": [
+        {
+          "name": "Created",
+          "code": 201,
+          "body": "{\"id\": \"rule1\", \"name\": \"High Error Rate\"}"
+        }
+      ]
+    }
+  ]
+}

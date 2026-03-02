@@ -1,0 +1,184 @@
+openapi: "3.0.0"
+info:
+  title: Google Maps Platform API
+  version: "1.0"
+servers:
+  - url: https://maps.googleapis.com/maps/api
+security:
+  - apiKey: []
+components:
+  securitySchemes:
+    apiKey:
+      type: apiKey
+      in: query
+      name: key
+paths:
+  /geocode/json:
+    get:
+      summary: Geocode an address to coordinates
+      parameters:
+        - name: address
+          in: query
+          schema:
+            type: string
+          description: Street address to geocode
+        - name: latlng
+          in: query
+          schema:
+            type: string
+          description: "Lat,lng for reverse geocoding"
+        - name: components
+          in: query
+          schema:
+            type: string
+          description: Component filter (e.g. country:US)
+        - name: language
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Geocode results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  results:
+                    type: array
+                    items:
+                      type: object
+  /directions/json:
+    get:
+      summary: Get directions between locations
+      parameters:
+        - name: origin
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Starting point (address or lat,lng)
+        - name: destination
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Ending point
+        - name: mode
+          in: query
+          schema:
+            type: string
+            enum: [driving, walking, bicycling, transit]
+            default: driving
+        - name: waypoints
+          in: query
+          schema:
+            type: string
+          description: "Pipe-separated intermediate points"
+        - name: alternatives
+          in: query
+          schema:
+            type: boolean
+        - name: departure_time
+          in: query
+          schema:
+            type: string
+          description: Unix timestamp or "now"
+        - name: language
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Directions result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  routes:
+                    type: array
+                    items:
+                      type: object
+                  geocoded_waypoints:
+                    type: array
+                    items:
+                      type: object
+  /place/textsearch/json:
+    get:
+      summary: Search for places by text query
+      parameters:
+        - name: query
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Search string (e.g. "pizza in New York")
+        - name: location
+          in: query
+          schema:
+            type: string
+          description: "Lat,lng bias point"
+        - name: radius
+          in: query
+          schema:
+            type: integer
+          description: Search radius in meters
+        - name: type
+          in: query
+          schema:
+            type: string
+          description: Place type filter (e.g. restaurant)
+        - name: language
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Places results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  results:
+                    type: array
+                    items:
+                      type: object
+  /place/details/json:
+    get:
+      summary: Get details for a specific place
+      parameters:
+        - name: place_id
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Google Place ID
+        - name: fields
+          in: query
+          schema:
+            type: string
+          description: "Comma-separated fields (name,rating,formatted_address)"
+        - name: language
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Place details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  result:
+                    type: object

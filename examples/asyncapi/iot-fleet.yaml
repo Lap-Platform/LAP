@@ -1,0 +1,91 @@
+asyncapi: 2.6.0
+info:
+  title: IoT Fleet Management
+  version: 1.0.0
+  description: MQTT-based IoT fleet telemetry and control
+
+servers:
+  production:
+    url: mqtt://iot-broker.example.com:1883
+    protocol: mqtt
+
+channels:
+  fleet/{deviceId}/telemetry:
+    parameters:
+      deviceId:
+        schema: {type: string}
+    publish:
+      summary: Device telemetry data
+      message:
+        name: Telemetry
+        payload:
+          type: object
+          required: [deviceId, timestamp]
+          properties:
+            deviceId: {type: string}
+            timestamp: {type: string, format: date-time}
+            location:
+              type: object
+              properties:
+                lat: {type: number}
+                lng: {type: number}
+                speed: {type: number}
+                heading: {type: number}
+            battery: {type: number}
+            signalStrength: {type: integer}
+            engineStatus: {type: string, enum: [running, idle, off]}
+    bindings:
+      mqtt:
+        qos: 1
+
+  fleet/{deviceId}/commands:
+    parameters:
+      deviceId:
+        schema: {type: string}
+    subscribe:
+      summary: Send command to device
+      message:
+        name: DeviceCommand
+        payload:
+          type: object
+          required: [commandId, action]
+          properties:
+            commandId: {type: string}
+            action: {type: string, enum: [lock, unlock, shutdown, diagnostic, update_firmware]}
+            parameters:
+              type: object
+    bindings:
+      mqtt:
+        qos: 2
+
+  fleet/{deviceId}/alerts:
+    parameters:
+      deviceId:
+        schema: {type: string}
+    publish:
+      summary: Device alert
+      message:
+        name: DeviceAlert
+        payload:
+          type: object
+          required: [alertId, severity, type]
+          properties:
+            alertId: {type: string}
+            severity: {type: string, enum: [info, warning, critical]}
+            type: {type: string, enum: [geofence_violation, low_battery, maintenance_due, accident]}
+            message: {type: string}
+            timestamp: {type: string, format: date-time}
+
+  fleet/status:
+    subscribe:
+      summary: Fleet-wide status summary
+      message:
+        name: FleetStatus
+        payload:
+          type: object
+          properties:
+            totalDevices: {type: integer}
+            online: {type: integer}
+            offline: {type: integer}
+            alerts: {type: integer}
+            updatedAt: {type: string, format: date-time}

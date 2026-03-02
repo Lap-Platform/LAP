@@ -1,0 +1,57 @@
+You are an API integration assistant. You will be given API documentation and a series of tasks.
+For each task, write the exact API call (curl command for REST, GraphQL query, protobuf RPC call, etc).
+
+Format your response as:
+TASK 1: <your api call>
+TASK 2: <your api call>
+... etc
+
+--- API DOCUMENTATION ---
+@doclean v0.1
+@api GitHub Repos API
+@base https://api.github.com
+@auth Bearer token
+
+@endpoint GET /user/repos
+@desc List Repos
+@required {sort: str, per_page: str, page: str}
+@returns(200) {id: int, full_name: str, private: bool} # OK
+
+@endpoint GET /repos/{owner}/{repo}
+@desc Get Repo
+@required {owner: str, repo: str}
+@returns(200) {id: int, full_name: str, stargazers_count: int} # OK
+
+@endpoint POST /user/repos
+@desc Create Repo
+@required {name: str, private: bool, description: str}
+@returns(201) {id: int, full_name: str} # Created
+
+@endpoint GET /repos/{owner}/{repo}/issues
+@desc List Issues
+@required {owner: str, repo: str, state: str, labels: str # Comma-separated}
+@returns(200) {id: int, title: str, state: str} # OK
+
+@endpoint POST /repos/{owner}/{repo}/issues
+@desc Create Issue
+@required {owner: str, repo: str, title: str, body: str, labels: [str]}
+@returns(201) {id: int, number: int, title: str} # Created
+
+@endpoint PATCH /repos/{owner}/{repo}/issues/{issue_number}
+@desc Update Issue
+@required {owner: str, repo: str, issue_number: str, state: str}
+@returns(200) {id: int, state: str} # OK
+
+--- END DOCUMENTATION ---
+
+TASKS:
+1. List repositories for current user with type 'owner' and sort by 'updated'
+2. Get repository octocat/Hello-World details
+3. Create repository with name 'new-repo' and description 'My new project'
+4. List issues for repository octocat/Hello-World with state 'open'
+5. Create issue in octocat/Hello-World with title 'Bug found' and labels
+6. Update issue #42 in octocat/Hello-World with new title and state 'closed'
+7. List issues with milestone filter and per_page 25
+8. Create repository with name 'private-repo' and private flag true
+9. List user repositories with visibility 'public' and affiliation 'owner,collaborator'
+10. Create issue with title 'Feature request', body text, and assignees list

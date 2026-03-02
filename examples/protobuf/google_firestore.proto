@@ -1,0 +1,430 @@
+syntax = "proto3";
+
+package google.firestore.v1;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+service Firestore {
+  rpc GetDocument(GetDocumentRequest) returns (Document);
+  rpc ListDocuments(ListDocumentsRequest) returns (ListDocumentsResponse);
+  rpc CreateDocument(CreateDocumentRequest) returns (Document);
+  rpc UpdateDocument(UpdateDocumentRequest) returns (Document);
+  rpc DeleteDocument(DeleteDocumentRequest) returns (google.protobuf.Empty);
+  rpc BatchGetDocuments(BatchGetDocumentsRequest) returns (stream BatchGetDocumentsResponse);
+  rpc BeginTransaction(BeginTransactionRequest) returns (BeginTransactionResponse);
+  rpc Commit(CommitRequest) returns (CommitResponse);
+  rpc Rollback(RollbackRequest) returns (google.protobuf.Empty);
+  rpc RunQuery(RunQueryRequest) returns (stream RunQueryResponse);
+  rpc Write(stream WriteRequest) returns (stream WriteResponse);
+  rpc Listen(stream ListenRequest) returns (stream ListenResponse);
+  rpc ListCollectionIds(ListCollectionIdsRequest) returns (ListCollectionIdsResponse);
+}
+
+message Document {
+  string name = 1;
+  map<string, Value> fields = 2;
+  google.protobuf.Timestamp create_time = 3;
+  google.protobuf.Timestamp update_time = 4;
+}
+
+message Value {
+  oneof value_type {
+    bool null_value = 1;
+    bool boolean_value = 2;
+    int64 integer_value = 3;
+    double double_value = 4;
+    google.protobuf.Timestamp timestamp_value = 5;
+    string string_value = 6;
+    bytes bytes_value = 7;
+    string reference_value = 8;
+    LatLng geo_point_value = 9;
+    ArrayValue array_value = 10;
+    MapValue map_value = 11;
+  }
+}
+
+message LatLng {
+  double latitude = 1;
+  double longitude = 2;
+}
+
+message ArrayValue {
+  repeated Value values = 1;
+}
+
+message MapValue {
+  map<string, Value> fields = 1;
+}
+
+message GetDocumentRequest {
+  string name = 1;
+  DocumentMask mask = 2;
+  oneof consistency_selector {
+    bytes transaction = 3;
+    google.protobuf.Timestamp read_time = 4;
+  }
+}
+
+message DocumentMask {
+  repeated string field_paths = 1;
+}
+
+message ListDocumentsRequest {
+  string parent = 1;
+  string collection_id = 2;
+  int32 page_size = 3;
+  string page_token = 4;
+  string order_by = 5;
+  DocumentMask mask = 6;
+  oneof consistency_selector {
+    bytes transaction = 7;
+    google.protobuf.Timestamp read_time = 8;
+  }
+  bool show_missing = 9;
+}
+
+message ListDocumentsResponse {
+  repeated Document documents = 1;
+  string next_page_token = 2;
+}
+
+message CreateDocumentRequest {
+  string parent = 1;
+  string collection_id = 2;
+  string document_id = 3;
+  Document document = 4;
+  DocumentMask mask = 5;
+}
+
+message UpdateDocumentRequest {
+  Document document = 1;
+  DocumentMask update_mask = 2;
+  DocumentMask mask = 3;
+  Precondition current_document = 4;
+}
+
+message Precondition {
+  oneof condition_type {
+    bool exists = 1;
+    google.protobuf.Timestamp update_time = 2;
+  }
+}
+
+message DeleteDocumentRequest {
+  string name = 1;
+  Precondition current_document = 2;
+}
+
+message BatchGetDocumentsRequest {
+  string database = 1;
+  repeated string documents = 2;
+  DocumentMask mask = 3;
+  oneof consistency_selector {
+    bytes transaction = 4;
+    TransactionOptions new_transaction = 5;
+    google.protobuf.Timestamp read_time = 6;
+  }
+}
+
+message BatchGetDocumentsResponse {
+  oneof result {
+    Document found = 1;
+    string missing = 2;
+  }
+  bytes transaction = 3;
+  google.protobuf.Timestamp read_time = 4;
+}
+
+message BeginTransactionRequest {
+  string database = 1;
+  TransactionOptions options = 2;
+}
+
+message BeginTransactionResponse {
+  bytes transaction = 1;
+}
+
+message TransactionOptions {
+  oneof mode {
+    ReadWrite read_write = 1;
+    ReadOnly read_only = 2;
+  }
+}
+
+message ReadWrite {
+  bytes retry_transaction = 1;
+}
+
+message ReadOnly {
+  oneof consistency_selector {
+    google.protobuf.Timestamp read_time = 1;
+  }
+}
+
+message CommitRequest {
+  string database = 1;
+  repeated Write writes = 2;
+  bytes transaction = 3;
+}
+
+message Write {
+  oneof operation {
+    Document update = 1;
+    string delete = 2;
+    Document transform = 3;
+  }
+  DocumentMask update_mask = 4;
+  repeated DocumentTransform update_transforms = 5;
+  Precondition current_document = 6;
+}
+
+message DocumentTransform {
+  repeated FieldTransform field_transforms = 1;
+}
+
+message FieldTransform {
+  string field_path = 1;
+  oneof transform_type {
+    string set_to_server_value = 2;
+    Value increment = 3;
+    Value maximum = 4;
+    Value minimum = 5;
+    ArrayValue append_missing_elements = 6;
+    ArrayValue remove_all_from_array = 7;
+  }
+}
+
+message CommitResponse {
+  repeated WriteResult write_results = 1;
+  google.protobuf.Timestamp commit_time = 2;
+}
+
+message WriteResult {
+  google.protobuf.Timestamp update_time = 1;
+  repeated Value transform_results = 2;
+}
+
+message RollbackRequest {
+  string database = 1;
+  bytes transaction = 2;
+}
+
+message RunQueryRequest {
+  string parent = 1;
+  oneof query_type {
+    StructuredQuery structured_query = 2;
+  }
+  oneof consistency_selector {
+    bytes transaction = 3;
+    TransactionOptions new_transaction = 4;
+    google.protobuf.Timestamp read_time = 5;
+  }
+}
+
+message StructuredQuery {
+  Projection select = 1;
+  repeated CollectionSelector from = 2;
+  Filter where = 3;
+  repeated Order order_by = 4;
+  Cursor start_at = 5;
+  Cursor end_at = 6;
+  int32 offset = 7;
+  int32 limit = 8;
+}
+
+message Projection {
+  repeated FieldReference fields = 1;
+}
+
+message FieldReference {
+  string field_path = 1;
+}
+
+message CollectionSelector {
+  string collection_id = 1;
+  bool all_descendants = 2;
+}
+
+message Filter {
+  oneof filter_type {
+    CompositeFilter composite_filter = 1;
+    FieldFilter field_filter = 2;
+    UnaryFilter unary_filter = 3;
+  }
+}
+
+message CompositeFilter {
+  Operator op = 1;
+  repeated Filter filters = 2;
+
+  enum Operator {
+    OPERATOR_UNSPECIFIED = 0;
+    AND = 1;
+    OR = 2;
+  }
+}
+
+message FieldFilter {
+  FieldReference field = 1;
+  Operator op = 2;
+  Value value = 3;
+
+  enum Operator {
+    OPERATOR_UNSPECIFIED = 0;
+    LESS_THAN = 1;
+    LESS_THAN_OR_EQUAL = 2;
+    GREATER_THAN = 3;
+    GREATER_THAN_OR_EQUAL = 4;
+    EQUAL = 5;
+    NOT_EQUAL = 6;
+    ARRAY_CONTAINS = 7;
+    IN = 8;
+    ARRAY_CONTAINS_ANY = 9;
+    NOT_IN = 10;
+  }
+}
+
+message UnaryFilter {
+  Operator op = 1;
+  oneof operand_type {
+    FieldReference field = 2;
+  }
+
+  enum Operator {
+    OPERATOR_UNSPECIFIED = 0;
+    IS_NAN = 1;
+    IS_NULL = 2;
+    IS_NOT_NAN = 3;
+    IS_NOT_NULL = 4;
+  }
+}
+
+message Order {
+  FieldReference field = 1;
+  Direction direction = 2;
+
+  enum Direction {
+    DIRECTION_UNSPECIFIED = 0;
+    ASCENDING = 1;
+    DESCENDING = 2;
+  }
+}
+
+message Cursor {
+  repeated Value values = 1;
+  bool before = 2;
+}
+
+message RunQueryResponse {
+  bytes transaction = 1;
+  Document document = 2;
+  google.protobuf.Timestamp read_time = 3;
+  int32 skipped_results = 4;
+}
+
+message WriteRequest {
+  string database = 1;
+  string stream_id = 2;
+  repeated Write writes = 3;
+  bytes stream_token = 4;
+  map<string, string> labels = 5;
+}
+
+message WriteResponse {
+  string stream_id = 1;
+  bytes stream_token = 2;
+  repeated WriteResult write_results = 3;
+  google.protobuf.Timestamp commit_time = 4;
+}
+
+message ListenRequest {
+  string database = 1;
+  oneof target_change {
+    Target add_target = 2;
+    int32 remove_target = 3;
+  }
+  map<string, string> labels = 4;
+}
+
+message Target {
+  oneof target_type {
+    QueryTarget query = 2;
+    DocumentsTarget documents = 3;
+  }
+  int32 target_id = 5;
+  oneof resume_type {
+    bytes resume_token = 6;
+    google.protobuf.Timestamp read_time = 7;
+  }
+}
+
+message QueryTarget {
+  string parent = 1;
+  oneof query_type {
+    StructuredQuery structured_query = 2;
+  }
+}
+
+message DocumentsTarget {
+  repeated string documents = 1;
+}
+
+message ListenResponse {
+  oneof response_type {
+    TargetChange target_change = 1;
+    DocumentChange document_change = 2;
+    DocumentDelete document_delete = 3;
+    DocumentRemove document_remove = 4;
+    ExistenceFilter filter = 5;
+  }
+}
+
+message TargetChange {
+  TargetChangeType target_change_type = 1;
+  repeated int32 target_ids = 2;
+  bytes resume_token = 3;
+  google.protobuf.Timestamp read_time = 4;
+
+  enum TargetChangeType {
+    NO_CHANGE = 0;
+    ADD = 1;
+    REMOVE = 2;
+    CURRENT = 3;
+    RESET = 4;
+  }
+}
+
+message DocumentChange {
+  Document document = 1;
+  repeated int32 target_ids = 2;
+  repeated int32 removed_target_ids = 3;
+}
+
+message DocumentDelete {
+  string document = 1;
+  repeated int32 removed_target_ids = 2;
+  google.protobuf.Timestamp read_time = 3;
+}
+
+message DocumentRemove {
+  string document = 1;
+  repeated int32 removed_target_ids = 2;
+  google.protobuf.Timestamp read_time = 3;
+}
+
+message ExistenceFilter {
+  int32 target_id = 1;
+  int32 count = 2;
+}
+
+message ListCollectionIdsRequest {
+  string parent = 1;
+  int32 page_size = 2;
+  string page_token = 3;
+}
+
+message ListCollectionIdsResponse {
+  repeated string collection_ids = 1;
+  string next_page_token = 2;
+}

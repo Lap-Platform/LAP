@@ -1,0 +1,36 @@
+openapi: "3.0.0"
+info:
+  title: Multi Auth API
+  version: "1.0.0"
+servers:
+  - url: https://api.multiauth.com
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+    apiKey:
+      type: apiKey
+      name: X-API-Key
+      in: header
+    oauth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://auth.example.com/authorize
+          tokenUrl: https://auth.example.com/token
+security:
+  - bearerAuth: []
+  - apiKey: []
+  - oauth2: []
+paths:
+  /protected:
+    get:
+      summary: Protected endpoint
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden

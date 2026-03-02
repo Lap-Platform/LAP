@@ -1,0 +1,91 @@
+asyncapi: 2.6.0
+info:
+  title: Supply Chain Tracking
+  version: 1.0.0
+  description: End-to-end supply chain visibility events
+
+servers:
+  production:
+    url: kafka-supply:9092
+    protocol: kafka
+
+channels:
+  shipments/{shipmentId}/tracking:
+    parameters:
+      shipmentId:
+        schema: {type: string}
+    subscribe:
+      summary: Shipment tracking update
+      message:
+        name: TrackingUpdate
+        payload:
+          type: object
+          required: [shipmentId, status, location]
+          properties:
+            shipmentId: {type: string}
+            status: {type: string, enum: [created, picked_up, in_transit, customs, out_for_delivery, delivered, exception]}
+            location:
+              type: object
+              properties:
+                facility: {type: string}
+                city: {type: string}
+                country: {type: string}
+                lat: {type: number}
+                lng: {type: number}
+            carrier: {type: string}
+            estimatedArrival: {type: string, format: date-time}
+            timestamp: {type: string, format: date-time}
+
+  warehouse/inventory:
+    publish:
+      summary: Warehouse inventory change
+      message:
+        name: InventoryChange
+        payload:
+          type: object
+          required: [sku, warehouseId, quantity, type]
+          properties:
+            sku: {type: string}
+            warehouseId: {type: string}
+            quantity: {type: integer}
+            type: {type: string, enum: [received, shipped, adjusted, damaged, returned]}
+            previousQuantity: {type: integer}
+            lotNumber: {type: string}
+
+  purchase-orders/status:
+    subscribe:
+      summary: Purchase order status change
+      message:
+        name: POStatusChange
+        payload:
+          type: object
+          required: [poNumber, status]
+          properties:
+            poNumber: {type: string}
+            status: {type: string, enum: [draft, submitted, acknowledged, partially_shipped, shipped, received, closed]}
+            supplierId: {type: string}
+            expectedDate: {type: string, format: date}
+            items:
+              type: array
+              items:
+                type: object
+                properties:
+                  sku: {type: string}
+                  ordered: {type: integer}
+                  shipped: {type: integer}
+
+  quality/inspections:
+    publish:
+      summary: Quality inspection result
+      message:
+        name: InspectionResult
+        payload:
+          type: object
+          required: [inspectionId, result]
+          properties:
+            inspectionId: {type: string}
+            shipmentId: {type: string}
+            result: {type: string, enum: [passed, failed, conditional]}
+            defectsFound: {type: integer}
+            notes: {type: string}
+            inspector: {type: string}

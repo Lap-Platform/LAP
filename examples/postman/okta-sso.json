@@ -1,0 +1,247 @@
+{
+  "info": {
+    "name": "Okta SSO API",
+    "_postman_id": "okta-001",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      {
+        "key": "key",
+        "value": "Authorization"
+      },
+      {
+        "key": "in",
+        "value": "header"
+      },
+      {
+        "key": "value",
+        "value": "{{apiKey}}"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://{{domain}}.okta.com/api/v1"
+    },
+    {
+      "key": "domain",
+      "value": "myorg"
+    }
+  ],
+  "item": [
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "200",
+                  "description": ""
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "SCIM filter e.g. profile.email eq \"user@example.com\""
+                },
+                {
+                  "key": "filter",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "OK",
+              "code": 200,
+              "body": "[{\"id\": \"u1\", \"profile\": {\"email\": \"john@example.com\", \"firstName\": \"John\", \"lastName\": \"Doe\"}, \"status\": \"ACTIVE\"}]"
+            }
+          ]
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "activate",
+                  "value": "true",
+                  "description": ""
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"profile\": {\"firstName\": \"Jane\", \"lastName\": \"Doe\", \"email\": \"jane@example.com\", \"login\": \"jane@example.com\"}, \"credentials\": {\"password\": {\"value\": \"TempP@ss1\"}}}"
+            }
+          },
+          "response": [
+            {
+              "name": "Created",
+              "code": 200,
+              "body": "{\"id\": \"u2\", \"status\": \"ACTIVE\"}"
+            }
+          ]
+        },
+        {
+          "name": "Get User",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/users/:userId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                ":userId"
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "u1"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "OK",
+              "code": 200,
+              "body": "{\"id\": \"u1\", \"profile\": {\"email\": \"john@example.com\"}, \"status\": \"ACTIVE\"}"
+            }
+          ]
+        },
+        {
+          "name": "Deactivate User",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/users/:userId/lifecycle/deactivate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                ":userId",
+                "lifecycle",
+                "deactivate"
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "u1"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "OK",
+              "code": 200,
+              "body": "{}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Groups",
+      "item": [
+        {
+          "name": "List Groups",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/groups",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "groups"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "",
+                  "description": "Search term"
+                },
+                {
+                  "key": "limit",
+                  "value": "200",
+                  "description": ""
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "OK",
+              "code": 200,
+              "body": "[{\"id\": \"g1\", \"profile\": {\"name\": \"Engineering\", \"description\": \"Eng team\"}}]"
+            }
+          ]
+        },
+        {
+          "name": "Add User to Group",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{baseUrl}}/groups/:groupId/users/:userId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "groups",
+                ":groupId",
+                "users",
+                ":userId"
+              ],
+              "variable": [
+                {
+                  "key": "groupId",
+                  "value": "g1"
+                },
+                {
+                  "key": "userId",
+                  "value": "u1"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "OK",
+              "code": 204,
+              "body": "{}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

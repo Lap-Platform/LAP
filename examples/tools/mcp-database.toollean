@@ -1,0 +1,26 @@
+# sqlite-mcp
+# MCP server for SQLite database operations
+
+@toollean v0.1
+@tool read_query
+@desc Execute a SELECT query and return results
+@in query:str SELECT SQL query to execute
+
+@toollean v0.1
+@tool write_query
+@desc Execute an INSERT, UPDATE, or DELETE query
+@in query:str SQL write query to execute
+
+@toollean v0.1
+@tool create_table
+@desc Create a new table in the database
+@in query:str CREATE TABLE SQL statement
+
+@toollean v0.1
+@tool list_tables
+@desc List all tables in the database
+
+@toollean v0.1
+@tool describe_table
+@desc Get schema information for a table
+@in table_name:str Name of the table to describe

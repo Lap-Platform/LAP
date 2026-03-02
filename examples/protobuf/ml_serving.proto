@@ -1,0 +1,137 @@
+syntax = "proto3";
+
+package ml.serving.v1;
+
+// ML model serving service.
+service ModelService {
+  // Run inference on a single input.
+  rpc Predict(PredictRequest) returns (PredictResponse);
+
+  // Batch predict (client streaming).
+  rpc BatchPredict(stream PredictRequest) returns (BatchPredictResponse);
+
+  // Streaming inference (e.g., token-by-token LLM generation).
+  rpc StreamPredict(PredictRequest) returns (stream StreamPredictResponse);
+
+  // Get model metadata.
+  rpc GetModelInfo(GetModelInfoRequest) returns (ModelInfo);
+
+  // List available models.
+  rpc ListModels(ListModelsRequest) returns (ListModelsResponse);
+}
+
+enum DataType {
+  DATA_TYPE_UNSPECIFIED = 0;
+  DATA_TYPE_FLOAT32 = 1;
+  DATA_TYPE_FLOAT64 = 2;
+  DATA_TYPE_INT32 = 3;
+  DATA_TYPE_INT64 = 4;
+  DATA_TYPE_STRING = 5;
+  DATA_TYPE_BOOL = 6;
+  DATA_TYPE_BYTES = 7;
+}
+
+message Tensor {
+  repeated int64 shape = 1;
+  DataType dtype = 2;
+  oneof data {
+    bytes raw_data = 3;
+    FloatList float_data = 4;
+    IntList int_data = 5;
+    StringList string_data = 6;
+  }
+}
+
+message FloatList {
+  repeated float values = 1;
+}
+
+message IntList {
+  repeated int64 values = 1;
+}
+
+message StringList {
+  repeated string values = 1;
+}
+
+message PredictRequest {
+  string model_name = 1;
+  string model_version = 2;
+  map<string, Tensor> inputs = 3;
+  map<string, string> parameters = 4;
+}
+
+message PredictResponse {
+  string model_name = 1;
+  string model_version = 2;
+  map<string, Tensor> outputs = 3;
+  ModelStats stats = 4;
+}
+
+message StreamPredictResponse {
+  oneof response {
+    PredictResponse final_response = 1;
+    PartialResult partial = 2;
+  }
+}
+
+message PartialResult {
+  string token = 1;
+  int32 index = 2;
+  float log_probability = 3;
+  bool is_final = 4;
+}
+
+message BatchPredictResponse {
+  repeated PredictResponse predictions = 1;
+  int32 total_processed = 2;
+  int32 total_errors = 3;
+  repeated string error_messages = 4;
+}
+
+message ModelStats {
+  double inference_time_ms = 1;
+  int64 input_tokens = 2;
+  int64 output_tokens = 3;
+}
+
+message ModelInfo {
+  string name = 1;
+  string version = 2;
+  string framework = 3;
+  repeated TensorSpec input_specs = 4;
+  repeated TensorSpec output_specs = 5;
+  map<string, string> metadata = 6;
+  ModelStatus status = 7;
+}
+
+enum ModelStatus {
+  MODEL_STATUS_UNSPECIFIED = 0;
+  MODEL_STATUS_LOADING = 1;
+  MODEL_STATUS_READY = 2;
+  MODEL_STATUS_UNLOADING = 3;
+  MODEL_STATUS_FAILED = 4;
+}
+
+message TensorSpec {
+  string name = 1;
+  repeated int64 shape = 2;
+  DataType dtype = 3;
+  string description = 4;
+}
+
+message GetModelInfoRequest {
+  string model_name = 1;
+  string model_version = 2;
+}
+
+message ListModelsRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+  string filter = 3;
+}
+
+message ListModelsResponse {
+  repeated ModelInfo models = 1;
+  string next_page_token = 2;
+}

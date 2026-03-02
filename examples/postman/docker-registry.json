@@ -1,0 +1,220 @@
+{
+  "info": {
+    "name": "Docker Registry API",
+    "_postman_id": "docker-001",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://hub.docker.com/v2"
+    }
+  ],
+  "item": [
+    {
+      "name": "Search Repos",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/search/repositories",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "search",
+            "repositories"
+          ],
+          "query": [
+            {
+              "key": "query",
+              "value": "nginx",
+              "description": ""
+            },
+            {
+              "key": "page_size",
+              "value": "25",
+              "description": ""
+            },
+            {
+              "key": "page",
+              "value": "1",
+              "description": ""
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"count\": 100, \"results\": [{\"repo_name\": \"library/nginx\", \"star_count\": 5000}]}"
+        }
+      ]
+    },
+    {
+      "name": "List Tags",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/repositories/:namespace/:repo/tags",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "repositories",
+            ":namespace",
+            ":repo",
+            "tags"
+          ],
+          "query": [
+            {
+              "key": "page_size",
+              "value": "100",
+              "description": ""
+            }
+          ],
+          "variable": [
+            {
+              "key": "namespace",
+              "value": "library"
+            },
+            {
+              "key": "repo",
+              "value": "nginx"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"count\": 50, \"results\": [{\"name\": \"latest\", \"full_size\": 50000000}]}"
+        }
+      ]
+    },
+    {
+      "name": "Get Manifest",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/repositories/:namespace/:repo/tags/:tag",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "repositories",
+            ":namespace",
+            ":repo",
+            "tags",
+            ":tag"
+          ],
+          "variable": [
+            {
+              "key": "namespace",
+              "value": "library"
+            },
+            {
+              "key": "repo",
+              "value": "nginx"
+            },
+            {
+              "key": "tag",
+              "value": "latest"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"name\": \"latest\", \"full_size\": 50000000, \"images\": [{\"architecture\": \"amd64\", \"os\": \"linux\"}]}"
+        }
+      ]
+    },
+    {
+      "name": "Delete Tag",
+      "request": {
+        "method": "DELETE",
+        "url": {
+          "raw": "{{baseUrl}}/repositories/:namespace/:repo/tags/:tag",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "repositories",
+            ":namespace",
+            ":repo",
+            "tags",
+            ":tag"
+          ],
+          "variable": [
+            {
+              "key": "namespace",
+              "value": "myuser"
+            },
+            {
+              "key": "repo",
+              "value": "myapp"
+            },
+            {
+              "key": "tag",
+              "value": "old"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "Deleted",
+          "code": 204,
+          "body": "{}"
+        }
+      ]
+    },
+    {
+      "name": "Get Repo",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/repositories/:namespace/:repo",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "repositories",
+            ":namespace",
+            ":repo"
+          ],
+          "variable": [
+            {
+              "key": "namespace",
+              "value": "library"
+            },
+            {
+              "key": "repo",
+              "value": "nginx"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"name\": \"nginx\", \"namespace\": \"library\", \"description\": \"Official Nginx image\", \"pull_count\": 1000000}"
+        }
+      ]
+    }
+  ]
+}

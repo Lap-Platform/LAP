@@ -1,0 +1,3154 @@
+{
+	"info": {
+		"_postman_id": "08fc1cbe-f8f2-42dd-b87a-224211707d1b",
+		"name": "NSO Sample API Requests",
+		"description": "This only covers a sub-set of the RESTCONF Northbound API, since auto-generated swagger from the application is 200,000 lines of documentation.\n\nCreated using https://github.com/NSO-developer/nso-vagrant as a localhost NSO testing environment.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Always-On Read Only Requests",
+			"item": [
+				{
+					"name": "NSO Root of the App Hierarchy Level Queries Copy",
+					"item": [
+						{
+							"name": "Root Level NSO JSON Returned",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/yang-data+json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Root Level NSO XML returned",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/yang-data+xml",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"description": "Note: Root level queries have different headers than other queries. Return All Application and Device Config.",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "View Device Config",
+					"item": [
+						{
+							"name": "All Devices in Device List: Show Running-config Devices Device",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"type": "text",
+										"value": "application/yang-data+json"
+									}
+								],
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data/tailf-ncs:devices/device",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data",
+										"tailf-ncs:devices",
+										"device"
+									]
+								},
+								"description": "Note: This can be a very large payload, since it is sending the parsed running config of every single device in the device list, and the NSO application configuration."
+							},
+							"response": []
+						},
+						{
+							"name": "Single Device Config - Show devices device DEVICENAME",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"type": "text",
+										"value": "application/yang-data+json"
+									}
+								],
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data/tailf-ncs:devices/device={{SAMPLE_IOS_DEVICE}}",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data",
+										"tailf-ncs:devices",
+										"device={{SAMPLE_IOS_DEVICE}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Single Device HW / SW Platform Info",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"type": "text",
+										"value": "application/yang-data+json"
+									}
+								],
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data/tailf-ncs:devices/device={{SAMPLE_IOS_DEVICE}}/platform",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data",
+										"tailf-ncs:devices",
+										"device={{SAMPLE_IOS_DEVICE}}",
+										"platform"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "show interfaces",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/yang-data+json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data/tailf-ncs:devices/device={{SAMPLE_IOS_DEVICE}}/config/tailf-ned-cisco-ios:interface/",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data",
+										"tailf-ncs:devices",
+										"device={{SAMPLE_IOS_DEVICE}}",
+										"config",
+										"tailf-ned-cisco-ios:interface",
+										""
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "show interface Gig 4 config",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/yang-data+json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data/tailf-ncs:devices/device={{SAMPLE_IOS_DEVICE}}/config/tailf-ned-cisco-ios:interface/GigabitEthernet=4",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data",
+										"tailf-ncs:devices",
+										"device={{SAMPLE_IOS_DEVICE}}",
+										"config",
+										"tailf-ned-cisco-ios:interface",
+										"GigabitEthernet=4"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"description": "If device config is very nested, you can use the depth=X parameter to see additional hidden layers of nesting.",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "NSO Device Groups",
+					"item": [
+						{
+							"name": "List Device Groups",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(204);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/yang-data+json"
+									},
+									{
+										"warning": "This is a duplicate header and will be overridden by the Authorization header generated by Postman.",
+										"key": "Authorization",
+										"value": "Basic YWRtaW46YWRtaW4="
+									},
+									{
+										"key": "Accept",
+										"value": "application/yang-data+json"
+									},
+									{
+										"key": "",
+										"value": "",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data/tailf-ncs:devices/device-group",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data",
+										"tailf-ncs:devices",
+										"device-group"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List Device Single Device Group Details",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(204);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/yang-data+json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Basic YWRtaW46YWRtaW4=",
+										"warning": "This is a duplicate header and will be overridden by the Authorization header generated by Postman."
+									},
+									{
+										"key": "Accept",
+										"value": "application/yang-data+json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data/tailf-ncs:devices/device-group=IOS-DEVICES",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data",
+										"tailf-ncs:devices",
+										"device-group=IOS-DEVICES"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "View Existing NSO Service Instances",
+					"item": [
+						{
+							"name": "Get List of Service Instances for a Service",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(204);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/yang-data+xml"
+									},
+									{
+										"key": "Authorization",
+										"value": "Basic YWRtaW46YWRtaW4=",
+										"warning": "This is a duplicate header and will be overridden by the Authorization header generated by Postman."
+									},
+									{
+										"key": "Accept",
+										"value": "application/yang-data+json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data/svi_verify_example:svi_verify_example",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data",
+										"svi_verify_example:svi_verify_example"
+									]
+								},
+								"description": "Note: this will only have data if service instances already exist.\nShows all service instances. In this case we have just one. \nCLI version:\nadmin@ncs# show running-config simple-sample-snmp-server-service\nsimple-sample-snmp-server-service first_service_instance\n device [ ios0 ]\n dummy  10.0.0.0"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Service Info For Single Service Instance",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(204);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/yang-data+xml"
+									},
+									{
+										"key": "Authorization",
+										"value": "Basic YWRtaW46YWRtaW4=",
+										"warning": "This is a duplicate header and will be overridden by the Authorization header generated by Postman."
+									},
+									{
+										"key": "Accept",
+										"value": "application/yang-data+json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data/svi_verify_example:svi_verify_example=first-instance",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data",
+										"svi_verify_example:svi_verify_example=first-instance"
+									]
+								},
+								"description": "Note: this will only have data if service instances already exist.\nCLI version to do the same:\nadmin@ncs# show running-config simple-sample-snmp-server-service first_service_instance"
+							},
+							"response": []
+						}
+					],
+					"description": "NSO allows you to create any service, with any inputs, to enforce any config, for any devices. \n\nThe details for the service can be seen on GitHub.\n\nCode for your reference on GitHub:\nhttps://github.com/jabelk/svi_verify_example",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Operational Data",
+					"item": [
+						{
+							"name": "View NSO Live Status Capabilities",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"type": "text",
+										"value": "application/yang-data+json"
+									}
+								],
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data/tailf-ncs:devices/device={{SAMPLE_IOS_DEVICE}}/live-status",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data",
+										"tailf-ncs:devices",
+										"device={{SAMPLE_IOS_DEVICE}}",
+										"live-status"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Reservable Sandbox Read / Write Access",
+			"item": [
+				{
+					"name": "NSO Root of the App Hierarchy Level Queries",
+					"item": [
+						{
+							"name": "Root Level NSO JSON Returned",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/yang-data+json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Root Level NSO XML returned",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/yang-data+xml",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"description": "Note: Root level queries have different headers than other queries. Return All Application and Device Config.",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "View Device Config",
+					"item": [
+						{
+							"name": "All Devices in Device List: Show Running-config Devices Device",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"type": "text",
+										"value": "application/yang-data+json"
+									}
+								],
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data/tailf-ncs:devices/device",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data",
+										"tailf-ncs:devices",
+										"device"
+									]
+								},
+								"description": "Note: This can be a very large payload, since it is sending the parsed running config of every single device in the device list, and the NSO application configuration."
+							},
+							"response": []
+						},
+						{
+							"name": "Single Device Config - Show devices device DEVICENAME",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"type": "text",
+										"value": "application/yang-data+json"
+									}
+								],
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data/tailf-ncs:devices/device={{SAMPLE_IOS_DEVICE}}",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data",
+										"tailf-ncs:devices",
+										"device={{SAMPLE_IOS_DEVICE}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Single Device HW / SW Platform Info",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"type": "text",
+										"value": "application/yang-data+json"
+									}
+								],
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data/tailf-ncs:devices/device={{SAMPLE_IOS_DEVICE}}/platform",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data",
+										"tailf-ncs:devices",
+										"device={{SAMPLE_IOS_DEVICE}}",
+										"platform"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "show interfaces",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/yang-data+json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data/tailf-ncs:devices/device={{SAMPLE_IOS_DEVICE}}/config/tailf-ned-cisco-ios:interface/",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data",
+										"tailf-ncs:devices",
+										"device={{SAMPLE_IOS_DEVICE}}",
+										"config",
+										"tailf-ned-cisco-ios:interface",
+										""
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "show interface Gig 4 config",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/yang-data+json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data/tailf-ncs:devices/device={{SAMPLE_IOS_DEVICE}}/config/tailf-ned-cisco-ios:interface/GigabitEthernet=4",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data",
+										"tailf-ncs:devices",
+										"device={{SAMPLE_IOS_DEVICE}}",
+										"config",
+										"tailf-ned-cisco-ios:interface",
+										"GigabitEthernet=4"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"description": "If device config is very nested, you can use the depth=X parameter to see additional hidden layers of nesting.",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Commit Dry-Run and Rollbacks",
+					"item": [
+						{
+							"name": "Commit Dry-run outformat native",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"type": "text",
+										"value": "application/yang-data+json"
+									},
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/yang-data+xml",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": " <Loopback>\n   <name>1337</name>\n   <description>RESTCONF CREATED LOOPBACK</description>\n   <ip>\n     <address>\n       <primary>\n         <address>10.20.50.4</address>\n         <mask>255.255.255.255</mask>\n       </primary>\n     </address>\n   </ip>\n </Loopback>"
+								},
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data/tailf-ncs:devices/device={{SAMPLE_IOS_DEVICE}}/config/tailf-ned-cisco-ios:interface?dry-run=native",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data",
+										"tailf-ncs:devices",
+										"device={{SAMPLE_IOS_DEVICE}}",
+										"config",
+										"tailf-ned-cisco-ios:interface"
+									],
+									"query": [
+										{
+											"key": "dry-run",
+											"value": "native",
+											"description": "uncheck to actually commit"
+										}
+									]
+								},
+								"description": "This is using an example for an IOS interface, with the configuration in the payload, but could be any config. The key thing is having the query params ?dry-run=native so NSO knows to not commit it and to respond back with the dry-run data in CLI format. Postman has the query param in the headers tab."
+							},
+							"response": []
+						},
+						{
+							"name": "Commit Dry-run outformat native Copy",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"type": "text",
+										"value": "application/yang-data+json"
+									},
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/yang-data+xml",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": " <Loopback>\n   <name>1337</name>\n   <description>RESTCONF CREATED LOOPBACK</description>\n   <ip>\n     <address>\n       <primary>\n         <address>10.20.50.4</address>\n         <mask>255.255.255.255</mask>\n       </primary>\n     </address>\n   </ip>\n </Loopback>"
+								},
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data/tailf-ncs:devices/device={{SAMPLE_IOS_DEVICE}}/config/tailf-ned-cisco-ios:interface?dry-run=native&dry-run-reverse=native",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data",
+										"tailf-ncs:devices",
+										"device={{SAMPLE_IOS_DEVICE}}",
+										"config",
+										"tailf-ned-cisco-ios:interface"
+									],
+									"query": [
+										{
+											"key": "dry-run",
+											"value": "native",
+											"description": "uncheck to actually commit"
+										},
+										{
+											"key": "dry-run-reverse",
+											"value": "native"
+										}
+									]
+								},
+								"description": "This is using an example for an IOS interface, with the configuration in the payload, but could be any config. The key thing is having the query params ?dry-run=native so NSO knows to not commit it and to respond back with the dry-run data in CLI format. Postman has the query param in the headers tab."
+							},
+							"response": []
+						},
+						{
+							"name": "Commit-Dry Run Remove IP address from interface",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Accept",
+										"type": "text",
+										"value": "application/yang-data+json"
+									},
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/yang-data+xml"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "\n"
+								},
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data/tailf-ncs:devices/device={{SAMPLE_IOS_DEVICE}}/config/tailf-ned-cisco-ios:interface/GigabitEthernet=4/ip/address?dry-run=native",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data",
+										"tailf-ncs:devices",
+										"device={{SAMPLE_IOS_DEVICE}}",
+										"config",
+										"tailf-ned-cisco-ios:interface",
+										"GigabitEthernet=4",
+										"ip",
+										"address"
+									],
+									"query": [
+										{
+											"key": "dry-run",
+											"value": "native"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"description": "Commit dry-run is NSO not making any change to the device, but telling you what the proposed change will be based on what is already existing on the device, calculating the difference. Rollbacks are when NSO calculates the minimum number of commands to return it to the previous state of configuration before the NSO commit transaction. ",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Device Config Templates",
+					"item": [
+						{
+							"name": "1. Create a DNS Server Configuration Template",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(204);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/yang-data+xml"
+									},
+									{
+										"key": "Authorization",
+										"value": "Basic YWRtaW46YWRtaW4=",
+										"warning": "This is a duplicate header and will be overridden by the Authorization header generated by Postman."
+									},
+									{
+										"key": "Accept",
+										"value": "application/yang-data+xml"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "<devices xmlns=\"http://tail-f.com/ns/ncs\">\n               <template>\n                 <name>SET-DNS-SERVER</name>\n                 <ned-id>\n                   <id xmlns:cisco-iosxr-cli-7.20=\"http://tail-f.com/ns/ned-id/cisco-iosxr-cli-7.20\">cisco-iosxr-cli-7.20:cisco-iosxr-cli-7.20</id>\n                   <config>\n                     <domain xmlns=\"http://tail-f.com/ned/cisco-ios-xr\">\n                       <name-server>\n                         <address>208.67.222.222</address>\n                       </name-server>\n                       <name-server>\n                         <address>208.67.220.220</address>\n                       </name-server>\n                     </domain>\n                   </config>\n                 </ned-id>\n                 <ned-id>\n                   <id xmlns:cisco-asa-cli-6.8=\"http://tail-f.com/ns/ned-id/cisco-asa-cli-6.8\">cisco-asa-cli-6.8:cisco-asa-cli-6.8</id>\n                   <config>\n                     <dns xmlns=\"http://cisco.com/ned/asa\">\n                       <domain-lookup>\n                         <name>mgmt</name>\n                       </domain-lookup>\n                       <server-group>\n                         <name>DefaultDNS</name>\n                         <name-server>208.67.220.220</name-server>\n                         <name-server>208.67.222.222</name-server>\n                       </server-group>\n                     </dns>\n                   </config>\n                 </ned-id>\n                 <ned-id>\n                   <id xmlns:cisco-ios-cli-6.44=\"http://tail-f.com/ns/ned-id/cisco-ios-cli-6.44\">cisco-ios-cli-6.44:cisco-ios-cli-6.44</id>\n                   <config>\n                     <ip xmlns=\"urn:ios\">\n                       <name-server>\n                         <name-server-list>\n                           <address>208.67.222.222</address>\n                         </name-server-list>\n                         <name-server-list>\n                           <address>208.67.220.220</address>\n                         </name-server-list>\n                       </name-server>\n                     </ip>\n                   </config>\n                 </ned-id>\n                 <ned-id>\n                   <id xmlns:cisco-nx-cli-5.15=\"http://tail-f.com/ns/ned-id/cisco-nx-cli-5.15\">cisco-nx-cli-5.15:cisco-nx-cli-5.15</id>\n                   <config>\n                     <ip xmlns=\"http://tail-f.com/ned/cisco-nx\">\n                       <name-server>\n                         <servers>208.67.222.222</servers>\n                         <servers>208.67.220.220</servers>\n                       </name-server>\n                     </ip>\n                   </config>\n                 </ned-id>\n               </template>\n             </devices>"
+								},
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data/tailf-ncs:devices/",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data",
+										"tailf-ncs:devices",
+										""
+									]
+								},
+								"description": "sample CLI to do the same:\ndevices template Standard_DNS_Servers\nned-id cisco-ios-cli-6.42\nconfi\nip name-server name-server-list 8.8.8.8\nexit\nexit\nexit\nned-id cisco-nx-cli-5.13 config\nip name-server servers 8.8.8.8"
+							},
+							"response": []
+						},
+						{
+							"name": "2. Apply DNS Server Device Template",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/yang-data+xml"
+									},
+									{
+										"warning": "This is a duplicate header and will be overridden by the Authorization header generated by Postman.",
+										"key": "Authorization",
+										"value": "Basic YWRtaW46YWRtaW4="
+									},
+									{
+										"key": "Accept",
+										"value": "application/yang-data+xml"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "<!--\ncli for same config\nconf\ndevices device dist-rtr01 apply-template template-name SET-DNS-SERVER\n-->\n\n<input>\n\t<template-name>SET-DNS-SERVER</template-name>\n</input>\n\n"
+								},
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data/tailf-ncs:devices/device={{SAMPLE_IOS_DEVICE}}/apply-template/",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data",
+										"tailf-ncs:devices",
+										"device={{SAMPLE_IOS_DEVICE}}",
+										"apply-template",
+										""
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "NSO Device Groups",
+					"item": [
+						{
+							"name": "Configure Device Groups",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(204);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/yang-data+xml"
+									},
+									{
+										"warning": "This is a duplicate header and will be overridden by the Authorization header generated by Postman.",
+										"key": "Authorization",
+										"value": "Basic YWRtaW46YWRtaW4="
+									},
+									{
+										"key": "Accept",
+										"value": "application/yang-data+json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "<devices xmlns=\"http://tail-f.com/ns/ncs\">\n               <device-group>\n                 <name>ALL</name>\n                 <device-group>ASA-DEVICES</device-group>\n                 <device-group>IOS-DEVICES</device-group>\n                 <device-group>NXOS-DEVICES</device-group>\n                 <device-group>XR-DEVICES</device-group>\n               </device-group>\n               <device-group>\n                 <name>ASA-DEVICES</name>\n                 <device-name>edge-firewall01</device-name>\n               </device-group>\n               <device-group>\n                 <name>IOS-DEVICES</name>\n                 <device-name>dist-rtr01</device-name>\n                 <device-name>dist-rtr02</device-name>\n                 <device-name>internet-rtr01</device-name>\n               </device-group>\n               <device-group>\n                 <name>NXOS-DEVICES</name>\n                 <device-name>dist-sw01</device-name>\n                 <device-name>dist-sw02</device-name>\n               </device-group>\n               <device-group>\n                 <name>XR-DEVICES</name>\n                 <device-name>core-rtr01</device-name>\n                 <device-name>core-rtr02</device-name>\n               </device-group>\n             </devices>"
+								},
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data/tailf-ncs:devices",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data",
+										"tailf-ncs:devices"
+									]
+								},
+								"description": "Groups are useful for organizing your devices in a way\nthat makes sense to you.\n\nDevices can be a member of more than one group,\nand device groups can be nested.\n\nCLI Equivalent\n\ndevices device-group campus-devices device-name [ ios0 nx0 ]\ntop\ndevices device-group backbone-devices device-name [ iosxr0 asa0 ]\ntop\ndevices device-group parent-group-all-devices device-group [ campus-devices backbone-devices ]\ncommit dry-run\ncommit dry-run outformat xml\ntop"
+							},
+							"response": []
+						},
+						{
+							"name": "List Device Groups",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(204);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/yang-data+json"
+									},
+									{
+										"warning": "This is a duplicate header and will be overridden by the Authorization header generated by Postman.",
+										"key": "Authorization",
+										"value": "Basic YWRtaW46YWRtaW4="
+									},
+									{
+										"key": "Accept",
+										"value": "application/yang-data+json"
+									},
+									{
+										"key": "",
+										"value": "",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data/tailf-ncs:devices/device-group",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data",
+										"tailf-ncs:devices",
+										"device-group"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List Device Single Device Group Details",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(204);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/yang-data+json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Basic YWRtaW46YWRtaW4=",
+										"warning": "This is a duplicate header and will be overridden by the Authorization header generated by Postman."
+									},
+									{
+										"key": "Accept",
+										"value": "application/yang-data+json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data/tailf-ncs:devices/device-group=IOS-DEVICES",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data",
+										"tailf-ncs:devices",
+										"device-group=IOS-DEVICES"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Config Compliance Reporting",
+					"item": [
+						{
+							"name": "Configure DNS Server Compliance Report",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(204);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/yang-data+xml"
+									},
+									{
+										"key": "Authorization",
+										"value": "Basic YWRtaW46YWRtaW4=",
+										"warning": "This is a duplicate header and will be overridden by the Authorization header generated by Postman."
+									},
+									{
+										"key": "Accept",
+										"value": "application/yang-data+json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "<compliance xmlns=\"http://tail-f.com/ns/ncs\">\n               <reports>\n                 <report>\n                   <name>DNS_COMPLIANCE_REPORT</name>\n                   <compare-template>\n                     <template-name>SET-DNS-SERVER</template-name>\n                     <device-group>ALL</device-group>\n                   </compare-template>\n                 </report>\n               </reports>\n             </compliance>"
+								},
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data/tailf-ncs:compliance",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data",
+										"tailf-ncs:compliance"
+									]
+								},
+								"description": "This compliance report uses the device config template SET-DNS-SERVER to see if the device has a DNS server per OS type. \nIt assumes you have the template in the CDB and have device groups set. The prod instance does not have these set by default."
+							},
+							"response": []
+						},
+						{
+							"name": "Run Compliance Report",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/yang-data+xml"
+									},
+									{
+										"warning": "This is a duplicate header and will be overridden by the Authorization header generated by Postman.",
+										"key": "Authorization",
+										"value": "Basic YWRtaW46YWRtaW4="
+									},
+									{
+										"key": "Accept",
+										"value": "application/yang-data+json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "<input>\n\t<outformat>html</outformat>\n</input>"
+								},
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data/tailf-ncs:compliance/reports/report=DNS_COMPLIANCE_REPORT/run",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data",
+										"tailf-ncs:compliance",
+										"reports",
+										"report=DNS_COMPLIANCE_REPORT",
+										"run"
+									]
+								},
+								"description": "for a system install the report will be created here:\n/var/opt/ncs/state/compliance-reports"
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "NSO Services: SVI Verify Example",
+					"item": [
+						{
+							"name": "Get List of Service Instances for a Service",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(204);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/yang-data+xml"
+									},
+									{
+										"key": "Authorization",
+										"value": "Basic YWRtaW46YWRtaW4=",
+										"warning": "This is a duplicate header and will be overridden by the Authorization header generated by Postman."
+									},
+									{
+										"key": "Accept",
+										"value": "application/yang-data+json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data/svi_verify_example:svi_verify_example",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data",
+										"svi_verify_example:svi_verify_example"
+									]
+								},
+								"description": "Note: this will only have data if service instances already exist.\nShows all service instances. In this case we have just one. \nCLI version:\nadmin@ncs# show running-config simple-sample-snmp-server-service\nsimple-sample-snmp-server-service first_service_instance\n device [ ios0 ]\n dummy  10.0.0.0"
+							},
+							"response": []
+						},
+						{
+							"name": "Create Service Instance for Single Device",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(204);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/yang-data+json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Basic YWRtaW46YWRtaW4="
+									},
+									{
+										"key": "Accept",
+										"value": "application/yang-data+json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"svi_verify_example:svi_verify_example\": [\n        {\n            \"name\": \"first-instance\",\n            \"switches\": [\n                {\n                    \"id\": \"first-sw\",\n                    \"switch-device\": \"dist-sw01\"\n                },\n                {\n                    \"id\": \"second-sw\",\n                    \"switch-device\": \"dist-sw02\"\n                }\n            ],\n            \"firewalls\": [\n                {\n                    \"id\": \"first-fw\",\n                    \"firewall-device\": \"edge-firewall01\"\n                }\n            ],\n            \"vlan-id\": 1337,\n            \"vlan-name\": \"SVI-DEMO\"\n        }\n    ]\n}"
+								},
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data/svi_verify_example:svi_verify_example/",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data",
+										"svi_verify_example:svi_verify_example",
+										""
+									],
+									"query": [
+										{
+											"key": "dry-run",
+											"value": "native",
+											"disabled": true
+										}
+									]
+								},
+								"description": "Creates a service and applies the corresponding template. \n\nto add a package on the sandbox system install do the following:\n\ncd /var/opt/ncs/packages\nncs-make-package --service-skeleton template snmp-servers\nvi snmp-servers/src/yang/snmp-servers.yang\n\n** add type string / remove type ip address **\nhttps://github.com/jabelk/snmp-servers/blob/main/src/yang/snmp-servers.yang#L31\n\ncd snmp-servers/src/\nmake\ncd ..\ncd templates/\nvi snmp-servers-template.xml\n\n** add in the templates **\n\nhttps://github.com/jabelk/snmp-servers/blob/main/templates/snmp-servers-template.xml#L19\n\nlog into NSO\nncs_cli -C\npackages reload"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Service Info For Single Service Instance",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(204);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/yang-data+xml"
+									},
+									{
+										"key": "Authorization",
+										"value": "Basic YWRtaW46YWRtaW4=",
+										"warning": "This is a duplicate header and will be overridden by the Authorization header generated by Postman."
+									},
+									{
+										"key": "Accept",
+										"value": "application/yang-data+json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data/svi_verify_example:svi_verify_example=first-instance",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data",
+										"svi_verify_example:svi_verify_example=first-instance"
+									]
+								},
+								"description": "Note: this will only have data if service instances already exist.\nCLI version to do the same:\nadmin@ncs# show running-config simple-sample-snmp-server-service first_service_instance"
+							},
+							"response": []
+						},
+						{
+							"name": "Update an Existing Service Instance",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(204);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/yang-data+json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Basic YWRtaW46YWRtaW4="
+									},
+									{
+										"key": "Accept",
+										"value": "application/yang-data+json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"svi_verify_example:svi_verify_example\": [\n        {\n            \"name\": \"first-instance\",\n            \"switches\": [\n                {\n                    \"id\": \"first-sw\",\n                    \"switch-device\": \"dist-sw01\"\n                },\n                {\n                    \"id\": \"second-sw\",\n                    \"switch-device\": \"dist-sw02\"\n                }\n            ],\n            \"firewalls\": [\n                {\n                    \"id\": \"first-fw\",\n                    \"firewall-device\": \"edge-firewall01\"\n                }\n            ],\n            \"vlan-id\": 1503,\n            \"vlan-name\": \"NEW-SVI-DEMO\"\n        }\n    ]\n}"
+								},
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data/svi_verify_example:svi_verify_example=first-instance",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data",
+										"svi_verify_example:svi_verify_example=first-instance"
+									]
+								},
+								"description": "Updating the VLAN Name and Number"
+							},
+							"response": []
+						},
+						{
+							"name": "Remove Device from Service",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(204);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/yang-data+xml"
+									},
+									{
+										"key": "Authorization",
+										"value": "Basic YWRtaW46YWRtaW4=",
+										"warning": "This is a duplicate header and will be overridden by the Authorization header generated by Postman."
+									},
+									{
+										"key": "Accept",
+										"value": "application/yang-data+json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data/svi_verify_example:svi_verify_example=first-instance",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data",
+										"svi_verify_example:svi_verify_example=first-instance"
+									]
+								},
+								"description": "This will remove any configuration template based on the inputs stored in the service. \nCLI way of doing the same thing:\nno simple-sample-snmp-server-service first_service_instance"
+							},
+							"response": []
+						}
+					],
+					"description": "NSO allows you to create any service, with any inputs, to enforce any config, for any devices. \n\nThe details for the service can be seen on GitHub.\n\nCode for your reference on GitHub:\nhttps://github.com/jabelk/svi_verify_example",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Operational Data",
+					"item": [
+						{
+							"name": "View NSO Parsed Live Status",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"type": "text",
+										"value": "application/yang-data+json"
+									}
+								],
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data/tailf-ncs:devices/device={{SAMPLE_IOS_DEVICE}}/live-status",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data",
+										"tailf-ncs:devices",
+										"device={{SAMPLE_IOS_DEVICE}}",
+										"live-status"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "View Arp Data",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"type": "text",
+										"value": "application/yang-data+json"
+									}
+								],
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data/tailf-ncs:devices/device={{SAMPLE_IOS_DEVICE}}/live-status/tailf-ned-cisco-ios-stats:arp",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data",
+										"tailf-ncs:devices",
+										"device={{SAMPLE_IOS_DEVICE}}",
+										"live-status",
+										"tailf-ned-cisco-ios-stats:arp"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Send any Command to Device: Show IP Interface Brief",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"type": "text",
+										"value": "application/yang-data+json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/yang-data+json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"input\":\n  {\n    \"args\": \"show ip interface brief\"\n  }\n}"
+								},
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data/tailf-ncs:devices/device={{SAMPLE_IOS_DEVICE}}/live-status/tailf-ned-cisco-ios-stats:exec/any",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data",
+										"tailf-ncs:devices",
+										"device={{SAMPLE_IOS_DEVICE}}",
+										"live-status",
+										"tailf-ned-cisco-ios-stats:exec",
+										"any"
+									]
+								},
+								"description": "any enable level command can be sent"
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Device Config Management",
+					"item": [
+						{
+							"name": "1. Create new Loopback",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"type": "text",
+										"value": "application/yang-data+json"
+									},
+									{
+										"key": "Content-Type",
+										"type": "text",
+										"value": "application/yang-data+xml"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": " <Loopback>\n   <name>1337</name>\n   <description>RESTCONF CREATED LOOPBACK</description>\n   <ip>\n     <address>\n       <primary>\n         <address>10.20.50.4</address>\n         <mask>255.255.255.255</mask>\n       </primary>\n     </address>\n   </ip>\n </Loopback>",
+									"options": {
+										"raw": {
+											"language": "xml"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data/tailf-ncs:devices/device={{SAMPLE_IOS_DEVICE}}/config/tailf-ned-cisco-ios:interface",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data",
+										"tailf-ncs:devices",
+										"device={{SAMPLE_IOS_DEVICE}}",
+										"config",
+										"tailf-ned-cisco-ios:interface"
+									]
+								}
+							},
+							"response": [
+								{
+									"name": "Failure: already exists",
+									"originalRequest": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Accept",
+												"type": "text",
+												"value": "application/yang-data+json, application/vnd.yang.collection+json, application/yang-patch+json"
+											},
+											{
+												"key": "Content-Type",
+												"value": "application/yang-data+json",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"Loopback\": [\n        {\n            \"name\": \"42518\",\n            \"description\": \"RESTCONF TEST LOOPBACK\",\n            \"ip\": {\n                \"address\": {\n                    \"primary\": {\n                        \"address\": \"203.0.113.99\",\n                        \"mask\": \"255.255.255.255\"\n                    }\n                }\n            }\n        }\n    ]\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "https://{{nso_premade}}/restconf/data/tailf-ncs:devices/device=dist-rtr01/config/tailf-ned-cisco-ios:interface",
+											"protocol": "https",
+											"host": [
+												"{{nso_premade}}"
+											],
+											"path": [
+												"restconf",
+												"data",
+												"tailf-ncs:devices",
+												"device=dist-rtr01",
+												"config",
+												"tailf-ned-cisco-ios:interface"
+											]
+										}
+									},
+									"status": "Conflict",
+									"code": 409,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Date",
+											"value": "Mon, 14 Sep 2020 13:41:59 GMT"
+										},
+										{
+											"key": "Cache-Control",
+											"value": "private, no-cache, must-revalidate, proxy-revalidate"
+										},
+										{
+											"key": "Content-Length",
+											"value": "384"
+										},
+										{
+											"key": "Content-Type",
+											"value": "application/yang-data+json"
+										},
+										{
+											"key": "Pragma",
+											"value": "no-cache"
+										},
+										{
+											"key": "Content-Security-Policy",
+											"value": "default-src 'self'; block-all-mixed-content; base-uri 'self'; frame-ancestors 'none';"
+										},
+										{
+											"key": "Strict-Transport-Security",
+											"value": "max-age=15552000; includeSubDomains"
+										},
+										{
+											"key": "X-Content-Type-Options",
+											"value": "nosniff"
+										},
+										{
+											"key": "X-Frame-Options",
+											"value": "DENY"
+										},
+										{
+											"key": "X-XSS-Protection",
+											"value": "1; mode=block"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"errors\": {\n        \"error\": [\n            {\n                \"error-message\": \"object already exists: /ncs:devices/ncs:device[ncs:name='dist-rtr01']/ncs:config/ios:interface/ios:Loopback[ios:name='42518']\",\n                \"error-path\": \"/tailf-ncs:devices/device=dist-rtr01/config/tailf-ned-cisco-ios:interface\",\n                \"error-tag\": \"data-exists\",\n                \"error-type\": \"application\"\n            }\n        ]\n    }\n}"
+								},
+								{
+									"name": "Failure: bad content-type",
+									"originalRequest": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Accept",
+												"type": "text",
+												"value": "application/yang-data+json, application/vnd.yang.collection+json, application/yang-patch+json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"Loopback\": [\n        {\n            \"name\": \"42518\",\n            \"description\": \"RESTCONF TEST LOOPBACK\",\n            \"ip\": {\n                \"address\": {\n                    \"primary\": {\n                        \"address\": \"203.0.113.99\",\n                        \"mask\": \"255.255.255.255\"\n                    }\n                }\n            }\n        }\n    ]\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "https://{{nso_premade}}/restconf/data/tailf-ncs:devices/device=dist-rtr01/config/tailf-ned-cisco-ios:interface",
+											"protocol": "https",
+											"host": [
+												"{{nso_premade}}"
+											],
+											"path": [
+												"restconf",
+												"data",
+												"tailf-ncs:devices",
+												"device=dist-rtr01",
+												"config",
+												"tailf-ned-cisco-ios:interface"
+											]
+										}
+									},
+									"status": "Unsupported Media Type",
+									"code": 415,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Date",
+											"value": "Mon, 14 Sep 2020 13:35:47 GMT"
+										},
+										{
+											"key": "Cache-Control",
+											"value": "private, no-cache, must-revalidate, proxy-revalidate"
+										},
+										{
+											"key": "Content-Length",
+											"value": "281"
+										},
+										{
+											"key": "Content-Type",
+											"value": "application/yang-data+json"
+										},
+										{
+											"key": "Pragma",
+											"value": "no-cache"
+										},
+										{
+											"key": "Content-Security-Policy",
+											"value": "default-src 'self'; block-all-mixed-content; base-uri 'self'; frame-ancestors 'none';"
+										},
+										{
+											"key": "Strict-Transport-Security",
+											"value": "max-age=15552000; includeSubDomains"
+										},
+										{
+											"key": "X-Content-Type-Options",
+											"value": "nosniff"
+										},
+										{
+											"key": "X-Frame-Options",
+											"value": "DENY"
+										},
+										{
+											"key": "X-XSS-Protection",
+											"value": "1; mode=block"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"errors\": {\n        \"error\": [\n            {\n                \"error-message\": \"Unsupported media type: application/json ; Should be one of: application/yang-data+xml, application/yang-data+json.\",\n                \"error-tag\": \"malformed-message\",\n                \"error-type\": \"application\"\n            }\n        ]\n    }\n}"
+								},
+								{
+									"name": "Success",
+									"originalRequest": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Accept",
+												"type": "text",
+												"value": "application/yang-data+json, application/vnd.yang.collection+json, application/yang-patch+json"
+											},
+											{
+												"key": "Content-Type",
+												"value": "application/yang-data+json",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"Loopback\": [\n        {\n            \"name\": \"42518\",\n            \"description\": \"RESTCONF TEST LOOPBACK\",\n            \"ip\": {\n                \"address\": {\n                    \"primary\": {\n                        \"address\": \"203.0.113.99\",\n                        \"mask\": \"255.255.255.255\"\n                    }\n                }\n            }\n        }\n    ]\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "https://{{nso_premade}}/restconf/data/tailf-ncs:devices/device=dist-rtr01/config/tailf-ned-cisco-ios:interface",
+											"protocol": "https",
+											"host": [
+												"{{nso_premade}}"
+											],
+											"path": [
+												"restconf",
+												"data",
+												"tailf-ncs:devices",
+												"device=dist-rtr01",
+												"config",
+												"tailf-ned-cisco-ios:interface"
+											]
+										}
+									},
+									"status": "Created",
+									"code": 201,
+									"_postman_previewlanguage": "html",
+									"header": [
+										{
+											"key": "Location",
+											"value": "https://10.10.20.49/restconf/data/tailf-ncs:devices/device=dist-rtr01/config/tailf-ned-cisco-ios:interface/Loopback=42518"
+										},
+										{
+											"key": "Date",
+											"value": "Mon, 14 Sep 2020 13:36:12 GMT"
+										},
+										{
+											"key": "Last-Modified",
+											"value": "Mon, 14 Sep 2020 13:36:12 GMT"
+										},
+										{
+											"key": "Cache-Control",
+											"value": "private, no-cache, must-revalidate, proxy-revalidate"
+										},
+										{
+											"key": "Etag",
+											"value": "\"1600-90572-167270\""
+										},
+										{
+											"key": "Content-Length",
+											"value": "0"
+										},
+										{
+											"key": "Content-Type",
+											"value": "text/html; charset=UTF-8"
+										},
+										{
+											"key": "Pragma",
+											"value": "no-cache"
+										},
+										{
+											"key": "Content-Security-Policy",
+											"value": "default-src 'self'; block-all-mixed-content; base-uri 'self'; frame-ancestors 'none';"
+										},
+										{
+											"key": "Strict-Transport-Security",
+											"value": "max-age=15552000; includeSubDomains"
+										},
+										{
+											"key": "X-Content-Type-Options",
+											"value": "nosniff"
+										},
+										{
+											"key": "X-Frame-Options",
+											"value": "DENY"
+										},
+										{
+											"key": "X-XSS-Protection",
+											"value": "1; mode=block"
+										}
+									],
+									"cookie": [],
+									"body": ""
+								}
+							]
+						},
+						{
+							"name": "2. Edit New Loopback IP Address",
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Accept",
+										"type": "text",
+										"value": "application/yang-data+json"
+									},
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/yang-data+xml"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "\n                       <ip>\n                         <address>\n                           <primary>\n                             <address>10.0.0.5</address>\n                             <mask>255.255.255.255</mask>\n                           </primary>\n                         </address>\n                       </ip>\n"
+								},
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data/tailf-ncs:devices/device={{SAMPLE_IOS_DEVICE}}/config/tailf-ned-cisco-ios:interface/Loopback=1337/ip",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data",
+										"tailf-ncs:devices",
+										"device={{SAMPLE_IOS_DEVICE}}",
+										"config",
+										"tailf-ned-cisco-ios:interface",
+										"Loopback=1337",
+										"ip"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "3. Remove IP Address From Interface",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Accept",
+										"type": "text",
+										"value": "application/yang-data+json"
+									},
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/yang-data+xml"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data/tailf-ncs:devices/device={{SAMPLE_IOS_DEVICE}}/config/tailf-ned-cisco-ios:interface/Loopback=1337/ip/address",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data",
+										"tailf-ncs:devices",
+										"device={{SAMPLE_IOS_DEVICE}}",
+										"config",
+										"tailf-ned-cisco-ios:interface",
+										"Loopback=1337",
+										"ip",
+										"address"
+									],
+									"query": [
+										{
+											"key": "dry-run",
+											"value": "native",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "4. Delete new Loopback",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Accept",
+										"type": "text",
+										"value": "application/yang-data+json"
+									},
+									{
+										"key": "Content-Type",
+										"type": "text",
+										"value": "application/yang-data+xml"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "xml"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data/tailf-ncs:devices/device={{SAMPLE_IOS_DEVICE}}/config/tailf-ned-cisco-ios:interface/Loopback=1337",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data",
+										"tailf-ncs:devices",
+										"device={{SAMPLE_IOS_DEVICE}}",
+										"config",
+										"tailf-ned-cisco-ios:interface",
+										"Loopback=1337"
+									]
+								}
+							},
+							"response": [
+								{
+									"name": "Success",
+									"originalRequest": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Accept",
+												"type": "text",
+												"value": "application/yang-data+json, application/vnd.yang.collection+json, application/yang-patch+json"
+											},
+											{
+												"key": "Content-Type",
+												"value": "application/yang-data+json",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"Loopback\": [\n        {\n            \"name\": \"42518\",\n            \"description\": \"RESTCONF TEST LOOPBACK\",\n            \"ip\": {\n                \"address\": {\n                    \"primary\": {\n                        \"address\": \"203.0.113.99\",\n                        \"mask\": \"255.255.255.255\"\n                    }\n                }\n            }\n        }\n    ]\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "https://{{nso_premade}}/restconf/data/tailf-ncs:devices/device=dist-rtr01/config/tailf-ned-cisco-ios:interface",
+											"protocol": "https",
+											"host": [
+												"{{nso_premade}}"
+											],
+											"path": [
+												"restconf",
+												"data",
+												"tailf-ncs:devices",
+												"device=dist-rtr01",
+												"config",
+												"tailf-ned-cisco-ios:interface"
+											]
+										}
+									},
+									"status": "Created",
+									"code": 201,
+									"_postman_previewlanguage": "html",
+									"header": [
+										{
+											"key": "Location",
+											"value": "https://10.10.20.49/restconf/data/tailf-ncs:devices/device=dist-rtr01/config/tailf-ned-cisco-ios:interface/Loopback=42518"
+										},
+										{
+											"key": "Date",
+											"value": "Mon, 14 Sep 2020 13:36:12 GMT"
+										},
+										{
+											"key": "Last-Modified",
+											"value": "Mon, 14 Sep 2020 13:36:12 GMT"
+										},
+										{
+											"key": "Cache-Control",
+											"value": "private, no-cache, must-revalidate, proxy-revalidate"
+										},
+										{
+											"key": "Etag",
+											"value": "\"1600-90572-167270\""
+										},
+										{
+											"key": "Content-Length",
+											"value": "0"
+										},
+										{
+											"key": "Content-Type",
+											"value": "text/html; charset=UTF-8"
+										},
+										{
+											"key": "Pragma",
+											"value": "no-cache"
+										},
+										{
+											"key": "Content-Security-Policy",
+											"value": "default-src 'self'; block-all-mixed-content; base-uri 'self'; frame-ancestors 'none';"
+										},
+										{
+											"key": "Strict-Transport-Security",
+											"value": "max-age=15552000; includeSubDomains"
+										},
+										{
+											"key": "X-Content-Type-Options",
+											"value": "nosniff"
+										},
+										{
+											"key": "X-Frame-Options",
+											"value": "DENY"
+										},
+										{
+											"key": "X-XSS-Protection",
+											"value": "1; mode=block"
+										}
+									],
+									"cookie": [],
+									"body": ""
+								},
+								{
+									"name": "Failure: already exists",
+									"originalRequest": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Accept",
+												"type": "text",
+												"value": "application/yang-data+json, application/vnd.yang.collection+json, application/yang-patch+json"
+											},
+											{
+												"key": "Content-Type",
+												"value": "application/yang-data+json",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"Loopback\": [\n        {\n            \"name\": \"42518\",\n            \"description\": \"RESTCONF TEST LOOPBACK\",\n            \"ip\": {\n                \"address\": {\n                    \"primary\": {\n                        \"address\": \"203.0.113.99\",\n                        \"mask\": \"255.255.255.255\"\n                    }\n                }\n            }\n        }\n    ]\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "https://{{nso_premade}}/restconf/data/tailf-ncs:devices/device=dist-rtr01/config/tailf-ned-cisco-ios:interface",
+											"protocol": "https",
+											"host": [
+												"{{nso_premade}}"
+											],
+											"path": [
+												"restconf",
+												"data",
+												"tailf-ncs:devices",
+												"device=dist-rtr01",
+												"config",
+												"tailf-ned-cisco-ios:interface"
+											]
+										}
+									},
+									"status": "Conflict",
+									"code": 409,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Date",
+											"value": "Mon, 14 Sep 2020 13:41:59 GMT"
+										},
+										{
+											"key": "Cache-Control",
+											"value": "private, no-cache, must-revalidate, proxy-revalidate"
+										},
+										{
+											"key": "Content-Length",
+											"value": "384"
+										},
+										{
+											"key": "Content-Type",
+											"value": "application/yang-data+json"
+										},
+										{
+											"key": "Pragma",
+											"value": "no-cache"
+										},
+										{
+											"key": "Content-Security-Policy",
+											"value": "default-src 'self'; block-all-mixed-content; base-uri 'self'; frame-ancestors 'none';"
+										},
+										{
+											"key": "Strict-Transport-Security",
+											"value": "max-age=15552000; includeSubDomains"
+										},
+										{
+											"key": "X-Content-Type-Options",
+											"value": "nosniff"
+										},
+										{
+											"key": "X-Frame-Options",
+											"value": "DENY"
+										},
+										{
+											"key": "X-XSS-Protection",
+											"value": "1; mode=block"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"errors\": {\n        \"error\": [\n            {\n                \"error-message\": \"object already exists: /ncs:devices/ncs:device[ncs:name='dist-rtr01']/ncs:config/ios:interface/ios:Loopback[ios:name='42518']\",\n                \"error-path\": \"/tailf-ncs:devices/device=dist-rtr01/config/tailf-ned-cisco-ios:interface\",\n                \"error-tag\": \"data-exists\",\n                \"error-type\": \"application\"\n            }\n        ]\n    }\n}"
+								},
+								{
+									"name": "Failure: bad content-type",
+									"originalRequest": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Accept",
+												"type": "text",
+												"value": "application/yang-data+json, application/vnd.yang.collection+json, application/yang-patch+json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"Loopback\": [\n        {\n            \"name\": \"42518\",\n            \"description\": \"RESTCONF TEST LOOPBACK\",\n            \"ip\": {\n                \"address\": {\n                    \"primary\": {\n                        \"address\": \"203.0.113.99\",\n                        \"mask\": \"255.255.255.255\"\n                    }\n                }\n            }\n        }\n    ]\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "https://{{nso_premade}}/restconf/data/tailf-ncs:devices/device=dist-rtr01/config/tailf-ned-cisco-ios:interface",
+											"protocol": "https",
+											"host": [
+												"{{nso_premade}}"
+											],
+											"path": [
+												"restconf",
+												"data",
+												"tailf-ncs:devices",
+												"device=dist-rtr01",
+												"config",
+												"tailf-ned-cisco-ios:interface"
+											]
+										}
+									},
+									"status": "Unsupported Media Type",
+									"code": 415,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Date",
+											"value": "Mon, 14 Sep 2020 13:35:47 GMT"
+										},
+										{
+											"key": "Cache-Control",
+											"value": "private, no-cache, must-revalidate, proxy-revalidate"
+										},
+										{
+											"key": "Content-Length",
+											"value": "281"
+										},
+										{
+											"key": "Content-Type",
+											"value": "application/yang-data+json"
+										},
+										{
+											"key": "Pragma",
+											"value": "no-cache"
+										},
+										{
+											"key": "Content-Security-Policy",
+											"value": "default-src 'self'; block-all-mixed-content; base-uri 'self'; frame-ancestors 'none';"
+										},
+										{
+											"key": "Strict-Transport-Security",
+											"value": "max-age=15552000; includeSubDomains"
+										},
+										{
+											"key": "X-Content-Type-Options",
+											"value": "nosniff"
+										},
+										{
+											"key": "X-Frame-Options",
+											"value": "DENY"
+										},
+										{
+											"key": "X-XSS-Protection",
+											"value": "1; mode=block"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"errors\": {\n        \"error\": [\n            {\n                \"error-message\": \"Unsupported media type: application/json ; Should be one of: application/yang-data+xml, application/yang-data+json.\",\n                \"error-tag\": \"malformed-message\",\n                \"error-type\": \"application\"\n            }\n        ]\n    }\n}"
+								}
+							]
+						},
+						{
+							"name": "5. Add SNMP Community String",
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Accept",
+										"type": "text",
+										"value": "application/yang-data+json"
+									},
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/yang-data+xml",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "                 <config>\n                   <snmp-server xmlns=\"urn:ios\">\n                     <community>\n                       <name>NSO-STRING</name>\n                       <RW/>\n                     </community>\n                   </snmp-server>\n                 </config>"
+								},
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data/tailf-ncs:devices/device={{SAMPLE_IOS_DEVICE}}/config/",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data",
+										"tailf-ncs:devices",
+										"device={{SAMPLE_IOS_DEVICE}}",
+										"config",
+										""
+									],
+									"query": [
+										{
+											"key": "dry-run",
+											"value": "native",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "6. Remove SNMP Community String from Device",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Accept",
+										"type": "text",
+										"value": "application/yang-data+json"
+									},
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/yang-data+xml"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data/tailf-ncs:devices/device={{SAMPLE_IOS_DEVICE}}/config/tailf-ned-cisco-ios:snmp-server",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data",
+										"tailf-ncs:devices",
+										"device={{SAMPLE_IOS_DEVICE}}",
+										"config",
+										"tailf-ned-cisco-ios:snmp-server"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"description": "Any element of device configuration modeled in NSO can be configured over the API. The ones given here are just samples. NSO will translate it to the correct commands and can rollback if needed. ",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Adding / Removing a Device",
+					"item": [
+						{
+							"name": "Step 0. Create a Device in the CDB",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"type": "text",
+										"value": "application/yang-data+json"
+									},
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/yang-data+xml"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "\n<!--\nSample CLI to do the same thing\ndevices device dist-rtr01\naddress   10.10.20.175\nauthgroup labadmin\ndevice-type cli ned-id cisco-ios-cli-6.44\ndevice-type cli protocol telnet\nstate admin-state unlocked\n-->\n\n\n<device>\n <name>dist-rtr01</name>\n <address>10.10.20.175</address>\n <authgroup>labadmin</authgroup>\n <device-type>\n   <cli>\n     <ned-id xmlns:cisco-ios-cli-6.44=\"http://tail-f.com/ns/ned-id/cisco-ios-cli-6.44\">cisco-ios-cli-6.44:cisco-ios-cli-6.44</ned-id>\n     <protocol>telnet</protocol>\n   </cli>\n </device-type>\n <state>\n   <admin-state>unlocked</admin-state>\n </state>\n</device>\n      "
+								},
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data/tailf-ncs:devices",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data",
+										"tailf-ncs:devices"
+									]
+								},
+								"description": "Update the Payload with correct info. Sample XML can be used from Get on existing device or using commit dry run on CLI. Device names, NED-ID, Address and Ports will likely be different depending on your environment."
+							},
+							"response": []
+						},
+						{
+							"name": "(not needed on sandbox telent) Step 1. SSH Fetch-Host-Keys Device",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"type": "text",
+										"value": "application/yang-data+json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data/tailf-ncs:devices/device={{SAMPLE_IOS_DEVICE}}/ssh/fetch-host-keys",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data",
+										"tailf-ncs:devices",
+										"device={{SAMPLE_IOS_DEVICE}}",
+										"ssh",
+										"fetch-host-keys"
+									]
+								},
+								"description": "Since the sandbox is using telnet, we won't need to fetch SSH host keys, but this call is how you would do it if you were using SSH\n\ndeveloper@ncs(config-device-dist-rtr01)# ssh fetch-host-keys\nresult not-available\ninfo Not available for telnet\nis the error given"
+							},
+							"response": []
+						},
+						{
+							"name": "Step 2. Sync-from Device",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"type": "text",
+										"value": "application/yang-data+json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data/tailf-ncs:devices/device={{SAMPLE_IOS_DEVICE}}/sync-from",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data",
+										"tailf-ncs:devices",
+										"device={{SAMPLE_IOS_DEVICE}}",
+										"sync-from"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete a device from CDB Device List",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/yang-data+json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{PROTOCOL}}://{{NSO_IP}}:{{NSO_HTTP_PORT}}/restconf/data/tailf-ncs:devices/device={{SAMPLE_IOS_DEVICE}}",
+									"protocol": "{{PROTOCOL}}",
+									"host": [
+										"{{NSO_IP}}"
+									],
+									"port": "{{NSO_HTTP_PORT}}",
+									"path": [
+										"restconf",
+										"data",
+										"tailf-ncs:devices",
+										"device={{SAMPLE_IOS_DEVICE}}"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"description": "The production NSO already has all devices added, but you can delete one and re-add it. ",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					]
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "basic",
+		"basic": [
+			{
+				"key": "password",
+				"value": "{{password}}",
+				"type": "string"
+			},
+			{
+				"key": "username",
+				"value": "{{username}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "NSO_IP",
+			"value": "127.0.0.1",
+			"disabled": true
+		},
+		{
+			"key": "NSO_HTTP_PORT",
+			"value": "8009",
+			"disabled": true
+		},
+		{
+			"key": "username",
+			"value": "admin",
+			"disabled": true
+		},
+		{
+			"key": "password",
+			"value": "admin",
+			"disabled": true
+		},
+		{
+			"key": "sample_ios_device",
+			"value": "ios0",
+			"disabled": true
+		},
+		{
+			"key": "sample_xr_device",
+			"value": "iosxr0",
+			"disabled": true
+		},
+		{
+			"key": "sample_junos_device",
+			"value": "junos0",
+			"disabled": true
+		}
+	]
+}

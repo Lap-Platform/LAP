@@ -1,0 +1,185 @@
+{
+  "info": {
+    "name": "Auth0 Identity API",
+    "_postman_id": "auth0-001",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://{{domain}}.auth0.com"
+    },
+    {
+      "key": "domain",
+      "value": "myapp"
+    }
+  ],
+  "item": [
+    {
+      "name": "Get Token",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/oauth/token",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "oauth",
+            "token"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"grant_type\": \"client_credentials\", \"client_id\": \"{{clientId}}\", \"client_secret\": \"{{clientSecret}}\", \"audience\": \"https://api.example.com\"}"
+        },
+        "auth": {
+          "type": "noauth"
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"access_token\": \"eyJ...\", \"token_type\": \"Bearer\", \"expires_in\": 86400}"
+        }
+      ]
+    },
+    {
+      "name": "Get User Info",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/userinfo",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "userinfo"
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"sub\": \"auth0|123\", \"email\": \"user@example.com\", \"name\": \"John\"}"
+        }
+      ]
+    },
+    {
+      "name": "List Users",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/v2/users",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v2",
+            "users"
+          ],
+          "query": [
+            {
+              "key": "q",
+              "value": "",
+              "description": "Lucene query"
+            },
+            {
+              "key": "per_page",
+              "value": "50",
+              "description": ""
+            },
+            {
+              "key": "page",
+              "value": "0",
+              "description": ""
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "[{\"user_id\": \"auth0|123\", \"email\": \"user@example.com\"}]"
+        }
+      ]
+    },
+    {
+      "name": "Create User",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/api/v2/users",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v2",
+            "users"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\": \"new@example.com\", \"password\": \"SecureP@ss1\", \"connection\": \"Username-Password-Authentication\"}"
+        }
+      },
+      "response": [
+        {
+          "name": "Created",
+          "code": 201,
+          "body": "{\"user_id\": \"auth0|456\", \"email\": \"new@example.com\"}"
+        }
+      ]
+    },
+    {
+      "name": "Assign Roles",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/api/v2/users/:id/roles",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v2",
+            "users",
+            ":id",
+            "roles"
+          ],
+          "variable": [
+            {
+              "key": "id",
+              "value": "auth0|123"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"roles\": [\"rol_admin\"]}"
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 204,
+          "body": "{}"
+        }
+      ]
+    }
+  ]
+}

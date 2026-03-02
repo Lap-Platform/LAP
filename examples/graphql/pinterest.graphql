@@ -1,0 +1,107 @@
+enum BoardPrivacy { PUBLIC SECRET }
+enum PinMediaType { IMAGE VIDEO MULTIPLE_IMAGES MULTIPLE_MIXED }
+
+type User {
+  id: ID!
+  username: String!
+  firstName: String
+  lastName: String
+  about: String
+  profileImage: String
+  websiteUrl: String
+  accountType: String
+  followerCount: Int!
+  followingCount: Int!
+  pinCount: Int!
+  boardCount: Int!
+  monthlyViews: Int
+  boards(first: Int, after: String, privacy: BoardPrivacy): BoardConnection!
+  pins(first: Int, after: String): PinConnection!
+  followers(first: Int, after: String): UserConnection!
+  following(first: Int, after: String): UserConnection!
+}
+
+type Board {
+  id: ID!
+  name: String!
+  description: String
+  owner: User!
+  privacy: BoardPrivacy!
+  coverImages: [Image!]
+  pinCount: Int!
+  followerCount: Int!
+  collaborators: [User!]
+  sections(first: Int, after: String): BoardSectionConnection!
+  pins(first: Int, after: String): PinConnection!
+  createdAt: String!
+}
+
+type BoardSection { id: ID! title: String! pinCount: Int! pins(first: Int, after: String): PinConnection! }
+
+type Pin {
+  id: ID!
+  title: String
+  description: String
+  link: String
+  dominantColor: String
+  altText: String
+  creator: User!
+  board: Board
+  boardSection: BoardSection
+  media: PinMedia!
+  saveCount: Int
+  commentCount: Int
+  note: String
+  createdAt: String!
+}
+
+type PinMedia { type: PinMediaType! images: PinImages video: VideoInfo }
+type PinImages { original: Image size150x150: Image size236x: Image size474x: Image size736x: Image }
+type Image { url: String! width: Int! height: Int! }
+type VideoInfo { duration: Float coverImageUrl: String }
+
+type SearchResult { pins: [Pin!] boards: [Board!] users: [User!] relatedTerms: [String!] }
+
+type BoardConnection { edges: [BoardEdge!]! pageInfo: PageInfo! }
+type BoardEdge { cursor: String! node: Board! }
+type PinConnection { edges: [PinEdge!]! pageInfo: PageInfo! }
+type PinEdge { cursor: String! node: Pin! }
+type UserConnection { edges: [UserEdge!]! pageInfo: PageInfo! }
+type UserEdge { cursor: String! node: User! }
+type BoardSectionConnection { edges: [BoardSectionEdge!]! pageInfo: PageInfo! }
+type BoardSectionEdge { cursor: String! node: BoardSection! }
+type PageInfo { hasNextPage: Boolean! endCursor: String }
+
+input CreatePinInput { boardId: ID! title: String description: String link: String mediaUrl: String! altText: String sectionId: ID note: String }
+input CreateBoardInput { name: String! description: String privacy: BoardPrivacy }
+input UpdateBoardInput { name: String description: String privacy: BoardPrivacy }
+input CreateSectionInput { boardId: ID! title: String! }
+
+type PinPayload { pin: Pin }
+type BoardPayload { board: Board }
+type SectionPayload { section: BoardSection }
+type DeletePayload { success: Boolean! }
+
+type Query {
+  me: User!
+  user(username: String!): User
+  pin(id: ID!): Pin
+  board(id: ID!): Board
+  search(query: String!, type: String, first: Int, after: String): SearchResult!
+  homeFeed(first: Int, after: String): PinConnection!
+  trendingPins(category: String, first: Int): [Pin!]!
+}
+
+type Mutation {
+  createPin(input: CreatePinInput!): PinPayload!
+  deletePin(id: ID!): DeletePayload!
+  savePin(pinId: ID!, boardId: ID!, sectionId: ID): PinPayload!
+  createBoard(input: CreateBoardInput!): BoardPayload!
+  updateBoard(id: ID!, input: UpdateBoardInput!): BoardPayload!
+  deleteBoard(id: ID!): DeletePayload!
+  createSection(input: CreateSectionInput!): SectionPayload!
+  followUser(userId: ID!): DeletePayload!
+  unfollowUser(userId: ID!): DeletePayload!
+  followBoard(boardId: ID!): DeletePayload!
+  unfollowBoard(boardId: ID!): DeletePayload!
+}

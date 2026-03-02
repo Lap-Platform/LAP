@@ -1,0 +1,139 @@
+{
+  "info": {
+    "name": "Secure Payments API",
+    "_postman_id": "auth-001",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{"key": "token", "value": "{{accessToken}}"}]
+  },
+  "variable": [
+    {"key": "baseUrl", "value": "https://api.securepay.io/v2"},
+    {"key": "accessToken", "value": ""}
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "auth": {"type": "basic", "basic": [{"key": "username", "value": "client_id"}, {"key": "password", "value": "client_secret"}]},
+            "url": {"raw": "{{baseUrl}}/auth/token", "host": ["{{baseUrl}}"], "path": ["auth", "token"]},
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {"key": "grant_type", "value": "client_credentials"},
+                {"key": "scope", "value": "payments:read payments:write"}
+              ]
+            }
+          },
+          "response": [
+            {"name": "Token", "code": 200, "body": "{\"access_token\": \"eyJ...\", \"token_type\": \"bearer\", \"expires_in\": 3600}"},
+            {"name": "Unauthorized", "code": 401, "body": "{\"error\": \"invalid_client\"}"}
+          ]
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "auth": {"type": "noauth"},
+            "url": {"raw": "{{baseUrl}}/auth/refresh", "host": ["{{baseUrl}}"], "path": ["auth", "refresh"]},
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {"key": "grant_type", "value": "refresh_token"},
+                {"key": "refresh_token", "value": "{{refreshToken}}"}
+              ]
+            }
+          },
+          "response": [
+            {"name": "Refreshed", "code": 200, "body": "{\"access_token\": \"eyJ...\", \"expires_in\": 3600}"}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "Create Payment",
+          "request": {
+            "method": "POST",
+            "url": {"raw": "{{baseUrl}}/payments", "host": ["{{baseUrl}}"], "path": ["payments"]},
+            "header": [
+              {"key": "Idempotency-Key", "value": "{{$guid}}", "description": "Unique request ID"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"amount\": 5000, \"currency\": \"usd\", \"source\": \"tok_visa\", \"description\": \"Order #1234\"}"
+            }
+          },
+          "response": [
+            {"name": "Created", "code": 201, "body": "{\"id\": \"pay_abc123\", \"amount\": 5000, \"currency\": \"usd\", \"status\": \"succeeded\"}"},
+            {"name": "Card Declined", "code": 402, "body": "{\"error\": {\"type\": \"card_error\", \"message\": \"Card declined\"}}"}
+          ]
+        },
+        {
+          "name": "Get Payment",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/payments/:paymentId",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments", ":paymentId"],
+              "variable": [{"key": "paymentId", "value": "pay_abc123"}]
+            }
+          },
+          "response": [
+            {"name": "Success", "code": 200, "body": "{\"id\": \"pay_abc123\", \"amount\": 5000, \"status\": \"succeeded\"}"}
+          ]
+        },
+        {
+          "name": "Refund Payment",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/payments/:paymentId/refund",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments", ":paymentId", "refund"],
+              "variable": [{"key": "paymentId", "value": "pay_abc123"}]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"amount\": 2500, \"reason\": \"customer_request\"}"
+            }
+          },
+          "response": [
+            {"name": "Refunded", "code": 200, "body": "{\"id\": \"ref_xyz\", \"amount\": 2500, \"status\": \"refunded\"}"}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "API Keys",
+      "item": [
+        {
+          "name": "List API Keys",
+          "request": {
+            "method": "GET",
+            "auth": {
+              "type": "apikey",
+              "apikey": [
+                {"key": "key", "value": "X-Admin-Key"},
+                {"key": "in", "value": "header"},
+                {"key": "value", "value": "{{adminKey}}"}
+              ]
+            },
+            "url": {"raw": "{{baseUrl}}/api-keys", "host": ["{{baseUrl}}"], "path": ["api-keys"]}
+          },
+          "response": [
+            {"name": "Keys", "code": 200, "body": "{\"keys\": [{\"id\": \"key_1\", \"name\": \"Production\", \"created\": \"2024-01-01\"}]}"}
+          ]
+        }
+      ]
+    }
+  ]
+}

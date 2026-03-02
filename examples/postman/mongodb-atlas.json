@@ -1,0 +1,182 @@
+{
+  "info": {
+    "name": "MongoDB Atlas API",
+    "_postman_id": "atlas-001",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "digest"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://cloud.mongodb.com/api/atlas/v2"
+    }
+  ],
+  "item": [
+    {
+      "name": "List Clusters",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/groups/:groupId/clusters",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "groups",
+            ":groupId",
+            "clusters"
+          ],
+          "variable": [
+            {
+              "key": "groupId",
+              "value": "grp1"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"results\": [{\"name\": \"prod-cluster\", \"stateName\": \"IDLE\", \"mongoDBVersion\": \"7.0\"}]}"
+        }
+      ]
+    },
+    {
+      "name": "Create Cluster",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/groups/:groupId/clusters",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "groups",
+            ":groupId",
+            "clusters"
+          ],
+          "variable": [
+            {
+              "key": "groupId",
+              "value": "grp1"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"name\": \"new-cluster\", \"clusterType\": \"REPLICASET\", \"providerSettings\": {\"providerName\": \"AWS\", \"instanceSizeName\": \"M10\", \"regionName\": \"US_EAST_1\"}}"
+        }
+      },
+      "response": [
+        {
+          "name": "Created",
+          "code": 201,
+          "body": "{\"name\": \"new-cluster\", \"stateName\": \"CREATING\"}"
+        }
+      ]
+    },
+    {
+      "name": "Get Cluster",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/groups/:groupId/clusters/:clusterName",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "groups",
+            ":groupId",
+            "clusters",
+            ":clusterName"
+          ],
+          "variable": [
+            {
+              "key": "groupId",
+              "value": "grp1"
+            },
+            {
+              "key": "clusterName",
+              "value": "prod-cluster"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"name\": \"prod-cluster\", \"connectionStrings\": {\"standard\": \"mongodb+srv://...\"}}"
+        }
+      ]
+    },
+    {
+      "name": "Delete Cluster",
+      "request": {
+        "method": "DELETE",
+        "url": {
+          "raw": "{{baseUrl}}/groups/:groupId/clusters/:clusterName",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "groups",
+            ":groupId",
+            "clusters",
+            ":clusterName"
+          ],
+          "variable": [
+            {
+              "key": "groupId",
+              "value": "grp1"
+            },
+            {
+              "key": "clusterName",
+              "value": "old-cluster"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "Accepted",
+          "code": 202,
+          "body": "{}"
+        }
+      ]
+    },
+    {
+      "name": "List Database Users",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/groups/:groupId/databaseUsers",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "groups",
+            ":groupId",
+            "databaseUsers"
+          ],
+          "variable": [
+            {
+              "key": "groupId",
+              "value": "grp1"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "code": 200,
+          "body": "{\"results\": [{\"username\": \"admin\", \"databaseName\": \"admin\", \"roles\": [{\"roleName\": \"readWriteAnyDatabase\"}]}]}"
+        }
+      ]
+    }
+  ]
+}

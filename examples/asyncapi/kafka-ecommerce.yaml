@@ -1,0 +1,88 @@
+asyncapi: 2.6.0
+info:
+  title: E-commerce Order Pipeline
+  version: 1.0.0
+  description: Kafka-based e-commerce order processing
+
+servers:
+  production:
+    url: kafka-broker:9092
+    protocol: kafka
+
+channels:
+  orders.created:
+    publish:
+      summary: New order created
+      message:
+        name: OrderCreated
+        payload:
+          type: object
+          required: [orderId, customerId, items, totalAmount]
+          properties:
+            orderId: {type: string}
+            customerId: {type: string}
+            items:
+              type: array
+              items:
+                type: object
+                properties:
+                  productId: {type: string}
+                  quantity: {type: integer}
+                  price: {type: number}
+            totalAmount: {type: number}
+            currency: {type: string}
+            shippingAddress:
+              type: object
+              properties:
+                street: {type: string}
+                city: {type: string}
+                country: {type: string}
+                zipCode: {type: string}
+    bindings:
+      kafka:
+        groupId: order-processors
+
+  orders.payment:
+    subscribe:
+      summary: Payment processed for order
+      message:
+        name: OrderPayment
+        payload:
+          type: object
+          required: [orderId, paymentId, status]
+          properties:
+            orderId: {type: string}
+            paymentId: {type: string}
+            status: {type: string, enum: [authorized, captured, failed, refunded]}
+            amount: {type: number}
+            gateway: {type: string}
+
+  orders.fulfillment:
+    subscribe:
+      summary: Order fulfillment update
+      message:
+        name: OrderFulfillment
+        payload:
+          type: object
+          required: [orderId, status]
+          properties:
+            orderId: {type: string}
+            status: {type: string, enum: [picking, packed, shipped, delivered]}
+            trackingNumber: {type: string}
+            carrier: {type: string}
+            estimatedDelivery: {type: string, format: date-time}
+
+  inventory.updated:
+    publish:
+      summary: Inventory level changed
+      message:
+        name: InventoryUpdate
+        payload:
+          type: object
+          required: [productId, warehouseId, quantity]
+          properties:
+            productId: {type: string}
+            warehouseId: {type: string}
+            quantity: {type: integer}
+            reservedQuantity: {type: integer}
+            reason: {type: string, enum: [sale, restock, adjustment, return]}
