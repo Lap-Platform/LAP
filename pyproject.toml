@@ -3,8 +3,8 @@ requires = ["setuptools>=68.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "lap-platform"
-version = "0.2.0"
+name = "lapsh"
+version = "0.3.0"
 description = "Lean API Platform -- Token-efficient API specs for AI agents"
 readme = "README.md"
 license = "Apache-2.0"
@@ -30,14 +30,14 @@ dependencies = ["pyyaml>=6.0", "tiktoken>=0.5.0"]
 dev = ["pytest", "pytest-timeout", "rich", "graphql-core", "tiktoken", "build", "twine"]
 
 [project.scripts]
-lap = "lap.cli.main:main"
+lapsh = "lap.cli.main:main"
 
 [project.urls]
-Homepage = "https://github.com/Lean-Agent-Protocol/lap"
-Documentation = "https://github.com/Lean-Agent-Protocol/lap#readme"
-Repository = "https://github.com/Lean-Agent-Protocol/lap"
-Issues = "https://github.com/Lean-Agent-Protocol/lap/issues"
-Changelog = "https://github.com/Lean-Agent-Protocol/lap/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/Lap-Platform/lap"
+Documentation = "https://github.com/Lap-Platform/lap#readme"
+Repository = "https://github.com/Lap-Platform/lap"
+Issues = "https://github.com/Lap-Platform/lap/issues"
+Changelog = "https://github.com/Lap-Platform/lap/blob/main/CHANGELOG.md"
 
 [tool.setuptools.packages.find]
 include = ["lap*"]

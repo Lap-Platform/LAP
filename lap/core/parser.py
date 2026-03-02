@@ -136,7 +136,11 @@ def _looks_like_field_start(text: str) -> bool:
 def _parse_field(text: str) -> ResponseField:
     """Parse a response field like 'name: str?' or 'billing: map{x: str, y: int}'."""
     text = text.strip()
+    # Try strict field name first (no spaces/slashes), then fall back to
+    # permissive match for API property names like "Publishing/Release Date"
     m = re.match(r'^([$a-zA-Z_\d][$\w.:-]*|\.\.\.):\s*(.+)$', text, re.DOTALL)
+    if not m:
+        m = re.match(r'^(.+?):\s+((?:str|int|num|bool|map|any|\[).*)$', text, re.DOTALL)
     if not m:
         warnings.warn(f"Malformed field '{text[:40]}', treating as type 'any'")
         return ResponseField(name=text, type='any')
@@ -152,7 +156,7 @@ def _parse_field(text: str) -> ResponseField:
         inner = type_part[brace + 1:]
         if inner.endswith('}'):
             inner = inner[:-1]
-        child_parts = _split_top_level(inner)
+        child_parts = _split_top_level_simple(inner)
         children = [_parse_field(c) for c in child_parts if c]
         type_part = base_type
 
@@ -296,7 +300,7 @@ def _split_error_entries(content: str) -> list[str]:
             current.append(ch)
         elif ch == ',' and depth == 0:
             rest = content[i + 1:].lstrip()
-            if rest and (rest[0].isdigit() or rest.startswith('default')):
+            if rest and (re.match(r'\d{3}[:},]', rest) or re.match(r'\d{3}$', rest) or rest.startswith('default')):
                 parts.append(''.join(current).strip())
                 current = []
                 i += 1
@@ -415,7 +419,8 @@ def parse_lap(text: str) -> LAPSpec:
                 # End group marker, skip
                 continue
             elif stripped.startswith('@example_request'):
-                # Request example, skip (informational)
+                if current_endpoint:
+                    current_endpoint.example_request = stripped[len('@example_request'):].strip()
                 continue
             elif stripped.startswith('@auth ') and current_endpoint is None:
                 spec.auth_scheme = stripped[6:].strip()

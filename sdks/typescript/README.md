@@ -1,17 +1,24 @@
-# @lap-platform/sdk -- TypeScript SDK for LAP
+# @lap-platform/lapsh -- TypeScript SDK for LAP
 
 Parse and work with LAP (Lean API Platform) API specifications in TypeScript/JavaScript.
 
 ## Install
 
 ```bash
-npm install @lap-platform/sdk
+# Use directly (no install)
+npx @lap-platform/lapsh compile api.yaml -o api.lap
+
+# Or install globally
+npm install -g @lap-platform/lapsh
+
+# Or add to a project
+npm install @lap-platform/lapsh
 ```
 
 ## Quick Start
 
 ```typescript
-import { LAPClient, toContext } from '@lap-platform/sdk';
+import { LAPClient, toContext } from '@lap-platform/lapsh';
 
 const client = new LAPClient();
 const spec = client.loadFile('./stripe-charges.lap');
@@ -36,7 +43,7 @@ const ctx = toContext(spec, { lean: true });
 
 ### `parse(text): LAPSpec`
 
-Low-level parser. Returns a `LAPSpec` (also available as `DocLeanSpec` for backward compatibility) with:
+Low-level parser. Returns a `LAPSpec` with:
 
 - `apiName`, `baseUrl`, `apiVersion`, `auth`
 - `endpoints: Endpoint[]`

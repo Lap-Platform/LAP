@@ -1,8 +1,8 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="lap-sdk",
-    version="0.1.0",
+    name="lapsh",
+    version="0.3.0",
     description="Lean API Platform SDK -- compressed API docs for LLM agents",
     packages=find_packages(),
     python_requires=">=3.10",

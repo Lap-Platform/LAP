@@ -5,7 +5,7 @@ Thanks for your interest in contributing! Here's how to get started.
 ## Setup
 
 ```bash
-git clone https://github.com/Lean-Agent-Protocol/lap.git
+git clone https://github.com/Lap-Platform/lap.git
 cd lap
 pip install -e ".[dev]"
 ```

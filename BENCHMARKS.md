@@ -6,7 +6,7 @@
 
 ## Compression Ratios — All 30 OpenAPI Specs
 
-![Compression ratios for all 30 OpenAPI specs](benchmarks/results/charts/compression_bar_chart.png)
+![Compression ratios for all 30 OpenAPI specs](assets/compression_bar_chart.png)
 
 | API | Raw Tokens | Lean Tokens | Compression |
 |-----|-----------|-------------|-------------|
@@ -47,13 +47,13 @@
 
 ## Token Savings — Top 10 Largest Specs
 
-![Token savings for top 10 specs](benchmarks/results/charts/token_savings_chart.png)
+![Token savings for top 10 specs](assets/token_savings_chart.png)
 
 ---
 
 ## Format Comparison
 
-![Median compression by format](benchmarks/results/charts/format_comparison.png)
+![Median compression by format](assets/format_comparison.png)
 
 | Format | Specs | Median Compression |
 |--------|------:|-------------------:|
@@ -69,7 +69,7 @@ LAP delivers the highest compression on verbose formats (OpenAPI, Postman) where
 
 ## Agent Implementation Test
 
-![Implementation comparison](benchmarks/results/charts/implementation_comparison.png)
+![Implementation comparison](assets/implementation_comparison.png)
 
 Real-world validation: five scenarios where an LLM agent generates working API integration code. The agent produces **identical output** regardless of whether it receives raw OpenAPI or LAP — it just costs fewer tokens.
 
@@ -87,7 +87,7 @@ Hetzner's 91% reduction is notable — the raw spec barely fits in most context 
 
 ## Version Comparison: v0.1 → v0.3
 
-![Version comparison](benchmarks/results/charts/version_comparison.png)
+![Version comparison](assets/version_comparison.png)
 
 v0.3 lean output is **~4.3% larger** than v0.1 on average across the same 30 OpenAPI specs. This is a deliberate trade-off:
 
@@ -107,7 +107,7 @@ The token increase is small and pays for itself in fewer agent errors and retrie
 
 ## Cost Projections
 
-![Cost projection table](benchmarks/results/charts/cost_projection.png)
+![Cost projection table](assets/cost_projection.png)
 
 With 10.3x average compression, a 100K-token API spec drops to ~10K tokens. At current model pricing, that translates to ~90% cost reduction per API call that includes spec context.
 

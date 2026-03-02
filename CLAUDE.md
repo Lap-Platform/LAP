@@ -14,12 +14,12 @@ pip install -e ".[dev]"
 python -m pytest tests/ -q
 
 # CLI entry point
-lap compile examples/verbose/openapi/petstore.yaml -o petstore.lap
+lapsh compile examples/verbose/openapi/petstore.yaml -o petstore.lap
 ```
 
 ## Project Structure
 
-- `lap/` -- Top-level Python package (installed as `lap-platform`)
+- `lap/` -- Top-level Python package (installed as `lapsh`)
   - `lap/core/compilers/` -- Format-specific compilers (openapi, graphql, asyncapi, protobuf, postman, lap)
   - `lap/core/formats/` -- Data models (LAP v0.2, LAP v0.1)
   - `lap/core/parser.py` -- LAP text to Python objects (proves losslessness)
@@ -29,9 +29,10 @@ lap compile examples/verbose/openapi/petstore.yaml -o petstore.lap
   - `lap/cli/main.py` -- CLI with 15+ subcommands
 - `integrations/` -- LangChain, CrewAI, OpenAI, MCP bridges
 - `sdks/python/` -- Python SDK (thin wrapper around lap.core)
-- `sdks/typescript/` -- TypeScript/npm SDK (@lap-platform/sdk)
+- `sdks/typescript/` -- TypeScript/npm SDK (@lap-platform/lapsh)
 - `tests/` -- pytest suite (11 test files)
-- `benchmarks/` -- Compression validation
+- `benchmarks/` -- Skill token benchmarks
+- `assets/` -- Chart PNGs for docs
 - `examples/verbose/` -- 162 real-world API specs (36MB corpus), organized by format
 - `examples/lap/` -- Pre-compiled LAP output, organized by format
 

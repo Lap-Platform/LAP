@@ -5,10 +5,10 @@
 ### Python SDK
 
 ```bash
-pip install lap-sdk
+pip install lapsh
 
 # Or from source:
-git clone https://github.com/anthropics/lap.git
+git clone https://github.com/Lap-Platform/lap.git
 cd lap
 pip install -r requirements.txt
 ```
@@ -17,21 +17,21 @@ Dependencies: `pyyaml`, `tiktoken`, `rich`
 
 Optional extras:
 ```bash
-pip install lap-sdk[langchain]   # LangChain integration
-pip install lap-sdk[tokens]      # Token counting with tiktoken
+pip install lapsh[langchain]   # LangChain integration
+pip install lapsh[tokens]      # Token counting with tiktoken
 ```
 
 ### TypeScript SDK
 
 ```bash
-npm install @anthropic/lap-sdk
-```
+# Use directly (no install)
+npx @lap-platform/lapsh compile api.yaml -o api.lap
 
-Or from source:
-```bash
-cd sdk/typescript
-npm install
-npm run build
+# Or install globally
+npm install -g @lap-platform/lapsh
+
+# Or add to a project
+npm install @lap-platform/lapsh
 ```
 
 ### CLI Only
@@ -39,10 +39,10 @@ npm run build
 If you just need the compiler:
 
 ```bash
-git clone https://github.com/anthropics/lap.git
+git clone https://github.com/Lap-Platform/lap.git
 cd lap
 pip install pyyaml tiktoken rich
-python3 cli.py --help
+lapsh --help
 ```
 
 ---
@@ -52,7 +52,7 @@ python3 cli.py --help
 ### 1. Compile an OpenAPI spec
 
 ```bash
-python3 cli.py compile specs/stripe-charges.yaml -o stripe.lap
+lapsh compile specs/stripe-charges.yaml -o stripe.lap
 ```
 
 Output:
@@ -83,7 +83,7 @@ The compiled LAP file:
 ### 3. Try lean mode for maximum compression
 
 ```bash
-python3 cli.py compile specs/stripe-charges.yaml --lean
+lapsh compile specs/stripe-charges.yaml --lean
 ```
 
 Output (lean mode strips descriptions):
@@ -104,7 +104,7 @@ Output (lean mode strips descriptions):
 ### 4. Validate zero information loss
 
 ```bash
-python3 cli.py validate specs/stripe-charges.yaml
+lapsh validate specs/stripe-charges.yaml
 ```
 
 ```

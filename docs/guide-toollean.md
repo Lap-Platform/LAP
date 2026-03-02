@@ -139,18 +139,20 @@ tool = parse_single_tool(text)
 
 ## CLI Usage
 
+These commands are available via the standalone tool script (`lap/core/compilers/lap_tools_advanced.py`):
+
 ```bash
 # Compile from various sources
-python lap.py compile-mcp manifest.json -o tools.lap
-python lap.py compile-skill SKILL.md -o skill.lap
-python lap.py compile-json tool.json -o tool.lap
+python -m lap.core.compilers.lap_tools_advanced compile-mcp manifest.json -o tools.lap
+python -m lap.core.compilers.lap_tools_advanced compile-skill SKILL.md -o skill.lap
+python -m lap.core.compilers.lap_tools_advanced compile-json tool.json -o tool.lap
 
 # Parse and inspect
-python lap.py parse tools.lap
-python lap.py stats tools.lap
+python -m lap.core.compilers.lap_tools_advanced parse tools.lap
+python -m lap.core.compilers.lap_tools_advanced stats tools.lap
 
 # Maximum compression (strip descriptions)
-python lap.py compile-mcp manifest.json --lean
+python -m lap.core.compilers.lap_tools_advanced compile-mcp manifest.json --lean
 ```
 
 ## Multi-Tool Bundles
