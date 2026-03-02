@@ -31,38 +31,7 @@ If each agent call includes one API spec as context:
 | 1,000 | 1,654,167 | 440,000 | 1,214,167 | $6.07 |
 | 10,000 | 16,541,667 | 4,400,000 | 12,141,667 | $60.71 |
 
-## 2. A2A Communication: Natural Language vs A2A-Lean
-
-| # | NL Tokens | Compact Tokens | JSON Tokens | Compact Savings | Message Preview |
-|---|----------|---------------|------------|----------------|-----------------|
-| 1 | 22 | 23 | 30 | -4.5% | Please search for recent news articles about AI re... |
-| 2 | 18 | 19 | 30 | -5.6% | Create a new GitHub issue titled 'Bug fix' in repo... |
-| 3 | 11 | 13 | 26 | -18.2% | Delete the file 'temp.log' from /var/tmp |
-| 4 | 13 | 17 | 29 | -30.8% | Update the issue 'Bug fix' set status to 'closed' |
-| 5 | 14 | 22 | 33 | -57.1% | Get the latest 10 commits from github.com/openai/t... |
-| 6 | 6 | 9 | 21 | -50.0% | List all repositories in my-org |
-| 7 | 11 | 12 | 23 | -9.1% | Run the command 'pytest -v' on ci-server |
-| 8 | 11 | 10 | 22 | 9.1% | Send a message to #general saying 'Deployment comp... |
-| 9 | 17 | 19 | 26 | -11.8% | Search for Python tutorials about async programmin... |
-| 10 | 12 | 14 | 26 | -16.7% | Create a new branch called 'feature/auth' in my-pr... |
-| 11 | 6 | 9 | 21 | -50.0% | Fetch the status for production-api |
-| 12 | 13 | 18 | 29 | -38.5% | Delete the branch 'hotfix/old' from main-repo |
-| 13 | 13 | 18 | 30 | -38.5% | Update the config 'app.yaml' set replicas to '3' |
-| 14 | 8 | 12 | 23 | -50.0% | Get the logs for web-server-01 |
-| 15 | 7 | 11 | 22 | -57.1% | List all issues in bug-tracker |
-| 16 | 13 | 15 | 26 | -15.4% | Execute the command 'docker build -t app .' on bui... |
-| 17 | 12 | 15 | 27 | -25.0% | Notify @ops-team with 'Disk usage above 90%' |
-| 18 | 9 | 10 | 21 | -11.1% | Search for 5 open source alternatives to Slack |
-| 19 | 13 | 16 | 28 | -23.1% | Create a new webhook called 'deploy-notify' in my-... |
-| 20 | 6 | 9 | 21 | -50.0% | Show all users in admin-panel |
-| 21 | 17 | 19 | 26 | -11.8% | Find recent research papers about quantum computin... |
-| 22 | 13 | 14 | 26 | -7.7% | Change the title of 'Old Name' to 'New Name' |
-| 23 | 9 | 11 | 22 | -22.2% | Run the command 'npm test' on staging |
-| 24 | 7 | 11 | 22 | -57.1% | Get the metrics for api-gateway |
-
-**Average:** NL=11.7 tokens → Compact=14.4 tokens (-23.1% reduction)
-
-## 3. Real Agent Session Token Usage
+## 2. Real Agent Session Token Usage
 
 _Parsed 50 sessions from OpenClaw JSONL transcripts_
 
@@ -93,7 +62,7 @@ _Parsed 50 sessions from OpenClaw JSONL transcripts_
 | 9ca188f9-9bc… | claude-opus-4-6 | 3 | 5 | 434 | 52,051 | 58,501 | $0.0745 |
 | 391b42b4-8aa… | claude-opus-4-6 | 3 | 5 | 425 | 52,045 | 58,491 | $0.0743 |
 
-## 4. LAP Impact Projection
+## 3. LAP Impact Projection
 
 Assuming a typical session includes 1 API spec as context:
 
@@ -108,6 +77,5 @@ Assuming a typical session includes 1 API spec as context:
 - **Spec files:** Real OpenAPI YAML specs from `/data/workspace/lap-poc/specs/`
 - **LAP output:** Real LAP-processed specs from `/data/workspace/lap-poc/output/`
 - **Session data:** Real OpenClaw JSONL session transcripts from `/data/agents/main/sessions/`
-- **A2A messages:** Example messages from `src/a2a_lean.py` compiled to A2A-Lean format
 - **Cost estimate:** $0.005/1K input tokens (approximate Claude/GPT-4 blended rate)
 - **No synthetic or estimated data.** All numbers derived from actual files.
