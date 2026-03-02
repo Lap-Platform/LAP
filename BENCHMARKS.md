@@ -47,7 +47,7 @@
 
 ## Token Savings — Top 10 Largest Specs
 
-![Token savings for top 10 specs](assets/token_savings_chart.png)
+![Token savings for top 10 specs](assets/benchmark_savings.png)
 
 ---
 
@@ -69,7 +69,7 @@ LAP delivers the highest compression on verbose formats (OpenAPI, Postman) where
 
 ## Agent Implementation Test
 
-![Implementation comparison](assets/implementation_comparison.png)
+![Implementation comparison](assets/benchmark_scores.png)
 
 Real-world validation: five scenarios where an LLM agent generates working API integration code. The agent produces **identical output** regardless of whether it receives raw OpenAPI or LAP — it just costs fewer tokens.
 
@@ -85,29 +85,9 @@ Hetzner's 91% reduction is notable — the raw spec barely fits in most context 
 
 ---
 
-## Version Comparison: v0.1 → v0.3
-
-![Version comparison](assets/version_comparison.png)
-
-v0.3 lean output is **~4.3% larger** than v0.1 on average across the same 30 OpenAPI specs. This is a deliberate trade-off:
-
-- **v0.2** added completeness signals (required fields, enum constraints) that agents need for reliable code generation
-- **v0.3** added inline schema resolution, eliminating `$ref` lookups that caused agent hallucinations
-
-The token increase is small and pays for itself in fewer agent errors and retries.
-
-| Change | Details |
-|--------|---------|
-| Overall | +4.3% lean tokens (299K → 312K across 30 specs) |
-| Improved | github-core −3.1%, twilio-core −1.3% |
-| Typical | +5–10% for structural metadata |
-| Outliers | slack +32.8%, sendgrid +28.2%, spotify +26.3% (small specs where metadata is proportionally larger) |
-
----
-
 ## Cost Projections
 
-![Cost projection table](assets/cost_projection.png)
+![Cost projection table](assets/cost_comparison.png)
 
 With 10.3x average compression, a 100K-token API spec drops to ~10K tokens. At current model pricing, that translates to ~90% cost reduction per API call that includes spec context.
 
