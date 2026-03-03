@@ -15,35 +15,7 @@ import yaml
 from lap.core.formats.lap import (
     LAPSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema
 )
-
-# Parameter names that strongly suggest authentication
-AUTH_PARAM_NAMES = frozenset({
-    "api_key", "apikey", "api-key",
-    "token", "access_token", "x-api-key",
-    "authorization", "auth_token", "secret",
-    "api_secret", "app_key", "appkey", "client_secret",
-    "subscription-key", "ocp-apim-subscription-key",
-    "x-auth-token", "api_token",
-})
-
-# Description keywords that suggest an auth parameter
-AUTH_DESC_KEYWORDS = ("api key", "authentication", "auth token", "access token", "your key", "your token")
-
-
-def resolve_ref(spec: dict, ref: str, _visited: set = None) -> dict:
-    """Resolve a $ref pointer in an AsyncAPI spec with cycle detection."""
-    if _visited is None:
-        _visited = set()
-    if ref in _visited:
-        raise ValueError(f"Circular $ref detected: {ref}")
-    _visited.add(ref)
-    parts = ref.lstrip("#/").split("/")
-    node = spec
-    for part in parts:
-        node = node.get(part, {})
-    if isinstance(node, dict) and "$ref" in node:
-        return resolve_ref(spec, node["$ref"], _visited)
-    return node
+from lap.core.utils import AUTH_PARAM_NAMES, AUTH_DESC_KEYWORDS, resolve_ref
 
 
 def _maybe_resolve(spec: dict, obj: dict) -> dict:
@@ -509,23 +481,3 @@ def compile_asyncapi(spec_path: str) -> LAPSpec:
         return _compile_v2(spec)
 
 
-def main():
-    import argparse
-    parser = argparse.ArgumentParser(description="Compile AsyncAPI spec to LAP format")
-    parser.add_argument("spec", help="Path to AsyncAPI spec (YAML/JSON)")
-    parser.add_argument("-o", "--output", help="Output file (default: stdout)")
-    parser.add_argument("--lean", action="store_true", help="Strip descriptions for max compression")
-    args = parser.parse_args()
-
-    lap = compile_asyncapi(args.spec)
-    result = lap.to_lap(lean=args.lean)
-
-    if args.output:
-        Path(args.output).write_text(result)
-        print(f"✅ Compiled to {args.output}")
-    else:
-        print(result)
-
-
-if __name__ == "__main__":
-    main()

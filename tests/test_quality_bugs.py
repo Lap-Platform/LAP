@@ -232,5 +232,176 @@ class TestGraphqlDependency:
         assert callable(compile_graphql)
 
 
+# =====================================================================
+# Bug #8: HTTP auth scheme "basic" should produce "Basic", not "Bearer basic"
+# =====================================================================
+
+class TestHttpAuthSchemeFormatting:
+    """Bug #8: HTTP auth schemes should map correctly."""
+
+    def test_basic_auth_produces_basic(self):
+        from lap.core.compilers.openapi import extract_auth
+        spec = {
+            "components": {
+                "securitySchemes": {
+                    "basicAuth": {"type": "http", "scheme": "basic"},
+                }
+            }
+        }
+        result = extract_auth(spec)
+        assert result == "Basic"
+        assert "Bearer" not in result
+
+    def test_bearer_auth_produces_bearer(self):
+        from lap.core.compilers.openapi import extract_auth
+        spec = {
+            "components": {
+                "securitySchemes": {
+                    "bearerAuth": {"type": "http", "scheme": "bearer"},
+                }
+            }
+        }
+        result = extract_auth(spec)
+        assert result == "Bearer"
+
+    def test_mixed_basic_and_bearer(self):
+        from lap.core.compilers.openapi import extract_auth
+        spec = {
+            "components": {
+                "securitySchemes": {
+                    "basicAuth": {"type": "http", "scheme": "basic"},
+                    "bearerAuth": {"type": "http", "scheme": "bearer"},
+                }
+            }
+        }
+        result = extract_auth(spec)
+        assert "Basic" in result
+        assert "Bearer" in result
+        assert "Basic | Bearer" == result
+
+    def test_unknown_http_scheme_capitalized(self):
+        from lap.core.compilers.openapi import extract_auth
+        spec = {
+            "components": {
+                "securitySchemes": {
+                    "digestAuth": {"type": "http", "scheme": "digest"},
+                }
+            }
+        }
+        result = extract_auth(spec)
+        assert result == "Digest"
+
+
+# =====================================================================
+# Bug #9: HTML tags in descriptions should be stripped
+# =====================================================================
+
+class TestHtmlStripping:
+    """Bug #9: HTML tags should be stripped from descriptions."""
+
+    def test_strip_html_helper(self):
+        from lap.core.compilers.openapi import _strip_html
+        assert _strip_html("<p>Hello</p>") == "Hello"
+        assert _strip_html('Click <a href="url">here</a>') == "Click here"
+        assert _strip_html("<b>bold</b> and <i>italic</i>") == "bold and italic"
+        assert _strip_html("no tags here") == "no tags here"
+
+    def test_param_description_no_html(self):
+        from lap.core.compilers.openapi import extract_params
+        params = [
+            {
+                "name": "customer",
+                "in": "query",
+                "schema": {"type": "string"},
+                "description": "<p>The customer's <a href='/docs'>ID</a></p>",
+            }
+        ]
+        required, optional = extract_params(params, {})
+        param = (required + optional)[0]
+        assert "<" not in param.description
+        assert ">" not in param.description
+        assert "customer" in param.description.lower() or "ID" in param.description
+
+    def test_response_description_no_html(self):
+        from lap.core.compilers.openapi import extract_response_schemas
+        responses = {
+            "200": {
+                "description": "<p>Successful response with <b>data</b></p>",
+            }
+        }
+        resp_schemas, _ = extract_response_schemas(responses, {})
+        assert resp_schemas
+        assert "<" not in resp_schemas[0].description
+
+    def test_endpoint_summary_no_html(self):
+        """Endpoint summary should have HTML stripped."""
+        import tempfile, json, os
+        spec_data = {
+            "openapi": "3.0.0",
+            "info": {"title": "Test", "version": "1.0"},
+            "paths": {
+                "/items": {
+                    "get": {
+                        "summary": "<p>List all items</p>",
+                        "responses": {"200": {"description": "OK"}},
+                    }
+                }
+            },
+        }
+        fd, tmp_path = tempfile.mkstemp(suffix=".json")
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                json.dump(spec_data, f)
+            spec = compile_openapi(tmp_path)
+            assert "<" not in spec.endpoints[0].summary
+            assert "List all items" in spec.endpoints[0].summary
+        finally:
+            os.unlink(tmp_path)
+
+
+# =====================================================================
+# Bug #10: Env var should be STRIPE_API_KEY, not STRIPE_API_API_KEY
+# =====================================================================
+
+class TestEnvVarDoubleApi:
+    """Bug #10: Env var should strip trailing _API before appending _API_KEY."""
+
+    def test_stripe_api_env_var(self):
+        spec = LAPSpec(
+            api_name="Stripe API",
+            base_url="https://api.stripe.com",
+            auth_scheme="Bearer",
+            endpoints=[Endpoint(method="get", path="/charges", summary="List charges")],
+        )
+        result = generate_skill(spec, SkillOptions(clawhub=True))
+        md = result.file_map["SKILL.md"]
+        assert "STRIPE_API_KEY" in md
+        assert "STRIPE_API_API_KEY" not in md
+
+    def test_plain_name_no_trailing_api(self):
+        """Name without trailing API should work normally."""
+        spec = LAPSpec(
+            api_name="Acme",
+            base_url="https://api.acme.com",
+            auth_scheme="Bearer",
+            endpoints=[Endpoint(method="get", path="/items", summary="List items")],
+        )
+        result = generate_skill(spec, SkillOptions(clawhub=True))
+        md = result.file_map["SKILL.md"]
+        assert "ACME_API_KEY" in md
+
+    def test_bare_api_name(self):
+        """api_name='API' should produce API_API_KEY (slug is 'api')."""
+        spec = LAPSpec(
+            api_name="API",
+            base_url="https://api.example.com",
+            auth_scheme="Bearer",
+            endpoints=[Endpoint(method="get", path="/status", summary="Status")],
+        )
+        result = generate_skill(spec, SkillOptions(clawhub=True))
+        md = result.file_map["SKILL.md"]
+        assert "API_API_KEY" in md
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

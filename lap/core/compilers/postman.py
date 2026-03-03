@@ -15,19 +15,7 @@ from typing import Optional
 from lap.core.formats.lap import (
     LAPSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema
 )
-
-# Parameter names that strongly suggest authentication (no bare "key" - too many false positives)
-AUTH_PARAM_NAMES = frozenset({
-    "api_key", "apikey", "api-key",
-    "token", "access_token", "x-api-key",
-    "authorization", "auth_token", "secret",
-    "api_secret", "app_key", "appkey", "client_secret",
-    "subscription-key", "ocp-apim-subscription-key",
-    "x-auth-token", "api_token",
-})
-
-# Description keywords that suggest an auth parameter
-AUTH_DESC_KEYWORDS = ("api key", "authentication", "auth token", "access token", "your key", "your token")
+from lap.core.utils import AUTH_PARAM_NAMES, AUTH_DESC_KEYWORDS
 
 
 def _resolve_variables(text: str, variables: dict) -> str:
@@ -476,23 +464,3 @@ def compile_postman(spec_path: str) -> LAPSpec:
     return lap
 
 
-def main():
-    import argparse
-    parser = argparse.ArgumentParser(description="Compile Postman Collection to LAP format")
-    parser.add_argument("spec", help="Path to Postman Collection JSON")
-    parser.add_argument("-o", "--output", help="Output file (default: stdout)")
-    parser.add_argument("--lean", action="store_true", help="Maximum compression")
-    args = parser.parse_args()
-
-    lap = compile_postman(args.spec)
-    result = lap.to_lap(lean=args.lean)
-
-    if args.output:
-        Path(args.output).write_text(result)
-        print(f"✅ Compiled to {args.output}")
-    else:
-        print(result)
-
-
-if __name__ == "__main__":
-    main()

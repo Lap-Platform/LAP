@@ -108,9 +108,9 @@ def enhance_skill(spec, skill: SkillOutput, api_key: str = None) -> SkillOutput:
 
     # Guard against oversized prompts
     prompt_tokens = count_tokens(spec_text)
-    if prompt_tokens > 80_000:
+    if prompt_tokens > 150_000:
         print(
-            f"Warning: spec is {prompt_tokens:,} tokens, exceeding 80k limit. "
+            f"Warning: spec is {prompt_tokens:,} tokens, exceeding 150k limit. "
             "Returning Layer 1 skill unchanged.",
             file=sys.stderr,
         )

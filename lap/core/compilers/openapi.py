@@ -6,55 +6,21 @@ Usage:
     python compiler.py <openapi-spec.yaml> [-o output.lap]
 """
 
-import argparse
 import datetime
 import json
-import re as _re
-import sys
+import re
 from pathlib import Path
 
 import yaml
 
 from lap.core.formats.lap import LAPSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema
+from lap.core.utils import AUTH_PARAM_NAMES, AUTH_DESC_KEYWORDS, resolve_ref
 from lap.core.yaml_compat import _SafeLoaderCompat
 
-# Parameter names that strongly suggest authentication
-AUTH_PARAM_NAMES = frozenset({
-    "api_key", "apikey", "api-key",
-    "token", "access_token", "x-api-key",
-    "authorization", "auth_token", "secret",
-    "api_secret", "app_key", "appkey", "client_secret",
-    "subscription-key", "ocp-apim-subscription-key",
-    "x-auth-token", "api_token",
-})
 
-# Description keywords that suggest an auth parameter
-AUTH_DESC_KEYWORDS = ("api key", "authentication", "auth token", "access token", "your key", "your token")
-
-
-def resolve_ref(spec: dict, ref: str, _visited: set = None) -> dict:
-    """Resolve a $ref pointer in an OpenAPI spec with cycle detection."""
-    if _visited is None:
-        _visited = set()
-    if ref in _visited:
-        raise ValueError(f"Circular $ref detected: {ref}")
-    _visited.add(ref)
-    parts = ref.lstrip("#/").split("/")
-    node = spec
-    for part in parts:
-        if isinstance(node, list):
-            try:
-                node = node[int(part)]
-            except (ValueError, IndexError):
-                return {}
-        elif isinstance(node, dict):
-            node = node.get(part, {})
-        else:
-            return {}
-    # If the resolved node itself contains a $ref, resolve it too
-    if isinstance(node, dict) and "$ref" in node:
-        return resolve_ref(spec, node["$ref"], _visited)
-    return node
+def _strip_html(text: str) -> str:
+    """Remove HTML tags from description text."""
+    return re.sub(r'<[^>]+>', '', text)
 
 
 def extract_type(schema: dict, spec: dict) -> str:
@@ -149,7 +115,7 @@ def extract_params(param_list: list, spec: dict) -> tuple[list, list]:
             name=p["name"],
             type=extract_type(schema, spec),
             required=p.get("required", False),
-            description=(p.get("description") or "").replace('\n', ' ').strip(),
+            description=_strip_html((p.get("description") or "").replace('\n', ' ')).strip(),
             enum=enum_vals,
             default=str(schema["default"]) if "default" in schema else None,
         )
@@ -195,7 +161,7 @@ def extract_request_body(body: dict, spec: dict) -> list:
             name=name,
             type=type_str,
             required=name in required_names,
-            description=(schema.get("description") or "").replace('\n', ' ').strip(),
+            description=_strip_html((schema.get("description") or "").replace('\n', ' ')).strip(),
             enum=enum_vals,
             default=str(schema["default"]) if "default" in schema else None,
         ))
@@ -246,7 +212,7 @@ def extract_response_schemas(responses: dict, spec: dict) -> tuple:
         if "$ref" in resp:
             resp = resolve_ref(spec, resp["$ref"])
 
-        desc = (resp.get("description") or "").replace('\n', ' ').strip()
+        desc = _strip_html((resp.get("description") or "").replace('\n', ' ')).strip()
 
         # Extract response body schema
         content = resp.get("content", {})
@@ -350,7 +316,13 @@ def extract_auth(spec: dict) -> str:
             continue
         t = scheme.get("type", "")
         if t == "http":
-            parts.append(f"Bearer {scheme.get('scheme', 'token')}")
+            http_scheme = scheme.get("scheme", "bearer")
+            if http_scheme == "basic":
+                parts.append("Basic")
+            elif http_scheme == "bearer":
+                parts.append("Bearer")
+            else:
+                parts.append(http_scheme.capitalize())
         elif t == "apiKey":
             parts.append(f"ApiKey {scheme.get('name', 'key')} in {scheme.get('in', 'header')}")
         elif t == "oauth2":
@@ -462,7 +434,7 @@ def compile_openapi(spec_path: str) -> LAPSpec:
                 endpoint = Endpoint(
                     method=method,
                     path=path_str,
-                    summary=(details.get("summary") or details.get("description") or "").strip().split('\n')[0].strip(),
+                    summary=_strip_html((details.get("summary") or details.get("description") or "").strip().split('\n')[0]).strip(),
                     required_params=req_params,
                     optional_params=opt_params,
                     request_body=body_params,
@@ -508,29 +480,3 @@ def compile_openapi(spec_path: str) -> LAPSpec:
             lap.common_fields = common_params
 
     return lap
-
-
-def main():
-    parser = argparse.ArgumentParser(description="Compile OpenAPI spec to LAP format")
-    parser.add_argument("spec", help="Path to OpenAPI spec (YAML/JSON)")
-    parser.add_argument("-o", "--output", help="Output file (default: stdout)")
-    parser.add_argument("--verbose", action="store_true", help="Also output verbose version for comparison")
-    parser.add_argument("--lean", action="store_true", help="Strip all description comments for maximum compression")
-    args = parser.parse_args()
-
-    lap = compile_openapi(args.spec)
-    result = lap.to_lap(lean=args.lean)
-
-    if args.output:
-        Path(args.output).write_text(result)
-        print(f"✅ Compiled to {args.output}")
-        if args.verbose:
-            verbose_path = args.output.replace(".lap", ".verbose.md")
-            Path(verbose_path).write_text(lap.to_original_text())
-            print(f"📝 Verbose version: {verbose_path}")
-    else:
-        print(result)
-
-
-if __name__ == "__main__":
-    main()

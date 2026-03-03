@@ -782,28 +782,3 @@ def compile_proto_dir(dir_path: str) -> list:
     return results
 
 
-def main():
-    import argparse
-    parser = argparse.ArgumentParser(description="Compile Protobuf/gRPC spec to LAP format")
-    parser.add_argument("spec", help="Path to .proto file or directory")
-    parser.add_argument("-o", "--output", help="Output file (default: stdout)")
-    parser.add_argument("--lean", action="store_true", help="Strip descriptions for max compression")
-    args = parser.parse_args()
-
-    p = Path(args.spec)
-    if p.is_dir():
-        specs = compile_proto_dir(args.spec)
-        result = "\n---\n\n".join(s.to_lap(lean=args.lean) for s in specs)
-    else:
-        spec = compile_proto(args.spec)
-        result = spec.to_lap(lean=args.lean)
-
-    if args.output:
-        Path(args.output).write_text(result)
-        print(f"✅ Compiled to {args.output}")
-    else:
-        print(result)
-
-
-if __name__ == "__main__":
-    main()

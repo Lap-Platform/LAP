@@ -9,7 +9,8 @@ import warnings
 from pathlib import Path
 from typing import Optional
 
-__all__ = ["count_tokens", "MODEL_COSTS", "read_file_safe", "get_tiktoken_encoding"]
+__all__ = ["count_tokens", "MODEL_COSTS", "read_file_safe", "get_tiktoken_encoding",
+           "AUTH_PARAM_NAMES", "AUTH_DESC_KEYWORDS", "resolve_ref"]
 
 # Cost per 1K input tokens (USD) — approximate as of early 2026
 MODEL_COSTS = {
@@ -44,7 +45,7 @@ def count_tokens(text: str, model: str = "gpt-4o") -> int:
     """Count tokens using tiktoken. Falls back to len(text)//4 if unavailable."""
     enc = get_tiktoken_encoding(model)
     if enc:
-        return len(enc.encode(text))
+        return len(enc.encode(text, disallowed_special=()))
     # Rough fallback
     return len(text) // 4
 
@@ -58,3 +59,42 @@ def read_file_safe(path: str, max_size: int = 50 * 1024 * 1024) -> Optional[str]
         warnings.warn(f"File too large ({p.stat().st_size} bytes, max {max_size}): {path}")
         return None
     return p.read_text(encoding='utf-8')
+
+
+# Parameter names that strongly suggest authentication
+AUTH_PARAM_NAMES = frozenset({
+    "api_key", "apikey", "api-key",
+    "token", "access_token", "x-api-key",
+    "authorization", "auth_token", "secret",
+    "api_secret", "app_key", "appkey", "client_secret",
+    "subscription-key", "ocp-apim-subscription-key",
+    "x-auth-token", "api_token",
+})
+
+# Description keywords that suggest an auth parameter
+AUTH_DESC_KEYWORDS = ("api key", "authentication", "auth token", "access token", "your key", "your token")
+
+
+def resolve_ref(spec: dict, ref: str, _visited: set = None) -> dict:
+    """Resolve a $ref pointer in a spec with cycle detection."""
+    if _visited is None:
+        _visited = set()
+    if ref in _visited:
+        raise ValueError(f"Circular $ref detected: {ref}")
+    _visited.add(ref)
+    parts = ref.lstrip("#/").split("/")
+    node = spec
+    for part in parts:
+        if isinstance(node, list):
+            try:
+                node = node[int(part)]
+            except (ValueError, IndexError):
+                return {}
+        elif isinstance(node, dict):
+            node = node.get(part, {})
+        else:
+            return {}
+    # If the resolved node itself contains a $ref, resolve it too
+    if isinstance(node, dict) and "$ref" in node:
+        return resolve_ref(spec, node["$ref"], _visited)
+    return node

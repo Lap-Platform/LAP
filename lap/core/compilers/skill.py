@@ -11,16 +11,11 @@ from dataclasses import dataclass
 from typing import Optional
 
 from lap.core.formats.lap import LAPSpec, Endpoint, _group_name
-from lap.core.utils import count_tokens
+from lap.core.utils import count_tokens, AUTH_PARAM_NAMES
 
 
 # Parameter names that strongly suggest authentication (safety net)
-_AUTH_PARAM_NAMES = frozenset({
-    "key", "api_key", "apikey", "api-key",
-    "token", "access_token", "x-api-key",
-    "authorization", "auth_token", "secret",
-    "api_secret", "app_key", "appkey", "client_secret",
-})
+_AUTH_PARAM_NAMES = AUTH_PARAM_NAMES | {"key"}
 
 SKILL_MD_TOKEN_BUDGET = 3000
 
@@ -155,7 +150,10 @@ def _generate_frontmatter(spec: LAPSpec, options: SkillOptions) -> str:
     ]
 
     if options.clawhub and spec.auth_scheme:
-        env_var = _slugify(spec.api_name).upper().replace("-", "_") + "_API_KEY"
+        env_slug = _slugify(spec.api_name).upper().replace("-", "_")
+        if env_slug.endswith("_API"):
+            env_slug = env_slug[:-4]
+        env_var = (env_slug or "API") + "_API_KEY"
         lines.append("metadata:")
         lines.append("  openclaw:")
         lines.append("    requires:")
