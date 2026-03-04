@@ -1,6 +1,12 @@
 <div align="center">
 
-# LAP — Lean API Platform
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme-logo-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="assets/light/readme-logo-light.png">
+  <img alt="LAP — Lean API Platform" src="assets/readme-logo-dark.png">
+</picture>
+
+# LAP -- Lean API Platform
 
 **Compile API specs into token-efficient contracts for LLM agents.**
 

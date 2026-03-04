@@ -5,6 +5,39 @@ All notable changes to LAP (Lean API Platform) will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-03-04
+
+### Added
+- **AWS SDK JSON compiler**: Compile AWS SDK service definitions (~300 AWS services)
+  - Auto-detection integrated into `detect_format()` and `compile()` pipeline
+  - Maps operations, shapes, auth, and metadata to LAP format
+- **Skill generation** (Layer 1 + Layer 2)
+  - `lapsh skill <spec>` -- generate a Claude Code skill from any API spec
+  - `lapsh skill-batch <dir>` -- batch generate skills from a directory
+  - `lapsh benchmark-skill` / `benchmark-skill-all` -- token usage benchmarks
+  - Layer 1: mechanical generation (no LLM), Layer 2: optional LLM enhancement
+  - 3000-token budget per skill, generates SKILL.md + embedded LAP spec
+- **TypeScript SDK expansion**: OpenAPI compiler, serializer, and skill compiler ported to TypeScript
+- **YAML compatibility module** (`yaml_compat.py`): handles bare `=` tags, restricts booleans to true/false, tolerates unknown tags
+- **Auth inference from descriptions**: last-resort auth detection by scanning `info.description` for auth keywords
+
+### Changed
+- Consolidated shared code to `utils.py` -- `AUTH_PARAM_NAMES`, `AUTH_DESC_KEYWORDS`, `resolve_ref()` extracted from duplicate implementations across compilers
+- Removed dead `main()` / `if __name__` blocks from compiler modules
+- `graphql-core` promoted from optional to required dependency
+- Response schema depth increased from 2 to 3 levels, inline depth from 1 to 2
+- Auth param set updated: removed false-positive-prone bare "key", added Azure subscription-key variants and `x-auth-token`
+- All asset images updated to 300 DPI
+
+### Fixed
+- Swagger 2.0 `securityDefinitions` not recognized; `host`/`basePath` extraction for base URL
+- HTTP auth scheme "basic" producing "Bearer basic" instead of "Basic"
+- HTML tags leaking into compiled descriptions (now stripped)
+- `tiktoken` errors on special tokens (`disallowed_special=()`)
+- "API API" doubling in skill descriptions when api_name ends with "API"
+- Hardened all compilers (OpenAPI, AsyncAPI, Postman, Skill) against malformed specs: type arrays, missing param names, cycle detection in $ref resolution
+- YAML 1.1 edge cases: bare `=` value tag, YES/NO/ON/OFF boolean false positives
+
 ## [0.3.0] - 2026-02-27
 
 ### Added
