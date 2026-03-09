@@ -74,7 +74,7 @@ def _resolve_ai(args, ai_attr="ai", layer_attr="layer"):
     - --ai flag: force AI enhancement
     - --no-ai flag: skip AI
     - --layer (deprecated): mapped to 1 or 2
-    - Default: auto-detect (AI if claude CLI on PATH, else skip)
+    - Default: no AI (Layer 1). Use --ai to opt in.
     """
     ai = getattr(args, ai_attr, None)
     if ai is True:
@@ -85,8 +85,7 @@ def _resolve_ai(args, ai_attr="ai", layer_attr="layer"):
     if layer is not None:
         warn("--layer is deprecated, use --ai or --no-ai")
         return layer
-    import shutil
-    return 2 if shutil.which("claude") else 1
+    return 1
 
 
 def _collect_spec_files(directory):

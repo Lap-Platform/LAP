@@ -65,6 +65,17 @@ API Spec (YAML/JSON/SDL/proto)
 - All compilers follow the same pattern: take spec input, return format-specific data model, call `.to_lap()`
 - All file reads use `encoding='utf-8'` (Windows cp1255 fix)
 
+## Releasing
+
+- **Command**: Use `/release <version>` (e.g. `/release 0.5.0`) to bump, publish, and monitor
+- **Version files** (must stay in sync): `lap/__init__.py`, `pyproject.toml`, `sdks/typescript/package.json`
+- **Publishing**: GitHub Actions workflows triggered by creating a GitHub Release
+  - `publish-pypi.yml` -- builds and uploads to PyPI via trusted publishing
+  - `publish-npm.yml` -- builds and publishes to npm with `NPM_TOKEN` secret
+- **PyPI package**: `lapsh` at https://pypi.org/project/lapsh/
+- **npm package**: `@lap-platform/lapsh` at https://www.npmjs.com/package/@lap-platform/lapsh
+- Never publish manually -- always go through GitHub Releases
+
 ## Rules
 
 - Run `python -m pytest tests/ -q` and confirm all tests pass before committing

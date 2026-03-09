@@ -14,20 +14,27 @@ from lap.core.compilers.skill import SkillOutput
 
 
 ENHANCE_PROMPT = """You are enhancing a Claude Code skill for an API. Given the LAP spec below,
-generate the following sections in markdown:
+generate ADDITIONAL content to supplement (not replace) the existing skill document.
 
-1. **Question Mapping** (10-15 entries): Natural language questions mapped to API endpoints.
-   Format each as: - "Question?" -> METHOD /path
-   Cover common use cases, edge cases, and multi-step workflows.
+Use ### (level 3) headings only -- never ## (level 2). The output will be appended to an existing
+document that already has ## sections.
 
-2. **Response Tips** (one line per endpoint category): How to interpret responses.
-   Focus on pagination, error patterns, and nested objects.
+Generate these sections:
 
-3. **Anomaly Flags**: What should an agent surface proactively?
-   (e.g., rate limits approaching, deprecated fields, unusual status codes)
+### Workflow Playbooks
+3-5 common multi-step workflows as numbered lists under descriptive ### headings.
+Focus on tasks that chain multiple endpoints together.
 
-4. **Playbook** (3-5 common workflows): Step-by-step guides for typical tasks.
-   Format as numbered lists under descriptive headings.
+### Response Interpretation
+One line per endpoint category: how to interpret responses.
+Focus on pagination patterns, error codes, nested objects, and status fields.
+
+### Edge Cases and Gotchas
+5-10 practical warnings: rate limits, deprecated fields, required-but-undocumented params,
+common mistakes, and order-of-operations requirements.
+
+IMPORTANT: Do NOT generate question-to-endpoint mappings -- the existing skill already has a
+comprehensive endpoint catalog. Do NOT repeat endpoint names or paths.
 
 Return ONLY the markdown content -- no preamble, no code fences.
 
@@ -125,11 +132,14 @@ def enhance_skill(spec, skill: SkillOutput, api_key: str = None) -> SkillOutput:
         # Fallback: anthropic SDK (deferred import inside _enhance_via_sdk)
         enhanced_content = _enhance_via_sdk(prompt, api_key)
 
-    # Replace mechanical sections in SKILL.md with LLM-enhanced ones
+    # Append LLM-enhanced content after existing SKILL.md (additive, not destructive)
     skill_md = skill.file_map["SKILL.md"]
 
-    # Replace Common Questions section
-    skill_md = _replace_section(skill_md, "Common Questions", enhanced_content)
+    # Strip any ## headings from LLM output (force ### only)
+    enhanced_content = _demote_headings(enhanced_content)
+
+    # Append under a new ## section
+    skill_md = skill_md.rstrip() + "\n\n## LLM-Enhanced Guidance\n\n" + enhanced_content.strip() + "\n"
 
     # Update file map
     new_file_map = dict(skill.file_map)
@@ -146,10 +156,13 @@ def enhance_skill(spec, skill: SkillOutput, api_key: str = None) -> SkillOutput:
     )
 
 
-def _replace_section(md: str, section_name: str, new_content: str) -> str:
-    """Replace everything from ## {section_name} to the next ## heading."""
+def _demote_headings(content: str) -> str:
+    """Ensure all headings in LLM output are ### or lower (never ##)."""
     import re
-    pattern = rf'(## {re.escape(section_name)}\n).*?(?=\n## |\Z)'
-    replacement = f"## Enhanced Skill Content\n{new_content}\n"
-    result = re.sub(pattern, replacement, md, flags=re.DOTALL)
-    return result
+    lines = content.split("\n")
+    result = []
+    for line in lines:
+        if re.match(r'^## [^#]', line):
+            line = "#" + line  # ## -> ###
+        result.append(line)
+    return "\n".join(result)

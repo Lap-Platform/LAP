@@ -24,8 +24,9 @@ env/
 # Confidential / internal
 private/
 
-# Claude Code local settings
-.claude/
+# Claude Code local settings (keep commands tracked)
+.claude/*
+!.claude/commands/
 
 # Generated output
 output/
