@@ -1,6 +1,6 @@
 {
   "name": "@lap-platform/lapsh",
-  "version": "0.4.2",
+  "version": "0.4.4",
   "description": "TypeScript SDK for LAP (Lean API Platform) -- Parse and work with LAP API specifications",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",

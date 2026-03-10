@@ -87,15 +87,23 @@ def api_request(method, path, body=None, token=None):
             err = json.loads(body_text)
         except (json.JSONDecodeError, ValueError):
             err = {"error": body_text or f"HTTP {e.code}"}
-        raise SystemExit(f"Error: {err.get('error', err.get('message', body_text))}")
+        msg = err.get("error", err.get("message", body_text))
+        if e.code == 401:
+            raise SystemExit(f"Authentication failed: {msg}\n  Run 'lapsh login' to re-authenticate.")
+        if e.code == 403:
+            raise SystemExit(f"Permission denied: {msg}")
+        raise SystemExit(f"Error: {msg}")
 
 
 # ── SSE stream ──────────────────────────────────────────────────────
 
-def poll_sse_stream(session_id):
+def poll_sse_stream(session_id, stream_key):
     """Connect to SSE stream, wait for auth completion. Returns (token, username)."""
-    url = f"{get_registry_url()}/auth/cli/stream/{session_id}"
-    req = urllib.request.Request(url, headers={"Accept": "text/event-stream"})
+    url = f"{get_registry_url()}/auth/cli/stream/{session_id}?key={stream_key}"
+    req = urllib.request.Request(url, headers={
+        "Accept": "text/event-stream",
+        "User-Agent": f"lapsh/{__version__}",
+    })
 
     try:
         resp = urllib.request.urlopen(req, timeout=130)

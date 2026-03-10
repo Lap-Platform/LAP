@@ -33,9 +33,9 @@ except ImportError:
 
 def info(msg):
     if HAS_RICH:
-        console.print(f"[bold green][OK][/] {msg}")
+        console.print(f"[bold green]{msg}[/]")
     else:
-        print(f"[OK] {msg}")
+        print(msg)
 
 def warn(msg):
     if HAS_RICH:
@@ -49,6 +49,17 @@ def error(msg):
     else:
         print(f"[ERR] {msg}")
     sys.exit(1)
+
+def _print_stat(label, tier, tokens, width, pct=None, style=None):
+    """Print a token stat row. label is the left section header (first row only)."""
+    pct_part = f"   -{pct}%" if pct is not None else ""
+    num_part = f"{tokens:>{width},}"
+    if HAS_RICH and style:
+        console.print(f"  {label:<9}[{style}]{tier:<11}{num_part}{pct_part}[/]")
+    elif HAS_RICH:
+        console.print(f"  {label:<9}{tier:<11}{num_part}{pct_part}")
+    else:
+        print(f"  {label:<9}{tier:<11}{num_part}{pct_part}")
 
 def heading(msg):
     if HAS_RICH:
@@ -100,36 +111,103 @@ def _collect_spec_files(directory):
 
 # ── Commands ─────────────────────────────────────────────────────────
 
+def _render_lap(result_obj, lean):
+    """Render compiled result to LAP text. Handles single spec or list (protobuf)."""
+    if isinstance(result_obj, list):
+        return "\n---\n\n".join(s.to_lap(lean=lean) for s in result_obj)
+    return result_obj.to_lap(lean=lean)
+
+
 def cmd_compile(args):
     """Compile any API spec to LAP format (auto-detects format)."""
     from lap.core.compilers import compile as compile_spec
 
-    spec_path = args.spec
-    if not Path(spec_path).exists():
-        error(f"File/directory not found: {spec_path}")
+    spec_p = Path(args.spec)
+    if not spec_p.exists():
+        error(f"File/directory not found: {args.spec}")
 
     fmt = getattr(args, "format", None)
     try:
-        result_obj = compile_spec(spec_path, format=fmt)
+        result_obj = compile_spec(str(spec_p), format=fmt)
     except ValueError as e:
         error(str(e))
 
+    result = _render_lap(result_obj, lean=args.lean)
+
     # Protobuf directories return a list
     if isinstance(result_obj, list):
-        result = "\n---\n\n".join(s.to_lap(lean=args.lean) for s in result_obj)
         total_eps = sum(len(s.endpoints) for s in result_obj)
         label = f"{len(result_obj)} specs, {total_eps} endpoints"
     else:
-        result = result_obj.to_lap(lean=args.lean)
         label = f"{len(result_obj.endpoints)} endpoints"
 
-    if args.output:
-        Path(args.output).parent.mkdir(parents=True, exist_ok=True)
-        Path(args.output).write_text(result, encoding='utf-8')
-        info(f"Compiled {Path(spec_path).name} -> {args.output}")
-        info(f"{label} | {len(result):,} chars | {'lean' if args.lean else 'standard'} mode")
-    else:
+    # --stdout: print to stdout (for piping)
+    if args.stdout:
         print(result)
+        return
+
+    from lap.core.utils import count_tokens
+
+    # Determine output path: -o overrides, otherwise derive from input name
+    if args.output:
+        out_path = Path(args.output)
+    else:
+        out_path = spec_p.parent / f"{spec_p.stem}.lap"
+
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(result, encoding='utf-8')
+
+    # Auto-save the other tier alongside
+    other = _render_lap(result_obj, lean=not args.lean)
+
+    stem = out_path.stem.removesuffix(".lean").removesuffix(".standard")
+    if args.lean:
+        other_path = out_path.parent / f"{stem}.standard.lap"
+    else:
+        other_path = out_path.parent / f"{stem}.lean.lap"
+    other_path.write_text(other, encoding='utf-8')
+
+    # Stats with savings percentages
+    SPEC_EXTS = {".yaml", ".yml", ".json", ".proto", ".graphql", ".smithy"}
+    if spec_p.is_dir():
+        original_text = "\n".join(
+            f.read_text(encoding='utf-8')
+            for f in sorted(spec_p.rglob("*"))
+            if f.is_file() and f.suffix in SPEC_EXTS
+        )
+    else:
+        original_text = spec_p.read_text(encoding='utf-8')
+    original_tokens = count_tokens(original_text)
+    primary_tokens = count_tokens(result)
+    other_tokens = count_tokens(other)
+    standard_tokens = other_tokens if args.lean else primary_tokens
+    lean_tokens = primary_tokens if args.lean else other_tokens
+    std_pct = int((1 - standard_tokens / original_tokens) * 100) if original_tokens else 0
+    lean_pct = int((1 - lean_tokens / original_tokens) * 100) if original_tokens else 0
+
+    info(f"Compiled {spec_p.name} -- {label}")
+    print()
+
+    w = max(len(f"{t:,}") for t in [original_tokens, standard_tokens, lean_tokens])
+    _print_stat("Tokens", "Original", original_tokens, w)
+    _print_stat("", "Standard", standard_tokens, w, std_pct, style="green")
+    _print_stat("", "Lean", lean_tokens, w, lean_pct, style="bold green")
+    print()
+
+    if args.lean:
+        std_path, lean_path = other_path, out_path
+    else:
+        std_path, lean_path = out_path, other_path
+    if HAS_RICH:
+        console.print(f"  Output   [green]Standard   {std_path.resolve()}[/]")
+        console.print(f"           [bold green]Lean       {lean_path.resolve()}[/]")
+    else:
+        print(f"  Output   Standard   {std_path.resolve()}")
+        print(f"           Lean       {lean_path.resolve()}")
+    print()
+
+    print(f"  Next: lapsh skill {spec_p.name}")
+    print(f"        lapsh publish {spec_p.name} --provider your-domain.com")
 
 
 
@@ -300,6 +378,7 @@ def cmd_login(args):
         body["name"] = args.token_name
     result = api_request("POST", "/auth/cli/session", body=body if body else None)
     session_id = result["session_id"]
+    stream_key = result["stream_key"]
     auth_url = result["auth_url"]
 
     # Open browser
@@ -308,7 +387,7 @@ def cmd_login(args):
     print("Waiting for authentication (press Ctrl+C to cancel)...")
 
     # Poll SSE stream
-    token, username = poll_sse_stream(session_id)
+    token, username = poll_sse_stream(session_id, stream_key)
     save_credentials(token, username)
     info(f"Logged in as {username}")
 
@@ -348,7 +427,7 @@ def cmd_whoami(args):
 
 def cmd_publish(args):
     """Compile and publish a spec to the registry."""
-    from lap.cli.auth import get_token, api_request
+    from lap.cli.auth import get_token, api_request, get_registry_url
     from lap.core.compilers import compile as compile_spec
 
     token = get_token()
@@ -429,6 +508,10 @@ def cmd_publish(args):
     print(f"Publishing {name} to provider {args.provider}...")
     result = api_request("POST", f"/v1/apis/{quote(name, safe='')}", body=body, token=token)
     info(f"Published {name} v{result.get('version', '?')} (provider: {result.get('provider', args.provider)})")
+    print()
+    print(f"  View: {get_registry_url()}/apis/{name}")
+    print()
+    print(f"  Next: lapsh skill-install {name}")
 
 
 def cmd_skill(args):
@@ -499,8 +582,20 @@ def cmd_skill(args):
         out.write_text(content, encoding='utf-8')
 
     reduction = int((1 - skill.token_count / raw_tokens) * 100) if raw_tokens else 0
-    info(f"Skill written to {out_dir}")
-    info(f"{skill.endpoint_count} endpoints | {skill.token_count:,} tokens | {reduction}% smaller than source")
+    info(f"Generated skill -- {skill.name}")
+    stats = f"     {skill.endpoint_count} endpoints | {skill.token_count:,} tokens | {reduction}% smaller than source"
+    if HAS_RICH:
+        console.print(f"[green]{stats}[/]")
+    else:
+        print(stats)
+    print()
+
+    if getattr(args, "install", False):
+        print(f"  Installed to {out_dir.resolve()}")
+    else:
+        print(f"  Output   {out_dir.resolve()}")
+        print()
+        print(f"  Next: lapsh skill --install {Path(spec_path).name}")
 
 
 def cmd_skill_batch(args):
@@ -756,6 +851,7 @@ def main():
                    choices=["openapi", "graphql", "asyncapi", "protobuf", "postman", "smithy"],
                    help="Force spec format (auto-detected if omitted)")
     p.add_argument("--lean", action="store_true", help="Maximum compression (strip descriptions)")
+    p.add_argument("--stdout", action="store_true", help="Print to stdout instead of saving files")
 
     # benchmark-all
     p = sub.add_parser("benchmark-all", help="Benchmark all specs in a directory")
@@ -792,7 +888,7 @@ def main():
     # publish
     p = sub.add_parser("publish", help="Compile and publish a spec to the registry")
     p.add_argument("spec", help="Path to API spec file")
-    p.add_argument("--provider", required=True, help="Provider slug (e.g. stripe)")
+    p.add_argument("--provider", required=True, help="Provider domain or slug (e.g. stripe.com)")
     p.add_argument("--name", help="Override spec name (auto-detected if omitted)")
     p.add_argument("--source-url", help="Upstream spec URL")
     p.add_argument("--skill", action="store_true", help="Generate and include a Claude Code skill")

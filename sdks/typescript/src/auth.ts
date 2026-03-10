@@ -115,11 +115,12 @@ export function apiRequest(
 // ── SSE stream ──────────────────────────────────────────────────────
 
 export function pollSseStream(
-  sessionId: string
+  sessionId: string,
+  streamKey: string
 ): Promise<{ token: string; username: string }> {
   return new Promise((resolve, reject) => {
     const baseUrl = getRegistryUrl();
-    const fullUrl = new URL(`/auth/cli/stream/${sessionId}`, baseUrl);
+    const fullUrl = new URL(`/auth/cli/stream/${sessionId}?key=${streamKey}`, baseUrl);
     const mod = fullUrl.protocol === 'https:' ? https : http;
 
     const req = mod.get(

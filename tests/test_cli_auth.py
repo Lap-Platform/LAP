@@ -133,7 +133,7 @@ class TestSseParsing:
         ]
         mock_resp = self._make_stream(lines)
         with patch("urllib.request.urlopen", return_value=mock_resp):
-            token, username = auth.poll_sse_stream("test-session")
+            token, username = auth.poll_sse_stream("test-session", "test-key")
             assert token == "lap_abc"
             assert username == "octocat"
 
@@ -145,7 +145,7 @@ class TestSseParsing:
         mock_resp = self._make_stream(lines)
         with patch("urllib.request.urlopen", return_value=mock_resp):
             with pytest.raises(SystemExit, match="Session expired"):
-                auth.poll_sse_stream("bad-session")
+                auth.poll_sse_stream("bad-session", "test-key")
 
     def test_timeout(self):
         lines = [
@@ -156,7 +156,7 @@ class TestSseParsing:
         mock_resp = self._make_stream(lines)
         with patch("urllib.request.urlopen", return_value=mock_resp):
             with pytest.raises(SystemExit, match="timed out"):
-                auth.poll_sse_stream("timeout-session")
+                auth.poll_sse_stream("timeout-session", "test-key")
 
     def test_ignores_non_data_lines(self):
         lines = [
@@ -166,7 +166,7 @@ class TestSseParsing:
         ]
         mock_resp = self._make_stream(lines)
         with patch("urllib.request.urlopen", return_value=mock_resp):
-            token, username = auth.poll_sse_stream("s1")
+            token, username = auth.poll_sse_stream("s1", "test-key")
             assert token == "lap_xyz"
 
     def test_ignores_invalid_json(self):
@@ -176,7 +176,7 @@ class TestSseParsing:
         ]
         mock_resp = self._make_stream(lines)
         with patch("urllib.request.urlopen", return_value=mock_resp):
-            token, _ = auth.poll_sse_stream("s2")
+            token, _ = auth.poll_sse_stream("s2", "test-key")
             assert token == "lap_ok"
 
 

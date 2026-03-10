@@ -89,13 +89,14 @@ async function cmdLogin(tokenName?: string): Promise<void> {
   const body = tokenName ? { name: tokenName } : undefined;
   const result = await apiRequest('POST', '/auth/cli/session', body);
   const sessionId = result.session_id as string;
+  const streamKey = result.stream_key as string;
   const authUrl = result.auth_url as string;
 
   console.log('Opening browser for GitHub authorization...');
   openBrowser(authUrl);
   console.log('Waiting for authentication (press Ctrl+C to cancel)...');
 
-  const { token, username } = await pollSseStream(sessionId);
+  const { token, username } = await pollSseStream(sessionId, streamKey);
   saveCredentials(token, username);
   info(`Logged in as ${username}`);
 }
@@ -154,7 +155,7 @@ async function cmdPublish(args: string[]): Promise<void> {
   }
 
   if (!specPath) error('Missing spec file path. Usage: lapsh publish <spec> --provider <slug>');
-  if (!provider) error('Missing --provider flag. Usage: lapsh publish <spec> --provider <slug>');
+  if (!provider) error('Missing --provider flag. Usage: lapsh publish <spec> --provider <domain>');
   if (!fs.existsSync(specPath)) error(`File not found: ${specPath}`);
 
   // Read spec and compile via registry API
