@@ -14,6 +14,8 @@ import urllib.error
 import webbrowser
 from pathlib import Path
 
+from lap import __version__
+
 
 # ── Config ──────────────────────────────────────────────────────────
 
@@ -66,7 +68,7 @@ def get_token():
 def api_request(method, path, body=None, token=None):
     """Make an HTTP request to the registry. Returns parsed JSON or raises."""
     url = f"{get_registry_url()}{path}"
-    headers = {"Accept": "application/json"}
+    headers = {"Accept": "application/json", "User-Agent": f"lapsh/{__version__}"}
     if token:
         headers["Authorization"] = f"Bearer {token}"
 
