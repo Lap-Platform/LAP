@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as http from 'http';
 import * as https from 'https';
-import { parse, LAPSpec } from './parser';
+import { parse, LAPSpec, SearchResponse } from './parser';
 
 export interface ToContextOptions {
   lean?: boolean;
@@ -19,15 +19,32 @@ export class LAPClient {
   }
 
   async fromRegistry(registryUrl: string, apiName: string): Promise<LAPSpec> {
-    const url = `${registryUrl.replace(/\/$/, '')}/specs/${encodeURIComponent(apiName)}`;
+    const url = `${registryUrl.replace(/\/$/, '')}/v1/apis/${encodeURIComponent(apiName)}`;
     const text = await this._fetch(url);
     return parse(text);
   }
 
-  private _fetch(url: string): Promise<string> {
+  async search(
+    registryUrl: string,
+    query: string,
+    options?: { tag?: string; sort?: string; limit?: number; offset?: number }
+  ): Promise<SearchResponse> {
+    const params = new URLSearchParams({ q: query });
+    if (options?.tag) params.set('tag', options.tag);
+    if (options?.sort) params.set('sort', options.sort);
+    if (options?.limit !== undefined) params.set('limit', String(options.limit));
+    if (options?.offset !== undefined) params.set('offset', String(options.offset));
+
+    const url = `${registryUrl.replace(/\/$/, '')}/v1/search?${params}`;
+    const text = await this._fetch(url, { Accept: 'application/json' });
+    return JSON.parse(text) as SearchResponse;
+  }
+
+  private _fetch(url: string, headers?: Record<string, string>): Promise<string> {
     return new Promise((resolve, reject) => {
       const mod = url.startsWith('https') ? https : http;
-      mod.get(url, res => {
+      const options = headers ? { headers } : {};
+      mod.get(url, options, res => {
         let data = '';
         res.on('data', chunk => data += chunk);
         res.on('end', () => {

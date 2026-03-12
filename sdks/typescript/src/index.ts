@@ -6,6 +6,8 @@ export {
   ResponseSchema,
   ResponseField,
   ErrorSchema,
+  SearchResult,
+  SearchResponse,
 } from './parser';
 
 export { LAPClient, toContext, ToContextOptions } from './client';

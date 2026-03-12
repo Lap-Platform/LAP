@@ -290,6 +290,32 @@ function parseErrors(line: string): ErrorSchema[] {
   });
 }
 
+export interface SearchResult {
+  name: string;
+  description: string;
+  version: string;
+  base_url: string;
+  endpoints: number;
+  tags: string[];
+  size: number;
+  lean_size: number | null;
+  has_skill: boolean;
+  skill_size: number | null;
+  provider: { slug: string; display_name: string; domain: string };
+  source_url: string;
+  last_updated: string;
+  is_community: boolean;
+}
+
+export interface SearchResponse {
+  query: string;
+  results: SearchResult[];
+  total: number;
+  limit: number;
+  offset: number;
+  has_more: boolean;
+}
+
 export function parse(text: string): LAPSpec {
   const lines = text.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('//'));
 

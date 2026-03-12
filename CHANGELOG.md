@@ -5,6 +5,20 @@ All notable changes to LAP (Lean API Platform) will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.5] - 2026-03-12
+
+### Added
+- **Registry search**: `lapsh search <query>` -- search the LAP registry for APIs
+  - Supports `--tag`, `--sort`, `--limit`, `--offset`, `--json` flags
+  - Output sanitization against ANSI injection from server responses
+  - Pagination hints when more results available
+- **TypeScript SDK search**: `LAPClient.search()` method for registry search
+- **Search test coverage**: 64 Python tests + 6 TypeScript tests
+
+### Fixed
+- TS SDK `fromRegistry()` used wrong URL path (`/specs/` -> `/v1/apis/`)
+- TypeScript SDK `SearchResponse` type and parser exports
+
 ## [0.4.2] - 2026-03-10
 
 ### Fixed

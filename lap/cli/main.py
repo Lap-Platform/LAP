@@ -9,6 +9,7 @@ import argparse
 import glob
 import json
 import os
+import re
 import sys
 from contextlib import contextmanager
 from pathlib import Path
@@ -27,6 +28,31 @@ try:
 except ImportError:
     HAS_RICH = False
     console = None
+
+
+# ── Security helpers ─────────────────────────────────────────────────
+
+_ANSI_ESCAPE = re.compile(r'\x1b(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+_CTRL_CHARS  = re.compile(r'[\x00-\x08\x0b-\x1f\x7f]')
+
+def _sanitize(s: str) -> str:
+    """Strip ANSI escapes and control characters from server-supplied strings."""
+    return _CTRL_CHARS.sub('', _ANSI_ESCAPE.sub('', s))
+
+def _validate_search_response(result):
+    """Validate registry response shape before field access."""
+    if not isinstance(result, dict):
+        error("Unexpected response format from registry.")
+    results = result.get("results", [])
+    if not isinstance(results, list):
+        error("Registry returned malformed results.")
+    for r in results:
+        if not isinstance(r, dict):
+            error("Registry returned malformed result entry.")
+    if not isinstance(result.get("total", 0), int):
+        result["total"] = len(results)
+    if not isinstance(result.get("offset", 0), int):
+        result["offset"] = 0
 
 
 # ── Helpers ──────────────────────────────────────────────────────────
@@ -684,6 +710,78 @@ def cmd_skill_install(args):
     info(f"Installed {len(files)} files to {install_dir}")
 
 
+def _format_search_results(results, total, offset):
+    """Format and print search results."""
+    rows = []
+    for r in results:
+        name = _sanitize(r.get("name", ""))
+        desc = _sanitize(r.get("description", ""))
+        ep = r.get("endpoints")
+        ep_str = f"{ep} endpoints" if isinstance(ep, int) else ""
+        size = r.get("size", 0)
+        lean = r.get("lean_size")
+        if isinstance(size, (int, float)) and isinstance(lean, (int, float)) and lean:
+            ratio_str = f"{size / lean:.1f}x compressed"
+        else:
+            ratio_str = ""
+        skill = " [skill]" if r.get("has_skill") else ""
+        rows.append((name, ep_str, ratio_str, desc, skill))
+
+    name_w = max((len(r[0]) for r in rows), default=0)
+    ep_w = max((len(r[1]) for r in rows), default=0)
+    ratio_w = max((len(r[2]) for r in rows), default=0)
+
+    for name, ep_str, ratio_str, desc, skill in rows:
+        print(f"  {name:<{name_w}}  {ep_str:>{ep_w}}  {ratio_str:>{ratio_w}}   {desc}{skill}")
+
+    shown = offset + len(results)
+    if shown < total:
+        info(f"Showing {shown}/{total} results. Use --offset {shown} for more.")
+
+
+def cmd_search(args):
+    """Search the LAP registry for APIs. No auth required."""
+    from lap.cli.auth import api_request
+    from urllib.parse import urlencode
+
+    query = " ".join(args.query)
+    if not query.strip():
+        error("Please provide a search query.")
+
+    params = {"q": query}
+    if args.tag:
+        params["tag"] = args.tag
+    if args.sort:
+        params["sort"] = args.sort
+    if args.limit is not None:
+        params["limit"] = str(args.limit)
+    if args.offset is not None:
+        params["offset"] = str(args.offset)
+
+    try:
+        result = api_request("GET", f"/v1/search?{urlencode(params)}")
+    except SystemExit:
+        raise
+    except Exception as e:
+        error(f"Search failed: {e}")
+
+    _validate_search_response(result)
+
+    results = result.get("results", [])
+    total = result.get("total", len(results))
+    offset = result.get("offset", 0)
+
+    if args.json:
+        print(json.dumps(result, indent=2, ensure_ascii=True))
+        return
+
+    if not results:
+        info(f"No results for '{query}'.")
+        return
+
+    _format_search_results(results, total, offset)
+
+
 def cmd_benchmark_skill(args):
     """Benchmark skill token usage for a spec."""
     from lap.core.compilers import compile as compile_spec
@@ -936,6 +1034,15 @@ def main():
     p.add_argument("name", help="API name from the registry")
     p.add_argument("--dir", help="Custom install directory (default: ~/.claude/skills/)")
 
+    # search
+    p = sub.add_parser("search", help="Search the LAP registry for APIs")
+    p.add_argument("query", nargs="+", help="Search query")
+    p.add_argument("--tag", help="Filter by tag")
+    p.add_argument("--sort", choices=["relevance", "popularity", "date"], help="Sort order")
+    p.add_argument("--limit", type=int, help="Max results (default: 50)")
+    p.add_argument("--offset", type=int, help="Pagination offset")
+    p.add_argument("--json", action="store_true", help="Output raw JSON")
+
     # benchmark-skill
     p = sub.add_parser("benchmark-skill", help="Benchmark skill token usage for a spec")
     p.add_argument("spec", help="Path to API spec file")
@@ -959,6 +1066,7 @@ def main():
         "skill": cmd_skill,
         "skill-batch": cmd_skill_batch,
         "skill-install": cmd_skill_install,
+        "search": cmd_search,
         "benchmark-skill": cmd_benchmark_skill,
         "benchmark-skill-all": cmd_benchmark_skill_all,
     }
