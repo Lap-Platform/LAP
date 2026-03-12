@@ -5,6 +5,18 @@ All notable changes to LAP (Lean API Platform) will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.7] - 2026-03-12
+
+### Added
+- **`lapsh get <name>`**: Download a LAP spec from the registry by name
+  - Supports `-o` for file output and `--lean` for lean variant
+  - Available in both Python and TypeScript CLIs
+- **Provider domain in search output**: Text search results now show the provider domain (e.g. `stripe.com`) as a column between name and endpoints
+- **`url` field in JSON search results**: Each result now includes the full registry URL for fetching the spec
+
+### Fixed
+- Add `User-Agent` header to `get` command to prevent Cloudflare 403 errors
+
 ## [0.4.6] - 2026-03-12
 
 ### Fixed
