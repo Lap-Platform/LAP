@@ -8,7 +8,7 @@
 
 # LAP -- Lean API Platform
 
-**Compile API specs into token-efficient contracts for LLM agents.**
+**Agent-Native API specs. Verified, compressed, ready to install.**
 
 [![PyPI](https://img.shields.io/pypi/v/lapsh.svg)](https://pypi.org/project/lapsh/)
 [![npm](https://img.shields.io/npm/v/@lap-platform/lapsh.svg)](https://www.npmjs.com/package/@lap-platform/lapsh)
@@ -22,9 +22,11 @@
 
 ---
 
-LLMs waste thousands of tokens parsing bloated API specs. Stripe's OpenAPI spec is **1M+ tokens** — mostly YAML scaffolding, nested wrappers, and repeated schemas. LAP compiles any API spec into a typed, flat format that preserves every endpoint, parameter, and constraint in a fraction of the tokens.
+Without API documentation, LLM agents hallucinate endpoints, invent parameters, and guess auth flows -- scoring just **0.399 accuracy** in blind tests.
 
-**Not minification** — a purpose-built compiler with its own grammar.
+LAP fixes this. One command gives your agent a verified, agent-native API spec -- jumping accuracy to **0.860**. And because LAP specs are 10x smaller than raw OpenAPI, you also save 35% on cost and run 29% faster.
+
+**Not minification** -- a purpose-built compiler with its own grammar.
 
 ### Proven in 500 blind runs across 50 APIs
 
@@ -40,15 +42,28 @@ LAP Lean scored **0.851** (vs 0.825 raw) while using **35% less cost** and **29%
 
 > [Full benchmark report (500 runs, 50 specs, 5 formats)](https://lap-platform.github.io/Lap-benchmark-docs/results/LAP_Benchmark_v2_Full_Report.html) · [Benchmark methodology and data](https://github.com/Lap-Platform/Lap-benchmark-docs)
 
-## Install
+## Quick Start
 
 ```bash
-# Try without installing
-npx @lap-platform/lapsh compile api.yaml
+# Search the registry for an API
+npx @lap-platform/lapsh search payment
 
-# Or install
+# Download a spec
+npx @lap-platform/lapsh get stripe-com -o stripe.lap
+
+# Install a pre-compiled skill (drops into ~/.claude/skills/)
+npx @lap-platform/lapsh skill-install stripe-com
+
+# Or compile your own spec
+npx @lap-platform/lapsh compile api.yaml --lean
+```
+
+> **Want to get listed?** [Register as a verified publisher](https://registry.lap.sh) and share your specs and skills with the registry.
+
+```bash
+# Install globally (npm or pip)
+npm install -g @lap-platform/lapsh
 pip install lapsh
-lapsh compile api.yaml -o api.lap
 ```
 
 ## What You Get
@@ -110,12 +125,16 @@ LAP is more than a compiler:
 
 | Component | What | Command |
 |-----------|------|---------|
+| **Search** | Find APIs in the registry | `lapsh search payment` |
+| **Get** | Download a spec by name | `lapsh get stripe-com` |
+| **Skill Install** | Install a pre-compiled skill | `lapsh skill-install stripe-com` |
 | **Compiler** | Any spec → `.lap` | `lapsh compile api.yaml` |
-| **Registry** | Browse & install pre-compiled specs | `lapsh skill-install stripe` |
 | **Skill Generator** | Create agent-ready skills from any spec | `lapsh skill api.yaml --install` |
 | **API Differ** | Detect breaking API changes | `lapsh diff old.lap new.lap` |
 | **Round-trip** | Convert LAP back to OpenAPI | `lapsh convert api.lap -f openapi` |
 | **Publish** | Share specs to the registry | `lapsh publish api.yaml --provider acme` |
+
+> **Claude Code users:** The `lap-search` skill is included -- your agent can search and install APIs directly. See `skills/search/SKILL.md`.
 
 ## Supported Formats
 
@@ -155,6 +174,12 @@ functions = to_openai_functions("stripe.lap")
 Also: CrewAI tool, MCP server and compression proxy. See [integration docs](docs/guide-integrate.md).
 
 ## FAQ
+
+<details>
+<summary><b>Why do agents hallucinate API calls?</b></summary>
+
+Because they have no way to find the spec, and even if they could, it's a million tokens of YAML written for humans. Agents without specs score 0.399 accuracy -- wrong 60% of the time. They hallucinate endpoint paths, send invalid types, and miss auth. Give them a LAP spec and accuracy jumps to 0.860. The spec doesn't make the agent smarter. It makes guessing unnecessary.
+</details>
 
 <details>
 <summary><b>How is this different from OpenAPI?</b></summary>
