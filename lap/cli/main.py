@@ -756,7 +756,7 @@ def cmd_get(args):
         url += "?format=lean"
 
     try:
-        req = _UrlRequest(url, headers={"Accept": "text/lap"})
+        req = _UrlRequest(url, headers={"Accept": "text/lap", "User-Agent": "lapsh/0.4.7"})
         with urlopen(req) as resp:
             body = resp.read().decode("utf-8")
     except Exception as e:

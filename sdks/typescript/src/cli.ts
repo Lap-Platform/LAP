@@ -483,7 +483,7 @@ async function cmdGet(args: string[]): Promise<void> {
   const fetcher = url.startsWith('https') ? https : http;
 
   const body = await new Promise<string>((resolve, reject) => {
-    const req = fetcher.get(url, { headers: { 'Accept': 'text/lap' } }, (res) => {
+    const req = fetcher.get(url, { headers: { 'Accept': 'text/lap', 'User-Agent': 'lapsh/0.4.7' } }, (res) => {
       if (res.statusCode && res.statusCode >= 400) {
         reject(new Error(`HTTP ${res.statusCode} fetching '${name}'`));
         res.resume();
