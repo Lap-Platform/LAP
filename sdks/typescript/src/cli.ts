@@ -30,6 +30,7 @@ import { toLap } from './serializer';
 import { generateSkill } from './skill';
 import { enhanceSkill, hasClaudeCli } from './skill_llm';
 import { compile } from './compilers/index';
+import { LAPClient } from './client';
 
 // ── Helpers ─────────────────────────────────────────────────────────
 
@@ -69,6 +70,8 @@ Commands:
   skill-batch <dir> -o <outdir>         Batch generate skills
     [--layer 1|2] [-v]                  Layer + verbose mode
   skill-install <name> [--dir <path>]   Install skill from registry
+  search <query> [--tag t] [--sort s]   Search the LAP registry for APIs
+    [--limit n] [--offset n] [--json]   Pagination and JSON output
 
 Environment:
   LAP_REGISTRY                          Registry URL (default: https://registry.lap.sh)`);
@@ -395,6 +398,66 @@ async function cmdSkillBatch(args: string[]): Promise<void> {
   info(`Generated ${success} skills, ${failed} failures`);
 }
 
+async function cmdSearch(args: string[]): Promise<void> {
+  const queryParts: string[] = [];
+  let tag: string | undefined;
+  let sort: string | undefined;
+  let limit: number | undefined;
+  let offset: number | undefined;
+  let jsonOutput = false;
+
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--tag' && i + 1 < args.length) { tag = args[++i]; }
+    else if (args[i] === '--sort' && i + 1 < args.length) { sort = args[++i]; }
+    else if (args[i] === '--limit' && i + 1 < args.length) { limit = parseInt(args[++i], 10); }
+    else if (args[i] === '--offset' && i + 1 < args.length) { offset = parseInt(args[++i], 10); }
+    else if (args[i] === '--json') { jsonOutput = true; }
+    else if (!args[i].startsWith('-')) { queryParts.push(args[i]); }
+  }
+
+  const query = queryParts.join(' ').trim();
+  if (!query) error('Please provide a search query. Usage: lapsh search <query>');
+
+  const client = new LAPClient();
+  const registryUrl = getRegistryUrl();
+  const result = await client.search(registryUrl, query, { tag, sort, limit, offset });
+
+  if (jsonOutput) {
+    console.log(JSON.stringify(result, null, 2));
+    return;
+  }
+
+  if (result.results.length === 0) {
+    info(`No results for '${query}'.`);
+    return;
+  }
+
+  const rows = result.results.map(r => {
+    const name = r.name || '';
+    const desc = r.description || '';
+    const ep = typeof r.endpoints === 'number' ? `${r.endpoints} endpoints` : '';
+    const size = r.size;
+    const lean = r.lean_size;
+    const ratio = (typeof size === 'number' && typeof lean === 'number' && lean)
+      ? `${(size / lean).toFixed(1)}x compressed` : '';
+    const skill = r.has_skill ? ' [skill]' : '';
+    return { name, ep, ratio, desc, skill };
+  });
+
+  const nameW = Math.max(...rows.map(r => r.name.length));
+  const epW = Math.max(...rows.map(r => r.ep.length));
+  const ratioW = Math.max(...rows.map(r => r.ratio.length));
+
+  for (const { name, ep, ratio, desc, skill } of rows) {
+    console.log(`  ${name.padEnd(nameW)}  ${ep.padStart(epW)}  ${ratio.padStart(ratioW)}   ${desc}${skill}`);
+  }
+
+  const shown = (result.offset || 0) + result.results.length;
+  if (shown < result.total) {
+    info(`Showing ${shown}/${result.total} results. Use --offset ${shown} for more.`);
+  }
+}
+
 async function cmdSkillInstall(args: string[]): Promise<void> {
   let name = '';
   let dir = '';
@@ -466,6 +529,9 @@ async function main(): Promise<void> {
         break;
       case 'skill-install':
         await cmdSkillInstall(args.slice(1));
+        break;
+      case 'search':
+        await cmdSearch(args.slice(1));
         break;
       default:
         console.error(`Unknown command: ${command}`);
