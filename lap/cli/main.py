@@ -715,6 +715,8 @@ def _format_search_results(results, total, offset):
     rows = []
     for r in results:
         name = _sanitize(r.get("name", ""))
+        prov = r.get("provider") or {}
+        prov_str = _sanitize(prov.get("domain", "") or prov.get("display_name", "") or "")
         desc = _sanitize(r.get("description", ""))
         ep = r.get("endpoints")
         ep_str = f"{ep} endpoints" if isinstance(ep, int) else ""
@@ -725,18 +727,47 @@ def _format_search_results(results, total, offset):
         else:
             ratio_str = ""
         skill = " [skill]" if r.get("has_skill") else ""
-        rows.append((name, ep_str, ratio_str, desc, skill))
+        rows.append((name, prov_str, ep_str, ratio_str, desc, skill))
 
     name_w = max((len(r[0]) for r in rows), default=0)
-    ep_w = max((len(r[1]) for r in rows), default=0)
-    ratio_w = max((len(r[2]) for r in rows), default=0)
+    prov_w = max((len(r[1]) for r in rows), default=0)
+    ep_w = max((len(r[2]) for r in rows), default=0)
+    ratio_w = max((len(r[3]) for r in rows), default=0)
 
-    for name, ep_str, ratio_str, desc, skill in rows:
-        print(f"  {name:<{name_w}}  {ep_str:>{ep_w}}  {ratio_str:>{ratio_w}}   {desc}{skill}")
+    for name, prov_str, ep_str, ratio_str, desc, skill in rows:
+        print(f"  {name:<{name_w}}  {prov_str:<{prov_w}}  {ep_str:>{ep_w}}  {ratio_str:>{ratio_w}}   {desc}{skill}")
 
     shown = offset + len(results)
     if shown < total:
         info(f"Showing {shown}/{total} results. Use --offset {shown} for more.")
+
+
+from urllib.request import urlopen, Request as _UrlRequest
+
+
+def cmd_get(args):
+    """Download a LAP spec from the registry by name."""
+    from lap.cli.auth import get_registry_url
+    from urllib.parse import quote
+
+    name = args.name
+    url = f"{get_registry_url()}/v1/apis/{quote(name, safe='')}"
+    if getattr(args, "lean", False):
+        url += "?format=lean"
+
+    try:
+        req = _UrlRequest(url, headers={"Accept": "text/lap"})
+        with urlopen(req) as resp:
+            body = resp.read().decode("utf-8")
+    except Exception as e:
+        error(f"Failed to fetch '{name}': {e}")
+
+    if args.output:
+        Path(args.output).parent.mkdir(parents=True, exist_ok=True)
+        Path(args.output).write_text(body, encoding="utf-8")
+        info(f"Saved {name} to {args.output}")
+    else:
+        print(body)
 
 
 def cmd_search(args):
@@ -1034,6 +1065,12 @@ def main():
     p.add_argument("name", help="API name from the registry")
     p.add_argument("--dir", help="Custom install directory (default: ~/.claude/skills/)")
 
+    # get
+    p = sub.add_parser("get", help="Download a LAP spec from the registry")
+    p.add_argument("name", help="API name (e.g. stripe)")
+    p.add_argument("-o", "--output", help="Output file path")
+    p.add_argument("--lean", action="store_true", help="Download lean variant")
+
     # search
     p = sub.add_parser("search", help="Search the LAP registry for APIs")
     p.add_argument("query", nargs="+", help="Search query")
@@ -1066,6 +1103,7 @@ def main():
         "skill": cmd_skill,
         "skill-batch": cmd_skill_batch,
         "skill-install": cmd_skill_install,
+        "get": cmd_get,
         "search": cmd_search,
         "benchmark-skill": cmd_benchmark_skill,
         "benchmark-skill-all": cmd_benchmark_skill_all,

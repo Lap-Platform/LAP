@@ -10,7 +10,7 @@ import pytest
 # Ensure project root is on path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from lap.cli.main import _sanitize, _validate_search_response, _format_search_results, cmd_search
+from lap.cli.main import _sanitize, _validate_search_response, _format_search_results, cmd_search, cmd_get
 
 
 # ── _sanitize ────────────────────────────────────────────────────────
@@ -166,6 +166,7 @@ class TestFormatSearchResults:
             "size": 1000,
             "lean_size": 250,
             "has_skill": True,
+            "provider": {"slug": "stripe", "display_name": "Stripe", "domain": "stripe.com"},
         }
         base.update(overrides)
         return base
@@ -175,10 +176,29 @@ class TestFormatSearchResults:
         _format_search_results(results, total=1, offset=0)
         out = capsys.readouterr().out
         assert "stripe" in out
+        assert "stripe.com" in out
         assert "42 endpoints" in out
         assert "4.0x compressed" in out
         assert "Payment processing" in out
         assert "[skill]" in out
+
+    def test_provider_domain_shown(self, capsys):
+        results = [self._make_result(provider={"slug": "twilio", "display_name": "Twilio", "domain": "twilio.com"})]
+        _format_search_results(results, total=1, offset=0)
+        out = capsys.readouterr().out
+        assert "twilio.com" in out
+
+    def test_provider_fallback_to_display_name(self, capsys):
+        results = [self._make_result(provider={"slug": "x", "display_name": "MyAPI", "domain": ""})]
+        _format_search_results(results, total=1, offset=0)
+        out = capsys.readouterr().out
+        assert "MyAPI" in out
+
+    def test_provider_missing_graceful(self, capsys):
+        results = [self._make_result(provider=None)]
+        _format_search_results(results, total=1, offset=0)
+        out = capsys.readouterr().out
+        assert "stripe" in out  # name still shows
 
     def test_no_skill_marker(self, capsys):
         results = [self._make_result(has_skill=False)]
@@ -423,3 +443,53 @@ class TestCmdSearch:
         out = capsys.readouterr().out
         assert "twilio" in out
         assert "[skill]" in out
+
+
+# ── cmd_get ──────────────────────────────────────────────────────────
+
+
+def _make_get_args(**overrides):
+    args = MagicMock()
+    args.name = "stripe"
+    args.output = None
+    args.lean = False
+    for k, v in overrides.items():
+        setattr(args, k, v)
+    return args
+
+
+class TestCmdGet:
+    def test_get_prints_to_stdout(self, capsys):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b"@api Stripe\n@base https://api.stripe.com"
+        mock_resp.__enter__ = lambda s: s
+        mock_resp.__exit__ = MagicMock(return_value=False)
+        with patch("lap.cli.main.urlopen", return_value=mock_resp):
+            cmd_get(_make_get_args())
+        out = capsys.readouterr().out
+        assert "@api Stripe" in out
+
+    def test_get_writes_to_file(self, tmp_path):
+        out_file = str(tmp_path / "stripe.lap")
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b"@api Stripe"
+        mock_resp.__enter__ = lambda s: s
+        mock_resp.__exit__ = MagicMock(return_value=False)
+        with patch("lap.cli.main.urlopen", return_value=mock_resp):
+            cmd_get(_make_get_args(output=out_file))
+        assert Path(out_file).read_text(encoding="utf-8") == "@api Stripe"
+
+    def test_get_lean_flag_adds_query_param(self):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b"@api Stripe"
+        mock_resp.__enter__ = lambda s: s
+        mock_resp.__exit__ = MagicMock(return_value=False)
+        with patch("lap.cli.main.urlopen", return_value=mock_resp) as mock_open:
+            cmd_get(_make_get_args(lean=True))
+        call_arg = mock_open.call_args[0][0]
+        assert "format=lean" in call_arg.full_url
+
+    def test_get_network_error_exits(self):
+        with patch("lap.cli.main.urlopen", side_effect=Exception("Connection refused")):
+            with pytest.raises(SystemExit):
+                cmd_get(_make_get_args())

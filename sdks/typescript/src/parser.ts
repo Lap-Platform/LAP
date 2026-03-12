@@ -305,6 +305,7 @@ export interface SearchResult {
   source_url: string;
   last_updated: string;
   is_community: boolean;
+  url?: string;
 }
 
 export interface SearchResponse {

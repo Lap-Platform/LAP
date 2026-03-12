@@ -70,6 +70,7 @@ Commands:
   skill-batch <dir> -o <outdir>         Batch generate skills
     [--layer 1|2] [-v]                  Layer + verbose mode
   skill-install <name> [--dir <path>]   Install skill from registry
+  get <name> [-o output] [--lean]        Download a LAP spec from the registry
   search <query> [--tag t] [--sort s]   Search the LAP registry for APIs
     [--limit n] [--offset n] [--json]   Pagination and JSON output
 
@@ -434,6 +435,7 @@ async function cmdSearch(args: string[]): Promise<void> {
 
   const rows = result.results.map(r => {
     const name = r.name || '';
+    const prov = r.provider?.domain || r.provider?.display_name || '';
     const desc = r.description || '';
     const ep = typeof r.endpoints === 'number' ? `${r.endpoints} endpoints` : '';
     const size = r.size;
@@ -441,20 +443,66 @@ async function cmdSearch(args: string[]): Promise<void> {
     const ratio = (typeof size === 'number' && typeof lean === 'number' && lean)
       ? `${(size / lean).toFixed(1)}x compressed` : '';
     const skill = r.has_skill ? ' [skill]' : '';
-    return { name, ep, ratio, desc, skill };
+    return { name, prov, ep, ratio, desc, skill };
   });
 
   const nameW = Math.max(...rows.map(r => r.name.length));
+  const provW = Math.max(...rows.map(r => r.prov.length));
   const epW = Math.max(...rows.map(r => r.ep.length));
   const ratioW = Math.max(...rows.map(r => r.ratio.length));
 
-  for (const { name, ep, ratio, desc, skill } of rows) {
-    console.log(`  ${name.padEnd(nameW)}  ${ep.padStart(epW)}  ${ratio.padStart(ratioW)}   ${desc}${skill}`);
+  for (const { name, prov, ep, ratio, desc, skill } of rows) {
+    console.log(`  ${name.padEnd(nameW)}  ${prov.padEnd(provW)}  ${ep.padStart(epW)}  ${ratio.padStart(ratioW)}   ${desc}${skill}`);
   }
 
   const shown = (result.offset || 0) + result.results.length;
   if (shown < result.total) {
     info(`Showing ${shown}/${result.total} results. Use --offset ${shown} for more.`);
+  }
+}
+
+async function cmdGet(args: string[]): Promise<void> {
+  let name = '';
+  let output = '';
+  let lean = false;
+
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '-o' || args[i] === '--output') { output = args[++i]; }
+    else if (args[i] === '--lean') { lean = true; }
+    else if (!args[i].startsWith('-')) { name = args[i]; }
+  }
+
+  if (!name) error('Missing API name. Usage: lapsh get <name> [-o output] [--lean]');
+
+  const registryUrl = getRegistryUrl();
+  let url = `${registryUrl}/v1/apis/${encodeURIComponent(name)}`;
+  if (lean) url += '?format=lean';
+
+  const http = await import('http');
+  const https = await import('https');
+  const fetcher = url.startsWith('https') ? https : http;
+
+  const body = await new Promise<string>((resolve, reject) => {
+    const req = fetcher.get(url, { headers: { 'Accept': 'text/lap' } }, (res) => {
+      if (res.statusCode && res.statusCode >= 400) {
+        reject(new Error(`HTTP ${res.statusCode} fetching '${name}'`));
+        res.resume();
+        return;
+      }
+      const chunks: Buffer[] = [];
+      res.on('data', (chunk: Buffer) => chunks.push(chunk));
+      res.on('end', () => resolve(Buffer.concat(chunks).toString('utf-8')));
+    });
+    req.on('error', reject);
+  });
+
+  if (output) {
+    const dir = path.dirname(output);
+    if (dir) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(output, body, 'utf-8');
+    info(`Saved ${name} to ${output}`);
+  } else {
+    console.log(body);
   }
 }
 
@@ -529,6 +577,9 @@ async function main(): Promise<void> {
         break;
       case 'skill-install':
         await cmdSkillInstall(args.slice(1));
+        break;
+      case 'get':
+        await cmdGet(args.slice(1));
         break;
       case 'search':
         await cmdSearch(args.slice(1));

@@ -1,3 +1,3 @@
 """LAP -- Lean API Platform. Token-efficient API specs for AI agents."""
 
-__version__ = "0.4.6"
+__version__ = "0.4.7"
