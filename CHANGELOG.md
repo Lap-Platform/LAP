@@ -37,6 +37,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - TS SDK `fromRegistry()` used wrong URL path (`/specs/` -> `/v1/apis/`)
 - TypeScript SDK `SearchResponse` type and parser exports
 
+## [0.4.3] - 2026-03-10
+
+_Skipped -- internal build number consumed during development; no public release._
+
 ## [0.4.2] - 2026-03-10
 
 ### Fixed
