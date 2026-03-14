@@ -11,10 +11,10 @@
 **Agent-Native API specs. Verified, compressed, ready to install.**
 
 <a href="https://pypi.org/project/lapsh/"><img src="https://img.shields.io/pypi/v/lapsh?style=for-the-badge&color=blue" alt="PyPI"></a>
+<a href="https://github.com/Lap-Platform/lap/actions/workflows/ci.yml"><img src="https://img.shields.io/badge/tests-1%2C101%20passed-brightgreen?style=for-the-badge" alt="Tests"></a>
 <a href="https://www.npmjs.com/package/@lap-platform/lapsh"><img src="https://img.shields.io/npm/v/@lap-platform/lapsh?style=for-the-badge&color=blue" alt="npm"></a>
 <br>
 <a href="https://github.com/Lap-Platform/lap/tree/main/skills/lap"><img src="https://img.shields.io/badge/Claude%20Code-skill-orange?style=for-the-badge" alt="Claude Code Skill"></a>
-<a href="https://github.com/Lap-Platform/lap/actions/workflows/ci.yml"><img src="https://img.shields.io/badge/tests-1%2C101%20passed-brightgreen?style=for-the-badge" alt="Tests"></a>
 <a href="https://clawhub.ai/mickmicksh/lap"><img src="https://img.shields.io/badge/OpenClaw-skill-orange?style=for-the-badge" alt="OpenClaw Skill"></a>
 <br>
 <a href="https://github.com/Lap-Platform/lap/pulls"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge" alt="PRs Welcome"></a>
