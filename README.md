@@ -6,7 +6,7 @@
   <img alt="LAP — Lean API Platform" src="assets/readme-logo-dark.png">
 </picture>
 
-# LAP -- Lean API Platform
+# LAP - Lean API Platform
 
 **Agent-Native API specs. Verified, compressed, ready to install.**
 
