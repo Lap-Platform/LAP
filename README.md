@@ -102,7 +102,7 @@ pip install lapsh
 - 🔁 **Round-trip** — convert back to OpenAPI with `lapsh convert`
 - 📦 **Registry** — browse and install pre-compiled specs at [lap.sh](https://lap.sh)
 - 🤖 **Skill generation** — `lapsh skill` creates agent-ready skills from any spec
-- 🔗 **Integrations** — LangChain, CrewAI, OpenAI function calling, MCP
+- 🔗 **Integrations** — LangChain, Context Hub, Python/TypeScript SDKs
 
 ## How It Works
 
@@ -126,7 +126,7 @@ Five compression stages, each targeting a different source of token waste:
 
 ## Benchmarks
 
-**162 specs · 5,228 endpoints · 4.37M → 423K tokens**
+**1,500+ specs · 5,228 endpoints · 4.37M → 423K tokens**
 
 <p align="center">
   <picture>
@@ -161,7 +161,7 @@ LAP is more than a compiler:
 | **Round-trip** | Convert LAP back to OpenAPI | `lapsh convert api.lap -f openapi` |
 | **Publish** | Share specs to the registry | `lapsh publish api.yaml --provider acme` |
 
-> **Claude Code users:** The `lap-search` skill is included -- your agent can search and install APIs directly. See `skills/search/SKILL.md`.
+> **Claude Code users:** The `lap` skill is included -- your agent can search and install APIs directly. See `skills/lap/SKILL.md`.
 
 ## Supported Formats
 
@@ -190,15 +190,11 @@ Format is auto-detected. Override with `-f openapi|graphql|asyncapi|protobuf|pos
 
 ```python
 # LangChain
-from lap.integrations import LAPLoader
-docs = LAPLoader("stripe.lap").load()
-
-# OpenAI function calling
-from lap.integrations import to_openai_functions
-functions = to_openai_functions("stripe.lap")
+from lap.middleware import LAPDocLoader
+docs = LAPDocLoader("stripe.lap").load()
 ```
 
-Also: CrewAI tool, MCP server and compression proxy. See [integration docs](docs/guide-integrate.md).
+LangChain, Context Hub, and Python/TypeScript SDKs. See [integration docs](docs/guide-integrate.md).
 
 ## FAQ
 
@@ -246,7 +242,7 @@ Cost is the least important argument. The core value is typed contracts: `enum(s
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). The test suite has 545 tests across 177 example specs in 6 formats.
+See [CONTRIBUTING.md](CONTRIBUTING.md). The test suite has 1,101 tests across 190+ example specs in 6 formats.
 
 ```bash
 git clone https://github.com/Lap-Platform/lap.git

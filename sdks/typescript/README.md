@@ -88,6 +88,6 @@ npx tsc
 node dist/tests/parser.test.js
 ```
 
-## Zero Dependencies
+## Minimal Dependencies
 
-No runtime dependencies — just TypeScript types and Node.js built-ins.
+Single runtime dependency (`js-yaml`) -- no heavy frameworks.

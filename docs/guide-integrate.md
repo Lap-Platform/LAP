@@ -56,122 +56,33 @@ results = vectorstore.similarity_search("create a repository")
 # Returns the POST /repos endpoint document
 ```
 
-## Using with CrewAI
+## Using with Context Hub
 
-LAP provides a CrewAI-compatible tool for API lookup.
+[Context Hub](https://github.com/andrewyng/context-hub) equips coding agents with curated, versioned documentation. The LAP registry is a supported Context Hub source - agents can discover and fetch LAP specs directly.
 
-```python
-from crewai import Agent, Task, Crew
-from integrations.crewai.lap_tool import LAPLookup
+### Setup
 
-# Create the tool
-api_lookup = LAPLookup(specs_dir="output/")
+Add the LAP registry to your `config.yaml`:
 
-# Use it in an agent
-agent = Agent(
-    role="API Developer",
-    tools=[api_lookup],
-    goal="Find the right API endpoint for any task"
-)
-
-task = Task(
-    description="Find how to create a Stripe charge",
-    agent=agent
-)
-
-crew = Crew(agents=[agent], tasks=[task])
-result = crew.kickoff()
+```yaml
+sources:
+  - name: default
+    url: https://cdn.aichub.org/v1
+  - name: lap
+    url: https://registry.lap.sh/chub
 ```
 
-### Standalone usage (without CrewAI)
+### Usage
 
-```python
-from integrations.crewai.lap_tool import LAPLookup
+```bash
+# Search for API docs via Context Hub
+chub search stripe --source lap
 
-tool = LAPLookup(specs_dir="output/")
-result = tool._run("stripe", endpoint="charges")
-print(result)
+# Fetch a spec
+chub get stripe --source lap
 ```
 
-## Using with OpenAI Function Calling
-
-Convert LAP endpoints to OpenAI function schemas:
-
-```python
-from lap import LAPClient
-
-client = LAPClient()
-doc = client.load("output/stripe-charges.lap")
-
-# Convert each endpoint to an OpenAI function definition
-functions = []
-for ep in doc.endpoints:
-    properties = {}
-    required = []
-
-    for p in ep.required_params:
-        properties[p.name] = {"type": _map_type(p.type), "description": p.description}
-        required.append(p.name)
-
-    for p in ep.optional_params:
-        properties[p.name] = {"type": _map_type(p.type), "description": p.description}
-
-    functions.append({
-        "name": f"{ep.method.lower()}_{ep.path.replace('/', '_').strip('_')}",
-        "description": ep.summary,
-        "parameters": {
-            "type": "object",
-            "properties": properties,
-            "required": required,
-        }
-    })
-
-def _map_type(t):
-    return {"str": "string", "int": "integer", "num": "number",
-            "bool": "boolean", "map": "object"}.get(t, "string")
-```
-
-Then use with the OpenAI API:
-
-```python
-import openai
-
-response = openai.chat.completions.create(
-    model="gpt-4o",
-    messages=[{"role": "user", "content": "Charge $50 to customer cus_123"}],
-    functions=functions,
-)
-```
-
-## Using with MCP
-
-LAP complements MCP — it compresses the documentation that MCP tools expose. The MCP integration serves LAP endpoints as MCP tools.
-
-```python
-from integrations.mcp.lap_mcp_server import LAPMCPServer
-
-# Load specs and serve as MCP tools
-server = LAPMCPServer("output/")
-server.load_spec("output/github-core.lap")
-
-# List available tools
-tools = server.list_tools()
-for tool in tools:
-    print(f"{tool['name']}: {tool['description'][:60]}")
-    print(f"  Input: {json.dumps(tool['inputSchema'], indent=2)[:100]}...")
-```
-
-Each LAP endpoint becomes an MCP tool with:
-- `name`: Derived from method + path (e.g., `github_get_repos_owner_repo`)
-- `description`: From `@desc`
-- `inputSchema`: JSON Schema generated from `@required` and `@optional` params
-
-### How LAP + MCP work together
-
-- **MCP** defines the protocol for tool discovery and invocation
-- **LAP** compresses the API documentation each tool exposes
-- An MCP server uses LAP for compact tool descriptions
-- The agent sees shorter, typed schemas instead of verbose JSON Schema
+Agents using Context Hub will automatically discover LAP specs alongside other documentation sources.
 
 ## Custom Integration
 

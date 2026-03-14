@@ -12,8 +12,8 @@ Compare any two LAP files to see what changed:
 
 ```bash
 # Compile two versions
-lapsh compile specs/stripe-charges-v1.yaml -o v1.lap
-lapsh compile specs/stripe-charges-v2.yaml -o v2.lap
+lapsh compile examples/verbose/openapi/stripe-charges-v1.yaml -o v1.lap
+lapsh compile examples/verbose/openapi/stripe-charges-v2.yaml -o v2.lap
 
 # Diff them
 lapsh diff v1.lap v2.lap
@@ -77,7 +77,7 @@ Add API diff checks to your CI pipeline:
 name: API Diff Check
 on:
   pull_request:
-    paths: ['specs/**']
+    paths: ['examples/verbose/**']
 
 jobs:
   api-diff:
@@ -93,9 +93,9 @@ jobs:
       - name: Compile current and previous specs
         run: |
           # Current version
-          lapsh compile specs/my-api.yaml -o new.lap
+          lapsh compile examples/verbose/openapi/my-api.yaml -o new.lap
           # Previous version (from main branch)
-          git show main:specs/my-api.yaml > /tmp/old-spec.yaml
+          git show main:examples/verbose/openapi/my-api.yaml > /tmp/old-spec.yaml
           lapsh compile /tmp/old-spec.yaml -o old.lap
 
       - name: Check for breaking changes
@@ -115,11 +115,11 @@ jobs:
 #!/bin/bash
 # .git/hooks/pre-commit
 
-for spec in specs/*.yaml; do
+for spec in examples/verbose/openapi/*.yaml; do
   name=$(basename "$spec" .yaml)
-  if [ -f "output/${name}.lap" ]; then
+  if [ -f "examples/lap/openapi/${name}.lap" ]; then
     lapsh compile "$spec" -o "/tmp/${name}-new.lap"
-    diff_output=$(lapsh diff "output/${name}.lap" "/tmp/${name}-new.lap" 2>&1)
+    diff_output=$(lapsh diff "examples/lap/openapi/${name}.lap" "/tmp/${name}-new.lap" 2>&1)
     if echo "$diff_output" | grep -q "REMOVED"; then
       echo "⚠️  Breaking change in ${name}:"
       echo "$diff_output"
@@ -137,16 +137,16 @@ Monitor third-party APIs for changes by periodically recompiling and diffing:
 #!/bin/bash
 # Run daily via cron
 
-for spec in specs/*.yaml; do
+for spec in examples/verbose/openapi/*.yaml; do
   name=$(basename "$spec" .yaml)
-  cp "output/${name}.lap" "/tmp/${name}-prev.lap" 2>/dev/null
+  cp "examples/lap/openapi/${name}.lap" "/tmp/${name}-prev.lap" 2>/dev/null
 
   # Recompile
-  lapsh compile "$spec" -o "output/${name}.lap"
+  lapsh compile "$spec" -o "examples/lap/openapi/${name}.lap"
 
   # Diff against previous
   if [ -f "/tmp/${name}-prev.lap" ]; then
-    changes=$(lapsh diff "/tmp/${name}-prev.lap" "output/${name}.lap" --format summary)
+    changes=$(lapsh diff "/tmp/${name}-prev.lap" "examples/lap/openapi/${name}.lap" --format summary)
     if [ -n "$changes" ]; then
       echo "Changes detected in ${name}:"
       echo "$changes"

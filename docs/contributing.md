@@ -2,29 +2,32 @@
 
 ## How to Add a New API Spec
 
+The easiest way to contribute an API spec is through the [registry publisher page](https://registry.lap.sh/#publish). You can also use the CLI:
+
+```bash
+# Compile and publish in one step
+lapsh publish my-api.yaml --provider acme
+```
+
+For local development and testing:
+
 1. **Find the OpenAPI spec** for the API you want to add. Good sources:
-   - [APIs.guru](https://apis.guru/) — large directory of OpenAPI specs
+   - [APIs.guru](https://apis.guru/) -- large directory of OpenAPI specs
    - The API provider's developer docs (often link to their spec)
    - GitHub repos (search `openapi.yaml` or `swagger.json`)
 
-2. **Add it to `specs/`**:
+2. **Add it to `examples/verbose/openapi/`**:
    ```bash
-   cp ~/downloaded-spec.yaml specs/my-api.yaml
+   cp ~/downloaded-spec.yaml examples/verbose/openapi/my-api.yaml
    ```
 
-3. **Compile and validate**:
+3. **Compile**:
    ```bash
-   lapsh compile specs/my-api.yaml -o output/my-api.lap
-   lapsh compile specs/my-api.yaml -o output/my-api.lean.lap --lean
-   lapsh validate specs/my-api.yaml
+   lapsh compile examples/verbose/openapi/my-api.yaml -o examples/lap/openapi/my-api.lap
+   lapsh compile examples/verbose/openapi/my-api.yaml -o examples/lap/openapi/my-api.lean.lap --lean
    ```
 
-4. **Fix any warnings** — if the compiler emits warnings about malformed fields, the source spec may need cleanup or the compiler may need a fix.
-
-5. **Submit a PR** with:
-   - The source spec in `specs/`
-   - Both compiled outputs in `output/`
-   - Validation passing
+4. **Fix any warnings** -- if the compiler emits warnings about malformed fields, the source spec may need cleanup or the compiler may need a fix.
 
 ## How to Improve the Compiler
 
@@ -54,10 +57,10 @@ pytest tests/ -v
 pytest integrations/test_integrations.py -v
 
 # Test compilation on all specs
-lapsh benchmark-all specs/
+lapsh benchmark-all examples/verbose/openapi/
 
-# Validate a specific change
-lapsh validate specs/stripe-charges.yaml
+# Inspect a specific spec
+lapsh inspect examples/verbose/openapi/stripe-charges.yaml
 ```
 
 ## How to Add a Framework Integration
@@ -132,7 +135,7 @@ pytest integrations/test_integrations.py -v
 
 ### Test coverage expectations:
 
-- **Compiler** — every spec in `specs/` should compile without errors
+- **Compiler** -- every spec in `examples/verbose/` should compile without errors
 - **Parser** — round-trip: compile → parse → serialize should be stable
 - **Validator** — 100% endpoint/parameter/error preservation
 - **Integrations** — basic load/query tests, with and without framework installed
@@ -140,7 +143,7 @@ pytest integrations/test_integrations.py -v
 ### PR checklist:
 
 - [ ] Tests pass (`pytest tests/ -v`)
-- [ ] All specs still compile (`lapsh benchmark-all specs/`)
+- [ ] All specs still compile (`lapsh benchmark-all examples/verbose/openapi/`)
 - [ ] No new warnings on existing specs
 - [ ] Documentation updated if adding features
 - [ ] Type hints on public API

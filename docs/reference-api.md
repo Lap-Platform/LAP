@@ -235,7 +235,7 @@ const filtered = toContext(spec, {
 
 ## Registry Server API
 
-The registry server (`registry/server.py`) exposes a REST API on port 8420.
+The registry at [lap.sh](https://lap.sh) exposes a REST API.
 
 ### `GET /specs`
 

@@ -90,7 +90,7 @@ Compact type system matching JSON Schema:
 ### From MCP Tool Manifest
 
 ```python
-from lap_compiler import compile_mcp_file
+from lap.core.compilers.lap_tools import compile_mcp_file
 
 bundle = compile_mcp_file("mcp-server-tools.json")
 print(bundle.to_lap())
@@ -99,7 +99,7 @@ print(bundle.to_lap())
 ### From OpenClaw SKILL.md
 
 ```python
-from lap_compiler import compile_skill_file
+from lap.core.compilers.lap_tools import compile_skill_file
 
 spec = compile_skill_file("SKILL.md")
 print(spec.to_lap())
@@ -108,7 +108,7 @@ print(spec.to_lap())
 ### From Generic JSON
 
 ```python
-from lap_compiler import compile_generic_json
+from lap.core.compilers.lap_tools import compile_generic_json
 
 spec = compile_generic_json({
     "name": "my_tool",
@@ -126,7 +126,7 @@ print(spec.to_lap())
 ## Parsing LAP
 
 ```python
-from lap_parser import parse_lap_tools, parse_single_tool
+from lap.core.compilers.lap_tools_parser import parse_lap_tools, parse_single_tool
 
 # Parse a file with multiple tools
 bundle = parse_lap_tools(open("tools.lap").read())

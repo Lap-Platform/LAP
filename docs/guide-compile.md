@@ -5,11 +5,11 @@
 Convert any OpenAPI 3.x YAML or JSON spec to LAP:
 
 ```bash
-lapsh compile specs/stripe-charges.yaml -o output/stripe.lap
+lapsh compile examples/verbose/openapi/stripe-charges.yaml -o stripe.lap
 ```
 
 ```
-✓ Compiled stripe-charges.yaml → output/stripe.lap
+✓ Compiled stripe-charges.yaml → stripe.lap
 ✓ 5 endpoints | 4,291 chars | standard mode
 ```
 
@@ -20,7 +20,7 @@ lapsh compile specs/stripe-charges.yaml -o output/stripe.lap
 Keeps descriptions and comments. Good for debugging and human review.
 
 ```bash
-lapsh compile specs/github-core.yaml -o github.lap
+lapsh compile examples/verbose/openapi/github-core.yaml -o github.lap
 ```
 
 ```
@@ -35,7 +35,7 @@ lapsh compile specs/github-core.yaml -o github.lap
 Strips all descriptions for maximum token compression. Use in production when agents already know the API semantics.
 
 ```bash
-lapsh compile specs/github-core.yaml -o github.lean.lap --lean
+lapsh compile examples/verbose/openapi/github-core.yaml -o github.lean.lap --lean
 ```
 
 ```
@@ -59,7 +59,7 @@ lapsh compile specs/github-core.yaml -o github.lean.lap --lean
 Large OpenAPI specs (1000+ endpoints) compile fine — the compiler processes endpoints sequentially:
 
 ```bash
-lapsh compile specs/stripe-full.yaml -o stripe-full.lap
+lapsh compile examples/verbose/openapi/stripe-full.yaml -o stripe-full.lap
 ```
 
 For very large specs, the output file may be substantial. Tips:
@@ -73,7 +73,7 @@ For very large specs, the output file may be substantial. Tips:
 Compile all specs in a directory:
 
 ```bash
-lapsh benchmark-all specs/
+lapsh benchmark-all examples/verbose/openapi/
 ```
 
 This processes every `.yaml` file in the directory and produces both standard and lean outputs in `output/`.
@@ -81,10 +81,10 @@ This processes every `.yaml` file in the directory and produces both standard an
 To compile individually with control over output:
 
 ```bash
-for spec in specs/*.yaml; do
+for spec in examples/verbose/openapi/*.yaml; do
   name=$(basename "$spec" .yaml)
-  lapsh compile "$spec" -o "output/${name}.lap"
-  lapsh compile "$spec" -o "output/${name}.lean.lap" --lean
+  lapsh compile "$spec" -o "${name}.lap"
+  lapsh compile "$spec" -o "${name}.lean.lap" --lean
 done
 ```
 
@@ -106,7 +106,7 @@ twitter      vercel       vonage       zoom
 Always validate that compilation preserved all information:
 
 ```bash
-lapsh validate specs/stripe-charges.yaml
+lapsh inspect examples/verbose/openapi/stripe-charges.yaml
 ```
 
 ```

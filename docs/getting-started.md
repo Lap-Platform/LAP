@@ -52,7 +52,7 @@ lapsh --help
 ### 1. Compile an OpenAPI spec
 
 ```bash
-lapsh compile specs/stripe-charges.yaml -o stripe.lap
+lapsh compile examples/verbose/openapi/stripe-charges.yaml -o stripe.lap
 ```
 
 Output:
@@ -83,7 +83,7 @@ The compiled LAP file:
 ### 3. Try lean mode for maximum compression
 
 ```bash
-lapsh compile specs/stripe-charges.yaml --lean
+lapsh compile examples/verbose/openapi/stripe-charges.yaml --lean
 ```
 
 Output (lean mode strips descriptions):
@@ -101,20 +101,10 @@ Output (lean mode strips descriptions):
 @errors {400, 401, 402, 429}
 ```
 
-### 4. Validate zero information loss
+### 4. Inspect the compiled output
 
 ```bash
-lapsh validate specs/stripe-charges.yaml
-```
-
-```
-  Check               Result   Status
- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  Endpoints       5/5 (100%)     ✅
-  Parameters    32/32 (100%)     ✅
-  Error Codes     8/8 (100%)     ✅
-
-PASS — Zero information loss!
+lapsh inspect stripe.lap
 ```
 
 ---
@@ -170,5 +160,5 @@ LAP is a structured, typed format for API documentation. Here's what each direct
 ## Next Steps
 
 - [Compiling OpenAPI Specs](guide-compile.md) — batch compilation, handling large specs
-- [Framework Integration](guide-integrate.md) — LangChain, CrewAI, OpenAI, MCP
+- [Framework Integration](guide-integrate.md) -- LangChain, Context Hub, SDKs
 - [CLI Reference](reference-cli.md) — all commands with examples

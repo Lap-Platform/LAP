@@ -3,7 +3,7 @@
 ## Overview
 
 ```
-lapsh [-h] {compile,validate,benchmark,benchmark-all,inspect,convert,diff,registry} ...
+lapsh [-h] {compile,benchmark,benchmark-all,inspect,convert,diff,registry} ...
 ```
 
 ## Commands
@@ -26,7 +26,7 @@ lapsh compile [-h] [-o OUTPUT] [--lean] spec
 
 ```bash
 # Compile to stdout
-$ lapsh compile specs/stripe-charges.yaml
+$ lapsh compile examples/verbose/openapi/stripe-charges.yaml
 
 @lap v0.1
 @api Stripe Charges API
@@ -40,12 +40,12 @@ $ lapsh compile specs/stripe-charges.yaml
 ...
 
 # Compile to file
-$ lapsh compile specs/stripe-charges.yaml -o output/stripe.lap
-✓ Compiled stripe-charges.yaml → output/stripe.lap
+$ lapsh compile examples/verbose/openapi/stripe-charges.yaml -o stripe.lap
+✓ Compiled stripe-charges.yaml → stripe.lap
 ✓ 5 endpoints | 4,291 chars | standard mode
 
 # Lean mode
-$ lapsh compile specs/stripe-charges.yaml --lean
+$ lapsh compile examples/verbose/openapi/stripe-charges.yaml --lean
 
 @lap v0.1
 @api Stripe Charges API
@@ -63,30 +63,6 @@ $ lapsh compile specs/stripe-charges.yaml --lean
 
 ---
 
-### `lapsh validate`
-
-Validate that LAP compilation preserves all information from the source spec.
-
-```
-lapsh validate [-h] spec
-```
-
-**Example:**
-
-```bash
-$ lapsh validate specs/stripe-charges.yaml
-
-  Check               Result   Status
- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  Endpoints       5/5 (100%)     ✅
-  Parameters    32/32 (100%)     ✅
-  Error Codes     8/8 (100%)     ✅
-
-PASS — Zero information loss!
-```
-
----
-
 ### `lapsh benchmark`
 
 Benchmark token usage comparing verbose docs vs LAP for a single spec.
@@ -98,7 +74,7 @@ lapsh benchmark [-h] spec
 **Example:**
 
 ```bash
-$ lapsh benchmark specs/stripe-charges.yaml
+$ lapsh benchmark examples/verbose/openapi/stripe-charges.yaml
 
 📊 LAP LAP Token Benchmark
 
@@ -129,7 +105,7 @@ lapsh benchmark-all [-h] directory
 **Example:**
 
 ```bash
-$ lapsh benchmark-all specs/
+$ lapsh benchmark-all examples/verbose/openapi/
 ```
 
 ---
