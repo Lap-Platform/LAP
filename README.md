@@ -20,7 +20,7 @@
 <a href="https://github.com/Lap-Platform/lap/pulls"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge" alt="PRs Welcome"></a>
 <a href="https://github.com/Lap-Platform/lap"><img src="https://img.shields.io/badge/%E2%AD%90_Star-this_repo-yellow?style=for-the-badge" alt="Star this repo"></a>
 <br>
-<a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-gray?style=for-the-badge" alt="License"></a>
+<a href="https://lap.sh"><img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fregistry.lap.sh%2Fv1%2Fstats.json&query=%24.total_apis&label=Registry&suffix=%20APIs&color=blueviolet&style=for-the-badge" alt="APIs in Registry"></a>
 
 [Website](https://lap.sh) · [Registry](https://lap.sh) · [Benchmarks](https://github.com/Lap-Platform/Lap-benchmark-docs) · [Docs](docs/)
 
