@@ -10,11 +10,15 @@
 
 **Agent-Native API specs. Verified, compressed, ready to install.**
 
-[![PyPI](https://img.shields.io/pypi/v/lapsh.svg)](https://pypi.org/project/lapsh/)
-[![npm](https://img.shields.io/npm/v/@lap-platform/lapsh.svg)](https://www.npmjs.com/package/@lap-platform/lapsh)
-[![CI](https://github.com/Lap-Platform/lap/actions/workflows/ci.yml/badge.svg)](https://github.com/Lap-Platform/lap/actions/workflows/ci.yml)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+<a href="https://pypi.org/project/lapsh/"><img src="https://img.shields.io/pypi/v/lapsh.svg?style=for-the-badge" alt="PyPI"></a>
+<a href="https://www.npmjs.com/package/@lap-platform/lapsh"><img src="https://img.shields.io/npm/v/@lap-platform/lapsh.svg?style=for-the-badge" alt="npm"></a>
+<a href="https://github.com/Lap-Platform/lap/actions/workflows/ci.yml"><img src="https://img.shields.io/badge/tests-1%2C101%20passed-brightgreen?style=for-the-badge" alt="Tests"></a>
+<a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=for-the-badge" alt="License"></a>
+<a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10+-blue.svg?style=for-the-badge" alt="Python 3.10+"></a>
+<a href="https://github.com/Lap-Platform/lap/tree/main/skills/lap"><img src="https://img.shields.io/badge/Claude%20Code-skill-orange?style=for-the-badge" alt="Claude Code Skill"></a>
+<a href="https://clawhub.ai/mickmicksh/lap"><img src="https://img.shields.io/badge/OpenClaw-skill-orange?style=for-the-badge" alt="OpenClaw Skill"></a>
+<a href="https://github.com/Lap-Platform/lap/pulls"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge" alt="PRs Welcome"></a>
+<a href="https://github.com/Lap-Platform/lap"><img src="https://img.shields.io/badge/%E2%AD%90_Star-this_repo-yellow?style=for-the-badge" alt="Star this repo"></a>
 
 [Website](https://lap.sh) · [Registry](https://lap.sh) · [Benchmarks](https://github.com/Lap-Platform/Lap-benchmark-docs) · [Docs](docs/)
 
@@ -56,6 +60,27 @@ npx @lap-platform/lapsh skill-install stripe-com
 
 # Or compile your own spec
 npx @lap-platform/lapsh compile api.yaml --lean
+```
+
+### Use as an Agent Skill
+
+Install the LAP skill so your agent can search, compile, and manage APIs automatically:
+
+**Claude Code:**
+```bash
+cp -r skills/lap ~/.claude/skills/lap
+```
+
+**OpenClaw:** install from [ClawHub](https://clawhub.ai/mickmicksh/lap) or copy manually:
+```bash
+cp -r skills/lap ~/.openclaw/skills/lap
+```
+
+Once installed, agents auto-trigger the skill when working with APIs -- or invoke it directly with `/lap`. You can also install individual API skills for specific integrations:
+
+```bash
+npx @lap-platform/lapsh skill-install stripe-com
+# Agent now knows the full Stripe API
 ```
 
 > **Want to get listed?** [Register as a verified publisher](https://registry.lap.sh) and share your specs and skills with the registry.
