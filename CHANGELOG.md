@@ -5,6 +5,18 @@ All notable changes to LAP (Lean API Platform) will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.8] - 2026-03-16
+
+### Fixed
+- **HTML tag leakage in @desc fields**: Descriptions from upstream API specs (Etsy, eBay, AWS, Stripe, Azure, etc.) were leaking raw HTML tags and entities into compiled LAP output
+- Move `_strip_html` to shared `strip_html` in `utils.py` with `html.unescape()` to handle both raw tags and HTML entities (`&lt;`, `&gt;`, etc.)
+- Apply HTML stripping to all compilers: TypeScript OpenAPI, Python Postman, and Python Smithy (previously only Python OpenAPI had it)
+
+### Added
+- HTML entity decoding tests for the shared `strip_html` utility
+- Postman compiler HTML stripping tests
+- TypeScript OpenAPI HTML stripping tests (params, summaries, responses, request body, entities)
+
 ## [0.4.7] - 2026-03-12
 
 ### Added
