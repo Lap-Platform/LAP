@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://github.com/Lap-Platform/lap#readme
+    about: Read the LAP docs before opening an issue
+  - name: PyPI Package
+    url: https://pypi.org/project/lapsh/
+    about: Check the latest published version on PyPI
+  - name: npm Package
+    url: https://www.npmjs.com/package/@lap-platform/lapsh
+    about: Check the latest published version on npm

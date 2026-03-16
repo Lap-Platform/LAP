@@ -1,0 +1,56 @@
+name: Issue Automation
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  validate-spec-request:
+    if: contains(github.event.issue.labels.*.name, 'spec-request')
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Validate spec request
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = context.payload.issue.body || '';
+            const urlMatch = body.match(/### Spec URL\s*\n\n(.+)/);
+            const specUrl = urlMatch ? urlMatch[1].trim() : '';
+
+            if (!specUrl || specUrl === '_No response_') {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: 'No spec URL provided. If you have a direct link to the spec file (YAML, JSON, SDL, proto), adding it here will help us process this request faster.'
+              });
+              return;
+            }
+
+            try {
+              const resp = await fetch(specUrl, { method: 'HEAD', signal: AbortSignal.timeout(10000) });
+              if (resp.ok) {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  body: `Spec URL is reachable (HTTP ${resp.status}). Thanks for including the direct link!`
+                });
+              } else {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  body: `Spec URL returned HTTP ${resp.status}. Please double-check the link.`
+                });
+              }
+            } catch (e) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: 'Could not reach the spec URL. Please verify the link is publicly accessible.'
+              });
+            }

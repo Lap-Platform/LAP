@@ -1,0 +1,64 @@
+name: Spec Request
+description: Request a new API spec to be added to the LAP registry
+title: "[Spec Request]: "
+labels: ["spec-request"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for requesting a new spec! Fill in the details below so we can add it to the LAP registry.
+
+  - type: input
+    id: api-name
+    attributes:
+      label: API Name
+      description: The name of the API you want added
+      placeholder: e.g., Stripe Payments API
+    validations:
+      required: true
+
+  - type: input
+    id: api-url
+    attributes:
+      label: API Provider / Documentation URL
+      description: Link to the API provider's documentation
+      placeholder: e.g., https://stripe.com/docs/api
+    validations:
+      required: true
+
+  - type: dropdown
+    id: spec-format
+    attributes:
+      label: Spec Format
+      description: What format is the API spec in?
+      options:
+        - OpenAPI
+        - GraphQL
+        - AsyncAPI
+        - Protobuf
+        - Postman
+        - Not sure
+    validations:
+      required: true
+
+  - type: input
+    id: spec-url
+    attributes:
+      label: Spec URL
+      description: Direct link to the spec file (YAML, JSON, SDL, proto, or Postman collection) if you have one
+      placeholder: e.g., https://raw.githubusercontent.com/.../openapi.yaml
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use Case
+      description: Tell us why this spec matters to you -- what are you building, and how would having this spec in LAP help your workflow?
+      placeholder: I'm building an agent that needs to...
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any other details that might help us add this spec

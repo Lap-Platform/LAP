@@ -24,6 +24,8 @@
 
 [Website](https://lap.sh) · [Registry](https://lap.sh) · [Benchmarks](https://github.com/Lap-Platform/Lap-benchmark-docs) · [Docs](docs/)
 
+[Request a Spec](https://github.com/Lap-Platform/lap/issues/new?template=spec-request.yml) · [Report a Bug](https://github.com/Lap-Platform/lap/issues/new?template=bug-report.yml) · [Request a Feature](https://github.com/Lap-Platform/lap/issues/new?template=feature-request.yml)
+
 </div>
 
 ---

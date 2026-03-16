@@ -1,0 +1,86 @@
+name: Bug Report
+description: Report a bug in the LAP CLI or TypeScript SDK
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: package
+    attributes:
+      label: Package
+      description: Which LAP package are you using?
+      options:
+        - Python CLI (lapsh)
+        - TypeScript SDK (@lap-platform/lapsh)
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear description of the bug
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: Steps to reproduce the behavior
+      placeholder: |
+        1. Run `lapsh compile ...`
+        2. See error...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected Behavior
+      description: What you expected to happen
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual-behavior
+    attributes:
+      label: Actual Behavior
+      description: What actually happened
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: LAP Version
+      description: Run `lapsh --version` or check your package.json
+      placeholder: e.g., 0.4.8
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      options:
+        - Windows
+        - macOS
+        - Linux
+    validations:
+      required: true
+
+  - type: input
+    id: runtime-version
+    attributes:
+      label: Runtime Version
+      description: Python version (e.g., 3.12) or Node.js version (e.g., 20.x)
+      placeholder: e.g., Python 3.12 or Node 20.x
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant Log Output
+      description: Paste any relevant log output or error messages
+      render: shell
