@@ -28,7 +28,7 @@ from lap.core.formats.lap import (
     ResponseField,
     ErrorSchema,
 )
-from lap.core.utils import read_file_safe
+from lap.core.utils import read_file_safe, strip_html
 
 
 # AWS SDK scalar types → LAP types
@@ -316,10 +316,7 @@ def _operation_to_endpoint(op_name: str, op_def: dict, shapes: dict) -> Optional
     # Extract documentation
     summary = op_def.get("documentation", "")
     if summary:
-        # Strip HTML tags
-        import re
-        summary = re.sub(r'<[^>]+>', '', summary)
-        summary = summary.strip()
+        summary = strip_html(summary).strip()
 
     # Extract input parameters
     input_shape = op_def.get("input", {}).get("shape")
@@ -350,8 +347,7 @@ def _operation_to_endpoint(op_name: str, op_def: dict, shapes: dict) -> Optional
             code = "400" if "Client" in error_shape else "500"
             description = error_def.get("documentation", "")
             if description:
-                import re
-                description = re.sub(r'<[^>]+>', '', description).strip()
+                description = strip_html(description).strip()
 
             error_schemas.append(ErrorSchema(
                 code=code,
