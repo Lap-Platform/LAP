@@ -599,8 +599,8 @@ def registry_available():
 
 
 skip_no_registry = pytest.mark.skipif(
-    "not registry_available()",
-    reason="LAP registry unreachable or lapsh/npx not installed",
+    "os.environ.get('CI') == 'true' or not registry_available()",
+    reason="LAP registry live tests skipped in CI or registry unreachable",
 )
 
 PROJECT_DIR = Path(__file__).parent.parent
