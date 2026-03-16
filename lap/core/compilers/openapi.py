@@ -14,13 +14,8 @@ from pathlib import Path
 import yaml
 
 from lap.core.formats.lap import LAPSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema
-from lap.core.utils import AUTH_PARAM_NAMES, AUTH_DESC_KEYWORDS, resolve_ref
+from lap.core.utils import AUTH_PARAM_NAMES, AUTH_DESC_KEYWORDS, resolve_ref, strip_html
 from lap.core.yaml_compat import _SafeLoaderCompat
-
-
-def _strip_html(text: str) -> str:
-    """Remove HTML tags from description text."""
-    return re.sub(r'<[^>]+>', '', text)
 
 
 def extract_type(schema: dict, spec: dict) -> str:
@@ -115,7 +110,7 @@ def extract_params(param_list: list, spec: dict) -> tuple[list, list]:
             name=p["name"],
             type=extract_type(schema, spec),
             required=p.get("required", False),
-            description=_strip_html((p.get("description") or "").replace('\n', ' ')).strip(),
+            description=strip_html((p.get("description") or "").replace('\n', ' ')).strip(),
             enum=enum_vals,
             default=str(schema["default"]) if "default" in schema else None,
         )
@@ -161,7 +156,7 @@ def extract_request_body(body: dict, spec: dict) -> list:
             name=name,
             type=type_str,
             required=name in required_names,
-            description=_strip_html((schema.get("description") or "").replace('\n', ' ')).strip(),
+            description=strip_html((schema.get("description") or "").replace('\n', ' ')).strip(),
             enum=enum_vals,
             default=str(schema["default"]) if "default" in schema else None,
         ))
@@ -212,7 +207,7 @@ def extract_response_schemas(responses: dict, spec: dict) -> tuple:
         if "$ref" in resp:
             resp = resolve_ref(spec, resp["$ref"])
 
-        desc = _strip_html((resp.get("description") or "").replace('\n', ' ')).strip()
+        desc = strip_html((resp.get("description") or "").replace('\n', ' ')).strip()
 
         # Extract response body schema
         content = resp.get("content", {})
@@ -434,7 +429,7 @@ def compile_openapi(spec_path: str) -> LAPSpec:
                 endpoint = Endpoint(
                     method=method,
                     path=path_str,
-                    summary=_strip_html((details.get("summary") or details.get("description") or "").strip().split('\n')[0]).strip(),
+                    summary=strip_html((details.get("summary") or details.get("description") or "").strip().split('\n')[0]).strip(),
                     required_params=req_params,
                     optional_params=opt_params,
                     request_body=body_params,

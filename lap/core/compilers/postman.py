@@ -15,7 +15,7 @@ from typing import Optional
 from lap.core.formats.lap import (
     LAPSpec, Endpoint, Param, ResponseSchema, ResponseField, ErrorSchema
 )
-from lap.core.utils import AUTH_PARAM_NAMES, AUTH_DESC_KEYWORDS
+from lap.core.utils import AUTH_PARAM_NAMES, AUTH_DESC_KEYWORDS, strip_html
 
 
 def _resolve_variables(text: str, variables: dict) -> str:
@@ -117,7 +117,7 @@ def _extract_query_params(url) -> list:
                 name=name,
                 type='str',
                 required=not disabled,
-                description=q.get('description', '').strip() if q.get('description') else '',
+                description=strip_html(q.get('description', '')).strip() if q.get('description') else '',
             ))
         return params
     return []
@@ -143,7 +143,7 @@ def _extract_header_params(request: dict) -> list:
             name=name,
             type='str',
             required=not disabled,
-            description=h.get('description', '').strip() if h.get('description') else '',
+            description=strip_html(h.get('description', '')).strip() if h.get('description') else '',
         ))
     return params
 
@@ -165,7 +165,7 @@ def _extract_path_params(url) -> list:
                 name=name,
                 type='str',
                 required=True,
-                description=v.get('description', '').strip() if v.get('description') else '',
+                description=strip_html(v.get('description', '')).strip() if v.get('description') else '',
             ))
         return params
     return []
@@ -211,7 +211,7 @@ def _extract_body_params(request: dict) -> list:
                 name=name,
                 type=param_type,
                 required=not disabled,
-                description=item.get('description', '').strip() if item.get('description') else '',
+                description=strip_html(item.get('description', '')).strip() if item.get('description') else '',
             ))
 
     return params

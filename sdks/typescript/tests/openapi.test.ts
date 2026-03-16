@@ -141,4 +141,157 @@ describe('OpenAPI Compiler', () => {
   });
 });
 
+describe('HTML Stripping', () => {
+  it('should strip HTML tags from param descriptions', () => {
+    const specPath = path.join(EXAMPLES_DIR, 'discord.yaml');
+    const spec = compileOpenapi(specPath);
+    for (const ep of spec.endpoints) {
+      for (const p of [...ep.requiredParams, ...ep.optionalParams]) {
+        if (p.description) {
+          assert.ok(!/<[a-zA-Z][^>]*>/.test(p.description),
+            `Param ${p.name} has HTML tags: ${p.description.slice(0, 100)}`);
+        }
+      }
+    }
+  });
+
+  it('should strip HTML tags from endpoint summaries', () => {
+    // Create a minimal spec with HTML in summary
+    const fs = require('fs');
+    const os = require('os');
+    const tmpFile = path.join(os.tmpdir(), 'html-test-spec.json');
+    const specData = {
+      openapi: '3.0.0',
+      info: { title: 'Test', version: '1.0' },
+      paths: {
+        '/items': {
+          get: {
+            summary: '<p>List all items</p>',
+            responses: { '200': { description: '<b>OK</b>' } },
+          },
+        },
+      },
+    };
+    fs.writeFileSync(tmpFile, JSON.stringify(specData));
+    try {
+      const spec = compileOpenapi(tmpFile);
+      assert.ok(spec.endpoints.length > 0);
+      assert.ok(!/<[a-zA-Z][^>]*>/.test(spec.endpoints[0].description || ''),
+        'Summary should not contain HTML tags');
+      assert.ok(spec.endpoints[0].description?.includes('List all items'),
+        'Summary text content should be preserved');
+    } finally {
+      fs.unlinkSync(tmpFile);
+    }
+  });
+
+  it('should strip HTML tags from response descriptions', () => {
+    const fs = require('fs');
+    const os = require('os');
+    const tmpFile = path.join(os.tmpdir(), 'resp-html-test-spec.json');
+    const specData = {
+      openapi: '3.0.0',
+      info: { title: 'Test', version: '1.0' },
+      paths: {
+        '/items': {
+          get: {
+            summary: 'List items',
+            responses: {
+              '200': { description: '<p>Successful response with <b>data</b></p>' },
+              '404': { description: '<span class="error">Not found</span>' },
+            },
+          },
+        },
+      },
+    };
+    fs.writeFileSync(tmpFile, JSON.stringify(specData));
+    try {
+      const spec = compileOpenapi(tmpFile);
+      const ep = spec.endpoints[0];
+      for (const rs of ep.responses) {
+        assert.ok(!/<[a-zA-Z][^>]*>/.test(rs.description || ''),
+          `Response ${rs.statusCode} has HTML tags: ${rs.description}`);
+      }
+    } finally {
+      fs.unlinkSync(tmpFile);
+    }
+  });
+
+  it('should strip HTML from request body field descriptions', () => {
+    const fs = require('fs');
+    const os = require('os');
+    const tmpFile = path.join(os.tmpdir(), 'body-html-test-spec.json');
+    const specData = {
+      openapi: '3.0.0',
+      info: { title: 'Test', version: '1.0' },
+      paths: {
+        '/items': {
+          post: {
+            summary: 'Create item',
+            requestBody: {
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      name: { type: 'string', description: '<b>Item</b> name' },
+                    },
+                  },
+                },
+              },
+            },
+            responses: { '201': { description: 'Created' } },
+          },
+        },
+      },
+    };
+    fs.writeFileSync(tmpFile, JSON.stringify(specData));
+    try {
+      const spec = compileOpenapi(tmpFile);
+      const ep = spec.endpoints[0];
+      const bodyParams = ep.requestBody || [];
+      for (const p of bodyParams) {
+        if (p.description) {
+          assert.ok(!/<[a-zA-Z][^>]*>/.test(p.description),
+            `Body param ${p.name} has HTML tags: ${p.description}`);
+          assert.ok(p.description.includes('Item'),
+            'Text content should be preserved');
+        }
+      }
+    } finally {
+      fs.unlinkSync(tmpFile);
+    }
+  });
+
+  it('should decode HTML entities in descriptions', () => {
+    const fs = require('fs');
+    const os = require('os');
+    const tmpFile = path.join(os.tmpdir(), 'entity-test-spec.json');
+    const specData = {
+      openapi: '3.0.0',
+      info: { title: 'Test', version: '1.0' },
+      paths: {
+        '/items': {
+          get: {
+            summary: '&lt;p&gt;List items&lt;/p&gt;',
+            responses: { '200': { description: 'OK' } },
+          },
+        },
+      },
+    };
+    fs.writeFileSync(tmpFile, JSON.stringify(specData));
+    try {
+      const spec = compileOpenapi(tmpFile);
+      assert.ok(!/<[a-zA-Z][^>]*>/.test(spec.endpoints[0].description || ''),
+        'Decoded entities should be stripped');
+      assert.ok(!spec.endpoints[0].description?.includes('&lt;'),
+        'HTML entities should be decoded');
+      assert.ok(spec.endpoints[0].description?.includes('List items'),
+        'Text content should be preserved');
+    } finally {
+      fs.unlinkSync(tmpFile);
+    }
+  });
+});
+
 console.log('\n-- OpenAPI compiler tests complete --');

@@ -300,11 +300,29 @@ class TestHtmlStripping:
     """Bug #9: HTML tags should be stripped from descriptions."""
 
     def test_strip_html_helper(self):
-        from lap.core.compilers.openapi import _strip_html
-        assert _strip_html("<p>Hello</p>") == "Hello"
-        assert _strip_html('Click <a href="url">here</a>') == "Click here"
-        assert _strip_html("<b>bold</b> and <i>italic</i>") == "bold and italic"
-        assert _strip_html("no tags here") == "no tags here"
+        from lap.core.utils import strip_html
+        assert strip_html("<p>Hello</p>") == "Hello"
+        assert strip_html('Click <a href="url">here</a>') == "Click here"
+        assert strip_html("<b>bold</b> and <i>italic</i>") == "bold and italic"
+        assert strip_html("no tags here") == "no tags here"
+
+    def test_strip_html_entities(self):
+        from lap.core.utils import strip_html
+        assert strip_html("&lt;p&gt;Hello&lt;/p&gt;") == "Hello"
+        assert strip_html("a &amp; b") == "a & b"
+        assert strip_html("&lt;code&gt;foo&lt;/code&gt; bar") == "foo bar"
+        assert strip_html("no entities") == "no entities"
+        # Mixed: entities + raw tags
+        assert strip_html("&lt;p&gt;Hello<br>world&lt;/p&gt;") == "Helloworld"
+
+    def test_postman_description_no_html(self):
+        from lap.core.compilers.postman import _extract_query_params
+        url = {"query": [{"key": "q", "description": "<b>Search</b> term"}]}
+        params = _extract_query_params(url)
+        assert params
+        assert "<" not in params[0].description
+        assert ">" not in params[0].description
+        assert "Search" in params[0].description
 
     def test_param_description_no_html(self):
         from lap.core.compilers.openapi import extract_params

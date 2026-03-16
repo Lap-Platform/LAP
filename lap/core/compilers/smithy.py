@@ -31,7 +31,7 @@ from lap.core.formats.lap import (
     ResponseField,
     ErrorSchema,
 )
-from lap.core.utils import read_file_safe
+from lap.core.utils import read_file_safe, strip_html
 
 
 # Smithy scalar types → LAP types
@@ -246,9 +246,9 @@ def _extract_service_metadata(service_shape: dict) -> dict:
     # Description from @documentation trait
     traits = service_shape.get("traits", {})
     if "smithy.api#documentation" in traits:
-        metadata["description"] = traits["smithy.api#documentation"]
+        metadata["description"] = strip_html(traits["smithy.api#documentation"])
     elif "smithy.api#title" in traits:
-        metadata["description"] = traits["smithy.api#title"]
+        metadata["description"] = strip_html(traits["smithy.api#title"])
 
     return metadata
 
@@ -487,7 +487,7 @@ def _extract_http_bindings(
         member_target = member_def.get("target", "smithy.api#String")
         traits = member_def.get("traits", {})
         required = "smithy.api#required" in traits
-        description = traits.get("smithy.api#documentation", "")
+        description = strip_html(traits.get("smithy.api#documentation", ""))
         field_type = _smithy_type_to_lap(member_target, shapes)
 
         # Classify by HTTP binding trait
@@ -576,7 +576,7 @@ def _operation_to_endpoint(op_id: str, op_shape: dict, shapes: dict) -> Optional
 
     # Extract operation name and summary
     op_name = op_id.split("#")[1] if "#" in op_id else op_id
-    summary = traits.get("smithy.api#documentation", "")
+    summary = strip_html(traits.get("smithy.api#documentation", ""))
 
     # Extract input bindings
     input_ref = op_shape.get("input", {}).get("target")
@@ -647,7 +647,7 @@ def _extract_operation_errors(error_refs: list, shapes: dict) -> list[ErrorSchem
         error_type = error_id.split("#")[1] if "#" in error_id else error_id
 
         # Get description
-        description = traits.get("smithy.api#documentation", "")
+        description = strip_html(traits.get("smithy.api#documentation", ""))
 
         error_schemas.append(ErrorSchema(
             code=code,

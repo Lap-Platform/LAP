@@ -10,6 +10,16 @@ import {
   ErrorSchema,
 } from '../parser';
 
+function stripHtml(text: string): string {
+  return text
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/<[^>]+>/g, '');
+}
+
 // ── $ref resolution ──────────────────────────────────────────────────────────
 
 function resolveRef(spec: Record<string, unknown>, ref: string, _visited?: Set<string>): Record<string, unknown> {
@@ -138,7 +148,7 @@ function extractParams(paramList: unknown[], spec: Record<string, unknown>): [Pa
       name,
       type: typeStr,
       required: isReq,
-      description: ((p['description'] as string) ?? '').replace(/\n/g, ' ').trim() || undefined,
+      description: stripHtml(((p['description'] as string) ?? '')).replace(/\n/g, ' ').trim() || undefined,
       nullable,
       enumValues: enumVals.length > 0 ? enumVals : undefined,
       defaultValue,
@@ -205,7 +215,7 @@ function extractRequestBody(body: Record<string, unknown>, spec: Record<string, 
       name,
       type: typeStr,
       required: isReq,
-      description: ((schema['description'] as string) ?? '').replace(/\n/g, ' ').trim() || undefined,
+      description: stripHtml(((schema['description'] as string) ?? '')).replace(/\n/g, ' ').trim() || undefined,
       nullable,
       enumValues: enumVals.length > 0 ? enumVals : undefined,
       defaultValue,
@@ -279,7 +289,7 @@ function extractResponseSchemas(
       resp = resolveRef(spec, resp['$ref'] as string);
     }
 
-    const desc = ((resp['description'] as string) ?? '').replace(/\n/g, ' ').trim() || undefined;
+    const desc = stripHtml(((resp['description'] as string) ?? '')).replace(/\n/g, ' ').trim() || undefined;
 
     const content = (resp['content'] as Record<string, unknown>) ?? {};
     const jsonContent = (content['application/json'] as Record<string, unknown>) ?? {};
@@ -444,7 +454,7 @@ export function compileOpenapi(specPath: string): LAPSpec {
       // Extract request example from requestBody
       const exampleRequest = extractRequestExample(requestBodyRaw, spec);
 
-      const summary = (
+      const summary = stripHtml(
         (details['summary'] as string) ??
         (details['description'] as string) ??
         ''

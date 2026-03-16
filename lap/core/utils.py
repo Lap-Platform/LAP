@@ -5,12 +5,21 @@ Single source of truth for functions previously duplicated across
 benchmark.py, benchmark_all.py, report.py, agent_test.py, demo.py, and the SDK.
 """
 
+import html
+import re
 import warnings
 from pathlib import Path
 from typing import Optional
 
 __all__ = ["count_tokens", "MODEL_COSTS", "read_file_safe", "get_tiktoken_encoding",
-           "AUTH_PARAM_NAMES", "AUTH_DESC_KEYWORDS", "resolve_ref"]
+           "AUTH_PARAM_NAMES", "AUTH_DESC_KEYWORDS", "resolve_ref", "strip_html"]
+
+def strip_html(text: str) -> str:
+    """Remove HTML tags and decode HTML entities from description text."""
+    text = html.unescape(text)
+    text = re.sub(r'<[^>]+>', '', text)
+    return text
+
 
 # Cost per 1K input tokens (USD) — approximate as of early 2026
 MODEL_COSTS = {
