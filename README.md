@@ -30,7 +30,7 @@
 
 Without API documentation, LLM agents hallucinate endpoints, invent parameters, and guess auth flows -- scoring just **0.399 accuracy** in blind tests.
 
-LAP fixes this. One command gives your agent a verified, agent-native API spec -- jumping accuracy to **0.860**. And because LAP specs are 10x smaller than raw OpenAPI, you also save 35% on cost and run 29% faster.
+LAP fixes this. One command gives your agent a verified, agent-native API spec -- jumping accuracy to **0.860**. And because LAP specs are up to 10x smaller than raw OpenAPI, you also save 35% on cost and run 29% faster.
 
 **Not minification** -- a purpose-built compiler with its own grammar.
 
@@ -95,12 +95,12 @@ pip install lapsh
 
 ## What You Get
 
-- 🗜️ **5.2× median compression** on OpenAPI, up to 39.6× on large specs — **35% cheaper, 29% faster** ([benchmarks](BENCHMARKS.md))
+- 📦 **Registry** — browse and install 1500+ pre-compiled specs at [lap.sh](https://registry.lap.sh)
+-  🗜️ **5.2× median compression** on OpenAPI, up to 39.6× on large specs — **35% cheaper, 29% faster** ([benchmarks](BENCHMARKS.md))
 - 📐 **Typed contracts** — `enum(a|b|c)`, `str(uuid)`, `int=10` prevent agent hallucination
 - 🔌 **6 input formats** — OpenAPI, GraphQL, AsyncAPI, Protobuf, Postman, Smithy
 - 🎯 **Zero information loss** — every endpoint, param, and type constraint preserved
 - 🔁 **Round-trip** — convert back to OpenAPI with `lapsh convert`
-- 📦 **Registry** — browse and install pre-compiled specs at [lap.sh](https://lap.sh)
 - 🤖 **Skill generation** — `lapsh skill` creates agent-ready skills from any spec
 - 🔗 **Integrations** — LangChain, Context Hub, Python/TypeScript SDKs
 
