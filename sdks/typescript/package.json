@@ -8,14 +8,16 @@
     "dist/src/**/*.js",
     "dist/src/**/*.d.ts",
     "dist/src/**/*.js.map",
-    "README.md"
+    "README.md",
+    "skills/**/*.md",
+    "skills/**/*.mdc"
   ],
   "bin": {
     "lapsh": "dist/src/cli.js"
   },
   "scripts": {
     "build": "tsc",
-    "test": "tsc && node dist/tests/parser.test.js && node dist/tests/serializer.test.js && node dist/tests/skill.test.js && node dist/tests/openapi.test.js && node dist/tests/skill_llm.test.js"
+    "test": "tsc && node dist/tests/parser.test.js && node dist/tests/serializer.test.js && node dist/tests/skill.test.js && node dist/tests/openapi.test.js && node dist/tests/aws-sdk.test.js && node dist/tests/postman.test.js && node dist/tests/asyncapi.test.js && node dist/tests/graphql.test.js && node dist/tests/protobuf.test.js && node dist/tests/smithy.test.js && node dist/tests/skill_llm.test.js"
   },
   "keywords": [
     "api",

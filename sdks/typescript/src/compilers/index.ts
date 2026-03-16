@@ -51,6 +51,23 @@ export function detectFormat(specPath: string): string {
       );
     }
 
+    // AWS SDK JSON (version "2.0" with operations + shapes)
+    if (data['version'] === '2.0' && 'operations' in data && 'shapes' in data) return 'aws_sdk';
+
+    // AWS SDK JSON (newer format without version key: metadata with apiVersion + protocol)
+    const awsMeta = data['metadata'];
+    if (
+      awsMeta &&
+      typeof awsMeta === 'object' &&
+      !Array.isArray(awsMeta) &&
+      'apiVersion' in (awsMeta as Record<string, unknown>) &&
+      'protocol' in (awsMeta as Record<string, unknown>) &&
+      'operations' in data &&
+      'shapes' in data
+    ) {
+      return 'aws_sdk';
+    }
+
     // Smithy JSON AST
     if ('smithy' in data && 'shapes' in data) return 'smithy';
 
@@ -87,12 +104,12 @@ export function detectFormat(specPath: string): string {
     }
 
     throw new Error(
-      `Cannot detect format of '${specPath}'. Use the format option to specify (openapi, graphql, asyncapi, protobuf, postman, smithy).`,
+      `Cannot detect format of '${specPath}'. Use the format option to specify (openapi, graphql, asyncapi, protobuf, postman, smithy, aws_sdk).`,
     );
   }
 
   throw new Error(
-    `Unsupported file extension '${ext}' for '${specPath}'. Use the format option to specify (openapi, graphql, asyncapi, protobuf, postman, smithy).`,
+    `Unsupported file extension '${ext}' for '${specPath}'. Use the format option to specify (openapi, graphql, asyncapi, protobuf, postman, smithy, aws_sdk).`,
   );
 }
 
@@ -109,6 +126,36 @@ export function compile(specPath: string, options?: { format?: string }): LAPSpe
   if (format === 'openapi') {
     const { compileOpenapi } = require('./openapi') as typeof import('./openapi');
     return compileOpenapi(specPath);
+  }
+
+  if (format === 'aws_sdk') {
+    const { compileAwsSdk } = require('./aws-sdk') as typeof import('./aws-sdk');
+    return compileAwsSdk(specPath);
+  }
+
+  if (format === 'graphql') {
+    const { compileGraphql } = require('./graphql') as typeof import('./graphql');
+    return compileGraphql(specPath);
+  }
+
+  if (format === 'protobuf') {
+    const { compileProtobuf } = require('./protobuf') as typeof import('./protobuf');
+    return compileProtobuf(specPath);
+  }
+
+  if (format === 'smithy') {
+    const { compileSmithySpec } = require('./smithy') as typeof import('./smithy');
+    return compileSmithySpec(specPath);
+  }
+
+  if (format === 'postman') {
+    const { compilePostman } = require('./postman') as typeof import('./postman');
+    return compilePostman(specPath);
+  }
+
+  if (format === 'asyncapi') {
+    const { compileAsyncApi } = require('./asyncapi') as typeof import('./asyncapi');
+    return compileAsyncApi(specPath);
   }
 
   throw new Error(

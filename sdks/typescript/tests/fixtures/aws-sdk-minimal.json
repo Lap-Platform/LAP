@@ -1,0 +1,113 @@
+{
+  "version": "2.0",
+  "metadata": {
+    "apiVersion": "2021-01-01",
+    "endpointPrefix": "testservice",
+    "protocol": "rest-json",
+    "serviceFullName": "AWS Test Service",
+    "serviceId": "TestService",
+    "signatureVersion": "v4",
+    "uid": "testservice-2021-01-01"
+  },
+  "operations": {
+    "GetItem": {
+      "name": "GetItem",
+      "http": {
+        "method": "GET",
+        "requestUri": "/items/{ItemId}"
+      },
+      "input": { "shape": "GetItemRequest" },
+      "output": { "shape": "GetItemResponse" },
+      "errors": [
+        { "shape": "ItemNotFoundException" },
+        { "shape": "InternalServerException" }
+      ],
+      "documentation": "<p>Retrieves an <b>item</b> by its ID.</p>"
+    },
+    "CreateItem": {
+      "name": "CreateItem",
+      "http": {
+        "method": "POST",
+        "requestUri": "/items"
+      },
+      "input": { "shape": "CreateItemRequest" },
+      "output": { "shape": "CreateItemResponse" },
+      "documentation": "&lt;p&gt;Creates a new item with &amp; special chars.&lt;/p&gt;"
+    }
+  },
+  "shapes": {
+    "GetItemRequest": {
+      "type": "structure",
+      "required": ["ItemId"],
+      "members": {
+        "ItemId": {
+          "shape": "String",
+          "location": "uri",
+          "locationName": "ItemId"
+        },
+        "ConsistentRead": {
+          "shape": "Boolean",
+          "location": "querystring",
+          "locationName": "consistent"
+        }
+      }
+    },
+    "GetItemResponse": {
+      "type": "structure",
+      "members": {
+        "Item": { "shape": "ItemData" },
+        "RequestId": { "shape": "String" }
+      }
+    },
+    "CreateItemRequest": {
+      "type": "structure",
+      "required": ["Name"],
+      "members": {
+        "Name": { "shape": "String" },
+        "Tags": { "shape": "TagList" }
+      }
+    },
+    "CreateItemResponse": {
+      "type": "structure",
+      "members": {
+        "ItemId": { "shape": "String" },
+        "Name": { "shape": "String" }
+      }
+    },
+    "ItemData": {
+      "type": "structure",
+      "members": {
+        "ItemId": { "shape": "String" },
+        "Name": { "shape": "String" },
+        "Count": { "shape": "Integer" },
+        "Active": { "shape": "Boolean" }
+      }
+    },
+    "ItemNotFoundException": {
+      "type": "structure",
+      "members": {
+        "Message": { "shape": "String" }
+      },
+      "documentation": "<p>The item was not found.</p>",
+      "error": { "httpStatusCode": 404 },
+      "exception": true
+    },
+    "InternalServerException": {
+      "type": "structure",
+      "members": {
+        "Message": { "shape": "String" }
+      },
+      "documentation": "Internal server error",
+      "error": { "httpStatusCode": 500 },
+      "exception": true,
+      "fault": true
+    },
+    "TagList": {
+      "type": "list",
+      "member": { "shape": "String" }
+    },
+    "String": { "type": "string" },
+    "Boolean": { "type": "boolean" },
+    "Integer": { "type": "integer" }
+  }
+}
