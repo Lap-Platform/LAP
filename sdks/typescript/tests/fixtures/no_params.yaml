@@ -1,0 +1,13 @@
+openapi: "3.0.0"
+info:
+  title: No Params API
+  version: "1.0.0"
+servers:
+  - url: https://api.noparams.com
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        "200":
+          description: OK

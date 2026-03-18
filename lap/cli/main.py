@@ -14,6 +14,8 @@ import sys
 from contextlib import contextmanager
 from pathlib import Path
 
+from lap import __version__
+
 # Add project root to path so `lap.*` imports work when run as script
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
@@ -472,8 +474,8 @@ def cmd_publish(args):
             result_obj = compile_spec(spec_path)
             if isinstance(result_obj, list):
                 error("Protobuf directories produce multiple specs. Use --name to specify which to publish.")
-            name = result_obj.api_name.lower().replace(" ", "-").replace("_", "-")
-            name = "".join(c for c in name if c.isalnum() or c == "-").strip("-")
+            from lap.core.compilers.skill import _slugify
+            name = _slugify(result_obj.api_name)
         except Exception as e:
             error(f"Could not auto-detect spec name: {e}. Use --name to specify.")
 
@@ -524,9 +526,9 @@ def cmd_publish(args):
                 if getattr(args, "skill_ai", None) is True or getattr(args, "skill_layer", None) == 2:
                     warn(f"AI enhancement failed: {e}")
 
-        body["skill_md"] = skill.file_map["SKILL.md"]
+        body["skill_md"] = skill.file_map[skill.main_file]
         body["skill_refs"] = {
-            k: v for k, v in skill.file_map.items() if k != "SKILL.md"
+            k: v for k, v in skill.file_map.items() if k != skill.main_file
         }
         print(f"Including skill ({skill.token_count:,} tokens)...")
 
@@ -541,9 +543,9 @@ def cmd_publish(args):
 
 
 def cmd_skill(args):
-    """Generate a Claude Code skill from an API spec."""
+    """Generate an AI IDE skill from an API spec."""
     from lap.core.compilers import compile as compile_spec
-    from lap.core.compilers.skill import generate_skill, SkillOptions
+    from lap.core.compilers.skill import generate_skill, SkillOptions, detect_target
     from lap.core.utils import count_tokens
 
     spec_path = args.spec
@@ -569,6 +571,7 @@ def cmd_skill(args):
         layer=layer,
         lean=not getattr(args, "full_spec", False),
         version=getattr(args, "skill_version", "1.0.0"),
+        target=getattr(args, "target", None) or detect_target(),
     )
 
     with _spinner("Generating skill..."):
@@ -590,12 +593,12 @@ def cmd_skill(args):
 
     # --stdout: print to stdout (old default behavior)
     if getattr(args, "stdout", False):
-        print(skill.file_map["SKILL.md"])
+        print(skill.file_map[skill.main_file])
         return
 
     # Determine output directory
     if getattr(args, "install", False):
-        out_dir = Path.home() / ".claude" / "skills" / skill.name
+        out_dir = _resolve_install_dir(options.target, skill.name)
     elif args.output:
         out_dir = Path(args.output) / skill.name
     else:
@@ -627,7 +630,7 @@ def cmd_skill(args):
 def cmd_skill_batch(args):
     """Generate skills for all specs in a directory."""
     from lap.core.compilers import compile as compile_spec
-    from lap.core.compilers.skill import generate_skill, SkillOptions
+    from lap.core.compilers.skill import generate_skill, SkillOptions, detect_target
 
     specs_dir = Path(args.directory)
     if not specs_dir.is_dir():
@@ -642,7 +645,7 @@ def cmd_skill_batch(args):
     out_dir.mkdir(parents=True, exist_ok=True)
 
     layer = _resolve_ai(args)
-    options = SkillOptions(layer=layer, lean=True)
+    options = SkillOptions(layer=layer, lean=True, target=getattr(args, "target", None) or detect_target())
     success, failed, skipped = 0, 0, 0
 
     heading(f"Generating skills for {len(spec_files)} specs")
@@ -682,32 +685,107 @@ def cmd_skill_batch(args):
     info(f"Generated {success} skills, {failed} failures, {skipped} skipped")
 
 
+# ── Built-in skills ───────────────────────────────────────────────────
+
+_BUILTIN_TARGET_DIRS = {
+    "claude": "lap",
+    "cursor": "cursor",
+}
+
+
+def _get_skills_dir():
+    """Find bundled skills directory (repo root or installed package)."""
+    # Development: repo root (lap/cli/main.py -> 3 parents up)
+    repo_skills = Path(__file__).resolve().parent.parent.parent / "skills"
+    if repo_skills.is_dir():
+        return repo_skills
+    # Installed package: lap/skills/ (lap/cli/main.py -> 2 parents up)
+    pkg_skills = Path(__file__).resolve().parent.parent / "skills"
+    if pkg_skills.is_dir():
+        return pkg_skills
+    return None
+
+
+def _resolve_install_dir(target, name, custom_dir=None):
+    """Determine install directory based on target IDE and optional override."""
+    if custom_dir:
+        return Path(custom_dir)
+    if target == "cursor":
+        return Path.home() / ".cursor" / "rules" / name
+    return Path.home() / ".claude" / "skills" / name
+
+
+def _install_builtin_skill(name, target, custom_dir):
+    """Install a built-in skill (bundled with the package) to the target IDE directory."""
+    skills_dir = _get_skills_dir()
+    if not skills_dir:
+        error("Built-in skill files not found. Reinstall the package.")
+
+    src_subdir = _BUILTIN_TARGET_DIRS.get(target, "lap")
+    src = skills_dir / src_subdir
+    if not src.is_dir():
+        error(f"No built-in skill '{name}' for target '{target}'.")
+
+    install_dir = _resolve_install_dir(target, name, custom_dir)
+
+    count = 0
+    for src_file in src.rglob("*"):
+        if src_file.is_file():
+            rel = src_file.relative_to(src)
+            dest = install_dir / rel
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            dest.write_text(src_file.read_text(encoding="utf-8"), encoding="utf-8")
+            count += 1
+
+    info(f"Installed {count} files to {install_dir}")
+
+
+def cmd_init(args):
+    """Set up LAP in your IDE (installs skill and config)."""
+    target = getattr(args, "target", None) or "claude"
+    _install_builtin_skill("lap", target, None)
+
+
 def cmd_skill_install(args):
     """Install a skill from the LAP registry."""
     from lap.cli.auth import api_request, get_registry_url
+    from lap.core.compilers.skill import generate_skill, SkillOptions, detect_target
+    from lap.core.parser import parse_lap as parse
     from urllib.parse import quote
-    import json as json_mod
+    import urllib.request
 
     name = args.name
+    target = getattr(args, "target", None) or detect_target()
+
     registry = get_registry_url()
-    print(f"Fetching skill bundle for {name}...")
+    print(f"Fetching spec for {name} (target: {target})...")
 
+    # Fetch LAP spec from registry
     try:
-        result = api_request("GET", f"/v1/apis/{quote(name, safe='')}/skill/bundle")
-    except SystemExit:
-        error(f"Failed to fetch skill from {registry}. Check that '{name}' exists and has a skill.")
+        url = f"{registry}/v1/apis/{quote(name, safe='')}"
+        req = urllib.request.Request(url, headers={"Accept": "text/lap", "User-Agent": "lapsh"})
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            spec_text = resp.read().decode("utf-8")
+    except Exception:
+        error(f"Failed to fetch spec for '{name}' from {registry}.")
 
-    files = result.get("files", {})
-    if not files:
-        error(f"No skill files found for '{name}'.")
+    if not spec_text.strip():
+        error(f"No spec found for '{name}'.")
 
-    install_dir = Path(getattr(args, "dir", None) or (Path.home() / ".claude" / "skills" / name))
-    for rel_path, content in files.items():
+    # Parse and generate skill with target
+    spec = parse(spec_text)
+    options = SkillOptions(target=target)
+    skill = generate_skill(spec, options)
+
+    # Determine install directory
+    install_dir = _resolve_install_dir(target, skill.name, getattr(args, "dir", None))
+
+    for rel_path, content in skill.file_map.items():
         out = install_dir / rel_path
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(content, encoding='utf-8')
 
-    info(f"Installed {len(files)} files to {install_dir}")
+    info(f"Installed {len(skill.file_map)} files to {install_dir} ({skill.token_count:,} tokens)")
 
 
 def _format_search_results(results, total, offset):
@@ -873,7 +951,7 @@ def cmd_benchmark_skill_all(args):
             ds = compile_openapi(spec_path)
             skill = generate_skill(ds)
             raw_t = count(raw)
-            skill_md_t = count(skill.file_map["SKILL.md"])
+            skill_md_t = count(skill.file_map[skill.main_file])
             total_t = skill.token_count
             ratio = raw_t / total_t if total_t else 0
             totals["raw"] += raw_t
@@ -970,6 +1048,7 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="Run 'lapsh <command> --help' for more info on a command.",
     )
+    parser.add_argument("--version", action="version", version=f"lapsh {__version__}")
     sub = parser.add_subparsers(dest="command", required=True)
 
     # compile (unified -- auto-detects format)
@@ -1029,7 +1108,7 @@ def main():
                    help=argparse.SUPPRESS)  # deprecated
 
     # skill
-    p = sub.add_parser("skill", help="Generate a Claude Code skill from an API spec")
+    p = sub.add_parser("skill", help="Generate an AI IDE skill from an API spec")
     p.add_argument("spec", help="Path to API spec file")
     p.add_argument("-o", "--output", help="Output parent directory (default: same directory as spec)")
     p.add_argument("-f", "--format",
@@ -1044,9 +1123,12 @@ def main():
     p.add_argument("--layer", type=int, default=None, choices=[1, 2],
                    help=argparse.SUPPRESS)  # deprecated
     p.add_argument("--full-spec", action="store_true", help="Include full spec (not lean)")
-    p.add_argument("--install", action="store_true", help="Install skill to ~/.claude/skills/")
+    p.add_argument("--install", action="store_true", help="Install skill to target IDE directory")
     p.add_argument("--version", dest="skill_version", default="1.0.0",
                    help="Skill version (default: 1.0.0)")
+    p.add_argument("--target", choices=["claude", "cursor"],
+                   default=None,
+                   help="Target IDE for skill output (default: auto-detect)")
 
     # skill-batch
     p = sub.add_parser("skill-batch", help="Generate skills for all specs in a directory")
@@ -1059,11 +1141,22 @@ def main():
     p.add_argument("--layer", type=int, default=None, choices=[1, 2],
                    help=argparse.SUPPRESS)  # deprecated
     p.add_argument("--verbose", "-v", action="store_true", help="Print full tracebacks on failure")
+    p.add_argument("--target", choices=["claude", "cursor"],
+                   default=None,
+                   help="Target IDE for skill output (default: auto-detect)")
+
+    # init
+    p = sub.add_parser("init", help="Set up LAP in your IDE (installs skill and config)")
+    p.add_argument("--target", choices=["claude", "cursor"], default=None,
+                   help="Target IDE (default: auto-detect)")
 
     # skill-install
     p = sub.add_parser("skill-install", help="Install a skill from the LAP registry")
     p.add_argument("name", help="API name from the registry")
-    p.add_argument("--dir", help="Custom install directory (default: ~/.claude/skills/)")
+    p.add_argument("--dir", help="Custom install directory")
+    p.add_argument("--target", choices=["claude", "cursor"],
+                   default=None,
+                   help="Target IDE (default: auto-detect)")
 
     # get
     p = sub.add_parser("get", help="Download a LAP spec from the registry")
@@ -1102,6 +1195,7 @@ def main():
         "publish": cmd_publish,
         "skill": cmd_skill,
         "skill-batch": cmd_skill_batch,
+        "init": cmd_init,
         "skill-install": cmd_skill_install,
         "get": cmd_get,
         "search": cmd_search,

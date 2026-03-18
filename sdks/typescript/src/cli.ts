@@ -10,6 +10,7 @@
  *   lapsh compile <spec> [-o out]         # Local compilation to LAP
  *   lapsh skill <spec> [-o dir]           # Generate Claude Code skill
  *   lapsh skill-batch <dir> -o <outdir>   # Batch generate skills
+ *   lapsh init                            # Set up LAP in your IDE
  *   lapsh skill-install <name>            # Install skill from registry
  */
 
@@ -27,10 +28,17 @@ import {
 } from './auth';
 import { parse } from './parser';
 import { toLap } from './serializer';
-import { generateSkill } from './skill';
+import pkg from '../package.json';
+import { generateSkill, VALID_TARGETS, detectTarget } from './skill';
+import type { SkillTarget } from './skill';
 import { enhanceSkill, hasClaudeCli } from './skill_llm';
 import { compile } from './compilers/index';
 import { LAPClient } from './client';
+
+const BUILTIN_TARGET_DIRS: Record<SkillTarget, string> = {
+  claude: 'lap',
+  cursor: 'cursor',
+};
 
 // ── Helpers ─────────────────────────────────────────────────────────
 
@@ -52,6 +60,38 @@ function resolveLayer(explicit: number | undefined): number {
   return hasClaudeCli() ? 2 : 1;
 }
 
+function resolveSkillsDir(): string | null {
+  // Development: repo root (dist/src/cli.js -> 4 levels up to repo root)
+  const devDir = path.resolve(__dirname, '..', '..', '..', '..', 'skills');
+  if (fs.existsSync(devDir)) return devDir;
+  // Installed npm package: skills/ next to dist/
+  const pkgDir = path.resolve(__dirname, '..', '..', 'skills');
+  if (fs.existsSync(pkgDir)) return pkgDir;
+  return null;
+}
+
+function copyDirRecursive(src: string, dest: string): void {
+  fs.cpSync(src, dest, { recursive: true });
+}
+
+function parseTargetArg(args: string[], i: number): SkillTarget | undefined {
+  const val = args[i + 1];
+  if (!(VALID_TARGETS as readonly string[]).includes(val)) {
+    error(`Invalid --target value: ${val}. Must be one of: ${VALID_TARGETS.join(', ')}`);
+  }
+  return val as SkillTarget;
+}
+
+function resolveInstallDir(target: SkillTarget, skillName: string, customDir?: string): string {
+  if (customDir) return customDir;
+  const homeDir = process.env.HOME || process.env.USERPROFILE;
+  if (!homeDir) error('Cannot determine home directory.');
+  if (target === 'cursor') {
+    return path.join(homeDir, '.cursor', 'rules', skillName);
+  }
+  return path.join(homeDir, '.claude', 'skills', skillName);
+}
+
 function usage(): never {
   console.log(`LAP CLI (Node.js)
 
@@ -64,12 +104,15 @@ Commands:
     [--source-url <url>]                Upstream spec URL
   compile <spec> [-o output] [--lean]   Compile API spec to LAP format
     [-f format]                         Force format (openapi, graphql, etc.)
-  skill <spec> [-o dir] [--layer 1|2]   Generate a Claude Code skill
-    [--full-spec] [--install]           Include full spec / install to ~/.claude/skills
+  skill <spec> [-o dir] [--layer 1|2]   Generate an AI IDE skill
+    [--full-spec] [--install]           Include full spec / install to target IDE dir
+    [--target claude|cursor]            Target IDE (default: claude)
     [-f format]                         Force spec format
   skill-batch <dir> -o <outdir>         Batch generate skills
-    [--layer 1|2] [-v]                  Layer + verbose mode
+    [--layer 1|2] [--target t] [-v]    Layer, target IDE, verbose mode
+  init [--target claude|cursor]          Set up LAP in your IDE
   skill-install <name> [--dir <path>]   Install skill from registry
+    [--target claude|cursor]            Target IDE (default: auto-detect)
   get <name> [-o output] [--lean]        Download a LAP spec from the registry
   search <query> [--tag t] [--sort s]   Search the LAP registry for APIs
     [--limit n] [--offset n] [--json]   Pagination and JSON output
@@ -246,6 +289,7 @@ async function cmdSkill(args: string[]): Promise<void> {
   let layerArg: number | undefined;
   let fullSpec = false;
   let install = false;
+  let target: SkillTarget | undefined;
 
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '-o' || args[i] === '--output') { output = args[++i]; }
@@ -253,6 +297,7 @@ async function cmdSkill(args: string[]): Promise<void> {
     else if (args[i] === '--layer') { layerArg = parseInt(args[++i], 10); }
     else if (args[i] === '--full-spec') { fullSpec = true; }
     else if (args[i] === '--install') { install = true; }
+    else if (args[i] === '--target') { target = parseTargetArg(args, i); i++; }
     else if (!args[i].startsWith('-')) { specPath = args[i]; }
   }
 
@@ -271,8 +316,9 @@ async function cmdSkill(args: string[]): Promise<void> {
     spec = compile(specPath, format ? { format } : undefined);
   }
 
+  const resolvedTarget = target ?? detectTarget();
   const layer = resolveLayer(layerArg);
-  let skill = generateSkill(spec, { layer, lean: !fullSpec });
+  let skill = generateSkill(spec, { layer, lean: !fullSpec, target: resolvedTarget });
 
   // Layer 2 enhancement
   if (layer === 2) {
@@ -292,10 +338,9 @@ async function cmdSkill(args: string[]): Promise<void> {
     }
   }
 
-  // Install to ~/.claude/skills/
+  // Install to target IDE directory
   if (install) {
-    const homeDir = process.env.HOME || process.env.USERPROFILE || '';
-    const skillDir = path.join(homeDir, '.claude', 'skills', skill.name);
+    const skillDir = resolveInstallDir(resolvedTarget, skill.name);
     for (const [relPath, content] of Object.entries(skill.fileMap)) {
       const out = path.join(skillDir, relPath);
       fs.mkdirSync(path.dirname(out), { recursive: true });
@@ -319,8 +364,8 @@ async function cmdSkill(args: string[]): Promise<void> {
     return;
   }
 
-  // Default: print SKILL.md to stdout
-  console.log(skill.fileMap['SKILL.md']);
+  // Default: print main skill file to stdout
+  console.log(skill.fileMap[skill.mainFile]);
 }
 
 async function cmdSkillBatch(args: string[]): Promise<void> {
@@ -328,11 +373,13 @@ async function cmdSkillBatch(args: string[]): Promise<void> {
   let output = '';
   let layerArg: number | undefined;
   let verbose = false;
+  let target: SkillTarget | undefined;
 
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '-o' || args[i] === '--output') { output = args[++i]; }
     else if (args[i] === '--layer') { layerArg = parseInt(args[++i], 10); }
     else if (args[i] === '-v' || args[i] === '--verbose') { verbose = true; }
+    else if (args[i] === '--target') { target = parseTargetArg(args, i); i++; }
     else if (!args[i].startsWith('-')) { directory = args[i]; }
   }
 
@@ -354,6 +401,7 @@ async function cmdSkillBatch(args: string[]): Promise<void> {
 
   fs.mkdirSync(output, { recursive: true });
   const layer = resolveLayer(layerArg);
+  const resolvedTarget = target ?? detectTarget();
   let success = 0;
   let failed = 0;
 
@@ -363,7 +411,7 @@ async function cmdSkillBatch(args: string[]): Promise<void> {
     const name = path.basename(specFilePath, path.extname(specFilePath));
     try {
       const spec = compile(specFilePath);
-      let skill = generateSkill(spec, { layer, lean: true });
+      let skill = generateSkill(spec, { layer, lean: true, target: resolvedTarget });
 
       if (layer === 2) {
         try {
@@ -483,7 +531,7 @@ async function cmdGet(args: string[]): Promise<void> {
   const fetcher = url.startsWith('https') ? https : http;
 
   const body = await new Promise<string>((resolve, reject) => {
-    const req = fetcher.get(url, { headers: { 'Accept': 'text/lap', 'User-Agent': 'lapsh/0.4.7' } }, (res) => {
+    const req = fetcher.get(url, { headers: { 'Accept': 'text/lap', 'User-Agent': `lapsh/${pkg.version}` } }, (res) => {
       if (res.statusCode && res.statusCode >= 400) {
         reject(new Error(`HTTP ${res.statusCode} fetching '${name}'`));
         res.resume();
@@ -506,39 +554,84 @@ async function cmdGet(args: string[]): Promise<void> {
   }
 }
 
+async function cmdInit(args: string[]): Promise<void> {
+  let target: SkillTarget | undefined;
+
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--target') { target = parseTargetArg(args, i); i++; }
+  }
+
+  const resolvedTarget = target ?? 'claude';
+
+  const skillsDir = resolveSkillsDir();
+  if (!skillsDir) error('Built-in skill files not found. Reinstall the package.');
+
+  const srcSubdir = BUILTIN_TARGET_DIRS[resolvedTarget] || 'lap';
+  const src = path.join(skillsDir, srcSubdir);
+  if (!fs.existsSync(src)) error(`No built-in skill for target '${resolvedTarget}'.`);
+
+  const installDir = resolveInstallDir(resolvedTarget, 'lap');
+
+  copyDirRecursive(src, installDir);
+  info(`Installed skill to ${installDir}`);
+}
+
 async function cmdSkillInstall(args: string[]): Promise<void> {
   let name = '';
   let dir = '';
+  let target: SkillTarget | undefined;
 
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--dir') { dir = args[++i]; }
+    else if (args[i] === '--target') { target = parseTargetArg(args, i); i++; }
     else if (!args[i].startsWith('-')) { name = args[i]; }
   }
 
-  if (!name) error('Missing skill name. Usage: lapsh skill-install <name> [--dir <path>]');
+  if (!name) error('Missing skill name. Usage: lapsh skill-install <name> [--dir <path>] [--target t]');
 
-  console.log(`Fetching skill bundle for ${name}...`);
+  const resolvedTarget = target ?? detectTarget();
 
-  let result: Record<string, unknown>;
-  try {
-    result = await apiRequest('GET', `/v1/apis/${encodeURIComponent(name)}/skill/bundle`);
-  } catch {
-    error(`Failed to fetch skill. Check that '${name}' exists and has a skill.`);
-  }
+  console.log(`Fetching spec for ${name} (target: ${resolvedTarget})...`);
 
-  const files = (result.files || {}) as Record<string, string>;
-  if (Object.keys(files).length === 0) error(`No skill files found for '${name}'.`);
+  // Fetch LAP spec from registry
+  const registryUrl = getRegistryUrl();
+  const http = await import('http');
+  const https = await import('https');
+  const url = `${registryUrl}/v1/apis/${encodeURIComponent(name)}`;
+  const fetcher = url.startsWith('https') ? https : http;
 
-  const homeDir = process.env.HOME || process.env.USERPROFILE || '';
-  const installDir = dir || path.join(homeDir, '.claude', 'skills', name);
+  const specText = await new Promise<string>((resolve, reject) => {
+    const req = fetcher.get(url, { headers: { 'Accept': 'text/lap', 'User-Agent': 'lapsh' } }, (res) => {
+      if (res.statusCode && res.statusCode >= 400) {
+        reject(new Error(`HTTP ${res.statusCode} fetching '${name}'`));
+        res.resume();
+        return;
+      }
+      const chunks: Buffer[] = [];
+      res.on('data', (chunk: Buffer) => chunks.push(chunk));
+      res.on('end', () => resolve(Buffer.concat(chunks).toString('utf-8')));
+    });
+    req.on('error', reject);
+  }).catch(() => {
+    error(`Failed to fetch spec for '${name}' from ${registryUrl}.`);
+  });
 
-  for (const [relPath, content] of Object.entries(files)) {
+  if (!specText || !specText.trim()) error(`No spec found for '${name}'.`);
+
+  // Parse and generate skill with target
+  const spec = parse(specText);
+  const skill = generateSkill(spec, { target: resolvedTarget });
+
+  // Determine install directory
+  const installDir = resolveInstallDir(resolvedTarget, skill.name, dir || undefined);
+
+  for (const [relPath, content] of Object.entries(skill.fileMap)) {
     const out = path.join(installDir, relPath);
     fs.mkdirSync(path.dirname(out), { recursive: true });
     fs.writeFileSync(out, content, 'utf-8');
   }
 
-  info(`Installed ${Object.keys(files).length} files to ${installDir}`);
+  info(`Installed ${Object.keys(skill.fileMap).length} files to ${installDir} (${skill.tokenCount.toLocaleString()} tokens)`);
 }
 
 // ── Main ────────────────────────────────────────────────────────────
@@ -548,6 +641,10 @@ async function main(): Promise<void> {
   const command = args[0];
 
   if (!command || command === '--help' || command === '-h') usage();
+  if (command === '--version' || command === '-v') {
+    console.log(`lapsh ${pkg.version}`);
+    process.exit(0);
+  }
 
   try {
     switch (command) {
@@ -574,6 +671,9 @@ async function main(): Promise<void> {
         break;
       case 'skill-batch':
         await cmdSkillBatch(args.slice(1));
+        break;
+      case 'init':
+        await cmdInit(args.slice(1));
         break;
       case 'skill-install':
         await cmdSkillInstall(args.slice(1));

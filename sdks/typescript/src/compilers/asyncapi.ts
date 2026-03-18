@@ -613,6 +613,9 @@ function compileV3(spec: Obj, apiName: string, baseUrl: string, apiVersion: stri
   };
 }
 
+// Exported for testing
+export { resolveRef, extractType };
+
 // ── Main compiler ─────────────────────────────────────────────────────────────
 
 export function compileAsyncApi(specPath: string): LAPSpec {

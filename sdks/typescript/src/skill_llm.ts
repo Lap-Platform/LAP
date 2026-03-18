@@ -46,7 +46,7 @@ export function hasClaudeCli(): boolean {
 export function replaceSection(md: string, sectionName: string, newContent: string): string {
   const escaped = sectionName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const pattern = new RegExp(`(## ${escaped}\\n)[\\s\\S]*?(?=\\n## |$)`);
-  return md.replace(pattern, `## Enhanced Skill Content\n${newContent}\n`);
+  return md.replace(pattern, `## ${sectionName}\n${newContent}\n`);
 }
 
 export function enhanceSkill(spec: LAPSpec, skill: SkillOutput, apiKey?: string): SkillOutput {
@@ -71,10 +71,10 @@ export function enhanceSkill(spec: LAPSpec, skill: SkillOutput, apiKey?: string)
     enhancedContent = enhanceViaSdk(prompt, apiKey);
   }
 
-  let skillMd = skill.fileMap['SKILL.md'];
+  let skillMd = skill.fileMap[skill.mainFile];
   skillMd = replaceSection(skillMd, 'Common Questions', enhancedContent);
 
-  const newFileMap = { ...skill.fileMap, 'SKILL.md': skillMd };
+  const newFileMap = { ...skill.fileMap, [skill.mainFile]: skillMd };
   const totalTokens = Object.values(newFileMap).reduce(
     (sum, c) => sum + Math.ceil(c.length / 4),
     0
@@ -82,6 +82,7 @@ export function enhanceSkill(spec: LAPSpec, skill: SkillOutput, apiKey?: string)
 
   return {
     name: skill.name,
+    mainFile: skill.mainFile,
     fileMap: newFileMap,
     tokenCount: totalTokens,
     endpointCount: skill.endpointCount,

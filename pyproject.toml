@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lapsh"
-version = "0.4.8"
+version = "0.5.0"
 description = "Lean API Platform -- Token-efficient API specs for AI agents"
 readme = "README.md"
 license = "Apache-2.0"
@@ -38,6 +38,9 @@ Documentation = "https://github.com/Lap-Platform/lap#readme"
 Repository = "https://github.com/Lap-Platform/lap"
 Issues = "https://github.com/Lap-Platform/lap/issues"
 Changelog = "https://github.com/Lap-Platform/lap/blob/main/CHANGELOG.md"
+
+[tool.setuptools.package-data]
+lap = ["skills/**/*.md", "skills/**/*.mdc"]
 
 [tool.setuptools.packages.find]
 include = ["lap*"]

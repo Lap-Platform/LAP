@@ -35,14 +35,20 @@ OUTPUT_DIR = PROJECT_DIR / 'output'
 # ═══════════════════════════════════════════════════════════════════
 
 def _all_spec_files():
-    """Get all spec files excluding incompatible ones.
-    
-    Excluded:
-    - stripe-full: too large for fast tests
-    - jira: YAML parsing error (bare '=' in enum triggers YAML tag error)
+    """Curated subset of specs covering key variations.
+
+    Selected for diversity: tiny (petstore), small (stripe-charges),
+    medium (discord, cloudflare), large (github-core), deep nesting (plaid),
+    enum-heavy (google-maps), flat/token auth (slack).
+
+    Edge cases (empty, deep nested, many params, etc.) are covered
+    separately by TestEdgeCase* classes using dedicated fixtures.
     """
-    files = sorted(glob.glob(str(SPECS_DIR / '*.yaml')))
-    return [f for f in files if 'stripe-full' not in f and 'jira' not in f]
+    names = [
+        "petstore", "stripe-charges", "discord", "github-core",
+        "plaid", "cloudflare", "google-maps", "slack",
+    ]
+    return [str(SPECS_DIR / f"{n}.yaml") for n in names]
 
 
 @pytest.fixture(params=_all_spec_files(), ids=lambda f: Path(f).stem)

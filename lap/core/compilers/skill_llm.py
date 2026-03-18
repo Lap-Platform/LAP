@@ -133,7 +133,7 @@ def enhance_skill(spec, skill: SkillOutput, api_key: str = None) -> SkillOutput:
         enhanced_content = _enhance_via_sdk(prompt, api_key)
 
     # Append LLM-enhanced content after existing SKILL.md (additive, not destructive)
-    skill_md = skill.file_map["SKILL.md"]
+    skill_md = skill.file_map[skill.main_file]
 
     # Strip any ## headings from LLM output (force ### only)
     enhanced_content = _demote_headings(enhanced_content)
@@ -143,13 +143,14 @@ def enhance_skill(spec, skill: SkillOutput, api_key: str = None) -> SkillOutput:
 
     # Update file map
     new_file_map = dict(skill.file_map)
-    new_file_map["SKILL.md"] = skill_md
+    new_file_map[skill.main_file] = skill_md
 
     # Recalculate tokens
     total_tokens = sum(count_tokens(content) for content in new_file_map.values())
 
     return SkillOutput(
         name=skill.name,
+        main_file=skill.main_file,
         file_map=new_file_map,
         token_count=total_tokens,
         endpoint_count=skill.endpoint_count,

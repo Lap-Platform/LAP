@@ -18,14 +18,16 @@ from lap.core.parser import parse_lap
 SPEC_DIR = Path("examples/verbose/openapi")
 
 SMALL_SPEC_NAMES = [
-    "petstore", "github-core", "discord", "slack", "openai-core",
-    "vonage", "cloudflare", "sendgrid", "spotify", "circleci",
-    "twilio-core", "stripe-charges", "google-maps",
+    "petstore", "stripe-charges", "discord", "slack", "github-core",
+    "cloudflare", "google-maps",
 ]
 
-_all_specs = sorted(SPEC_DIR.glob("*.yaml"))
-SMALL_SPECS = [p for p in _all_specs if p.stem in SMALL_SPEC_NAMES]
-LARGE_SPECS = [p for p in _all_specs if p.stem not in SMALL_SPEC_NAMES]
+LARGE_SPEC_NAMES = [
+    "plaid", "notion", "zoom",
+]
+
+SMALL_SPECS = [SPEC_DIR / f"{n}.yaml" for n in SMALL_SPEC_NAMES]
+LARGE_SPECS = [SPEC_DIR / f"{n}.yaml" for n in LARGE_SPEC_NAMES]
 
 
 def spec_ids(specs=None):

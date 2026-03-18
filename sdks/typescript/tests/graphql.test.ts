@@ -1,5 +1,8 @@
 import { describe, it } from 'node:test';
 import * as assert from 'node:assert';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as crypto from 'crypto';
 import * as path from 'path';
 import { compileGraphql } from '../src/compilers/graphql';
 import { detectFormat } from '../src/compilers/index';
@@ -104,8 +107,6 @@ describe('GraphQL Compiler', () => {
     });
 
     it('should throw on non-GraphQL content', () => {
-      const fs = require('fs');
-      const os = require('os');
       const tmpFile = path.join(os.tmpdir(), 'bad-graphql-test.graphql');
       fs.writeFileSync(tmpFile, 'this is not graphql at all', 'utf-8');
       try {
@@ -117,6 +118,265 @@ describe('GraphQL Compiler', () => {
         fs.unlinkSync(tmpFile);
       }
     });
+  });
+});
+
+describe('GraphQL introspection JSON', () => {
+  function writeTmp(data: unknown): string {
+    const tmpPath = path.join(os.tmpdir(), `gql-introspection-${crypto.randomUUID()}.json`);
+    fs.writeFileSync(tmpPath, JSON.stringify(data), 'utf-8');
+    return tmpPath;
+  }
+
+  function makeSchema(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+    return {
+      __schema: {
+        queryType: { name: 'Query' },
+        mutationType: null,
+        subscriptionType: null,
+        types: [
+          {
+            kind: 'OBJECT',
+            name: 'Query',
+            fields: [
+              {
+                name: 'hello',
+                description: null,
+                args: [],
+                type: { kind: 'SCALAR', name: 'String', ofType: null },
+              },
+            ],
+          },
+        ],
+        ...overrides,
+      },
+    };
+  }
+
+  it('compiles basic query from introspection', () => {
+    const tmpPath = writeTmp(makeSchema());
+    try {
+      const spec = compileGraphql(tmpPath);
+      assert.ok(spec.endpoints.length >= 1, 'Should have at least one endpoint');
+      const ep = spec.getEndpoint('GET', '/graphql/hello');
+      assert.ok(ep, 'Should find GET /graphql/hello');
+      assert.strictEqual(ep!.method, 'GET');
+    } finally {
+      fs.unlinkSync(tmpPath);
+    }
+  });
+
+  it('handles data wrapper', () => {
+    const bareSchema = makeSchema();
+    const wrapped = { data: bareSchema };
+    const tmpPath = writeTmp(wrapped);
+    try {
+      const spec = compileGraphql(tmpPath);
+      const ep = spec.getEndpoint('GET', '/graphql/hello');
+      assert.ok(ep, 'Wrapped introspection should produce same endpoint');
+    } finally {
+      fs.unlinkSync(tmpPath);
+    }
+  });
+
+  it('compiles mutations to POST', () => {
+    const schema = makeSchema({
+      mutationType: { name: 'Mutation' },
+      types: [
+        {
+          kind: 'OBJECT',
+          name: 'Query',
+          fields: [
+            {
+              name: 'hello',
+              description: null,
+              args: [],
+              type: { kind: 'SCALAR', name: 'String', ofType: null },
+            },
+          ],
+        },
+        {
+          kind: 'OBJECT',
+          name: 'Mutation',
+          fields: [
+            {
+              name: 'createUser',
+              description: null,
+              args: [],
+              type: { kind: 'SCALAR', name: 'String', ofType: null },
+            },
+          ],
+        },
+      ],
+    });
+    const tmpPath = writeTmp(schema);
+    try {
+      const spec = compileGraphql(tmpPath);
+      const ep = spec.getEndpoint('POST', '/graphql/createUser');
+      assert.ok(ep, 'Should find POST /graphql/createUser');
+      assert.strictEqual(ep!.method, 'POST');
+    } finally {
+      fs.unlinkSync(tmpPath);
+    }
+  });
+
+  it('compiles query args to params', () => {
+    const schema = makeSchema({
+      types: [
+        {
+          kind: 'OBJECT',
+          name: 'Query',
+          fields: [
+            {
+              name: 'hello',
+              description: null,
+              args: [
+                {
+                  name: 'name',
+                  description: null,
+                  type: { kind: 'NON_NULL', name: null, ofType: { kind: 'SCALAR', name: 'String', ofType: null } },
+                },
+              ],
+              type: { kind: 'SCALAR', name: 'String', ofType: null },
+            },
+          ],
+        },
+      ],
+    });
+    const tmpPath = writeTmp(schema);
+    try {
+      const spec = compileGraphql(tmpPath);
+      const ep = spec.getEndpoint('GET', '/graphql/hello');
+      assert.ok(ep, 'Should find GET /graphql/hello');
+      const reqNames = ep!.requiredParams.map((p) => p.name);
+      assert.ok(reqNames.includes('name'), 'Should have required param "name"');
+    } finally {
+      fs.unlinkSync(tmpPath);
+    }
+  });
+
+  it('handles subscriptions', () => {
+    const schema = makeSchema({
+      subscriptionType: { name: 'Subscription' },
+      types: [
+        {
+          kind: 'OBJECT',
+          name: 'Query',
+          fields: [
+            {
+              name: 'hello',
+              description: null,
+              args: [],
+              type: { kind: 'SCALAR', name: 'String', ofType: null },
+            },
+          ],
+        },
+        {
+          kind: 'OBJECT',
+          name: 'Subscription',
+          fields: [
+            {
+              name: 'onMessage',
+              description: null,
+              args: [],
+              type: { kind: 'SCALAR', name: 'String', ofType: null },
+            },
+          ],
+        },
+      ],
+    });
+    const tmpPath = writeTmp(schema);
+    try {
+      const spec = compileGraphql(tmpPath);
+      const ep = spec.getEndpoint('GET', '/graphql/onMessage');
+      assert.ok(ep, 'Should find GET /graphql/onMessage');
+      assert.ok(
+        ep!.description && ep!.description.includes('[SUBSCRIPTION]'),
+        `description should include [SUBSCRIPTION], got: ${ep!.description}`,
+      );
+    } finally {
+      fs.unlinkSync(tmpPath);
+    }
+  });
+});
+
+describe('GraphQL introspection format detection', () => {
+  it('detects bare introspection JSON', () => {
+    const data = {
+      __schema: {
+        queryType: { name: 'Query' },
+        mutationType: null,
+        subscriptionType: null,
+        types: [
+          {
+            kind: 'OBJECT',
+            name: 'Query',
+            fields: [
+              {
+                name: 'ping',
+                description: null,
+                args: [],
+                type: { kind: 'SCALAR', name: 'String', ofType: null },
+              },
+            ],
+          },
+        ],
+      },
+    };
+    const tmpPath = path.join(os.tmpdir(), `gql-detect-bare-${crypto.randomUUID()}.json`);
+    fs.writeFileSync(tmpPath, JSON.stringify(data), 'utf-8');
+    try {
+      assert.doesNotThrow(() => compileGraphql(tmpPath));
+    } finally {
+      fs.unlinkSync(tmpPath);
+    }
+  });
+
+  it('detects data-wrapped introspection', () => {
+    const data = {
+      data: {
+        __schema: {
+          queryType: { name: 'Query' },
+          mutationType: null,
+          subscriptionType: null,
+          types: [
+            {
+              kind: 'OBJECT',
+              name: 'Query',
+              fields: [
+                {
+                  name: 'ping',
+                  description: null,
+                  args: [],
+                  type: { kind: 'SCALAR', name: 'String', ofType: null },
+                },
+              ],
+            },
+          ],
+        },
+      },
+    };
+    const tmpPath = path.join(os.tmpdir(), `gql-detect-wrapped-${crypto.randomUUID()}.json`);
+    fs.writeFileSync(tmpPath, JSON.stringify(data), 'utf-8');
+    try {
+      assert.doesNotThrow(() => compileGraphql(tmpPath));
+    } finally {
+      fs.unlinkSync(tmpPath);
+    }
+  });
+
+  it('rejects non-graphql JSON', () => {
+    const data = { openapi: '3.0.0', info: { title: 'Test', version: '1.0.0' } };
+    const tmpPath = path.join(os.tmpdir(), `gql-reject-${crypto.randomUUID()}.json`);
+    fs.writeFileSync(tmpPath, JSON.stringify(data), 'utf-8');
+    try {
+      assert.throws(
+        () => compileGraphql(tmpPath),
+        /does not appear|introspection/i,
+      );
+    } finally {
+      fs.unlinkSync(tmpPath);
+    }
   });
 });
 

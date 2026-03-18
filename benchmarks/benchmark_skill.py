@@ -28,7 +28,7 @@ def benchmark_single(spec_path: str) -> dict:
     skill = generate_skill(spec)
 
     raw_tokens = count_tokens(raw)
-    skill_md_tokens = count_tokens(skill.file_map["SKILL.md"])
+    skill_md_tokens = count_tokens(skill.file_map[skill.main_file])
 
     # Per-file breakdown
     file_tokens = {}
@@ -130,7 +130,7 @@ def print_report(results: list):
 
 def _check_coverage(spec, skill) -> float:
     """Check what percentage of spec endpoints appear in the skill catalog."""
-    skill_md = skill.file_map["SKILL.md"]
+    skill_md = skill.file_map[skill.main_file]
     found = sum(
         1 for ep in spec.endpoints
         if f"| {ep.method.upper()} |" in skill_md and ep.path in skill_md

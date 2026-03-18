@@ -4,18 +4,65 @@
 
 import type { LAPSpec, Endpoint } from './parser';
 import { toLap, groupName } from './serializer';
+import * as fs from 'fs';
+import * as path from 'path';
 
 // ── Public interfaces ─────────────────────────────────────────────────────────
+
+export const VALID_TARGETS = ['claude', 'cursor'] as const;
+export type SkillTarget = typeof VALID_TARGETS[number];
+
+/**
+ * Auto-detect IDE target from environment.
+ *
+ * Detection priority:
+ * 1. TERM_PROGRAM env var (macOS/Linux -- set by IDE terminals)
+ * 2. IDE-specific env vars (CURSOR_TRACE_ID, CURSOR_EDITOR, etc.)
+ * 3. PATH entries containing IDE binary paths (cross-platform, esp. Windows)
+ * 4. .cursor project directory (walk up to .git root)
+ * 5. ~/.cursor/ in home directory (Cursor installed on this machine)
+ * 6. Default: 'claude'
+ */
+export function detectTarget(): SkillTarget {
+  // 1. TERM_PROGRAM (macOS/Linux)
+  const term = (process.env.TERM_PROGRAM || '').toLowerCase();
+  if (term.includes('cursor')) return 'cursor';
+
+  // 2. IDE-specific env vars
+  if (process.env.CURSOR_TRACE_ID || process.env.CURSOR_EDITOR) return 'cursor';
+
+  // 3. PATH-based detection (Windows: TERM_PROGRAM often unset)
+  const pathEnv = (process.env.PATH || '').toLowerCase();
+  if (pathEnv.includes('cursor') && pathEnv.includes('codebin')) return 'cursor';
+
+  // 4. Project directory walk
+  let dir = process.cwd();
+  while (true) {
+    if (fs.existsSync(path.join(dir, '.cursor'))) return 'cursor';
+    if (fs.existsSync(path.join(dir, '.git'))) break;
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+
+  // 5. Home directory check (Cursor config exists)
+  const homeDir = process.env.HOME || process.env.USERPROFILE;
+  if (homeDir && fs.existsSync(path.join(homeDir, '.cursor'))) return 'cursor';
+
+  return 'claude';
+}
 
 export interface SkillOptions {
   layer?: number;  // 1 = mechanical, 2 = LLM-enhanced
   lean?: boolean;
   clawhub?: boolean;  // include metadata.openclaw block
   version?: string;   // skill version in frontmatter (default: "1.0.0")
+  target?: SkillTarget;  // "claude" | "cursor" (default: "claude")
 }
 
 export interface SkillOutput {
   name: string;           // skill directory name (slugified API name)
+  mainFile: string;       // key into fileMap for the main skill file
   fileMap: Record<string, string>;  // {relative_path: content_string}
   tokenCount: number;     // total tokens across all files
   endpointCount: number;
@@ -30,7 +77,7 @@ function countTokens(text: string): number {
 // ── Helper functions (ported 1:1 from Python) ─────────────────────────────────
 
 export function slugify(name: string): string {
-  let slug = name.toLowerCase().replace(/ /g, '-').replace(/_/g, '-');
+  let slug = name.toLowerCase().replace(/ /g, '-').replace(/_/g, '-').replace(/\//g, '-').replace(/\./g, '-');
   slug = slug.split('').filter(c => /[a-z0-9-]/.test(c)).join('').replace(/^-+|-+$/g, '');
   slug = slug.replace(/-+/g, '-');
   return slug || 'api';
@@ -212,30 +259,62 @@ function generateSetup(spec: LAPSpec): string {
   return lines.join('\n');
 }
 
-function generateFrontmatter(spec: LAPSpec, options?: SkillOptions): string {
-  const name = slugify(spec.apiName);
+function buildDescription(spec: LAPSpec): string {
   const groups = getGroups(spec);
   const topGroups = [...groups.keys()].slice(0, 3);
   const groupText = topGroups.length > 0 ? topGroups.join(', ') : 'API operations';
   const epCount = spec.endpoints.length;
 
-  const desc =
-    `${spec.apiName} API skill. ` +
-    `Use when working with ${spec.apiName} for ${groupText}. ` +
-    `Covers ${epCount} endpoint${epCount !== 1 ? 's' : ''}.`;
+  // Strip trailing " API" to avoid "Stripe API API skill" doubling
+  let displayName = spec.apiName;
+  if (displayName.toUpperCase().endsWith(' API')) {
+    displayName = displayName.slice(0, -4).trimEnd();
+  }
+  if (!displayName || displayName.toUpperCase() === 'API') {
+    displayName = spec.apiName; // fallback: use original name as-is
+  }
 
-  const descEscaped = desc.replace(/"/g, '\\"');
+  let desc: string;
+  if (displayName.toUpperCase() === 'API') {
+    desc =
+      `API skill. ` +
+      `Use when working with this API for ${groupText}. ` +
+      `Covers ${epCount} endpoint${epCount !== 1 ? 's' : ''}.`;
+  } else {
+    desc =
+      `${displayName} API skill. ` +
+      `Use when working with ${displayName} for ${groupText}. ` +
+      `Covers ${epCount} endpoint${epCount !== 1 ? 's' : ''}.`;
+  }
+  return desc.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+}
 
+function generateFrontmatter(spec: LAPSpec, options?: SkillOptions): string {
+  const target = options?.target ?? 'claude';
+  if (target === 'cursor') return generateCursorFrontmatter(spec);
+  return generateClaudeFrontmatter(spec, options);
+}
+
+function generateClaudeFrontmatter(spec: LAPSpec, options?: SkillOptions): string {
+  const name = slugify(spec.apiName);
+  const descEscaped = buildDescription(spec);
   const ver = options?.version ?? '1.0.0';
   let fm = `---\nname: ${name}\ndescription: "${descEscaped}"\nversion: ${ver}\ngenerator: lapsh`;
 
   if (options?.clawhub && spec.auth) {
-    const envVar = slugify(spec.apiName).toUpperCase().replace(/-/g, '_') + '_API_KEY';
+    let envSlug = slugify(spec.apiName).toUpperCase().replace(/-/g, '_');
+    if (envSlug.endsWith('_API')) envSlug = envSlug.slice(0, -4);
+    const envVar = (envSlug || 'API') + '_API_KEY';
     fm += `\nmetadata:\n  openclaw:\n    requires:\n      env:\n        - ${envVar}`;
   }
 
   fm += '\n---';
   return fm;
+}
+
+function generateCursorFrontmatter(spec: LAPSpec): string {
+  const descEscaped = buildDescription(spec);
+  return `---\ndescription: "${descEscaped}"\nalwaysApply: false\n---`;
 }
 
 function generateSkillBody(spec: LAPSpec): string {
@@ -278,6 +357,10 @@ function generateSkillBody(spec: LAPSpec): string {
   sections.push(generateResponseTips(spec));
   sections.push('');
 
+  // CLI
+  sections.push(generateCliSection(spec));
+  sections.push('');
+
   // References
   sections.push('## References');
   sections.push(
@@ -292,6 +375,21 @@ function generateSkillBody(spec: LAPSpec): string {
   return sections.join('\n');
 }
 
+function generateCliSection(spec: LAPSpec): string {
+  const slug = slugify(spec.apiName);
+  return [
+    '## CLI',
+    '',
+    '```bash',
+    '# Update this spec to the latest version',
+    `npx @lap-platform/lapsh get ${slug} -o references/api-spec.lap`,
+    '',
+    '# Search for related APIs',
+    `npx @lap-platform/lapsh search ${slug}`,
+    '```',
+  ].join('\n');
+}
+
 function generateSkillMd(spec: LAPSpec, options?: SkillOptions): string {
   const parts: string[] = [];
   parts.push(generateFrontmatter(spec, options));
@@ -303,13 +401,20 @@ function generateSkillMd(spec: LAPSpec, options?: SkillOptions): string {
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export function generateSkill(spec: LAPSpec, options?: SkillOptions): SkillOutput {
-  options = { layer: 1, lean: true, ...options };
+  options = { layer: 1, lean: true, target: 'claude', ...options };
+  const target = options.target ?? 'claude';
+
+  if (!(VALID_TARGETS as readonly string[]).includes(target)) {
+    throw new Error(`Unknown target '${target}'. Valid targets: ${[...VALID_TARGETS].sort().join(', ')}`);
+  }
   if (!spec.endpoints || spec.endpoints.length === 0) {
     throw new Error('Cannot generate skill from spec with no endpoints.');
   }
+
   const name = slugify(spec.apiName);
+  const mainFile = target === 'cursor' ? `${name}.mdc` : 'SKILL.md';
   const fileMap: Record<string, string> = {};
-  fileMap['SKILL.md'] = generateSkillMd(spec, options);
+  fileMap[mainFile] = generateSkillMd(spec, options);
   const lean = options.lean ?? true;
   fileMap['references/api-spec.lap'] = toLap(spec, { lean });
   const totalTokens = Object.values(fileMap).reduce(
@@ -318,6 +423,7 @@ export function generateSkill(spec: LAPSpec, options?: SkillOptions): SkillOutpu
   );
   return {
     name,
+    mainFile,
     fileMap,
     tokenCount: totalTokens,
     endpointCount: spec.endpoints.length,

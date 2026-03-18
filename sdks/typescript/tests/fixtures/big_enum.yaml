@@ -1,0 +1,25 @@
+openapi: "3.0.0"
+info:
+  title: Big Enum API
+  version: "1.0.0"
+servers:
+  - url: https://api.enum.com
+paths:
+  /countries:
+    get:
+      summary: Filter by country
+      parameters:
+        - name: country
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [US, GB, DE, FR, JP, CN, IN, BR, CA, AU, MX, KR, IT, ES, NL, SE, CH, NO, DK, FI]
+        - name: currency
+          in: query
+          schema:
+            type: string
+            enum: [USD, EUR, GBP, JPY, CNY, INR, BRL, CAD, AUD, MXN, KRW, CHF, SEK, NOK, DKK]
+      responses:
+        "200":
+          description: Filtered results

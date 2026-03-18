@@ -4,12 +4,11 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { parse } from '../src/parser';
 import { toLap, groupName } from '../src/serializer';
+import { compileOpenapi } from '../src/compilers/openapi';
 
 // When compiled, __dirname = sdks/typescript/dist/tests
 const OUTPUT_DIR = path.resolve(__dirname, '../../../../output');
-const STRIPE_FILE = fs.existsSync(path.join(OUTPUT_DIR, 'stripe-charges.lap'))
-  ? path.join(OUTPUT_DIR, 'stripe-charges.lap')
-  : path.join(OUTPUT_DIR, 'stripe-charges.lap');
+const STRIPE_FILE = path.join(OUTPUT_DIR, 'stripe-charges.lap');
 
 describe('Serializer', () => {
   describe('Round-trip', () => {
@@ -202,6 +201,178 @@ describe('Serializer', () => {
     it('should handle empty string', () => {
       assert.strictEqual(groupName(''), 'root');
     });
+  });
+});
+
+// When compiled, __dirname = sdks/typescript/dist/tests
+const EXAMPLES_DIR = path.resolve(__dirname, '../../../../examples/verbose/openapi');
+
+const SPEC_NAMES = ['petstore', 'stripe-charges', 'discord', 'slack', 'github-core', 'cloudflare'];
+
+describe('Compile-based round-trip', () => {
+  for (const name of SPEC_NAMES) {
+    const yamlPath = path.join(EXAMPLES_DIR, `${name}.yaml`);
+    const ymlPath = path.join(EXAMPLES_DIR, `${name}.yml`);
+    const specPath = fs.existsSync(yamlPath) ? yamlPath : fs.existsSync(ymlPath) ? ymlPath : null;
+
+    if (!specPath) {
+      // File does not exist -- skip all sub-tests for this spec
+      describe(`Round-trip: ${name}`, () => {
+        it('endpoint count preserved', () => {
+          // skipped -- spec file not found
+        });
+        it('methods and paths preserved', () => {
+          // skipped -- spec file not found
+        });
+        it('api name preserved', () => {
+          // skipped -- spec file not found
+        });
+      });
+      continue;
+    }
+
+    describe(`Round-trip: ${name}`, () => {
+      it('endpoint count preserved', () => {
+        const spec = compileOpenapi(specPath!);
+        const lap = toLap(spec);
+        const parsed = parse(lap);
+        assert.strictEqual(
+          parsed.endpoints.length,
+          spec.endpoints.length,
+          `${name}: endpoint count mismatch after round-trip`,
+        );
+      });
+
+      it('methods and paths preserved', () => {
+        const spec = compileOpenapi(specPath!);
+        const lap = toLap(spec);
+        const parsed = parse(lap);
+
+        const toKey = (ep: { method: string; path: string }) =>
+          `${ep.method.toUpperCase()} ${ep.path}`;
+
+        const originalKeys = new Set(spec.endpoints.map(toKey));
+        const parsedKeys = new Set(parsed.endpoints.map(toKey));
+
+        for (const key of originalKeys) {
+          assert.ok(parsedKeys.has(key), `${name}: endpoint "${key}" missing after round-trip`);
+        }
+        assert.strictEqual(
+          parsedKeys.size,
+          originalKeys.size,
+          `${name}: endpoint set size mismatch after round-trip`,
+        );
+      });
+
+      it('api name preserved', () => {
+        const spec = compileOpenapi(specPath!);
+        const lap = toLap(spec);
+        const parsed = parse(lap);
+        assert.strictEqual(parsed.apiName, spec.apiName, `${name}: apiName mismatch after round-trip`);
+      });
+    });
+  }
+});
+
+describe('Double round-trip stability', () => {
+  const petstorePath = path.join(EXAMPLES_DIR, 'petstore.yaml');
+
+  it('standard mode is stable', () => {
+    if (!fs.existsSync(petstorePath)) return;
+    const spec = compileOpenapi(petstorePath);
+    const lap1 = toLap(spec);
+    const parsed1 = parse(lap1);
+    const lap2 = toLap(parsed1);
+    const parsed2 = parse(lap2);
+    assert.strictEqual(
+      parsed2.endpoints.length,
+      parsed1.endpoints.length,
+      'Standard mode: endpoint count must be stable across two round-trips',
+    );
+    // The second serialization of an already-parsed spec must itself be stable
+    const parsed3 = parse(lap2);
+    const lap3 = toLap(parsed3);
+    assert.strictEqual(lap2, lap3, 'Standard mode: LAP text must be idempotent from the second pass onward');
+  });
+
+  it('lean mode is stable', () => {
+    if (!fs.existsSync(petstorePath)) return;
+    const spec = compileOpenapi(petstorePath);
+    const lap1 = toLap(spec, { lean: true });
+    const parsed1 = parse(lap1);
+    const lap2 = toLap(parsed1, { lean: true });
+    const parsed2 = parse(lap2);
+    assert.strictEqual(
+      parsed2.endpoints.length,
+      parsed1.endpoints.length,
+      'Lean mode: endpoint count must be stable across two round-trips',
+    );
+    // The second serialization of an already-parsed spec must itself be stable
+    const parsed3 = parse(lap2);
+    const lap3 = toLap(parsed3, { lean: true });
+    assert.strictEqual(lap2, lap3, 'Lean mode: LAP text must be idempotent from the second pass onward');
+  });
+});
+
+describe('Serializer double round-trip', () => {
+  const stripePath = path.join(EXAMPLES_DIR, 'stripe-charges.yaml');
+  const petstorePath = path.join(EXAMPLES_DIR, 'petstore.yaml');
+
+  it('compile -> toLap -> parse -> toLap produces same endpoint count (standard)', () => {
+    if (!fs.existsSync(stripePath)) return;
+    const spec = compileOpenapi(stripePath);
+    const lap1 = toLap(spec);
+    const parsed1 = parse(lap1);
+    const lap2 = toLap(parsed1);
+    const parsed2 = parse(lap2);
+    assert.strictEqual(
+      parsed2.endpoints.length,
+      spec.endpoints.length,
+      'stripe-charges standard: endpoint count must survive compile -> toLap -> parse -> toLap',
+    );
+  });
+
+  it('compile -> toLap -> parse -> toLap produces same endpoint count (lean)', () => {
+    if (!fs.existsSync(stripePath)) return;
+    const spec = compileOpenapi(stripePath);
+    const lap1 = toLap(spec, { lean: true });
+    const parsed1 = parse(lap1);
+    const lap2 = toLap(parsed1, { lean: true });
+    const parsed2 = parse(lap2);
+    assert.strictEqual(
+      parsed2.endpoints.length,
+      spec.endpoints.length,
+      'stripe-charges lean: endpoint count must survive compile -> toLap -> parse -> toLap',
+    );
+  });
+
+  it('multi-group spec preserves groups after round-trip', () => {
+    if (!fs.existsSync(petstorePath)) return;
+    const spec = compileOpenapi(petstorePath);
+    const lap1 = toLap(spec);
+
+    // Collect distinct groups from compiled spec
+    const originalGroups = new Set(spec.endpoints.map(ep => groupName(ep.path)));
+
+    const parsed = parse(lap1);
+    const lap2 = toLap(parsed);
+
+    // Every @group marker from the first serialization must appear in the second
+    for (const gname of originalGroups) {
+      if (originalGroups.size > 1) {
+        assert.ok(
+          lap2.includes(`@group ${gname}`),
+          `Group "${gname}" missing from re-serialized output`,
+        );
+      }
+    }
+
+    // Endpoint count is preserved
+    assert.strictEqual(
+      parsed.endpoints.length,
+      spec.endpoints.length,
+      'Multi-group spec: endpoint count must be preserved across round-trip',
+    );
   });
 });
 

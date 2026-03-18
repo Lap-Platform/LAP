@@ -1,5 +1,7 @@
 import { describe, it } from 'node:test';
 import * as assert from 'node:assert';
+import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
 import { compileProtobuf } from '../src/compilers/protobuf';
 import { detectFormat } from '../src/compilers/index';
@@ -116,6 +118,209 @@ describe('Protobuf Compiler', () => {
         () => compileProtobuf('/nonexistent/path/to/service.proto'),
         /ENOENT|no such file/i,
       );
+    });
+  });
+});
+
+describe('Protobuf parser units', () => {
+  // Helper to write a temp .proto file, compile it, and clean up
+  function withProto(content: string, fn: (specPath: string) => void): void {
+    const tmpFile = path.join(os.tmpdir(), `lap-proto-test-${Date.now()}-${Math.random().toString(36).slice(2)}.proto`);
+    fs.writeFileSync(tmpFile, content, 'utf-8');
+    try {
+      fn(tmpFile);
+    } finally {
+      if (fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile);
+    }
+  }
+
+  it('parses simple message with scalar fields', () => {
+    withProto(`
+      syntax = "proto3";
+      package svc.v1;
+      message Req { string id = 1; }
+      message Res { string name = 1; int32 age = 2; }
+      service Svc { rpc Get(Req) returns (Res); }
+    `, (specPath) => {
+      const spec = compileProtobuf(specPath);
+      assert.strictEqual(spec.endpoints.length, 1, 'Should have 1 endpoint');
+      const ep = spec.getEndpoint('POST', '/Svc/Get');
+      assert.ok(ep, 'Should find POST /Svc/Get');
+      // Response should have name and age fields
+      assert.ok(ep.responses.length > 0, 'Should have response schema');
+      const fieldNames = ep.responses[0].fields.map(f => f.name);
+      assert.ok(fieldNames.includes('name'), 'Response should have name field');
+      assert.ok(fieldNames.includes('age'), 'Response should have age field');
+    });
+  });
+
+  it('parses repeated field as array type', () => {
+    withProto(`
+      syntax = "proto3";
+      package arr.v1;
+      message Req { string query = 1; }
+      message Res { repeated string tags = 1; }
+      service TagSvc { rpc List(Req) returns (Res); }
+    `, (specPath) => {
+      const spec = compileProtobuf(specPath);
+      const ep = spec.getEndpoint('POST', '/TagSvc/List');
+      assert.ok(ep, 'Should find POST /TagSvc/List');
+      assert.ok(ep.responses.length > 0, 'Should have response schema');
+      const tagsField = ep.responses[0].fields.find(f => f.name === 'tags');
+      assert.ok(tagsField, 'Should have tags field');
+      assert.ok(tagsField.type.startsWith('['), `tags field type should be array, got: ${tagsField.type}`);
+    });
+  });
+
+  it('parses message with map field -- endpoint is created, scalar siblings extracted', () => {
+    // The regex-based parser does not parse map<K,V> field syntax, so map fields
+    // are silently skipped. The endpoint and any scalar sibling fields are still parsed.
+    withProto(`
+      syntax = "proto3";
+      package map.v1;
+      message Req { map<string, int32> counts = 1; string name = 2; }
+      message Res { string result = 1; }
+      service MapSvc { rpc SetCounts(Req) returns (Res); }
+    `, (specPath) => {
+      const spec = compileProtobuf(specPath);
+      const ep = spec.getEndpoint('POST', '/MapSvc/SetCounts');
+      assert.ok(ep, 'Should find POST /MapSvc/SetCounts even when request has map field');
+      // Scalar sibling 'name' should be extracted; 'counts' (map) is skipped
+      const paramNames = (ep.requestBody || ep.allParams).map(p => p.name);
+      assert.ok(paramNames.includes('name'), 'Scalar sibling name should be extracted');
+      // Response scalar field is still parsed correctly
+      assert.ok(ep.responses.length > 0, 'Response schema should be present');
+      const resultField = ep.responses[0].fields.find(f => f.name === 'result');
+      assert.ok(resultField, 'Response should have result field');
+    });
+  });
+
+  it('parses enum values are accessible as fields when used in message', () => {
+    withProto(`
+      syntax = "proto3";
+      package enum.v1;
+      enum Status { UNKNOWN = 0; ACTIVE = 1; INACTIVE = 2; }
+      message Req { string id = 1; }
+      message Res { Status status = 1; string name = 2; }
+      service EnumSvc { rpc Get(Req) returns (Res); }
+    `, (specPath) => {
+      const spec = compileProtobuf(specPath);
+      assert.ok(spec.endpoints.length > 0, 'Should have at least 1 endpoint');
+      const ep = spec.getEndpoint('POST', '/EnumSvc/Get');
+      assert.ok(ep, 'Should find POST /EnumSvc/Get');
+      assert.ok(ep.responses.length > 0, 'Should have response schema');
+      const fieldNames = ep.responses[0].fields.map(f => f.name);
+      assert.ok(fieldNames.includes('status'), 'Response should have status field from enum reference');
+      assert.ok(fieldNames.includes('name'), 'Response should have name field');
+    });
+  });
+
+  it('parses oneof fields -- both alternatives appear as params', () => {
+    withProto(`
+      syntax = "proto3";
+      package oneof.v1;
+      message Req {
+        oneof choice {
+          string text = 1;
+          int32 number = 2;
+        }
+      }
+      message Res { string result = 1; }
+      service OneofSvc { rpc Process(Req) returns (Res); }
+    `, (specPath) => {
+      const spec = compileProtobuf(specPath);
+      const ep = spec.getEndpoint('POST', '/OneofSvc/Process');
+      assert.ok(ep, 'Should find POST /OneofSvc/Process');
+      const paramNames = (ep.requestBody || ep.allParams).map(p => p.name);
+      assert.ok(paramNames.includes('text'), 'Oneof should expose text field as param');
+      assert.ok(paramNames.includes('number'), 'Oneof should expose number field as param');
+    });
+  });
+
+  it('strips line and block comments from source', () => {
+    withProto(`
+      // This is a top-level comment
+      syntax = "proto3";
+      /* block comment about package */
+      package clean.v1;
+      message Req { /* field comment */ string id = 1; // trailing comment
+      }
+      message Res { string value = 1; }
+      // Service comment
+      service CleanSvc {
+        /* rpc comment */
+        rpc Fetch(Req) returns (Res);
+      }
+    `, (specPath) => {
+      const spec = compileProtobuf(specPath);
+      assert.ok(spec.apiName === 'clean.v1', `API name should be clean.v1, got: ${spec.apiName}`);
+      const ep = spec.getEndpoint('POST', '/CleanSvc/Fetch');
+      assert.ok(ep, 'Should find POST /CleanSvc/Fetch despite comments');
+      // Description should not contain comment text
+      assert.ok(!ep.description?.includes('//'), 'Description should not contain comment syntax');
+      assert.ok(!ep.description?.includes('/*'), 'Description should not contain block comment syntax');
+    });
+  });
+
+  it('handles multiple services in one proto file', () => {
+    withProto(`
+      syntax = "proto3";
+      package multi.v1;
+      message Req { string id = 1; }
+      message Res { string data = 1; }
+      service ServiceA { rpc DoA(Req) returns (Res); }
+      service ServiceB { rpc DoB(Req) returns (Res); rpc DoC(Req) returns (Res); }
+    `, (specPath) => {
+      const spec = compileProtobuf(specPath);
+      assert.strictEqual(spec.endpoints.length, 3, 'Should have 3 endpoints across 2 services');
+      assert.ok(spec.getEndpoint('POST', '/ServiceA/DoA'), 'Should have ServiceA/DoA');
+      assert.ok(spec.getEndpoint('POST', '/ServiceB/DoB'), 'Should have ServiceB/DoB');
+      assert.ok(spec.getEndpoint('POST', '/ServiceB/DoC'), 'Should have ServiceB/DoC');
+    });
+  });
+
+  it('handles server streaming rpc', () => {
+    withProto(`
+      syntax = "proto3";
+      package stream.v1;
+      message Req { string filter = 1; }
+      message Res { string item = 1; }
+      service StreamSvc { rpc List(Req) returns (stream Res); }
+    `, (specPath) => {
+      const spec = compileProtobuf(specPath);
+      const ep = spec.getEndpoint('POST', '/StreamSvc/List');
+      assert.ok(ep, 'Should find POST /StreamSvc/List');
+      assert.ok(ep.description?.includes('SERVER_STREAM'), `Server streaming rpc should be annotated SERVER_STREAM, got: ${ep.description}`);
+    });
+  });
+
+  it('handles client streaming rpc', () => {
+    withProto(`
+      syntax = "proto3";
+      package upload.v1;
+      message Req { string chunk = 1; }
+      message Res { int32 total = 1; }
+      service UploadSvc { rpc Upload(stream Req) returns (Res); }
+    `, (specPath) => {
+      const spec = compileProtobuf(specPath);
+      const ep = spec.getEndpoint('POST', '/UploadSvc/Upload');
+      assert.ok(ep, 'Should find POST /UploadSvc/Upload');
+      assert.ok(ep.description?.includes('CLIENT_STREAM'), `Client streaming rpc should be annotated CLIENT_STREAM, got: ${ep.description}`);
+    });
+  });
+
+  it('handles bidi streaming rpc', () => {
+    withProto(`
+      syntax = "proto3";
+      package chat.v1;
+      message Req { string msg = 1; }
+      message Res { string reply = 1; }
+      service ChatSvc { rpc Chat(stream Req) returns (stream Res); }
+    `, (specPath) => {
+      const spec = compileProtobuf(specPath);
+      const ep = spec.getEndpoint('POST', '/ChatSvc/Chat');
+      assert.ok(ep, 'Should find POST /ChatSvc/Chat');
+      assert.ok(ep.description?.includes('BIDI_STREAM'), `Bidi streaming rpc should be annotated BIDI_STREAM, got: ${ep.description}`);
     });
   });
 });

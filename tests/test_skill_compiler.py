@@ -305,7 +305,7 @@ def test_slugify_basic():
 
 
 def test_slugify_special_chars():
-    assert _slugify("My API (v2.0)") == "my-api-v20"
+    assert _slugify("My API (v2.0)") == "my-api-v2-0"
 
 
 def test_slugify_underscores():
@@ -577,3 +577,173 @@ def test_api_version_omitted_when_empty():
     result = generate_skill(spec)
     md = result.file_map["SKILL.md"]
     assert "API version:" not in md
+
+
+# -- Target: Cursor -----------------------------------------------------------
+
+class TestCursorTarget:
+    """Tests for --target cursor output."""
+
+    def test_cursor_file_extension(self, minimal_spec):
+        """Cursor target produces .mdc file instead of SKILL.md."""
+        result = generate_skill(minimal_spec, SkillOptions(target="cursor"))
+        mdc_files = [k for k in result.file_map if k.endswith(".mdc")]
+        assert len(mdc_files) == 1
+        assert "SKILL.md" not in result.file_map
+
+    def test_cursor_filename_matches_slug(self, minimal_spec):
+        """Cursor .mdc filename matches slugified API name."""
+        result = generate_skill(minimal_spec, SkillOptions(target="cursor"))
+        expected = f"{_slugify(minimal_spec.api_name)}.mdc"
+        assert expected in result.file_map
+
+    def test_cursor_frontmatter_has_description(self, minimal_spec):
+        """Cursor frontmatter has description field."""
+        result = generate_skill(minimal_spec, SkillOptions(target="cursor"))
+        md = result.file_map[result.main_file]
+        parts = md.split("---", 2)
+        frontmatter = parts[1]
+        assert "description:" in frontmatter
+
+    def test_cursor_frontmatter_has_always_apply(self, minimal_spec):
+        """Cursor frontmatter has alwaysApply: false."""
+        result = generate_skill(minimal_spec, SkillOptions(target="cursor"))
+        md = result.file_map[result.main_file]
+        parts = md.split("---", 2)
+        frontmatter = parts[1]
+        assert "alwaysApply: false" in frontmatter
+
+    def test_cursor_frontmatter_no_generator(self, minimal_spec):
+        """Cursor frontmatter should NOT have generator or version fields."""
+        result = generate_skill(minimal_spec, SkillOptions(target="cursor"))
+        md = result.file_map[result.main_file]
+        parts = md.split("---", 2)
+        frontmatter = parts[1]
+        assert "generator:" not in frontmatter
+        assert "version:" not in frontmatter
+
+    def test_cursor_reference_file_present(self, minimal_spec):
+        """Cursor target still includes references/api-spec.lap."""
+        result = generate_skill(minimal_spec, SkillOptions(target="cursor"))
+        assert "references/api-spec.lap" in result.file_map
+
+    def test_cursor_body_matches_claude(self, minimal_spec):
+        """Cursor body content (after frontmatter) matches Claude body."""
+        claude = generate_skill(minimal_spec, SkillOptions(target="claude"))
+        cursor = generate_skill(minimal_spec, SkillOptions(target="cursor"))
+        claude_body = claude.file_map[claude.main_file].split("---", 2)[2]
+        cursor_body = cursor.file_map[cursor.main_file].split("---", 2)[2]
+        assert claude_body == cursor_body
+
+
+# -- Default target ------------------------------------------------------------
+
+class TestDefaultTarget:
+    """Verify default target is Claude for backward compat."""
+
+    def test_default_is_claude(self, minimal_spec):
+        """Default SkillOptions produces Claude output."""
+        result = generate_skill(minimal_spec)
+        assert "SKILL.md" in result.file_map
+        md = result.file_map["SKILL.md"]
+        parts = md.split("---", 2)
+        frontmatter = parts[1]
+        assert "generator: lapsh" in frontmatter
+        assert "version:" in frontmatter
+
+
+# -- CLI section ---------------------------------------------------------------
+
+class TestCliSection:
+    """Verify CLI section appears in generated skills."""
+
+    def test_cli_section_present(self, minimal_spec):
+        """Generated body includes ## CLI section."""
+        result = generate_skill(minimal_spec)
+        md = result.file_map["SKILL.md"]
+        assert "## CLI" in md
+
+    def test_cli_section_has_npx(self, minimal_spec):
+        """CLI section contains npx @lap-platform/lapsh commands."""
+        result = generate_skill(minimal_spec)
+        md = result.file_map["SKILL.md"]
+        assert "npx @lap-platform/lapsh" in md
+
+    def test_cli_section_has_slug(self, minimal_spec):
+        """CLI section uses slugified API name."""
+        result = generate_skill(minimal_spec)
+        md = result.file_map["SKILL.md"]
+        slug = _slugify(minimal_spec.api_name)
+        assert f"lapsh get {slug}" in md
+        assert f"lapsh search {slug}" in md
+
+    def test_cli_section_in_all_targets(self, minimal_spec):
+        """CLI section appears in Claude and Cursor outputs."""
+        for target in ("claude", "cursor"):
+            result = generate_skill(minimal_spec, SkillOptions(target=target))
+            assert "## CLI" in result.file_map[result.main_file], f"CLI section missing for {target}"
+
+    def test_cli_section_before_references(self, minimal_spec):
+        """CLI section appears before References section."""
+        result = generate_skill(minimal_spec)
+        md = result.file_map["SKILL.md"]
+        cli_idx = md.index("## CLI")
+        ref_idx = md.index("## References")
+        assert cli_idx < ref_idx
+
+
+# -- Invalid target ---------------------------------------------------------------
+
+def test_invalid_target_raises(minimal_spec):
+    """Unknown target raises ValueError."""
+    with pytest.raises(ValueError, match="Unknown target"):
+        generate_skill(minimal_spec, SkillOptions(target="vscode"))
+
+
+# -- Init command (built-in skill install) -------------------------------------
+
+class TestInit:
+    """Tests for _install_builtin_skill and _get_skills_dir (used by lapsh init)."""
+
+    def test_skills_dir_found(self):
+        """_get_skills_dir returns a valid directory."""
+        from lap.cli.main import _get_skills_dir
+        skills_dir = _get_skills_dir()
+        assert skills_dir is not None
+        assert skills_dir.is_dir()
+
+    def test_builtin_install_cursor(self, tmp_path):
+        """Installing 'lap' for cursor creates .mdc file with references."""
+        from lap.cli.main import _install_builtin_skill
+        dest = tmp_path / "cursor-out"
+        _install_builtin_skill("lap", "cursor", str(dest))
+        assert (dest / "lap.mdc").exists()
+        assert (dest / "references" / "agent-flow.md").exists()
+        assert (dest / "references" / "command-reference.md").exists()
+        assert (dest / "references" / "publisher-flow.md").exists()
+
+    def test_builtin_install_claude(self, tmp_path):
+        """Installing 'lap' for claude creates SKILL.md with references."""
+        from lap.cli.main import _install_builtin_skill
+        dest = tmp_path / "claude-out"
+        _install_builtin_skill("lap", "claude", str(dest))
+        assert (dest / "SKILL.md").exists()
+        assert (dest / "references" / "agent-flow.md").exists()
+
+    def test_builtin_cursor_no_claude_paths(self, tmp_path):
+        """Cursor skill file should not contain ~/.claude/ paths."""
+        from lap.cli.main import _install_builtin_skill
+        dest = tmp_path / "check"
+        _install_builtin_skill("lap", "cursor", str(dest))
+        content = (dest / "lap.mdc").read_text(encoding="utf-8")
+        assert "~/.claude/skills/" not in content
+
+    def test_builtin_file_count(self, tmp_path):
+        """Each target installs exactly 4 files (main + 3 references)."""
+        from lap.cli.main import _install_builtin_skill
+        for target in ("claude", "cursor"):
+            dest = tmp_path / target
+            _install_builtin_skill("lap", target, str(dest))
+            files = list(dest.rglob("*"))
+            file_count = sum(1 for f in files if f.is_file())
+            assert file_count == 4, f"{target} should have 4 files, got {file_count}"

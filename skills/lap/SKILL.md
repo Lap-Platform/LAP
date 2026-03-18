@@ -1,6 +1,6 @@
 ---
 name: lap
-description: "LAP CLI -- compile, search, and manage API specs for AI agents. Use when working with API specifications (OpenAPI, GraphQL, AsyncAPI, Protobuf, Postman), compiling specs to LAP format, searching the LAP registry, generating skills from API specs, or publishing APIs. Commands: compile, search, get, skill, skill-install, skill-batch, publish, login, logout, whoami."
+description: "LAP CLI -- compile, search, and manage API specs for AI agents. Use when working with API specifications (OpenAPI, GraphQL, AsyncAPI, Protobuf, Postman), compiling specs to LAP format, searching the LAP registry, generating skills from API specs, or publishing APIs. Commands: init, compile, search, get, skill, skill-install, skill-batch, publish, login, logout, whoami."
 user-invocable: true
 version: 1.0.0
 metadata:
@@ -169,6 +169,13 @@ lapsh skill-batch specs/ -o skills/
 | `login` | Authenticate via GitHub OAuth |
 | `logout` | Revoke token |
 | `whoami` | Show authenticated user |
+
+### Setup
+
+| Command | Description |
+|---------|-------------|
+| `init` | Set up LAP in your IDE (auto-detects target) |
+| `init --target cursor` | Set up LAP for a specific IDE |
 
 ### Skill Commands
 

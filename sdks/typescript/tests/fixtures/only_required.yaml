@@ -1,0 +1,19 @@
+openapi: "3.0.0"
+info:
+  title: Required Only API
+  version: "1.0.0"
+servers:
+  - url: https://api.required.com
+paths:
+  /users/{user_id}:
+    get:
+      summary: Get user by ID
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User found

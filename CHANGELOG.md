@@ -5,6 +5,30 @@ All notable changes to LAP (Lean API Platform) will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-03-18
+
+### Added
+- **`lapsh init` command** -- set up LAP in your IDE with one command. Auto-installs the bundled LAP skill to the correct directory
+- **Cursor IDE support** -- `--target cursor` flag for `skill`, `skill-batch`, `skill-install`, and `init` commands. Generates `.mdc` files with Cursor-specific frontmatter
+- **IDE auto-detection** -- `detect_target()` checks TERM_PROGRAM, CURSOR_TRACE_ID, PATH, project directories, and home directory to auto-detect Claude vs Cursor
+- **`--version` flag** for both Python and TypeScript CLIs
+- **Full TypeScript SDK compiler parity** -- all 6 compilers (AsyncAPI, GraphQL, Postman, Protobuf, AWS SDK, Smithy) now available in TypeScript with comprehensive tests
+- **Cursor skill rule** (`skills/cursor/lap.mdc`) -- dedicated skill file for Cursor with `skill-install --target cursor` instructions
+- **CLI section in generated skills** -- every generated skill now includes a `## CLI` section with npx commands for updating and searching
+
+### Changed
+- `skill-install` now fetches LAP spec from registry and generates skills locally (instead of downloading pre-built bundles), enabling target-aware output
+- `SkillOutput` now includes `main_file` field -- callers use `skill.file_map[skill.main_file]` instead of hardcoded `"SKILL.md"`
+- Improved `_slugify()` to handle `/` and `.` characters
+- Reduced integration test corpus from 29 to 8 representative specs (test suite runs 4x faster)
+- `replaceSection()` in TypeScript now preserves original section name instead of hardcoding "Enhanced Skill Content"
+
+### Fixed
+- **HTML tag leakage in @desc fields** -- descriptions from upstream API specs were leaking raw HTML tags and entities into compiled LAP output
+- **Missing `Path` import** in `skill.py` -- `detect_target()` would crash at runtime
+- **Home directory validation** -- Cursor target path in TypeScript `cmdInit` no longer silently uses empty string when HOME/USERPROFILE are unset
+- **Security**: Smithy compiler uses `execFileSync` instead of `execSync` to prevent command injection
+
 ## [0.4.8] - 2026-03-16
 
 ### Fixed

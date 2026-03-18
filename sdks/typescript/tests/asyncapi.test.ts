@@ -1,7 +1,9 @@
 import { describe, it } from 'node:test';
 import * as assert from 'node:assert';
+import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
-import { compileAsyncApi } from '../src/compilers/asyncapi';
+import { compileAsyncApi, resolveRef, extractType } from '../src/compilers/asyncapi';
 import { detectFormat } from '../src/compilers/index';
 
 // When compiled, __dirname = sdks/typescript/dist/tests
@@ -109,8 +111,6 @@ describe('AsyncAPI Compiler', () => {
     });
 
     it('should throw on invalid YAML content', () => {
-      const fs = require('fs');
-      const os = require('os');
       const tmpFile = path.join(os.tmpdir(), 'bad-asyncapi-test.yaml');
       fs.writeFileSync(tmpFile, '{{{{invalid yaml: [[[', 'utf-8');
       try {
@@ -122,6 +122,64 @@ describe('AsyncAPI Compiler', () => {
         fs.unlinkSync(tmpFile);
       }
     });
+  });
+});
+
+describe('resolveRef', () => {
+  it('resolves basic $ref', () => {
+    const spec = { components: { schemas: { Foo: { type: 'object' } } } };
+    const result = resolveRef(spec, '#/components/schemas/Foo');
+    assert.deepStrictEqual(result, { type: 'object' });
+  });
+
+  it('resolves nested ref chain', () => {
+    const spec = {
+      components: {
+        schemas: {
+          A: { '$ref': '#/components/schemas/B' },
+          B: { type: 'string' },
+        },
+      },
+    };
+    const result = resolveRef(spec, '#/components/schemas/A');
+    assert.deepStrictEqual(result, { type: 'string' });
+  });
+
+  it('throws on circular ref', () => {
+    const spec = {
+      components: {
+        schemas: {
+          A: { '$ref': '#/components/schemas/B' },
+          B: { '$ref': '#/components/schemas/A' },
+        },
+      },
+    };
+    assert.throws(
+      () => resolveRef(spec, '#/components/schemas/A'),
+      /Circular/,
+    );
+  });
+});
+
+describe('extractType', () => {
+  it('maps string to str', () => {
+    assert.strictEqual(extractType({ type: 'string' }, {}), 'str');
+  });
+
+  it('maps string with format', () => {
+    assert.strictEqual(extractType({ type: 'string', format: 'date-time' }, {}), 'str(date-time)');
+  });
+
+  it('maps integer to int', () => {
+    assert.strictEqual(extractType({ type: 'integer' }, {}), 'int');
+  });
+
+  it('maps array of strings', () => {
+    assert.strictEqual(extractType({ type: 'array', items: { type: 'string' } }, {}), '[str]');
+  });
+
+  it('maps boolean to bool', () => {
+    assert.strictEqual(extractType({ type: 'boolean' }, {}), 'bool');
   });
 });
 

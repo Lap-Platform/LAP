@@ -8,6 +8,7 @@ LLM enhancement at publish time (see skill_llm.py).
 import re
 from collections import OrderedDict
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Optional
 
 from lap.core.formats.lap import LAPSpec, Endpoint, _group_name
@@ -18,6 +19,50 @@ from lap.core.utils import count_tokens, AUTH_PARAM_NAMES
 _AUTH_PARAM_NAMES = AUTH_PARAM_NAMES | {"key"}
 
 SKILL_MD_TOKEN_BUDGET = 3000
+VALID_TARGETS = {"claude", "cursor"}
+
+
+def detect_target() -> str:
+    """Auto-detect IDE target from environment.
+
+    Detection priority:
+    1. TERM_PROGRAM env var (macOS/Linux -- set by IDE terminals)
+    2. IDE-specific env vars (CURSOR_TRACE_ID, CURSOR_EDITOR, etc.)
+    3. PATH entries containing IDE binary paths (cross-platform)
+    4. .cursor project directory (walk up to .git root)
+    5. ~/.cursor/ in home directory (Cursor installed on this machine)
+    6. Default: 'claude'
+    """
+    import os
+
+    # 1. TERM_PROGRAM (macOS/Linux)
+    term = os.environ.get("TERM_PROGRAM", "").lower()
+    if "cursor" in term:
+        return "cursor"
+
+    # 2. IDE-specific env vars
+    if os.environ.get("CURSOR_TRACE_ID") or os.environ.get("CURSOR_EDITOR"):
+        return "cursor"
+
+    # 3. PATH-based detection (works on Windows where TERM_PROGRAM is unset)
+    path_env = os.environ.get("PATH", "").lower()
+    if "cursor" in path_env and "codebin" in path_env:
+        return "cursor"
+
+    # 4. Project directory walk
+    cwd = Path.cwd()
+    for parent in [cwd, *cwd.parents]:
+        if (parent / ".cursor").is_dir():
+            return "cursor"
+        if (parent / ".git").exists():
+            break
+
+    # 5. Home directory check (Cursor config exists)
+    cursor_home = Path.home() / ".cursor"
+    if cursor_home.is_dir():
+        return "cursor"
+
+    return "claude"
 
 
 @dataclass
@@ -26,11 +71,13 @@ class SkillOptions:
     lean: bool = True
     clawhub: bool = False    # include metadata.openclaw block
     version: str = "1.0.0"   # skill version in frontmatter
+    target: str = "claude"   # "claude" | "cursor"
 
 
 @dataclass
 class SkillOutput:
     name: str                # skill directory name (slugified api name)
+    main_file: str           # key into file_map for the main skill file
     file_map: dict[str, str] # {relative_path: content_string}
     token_count: int         # total tokens across all files
     endpoint_count: int
@@ -44,15 +91,22 @@ def generate_skill(spec: LAPSpec, options: Optional[SkillOptions] = None) -> Ski
     if options is None:
         options = SkillOptions()
 
+    if options.target not in VALID_TARGETS:
+        raise ValueError(f"Unknown target '{options.target}'. Valid targets: {', '.join(sorted(VALID_TARGETS))}")
+
     if not spec.endpoints:
         raise ValueError("Cannot generate skill from spec with no endpoints.")
 
     name = _slugify(spec.api_name)
     file_map = {}
 
-    # SKILL.md -- main skill file
+    # Main skill file -- extension depends on target
     skill_md = _generate_skill_md(spec, options)
-    file_map["SKILL.md"] = skill_md
+    if options.target == "cursor":
+        main_file = f"{name}.mdc"
+    else:
+        main_file = "SKILL.md"
+    file_map[main_file] = skill_md
 
     # references/api-spec.lap -- lean LAP spec
     lean_spec = spec.to_lap(lean=options.lean)
@@ -62,6 +116,7 @@ def generate_skill(spec: LAPSpec, options: Optional[SkillOptions] = None) -> Ski
 
     return SkillOutput(
         name=name,
+        main_file=main_file,
         file_map=file_map,
         token_count=total_tokens,
         endpoint_count=len(spec.endpoints),
@@ -90,7 +145,7 @@ def _detect_auth_param(spec: LAPSpec) -> tuple[str, str] | None:
 
 def _slugify(name: str) -> str:
     """Convert API name to a valid skill directory name."""
-    slug = name.lower().replace(" ", "-").replace("_", "-")
+    slug = name.lower().replace(" ", "-").replace("_", "-").replace("/", "-").replace(".", "-")
     slug = "".join(c for c in slug if c.isalnum() or c == "-").strip("-")
     # Collapse repeated hyphens
     slug = re.sub(r"-+", "-", slug)
@@ -111,9 +166,8 @@ def _generate_skill_md(spec: LAPSpec, options: SkillOptions) -> str:
     return "\n".join(parts)
 
 
-def _generate_frontmatter(spec: LAPSpec, options: SkillOptions) -> str:
-    """Generate YAML frontmatter with name, description, version, and generator."""
-    name = _slugify(spec.api_name)
+def _build_description(spec: LAPSpec) -> str:
+    """Build skill description text from spec metadata. Returns escaped string safe for YAML quoting."""
     groups = _get_groups(spec)
     top_groups = list(groups.keys())[:3]
     group_text = ", ".join(top_groups) if top_groups else "API operations"
@@ -126,7 +180,6 @@ def _generate_frontmatter(spec: LAPSpec, options: SkillOptions) -> str:
     if not display_name or display_name.upper() == "API":
         display_name = spec.api_name  # fallback: use original name as-is
 
-    # If display_name is exactly "API", use it directly without appending " API" again
     if display_name.upper() == "API":
         desc = (
             f"API skill. "
@@ -139,8 +192,20 @@ def _generate_frontmatter(spec: LAPSpec, options: SkillOptions) -> str:
             f"Use when working with {display_name} for {group_text}. "
             f"Covers {ep_count} endpoint{'s' if ep_count != 1 else ''}."
         )
+    return desc.replace('\\', '\\\\').replace('"', '\\"')
 
-    desc_escaped = desc.replace('"', '\\"')
+
+def _generate_frontmatter(spec: LAPSpec, options: SkillOptions) -> str:
+    """Dispatch to target-specific frontmatter generator."""
+    if options.target == "cursor":
+        return _generate_cursor_frontmatter(spec)
+    return _generate_claude_frontmatter(spec, options)
+
+
+def _generate_claude_frontmatter(spec: LAPSpec, options: SkillOptions) -> str:
+    """Generate Claude Code YAML frontmatter with name, description, version, and generator."""
+    name = _slugify(spec.api_name)
+    desc_escaped = _build_description(spec)
     lines = [
         "---",
         f"name: {name}",
@@ -161,6 +226,18 @@ def _generate_frontmatter(spec: LAPSpec, options: SkillOptions) -> str:
         lines.append(f"        - {env_var}")
 
     lines.append("---")
+    return "\n".join(lines)
+
+
+def _generate_cursor_frontmatter(spec: LAPSpec) -> str:
+    """Generate Cursor .mdc frontmatter (description + alwaysApply)."""
+    desc_escaped = _build_description(spec)
+    lines = [
+        "---",
+        f'description: "{desc_escaped}"',
+        "alwaysApply: false",
+        "---",
+    ]
     return "\n".join(lines)
 
 
@@ -212,6 +289,10 @@ def _generate_skill_body(spec: LAPSpec) -> str:
 
     # Response Tips
     sections.append(_generate_response_tips(spec))
+    sections.append("")
+
+    # CLI
+    sections.append(_generate_cli_section(spec))
     sections.append("")
 
     # References
@@ -384,6 +465,23 @@ def _generate_response_tips(spec: LAPSpec) -> str:
         tips.append(f"- Error responses use types: {', '.join(sorted(error_fields))}")
 
     return "\n".join(tips)
+
+
+def _generate_cli_section(spec: LAPSpec) -> str:
+    """Generate CLI section with npx commands for spec management."""
+    slug = _slugify(spec.api_name)
+    lines = [
+        "## CLI",
+        "",
+        "```bash",
+        "# Update this spec to the latest version",
+        f"npx @lap-platform/lapsh get {slug} -o references/api-spec.lap",
+        "",
+        "# Search for related APIs",
+        f"npx @lap-platform/lapsh search {slug}",
+        "```",
+    ]
+    return "\n".join(lines)
 
 
 # ── Helpers ──────────────────────────────────────────────────────────

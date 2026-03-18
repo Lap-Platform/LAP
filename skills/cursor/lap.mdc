@@ -1,0 +1,75 @@
+---
+description: "LAP CLI -- search, download, and install API specs for AI agents. Use when user needs an API (Stripe, Plaid, Twilio, etc). Commands: (1) npx -y @lap-platform/lapsh search <query>, (2) npx -y @lap-platform/lapsh get <name> -o <name>.lap, (3) npx -y @lap-platform/lapsh skill-install <name> --target cursor. The .lap file IS the spec -- do NOT compile, do NOT download raw YAML, do NOT download lean variants unless asked."
+alwaysApply: false
+---
+
+# LAP CLI
+
+Search and download API specs from the LAP registry. The registry contains 231+ APIs already compiled into LAP format -- just search and download, no compilation needed.
+
+## Command Resolution
+
+Always use `npx` -- it works without any global install:
+
+```bash
+npx -y @lap-platform/lapsh <command>
+```
+
+All examples below use `npx -y @lap-platform/lapsh`. If the user has `lapsh` installed globally, you may use that instead.
+
+---
+
+## How to get an API spec
+
+Two commands. Nothing else.
+
+```bash
+npx -y @lap-platform/lapsh search <query>
+npx -y @lap-platform/lapsh get <name> -o <name>.lap
+```
+
+Example:
+```bash
+npx -y @lap-platform/lapsh search plaid
+npx -y @lap-platform/lapsh get plaid -o plaid.lap
+```
+
+The `<name>` is the first column from search results. The `.lap` file is the complete API spec -- endpoints, parameters, auth, schemas. Read it and start coding.
+
+**Important: do NOT do any of these:**
+- Do NOT download the raw OpenAPI/Swagger YAML -- the `.lap` file replaces it
+- Do NOT compile or convert anything -- the registry returns ready-to-use `.lap` files
+- Do NOT download both `.lap` and `.lean.lap` unless the user asks -- one file is enough
+- Do NOT fetch from any URL other than the LAP registry -- `get` handles everything
+
+---
+
+## Install a skill (optional)
+
+If the user wants a persistent skill installed for Cursor:
+
+```bash
+npx -y @lap-platform/lapsh skill-install <name> --target cursor
+```
+
+This installs to `~/.cursor/rules/<name>/` with a `.mdc` file. **Always pass `--target cursor`** -- without it the skill installs to the wrong directory.
+
+---
+
+## Compile a local spec (advanced)
+
+If the user has a local OpenAPI/GraphQL/AsyncAPI spec file instead of using the registry:
+
+```bash
+npx -y @lap-platform/lapsh compile <spec-file> -o output.lap
+```
+
+---
+
+## Troubleshooting
+
+| Problem | Fix |
+|---------|-----|
+| `npx` hangs or fails | Run `npx -y @lap-platform/lapsh` (the `-y` skips confirmation) |
+| No results from search | Try broader terms (e.g., "payment" instead of "stripe charges") |
+| `get` returns empty | The API name must match the first column from search results exactly |

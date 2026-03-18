@@ -15,6 +15,7 @@
 <a href="https://www.npmjs.com/package/@lap-platform/lapsh"><img src="https://img.shields.io/npm/v/@lap-platform/lapsh?style=for-the-badge&color=blue" alt="npm"></a>
 <br>
 <a href="https://github.com/Lap-Platform/lap/tree/main/skills/lap"><img src="https://img.shields.io/badge/Claude%20Code-skill-orange?style=for-the-badge" alt="Claude Code Skill"></a>
+<a href="https://github.com/Lap-Platform/lap/tree/main/skills/cursor"><img src="https://img.shields.io/badge/Cursor-skill-orange?style=for-the-badge" alt="Cursor Skill"></a>
 <a href="https://clawhub.ai/mickmicksh/lap"><img src="https://img.shields.io/badge/OpenClaw-skill-orange?style=for-the-badge" alt="OpenClaw Skill"></a>
 <br>
 <a href="https://github.com/Lap-Platform/lap/pulls"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge" alt="PRs Welcome"></a>
@@ -59,7 +60,11 @@ npx @lap-platform/lapsh search payment
 # Download a spec
 npx @lap-platform/lapsh get stripe-com -o stripe.lap
 
-# Install a pre-compiled skill (drops into ~/.claude/skills/)
+# Set up LAP in your IDE
+npx @lap-platform/lapsh init                    # Claude Code
+npx @lap-platform/lapsh init --target cursor    # Cursor
+
+# Install an API skill
 npx @lap-platform/lapsh skill-install stripe-com
 
 # Or compile your own spec
@@ -72,7 +77,12 @@ Install the LAP skill so your agent can search, compile, and manage APIs automat
 
 **Claude Code:**
 ```bash
-cp -r skills/lap ~/.claude/skills/lap
+npx @lap-platform/lapsh init
+```
+
+**Cursor:**
+```bash
+npx @lap-platform/lapsh init --target cursor
 ```
 
 **OpenClaw:** install from [ClawHub](https://clawhub.ai/mickmicksh/lap) or copy manually:
@@ -154,16 +164,17 @@ LAP is more than a compiler:
 
 | Component | What | Command |
 |-----------|------|---------|
+| **Init** | Set up LAP in your IDE | `lapsh init` / `lapsh init --target cursor` |
 | **Search** | Find APIs in the registry | `lapsh search payment` |
 | **Get** | Download a spec by name | `lapsh get stripe-com` |
-| **Skill Install** | Install a pre-compiled skill | `lapsh skill-install stripe-com` |
+| **Skill Install** | Install an API skill | `lapsh skill-install stripe-com` |
 | **Compiler** | Any spec → `.lap` | `lapsh compile api.yaml` |
 | **Skill Generator** | Create agent-ready skills from any spec | `lapsh skill api.yaml --install` |
 | **API Differ** | Detect breaking API changes | `lapsh diff old.lap new.lap` |
 | **Round-trip** | Convert LAP back to OpenAPI | `lapsh convert api.lap -f openapi` |
 | **Publish** | Share specs to the registry | `lapsh publish api.yaml --provider acme` |
 
-> **Claude Code users:** The `lap` skill is included -- your agent can search and install APIs directly. See `skills/lap/SKILL.md`.
+> **Claude Code & Cursor:** The `lap` skill is included -- run `lapsh init` and your agent can search and install APIs directly.
 
 ## Supported Formats
 

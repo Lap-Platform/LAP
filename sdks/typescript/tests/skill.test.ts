@@ -3,12 +3,13 @@ import * as assert from 'node:assert';
 import * as fs from 'fs';
 import * as path from 'path';
 import { parse } from '../src/parser';
-import { generateSkill, slugify, singularize } from '../src/skill';
+import { generateSkill, slugify, singularize, VALID_TARGETS } from '../src/skill';
+import type { SkillOptions } from '../src/skill';
+import { compile } from '../src/compilers/index';
+import { groupName } from '../src/serializer';
 
-const OUTPUT_DIR = path.resolve(__dirname, '../../../output');
-const STRIPE_FILE = fs.existsSync(path.join(OUTPUT_DIR, 'stripe-charges.lap'))
-  ? path.join(OUTPUT_DIR, 'stripe-charges.lap')
-  : path.join(OUTPUT_DIR, 'stripe-charges.lap');
+const OUTPUT_DIR = path.resolve(__dirname, '../../../../output');
+const STRIPE_FILE = path.join(OUTPUT_DIR, 'stripe-charges.lap');
 
 describe('Skill Generation', () => {
   describe('generateSkill', () => {
@@ -147,7 +148,15 @@ describe('Skill Generation', () => {
     });
 
     it('should handle special characters', () => {
-      assert.strictEqual(slugify('API v2.0!'), 'api-v20');
+      assert.strictEqual(slugify('API v2.0!'), 'api-v2-0');
+    });
+
+    it('should replace slashes with hyphens', () => {
+      assert.strictEqual(slugify('stripe/charges'), 'stripe-charges');
+    });
+
+    it('should replace dots with hyphens', () => {
+      assert.strictEqual(slugify('api-v2.0'), 'api-v2-0');
     });
 
     it('should collapse repeated hyphens', () => {
@@ -269,6 +278,274 @@ describe('Skill Generation', () => {
       const md = skill.fileMap['SKILL.md'];
       assert.ok(md.includes('API version: 1.0.27'), 'Body should include API version');
     });
+  });
+
+  describe('cursor target', () => {
+    it('produces .mdc file instead of SKILL.md', () => {
+      const text = fs.readFileSync(STRIPE_FILE, 'utf-8');
+      const spec = parse(text);
+      const skill = generateSkill(spec, { target: 'cursor' });
+      const mdcFiles = Object.keys(skill.fileMap).filter(k => k.endsWith('.mdc'));
+      assert.strictEqual(mdcFiles.length, 1, 'Should have exactly one .mdc file');
+      assert.ok(!('SKILL.md' in skill.fileMap), 'Should not have SKILL.md');
+    });
+
+    it('.mdc filename matches slug', () => {
+      const text = fs.readFileSync(STRIPE_FILE, 'utf-8');
+      const spec = parse(text);
+      const skill = generateSkill(spec, { target: 'cursor' });
+      const expected = `${slugify(spec.apiName)}.mdc`;
+      assert.ok(expected in skill.fileMap, `Should have ${expected}`);
+      assert.strictEqual(skill.mainFile, expected);
+    });
+
+    it('frontmatter has description and alwaysApply', () => {
+      const text = fs.readFileSync(STRIPE_FILE, 'utf-8');
+      const spec = parse(text);
+      const skill = generateSkill(spec, { target: 'cursor' });
+      const md = skill.fileMap[skill.mainFile];
+      const fmMatch = md.match(/^---\n([\s\S]*?)\n---/);
+      assert.ok(fmMatch, 'Should have frontmatter');
+      assert.ok(fmMatch[1].includes('description:'), 'Should have description');
+      assert.ok(fmMatch[1].includes('alwaysApply: false'), 'Should have alwaysApply');
+    });
+
+    it('frontmatter has no generator or version', () => {
+      const text = fs.readFileSync(STRIPE_FILE, 'utf-8');
+      const spec = parse(text);
+      const skill = generateSkill(spec, { target: 'cursor' });
+      const md = skill.fileMap[skill.mainFile];
+      const fmMatch = md.match(/^---\n([\s\S]*?)\n---/);
+      assert.ok(fmMatch, 'Should have frontmatter');
+      assert.ok(!fmMatch[1].includes('generator:'), 'Should not have generator');
+      assert.ok(!fmMatch[1].includes('version:'), 'Should not have version');
+    });
+
+    it('body matches claude body', () => {
+      const text = fs.readFileSync(STRIPE_FILE, 'utf-8');
+      const spec = parse(text);
+      const claude = generateSkill(spec, { target: 'claude' });
+      const cursor = generateSkill(spec, { target: 'cursor' });
+      const claudeBody = claude.fileMap[claude.mainFile].split('---').slice(2).join('---');
+      const cursorBody = cursor.fileMap[cursor.mainFile].split('---').slice(2).join('---');
+      assert.strictEqual(cursorBody, claudeBody);
+    });
+
+    it('still includes references/api-spec.lap', () => {
+      const text = fs.readFileSync(STRIPE_FILE, 'utf-8');
+      const spec = parse(text);
+      const skill = generateSkill(spec, { target: 'cursor' });
+      assert.ok('references/api-spec.lap' in skill.fileMap, 'Should have api-spec.lap');
+    });
+  });
+
+  describe('default target', () => {
+    it('default produces Claude output with mainFile SKILL.md', () => {
+      const text = fs.readFileSync(STRIPE_FILE, 'utf-8');
+      const spec = parse(text);
+      const skill = generateSkill(spec);
+      assert.ok('SKILL.md' in skill.fileMap, 'Should have SKILL.md');
+      assert.strictEqual(skill.mainFile, 'SKILL.md');
+      const md = skill.fileMap['SKILL.md'];
+      const fmMatch = md.match(/^---\n([\s\S]*?)\n---/);
+      assert.ok(fmMatch, 'Should have frontmatter');
+      assert.ok(fmMatch[1].includes('generator: lapsh'), 'Should have generator');
+      assert.ok(fmMatch[1].includes('version:'), 'Should have version');
+    });
+  });
+
+  describe('CLI section', () => {
+    it('generated body includes ## CLI section', () => {
+      const text = fs.readFileSync(STRIPE_FILE, 'utf-8');
+      const spec = parse(text);
+      const skill = generateSkill(spec);
+      assert.ok(skill.fileMap['SKILL.md'].includes('## CLI'), 'Should have CLI section');
+    });
+
+    it('CLI section has npx commands', () => {
+      const text = fs.readFileSync(STRIPE_FILE, 'utf-8');
+      const spec = parse(text);
+      const skill = generateSkill(spec);
+      assert.ok(skill.fileMap['SKILL.md'].includes('npx @lap-platform/lapsh'), 'Should have npx command');
+    });
+
+    it('CLI section appears in all targets', () => {
+      const text = fs.readFileSync(STRIPE_FILE, 'utf-8');
+      const spec = parse(text);
+      for (const t of VALID_TARGETS) {
+        const skill = generateSkill(spec, { target: t });
+        assert.ok(skill.fileMap[skill.mainFile].includes('## CLI'), `CLI section missing for ${t}`);
+      }
+    });
+  });
+
+  describe('invalid target', () => {
+    it('throws on unknown target', () => {
+      const text = fs.readFileSync(STRIPE_FILE, 'utf-8');
+      const spec = parse(text);
+      assert.throws(
+        () => generateSkill(spec, { target: 'vscode' as any }),
+        /Unknown target/,
+      );
+    });
+  });
+
+  describe('description deduplication', () => {
+    it('avoids API API doubling in description', () => {
+      const spec = parse('@lap v0.3\n@api Stripe API\n@base https://api.stripe.com\n@endpoint GET /charges\n@desc List charges\n@end');
+      const skill = generateSkill(spec);
+      const md = skill.fileMap['SKILL.md'];
+      assert.ok(!md.includes('Stripe API API skill'), 'Should not double API');
+      assert.ok(md.includes('Stripe API skill'), 'Should have Stripe API skill');
+    });
+  });
+
+  describe('init', () => {
+    it('skills directory is resolvable', () => {
+      const skillsDir = path.resolve(__dirname, '../../../../skills');
+      assert.ok(fs.existsSync(skillsDir), `Skills dir should exist at ${skillsDir}`);
+      assert.ok(fs.existsSync(path.join(skillsDir, 'cursor', 'lap.mdc')), 'Cursor skill should exist');
+      assert.ok(fs.existsSync(path.join(skillsDir, 'lap', 'SKILL.md')), 'Claude skill should exist');
+    });
+
+    it('each target has reference files', () => {
+      const skillsDir = path.resolve(__dirname, '../../../../skills');
+      const targets = [
+        { name: 'claude', dir: path.join(skillsDir, 'lap') },
+        { name: 'cursor', dir: path.join(skillsDir, 'cursor') },
+      ];
+      for (const t of targets) {
+        assert.ok(fs.existsSync(t.dir), `${t.name} skill dir should exist`);
+        const refs = path.join(t.dir, 'references');
+        assert.ok(fs.existsSync(refs), `${t.name} references dir should exist`);
+        assert.ok(fs.existsSync(path.join(refs, 'agent-flow.md')), `${t.name} agent-flow.md should exist`);
+        assert.ok(fs.existsSync(path.join(refs, 'command-reference.md')), `${t.name} command-reference.md should exist`);
+        assert.ok(fs.existsSync(path.join(refs, 'publisher-flow.md')), `${t.name} publisher-flow.md should exist`);
+      }
+    });
+  });
+});
+
+// When compiled, __dirname = sdks/typescript/dist/tests
+// Petstore spec is at repo root: examples/verbose/openapi/petstore.yaml
+const PETSTORE_YAML = path.resolve(__dirname, '..', '..', '..', '..', 'examples', 'verbose', 'openapi', 'petstore.yaml');
+
+describe('Question inference', () => {
+  it('CRUD patterns produce questions', () => {
+    const spec = compile(PETSTORE_YAML);
+    const skill = generateSkill(spec);
+    const md = skill.fileMap['SKILL.md'];
+
+    const cqMatch = md.match(/## Common Questions\n([\s\S]*?)(?=\n## |$)/);
+    assert.ok(cqMatch, 'Should have Common Questions section');
+    const cqContent = cqMatch[1];
+    // Common questions section should contain action pattern text
+    assert.ok(
+      cqContent.includes('List') || cqContent.includes('Create') || cqContent.includes('list') || cqContent.includes('create'),
+      'Common Questions should contain CRUD pattern hints',
+    );
+  });
+
+  it('auth question present when spec has auth', () => {
+    // Parse a minimal spec with auth
+    const spec = parse(
+      '@lap v0.3\n@api Auth API\n@base https://api.example.com\n@auth Bearer token\n@endpoint GET /items\n@desc List items\n@end',
+    );
+    assert.ok(spec.auth, 'Spec should have auth');
+    const skill = generateSkill(spec);
+    const md = skill.fileMap['SKILL.md'];
+
+    const cqMatch = md.match(/## Common Questions\n([\s\S]*?)(?=\n## |$)/);
+    assert.ok(cqMatch, 'Should have Common Questions section');
+    const cqContent = cqMatch[1];
+    assert.ok(
+      cqContent.toLowerCase().includes('auth') || cqContent.toLowerCase().includes('authenticate'),
+      'Common Questions should mention auth when spec has auth',
+    );
+  });
+
+  it('no auth question when spec has no auth', () => {
+    const spec = parse(
+      '@lap v0.3\n@api NoAuth API\n@base https://api.example.com\n@endpoint GET /status\n@desc Health check\n@end',
+    );
+    assert.ok(!spec.auth, 'Spec should have no auth');
+    const skill = generateSkill(spec);
+    const md = skill.fileMap['SKILL.md'];
+
+    const cqMatch = md.match(/## Common Questions\n([\s\S]*?)(?=\n## |$)/);
+    assert.ok(cqMatch, 'Should have Common Questions section');
+    const cqContent = cqMatch[1];
+    // The auth hint line should not appear when there is no auth
+    assert.ok(
+      !cqContent.includes('How to authenticate?'),
+      'Common Questions should not include auth hint when spec has no auth',
+    );
+  });
+
+  it('PATCH verb produces partial update hint in Common Questions', () => {
+    const spec = parse(
+      '@lap v0.3\n@api Patch API\n@base https://api.example.com\n@endpoint PATCH /items/{id}\n@desc Partially update item\n@end',
+    );
+    const skill = generateSkill(spec);
+    const md = skill.fileMap['SKILL.md'];
+
+    const cqMatch = md.match(/## Common Questions\n([\s\S]*?)(?=\n## |$)/);
+    assert.ok(cqMatch, 'Should have Common Questions section');
+    const cqContent = cqMatch[1];
+    // The Common Questions section should describe PATCH as update/modify
+    assert.ok(
+      cqContent.includes('Update') || cqContent.includes('PATCH') || cqContent.includes('modify'),
+      'Common Questions should mention update/modify for PATCH endpoints',
+    );
+  });
+});
+
+describe('Resource/group extraction', () => {
+  it('endpoint catalog mentions endpoint count', () => {
+    const spec = compile(PETSTORE_YAML);
+    const skill = generateSkill(spec);
+    const md = skill.fileMap['SKILL.md'];
+
+    const endpointsMatch = md.match(/## Endpoints\n([\s\S]*?)(?=\n## |$)/);
+    assert.ok(endpointsMatch, 'Should have Endpoints section');
+    const epContent = endpointsMatch[1];
+    // The catalog should reference the total endpoint count
+    assert.ok(
+      epContent.includes(String(spec.endpoints.length)),
+      `Endpoints section should mention total count (${spec.endpoints.length})`,
+    );
+  });
+
+  it('endpoint catalog references api-spec.lap', () => {
+    const spec = compile(PETSTORE_YAML);
+    const skill = generateSkill(spec);
+    const md = skill.fileMap['SKILL.md'];
+
+    const endpointsMatch = md.match(/## Endpoints\n([\s\S]*?)(?=\n## |$)/);
+    assert.ok(endpointsMatch, 'Should have Endpoints section');
+    assert.ok(
+      endpointsMatch[1].includes('api-spec.lap'),
+      'Endpoint catalog should reference api-spec.lap for full details',
+    );
+  });
+
+  it('group name extraction from path skips version prefix', () => {
+    assert.strictEqual(groupName('/v1/users'), 'users');
+    assert.strictEqual(groupName('/v1/users/{id}'), 'users');
+    assert.strictEqual(groupName('/v2/orders/{id}/items'), 'orders');
+  });
+
+  it('group name extraction from path without version prefix', () => {
+    assert.strictEqual(groupName('/pets'), 'pets');
+    assert.strictEqual(groupName('/pets/{id}'), 'pets');
+    assert.strictEqual(groupName('/pets/{id}/tags'), 'pets');
+  });
+
+  it('singularize edge cases', () => {
+    // -ies -> -y
+    assert.strictEqual(singularize('queries'), 'query');
+    // -ses with preceding vowel -> drop final 's'
+    assert.strictEqual(singularize('processes'), 'process');
   });
 });
 

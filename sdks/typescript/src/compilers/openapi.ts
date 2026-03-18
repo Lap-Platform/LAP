@@ -321,19 +321,48 @@ function extractResponseSchemas(
 
 // ── Auth extraction ───────────────────────────────────────────────────────────
 
+function inferAuthFromDescription(spec: Record<string, unknown>): string {
+  const desc = (((spec['info'] as Record<string, unknown>) ?? {})['description'] as string ?? '').toLowerCase();
+  if (!desc) return '';
+
+  if (desc.includes('authorization: bearer') || desc.includes('bearer token'))
+    return 'Bearer (inferred from docs)';
+  if (desc.includes('authorization: token'))
+    return 'ApiKey (inferred from docs)';
+  if (['api key', 'api token', 'api_key', 'apikey'].some(p => desc.includes(p)))
+    return 'ApiKey (inferred from docs)';
+  if (desc.includes('oauth2') || desc.includes('oauth 2'))
+    return 'OAuth2 (inferred from docs)';
+  if (['authentication required', 'must authenticate', 'requires authentication'].some(p => desc.includes(p)))
+    return 'Auth required (see docs)';
+  return '';
+}
+
 function extractAuth(spec: Record<string, unknown>): string {
   const components = (spec['components'] as Record<string, unknown>) ?? {};
-  const schemes = (components['securitySchemes'] as Record<string, unknown>) ?? {};
+  let schemes = (components['securitySchemes'] as Record<string, unknown>) ?? {};
 
-  if (Object.keys(schemes).length === 0) return '';
+  // Swagger 2.0 fallback
+  if (Object.keys(schemes).length === 0) {
+    const swagger2Schemes = (spec['securityDefinitions'] as Record<string, unknown>) ?? {};
+    if (Object.keys(swagger2Schemes).length > 0) {
+      schemes = swagger2Schemes;
+    }
+  }
+
+  if (Object.keys(schemes).length === 0) return inferAuthFromDescription(spec);
 
   const parts: string[] = [];
   for (const [_schemeName, schemeRaw] of Object.entries(schemes)) {
     const scheme = schemeRaw as Record<string, unknown>;
+    if (typeof scheme !== 'object' || scheme === null) continue;
     const t = (scheme['type'] as string) ?? '';
 
     if (t === 'http') {
-      parts.push(`Bearer ${(scheme['scheme'] as string) ?? 'token'}`);
+      const httpScheme = ((scheme['scheme'] as string) ?? 'bearer').toLowerCase();
+      if (httpScheme === 'basic') parts.push('Basic');
+      else if (httpScheme === 'bearer') parts.push('Bearer');
+      else parts.push(httpScheme.charAt(0).toUpperCase() + httpScheme.slice(1));
     } else if (t === 'apiKey') {
       parts.push(`ApiKey ${(scheme['name'] as string) ?? 'key'} in ${(scheme['in'] as string) ?? 'header'}`);
     } else if (t === 'oauth2') {
@@ -345,6 +374,8 @@ function extractAuth(spec: Record<string, unknown>): string {
 
   return parts.join(' | ');
 }
+
+export { extractAuth, stripHtml, inferAuthFromDescription };
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -417,7 +448,13 @@ export function compileOpenapi(specPath: string): LAPSpec {
 
   const info = (spec['info'] as Record<string, unknown>) ?? {};
   const servers = (spec['servers'] as Record<string, unknown>[]) ?? [];
-  const baseUrl = servers.length > 0 ? (servers[0]['url'] as string) ?? '' : '';
+  let baseUrl = servers.length > 0 ? (servers[0]['url'] as string) ?? '' : '';
+  // Swagger 2.0 base URL fallback
+  if (!baseUrl && spec['host']) {
+    const scheme = ((spec['schemes'] as string[]) ?? ['https'])[0];
+    const basePath = (spec['basePath'] as string) ?? '';
+    baseUrl = `${scheme}://${spec['host']}${basePath}`;
+  }
   const apiName = (info['title'] as string) ?? path.basename(filePath, ext);
   const apiVersion = (info['version'] as string) ?? undefined;
   const auth = extractAuth(spec) || undefined;

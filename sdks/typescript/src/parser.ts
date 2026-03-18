@@ -317,6 +317,9 @@ export interface SearchResponse {
   has_more: boolean;
 }
 
+// Exported for testing
+export { splitTopLevel, parseParams, parseFieldList, parseReturns, parseErrors, parseTypeExpr };
+
 export function parse(text: string): LAPSpec {
   const lines = text.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('//'));
 

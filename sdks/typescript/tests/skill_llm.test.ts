@@ -25,7 +25,7 @@ Bearer token
 - Some tip`;
 
       const result = replaceSection(md, 'Common Questions', 'New enhanced content here');
-      assert.ok(result.includes('## Enhanced Skill Content'), 'Should have new section header');
+      assert.ok(result.includes('## Common Questions'), 'Should have new section header');
       assert.ok(result.includes('New enhanced content here'), 'Should have new content');
       assert.ok(!result.includes('Old question'), 'Should not have old content');
       assert.ok(result.includes('## Response Tips'), 'Should preserve next section');
@@ -38,7 +38,7 @@ Bearer token
 - Last section content`;
 
       const result = replaceSection(md, 'Common Questions', 'Replaced');
-      assert.ok(result.includes('## Enhanced Skill Content'), 'Should have new section header');
+      assert.ok(result.includes('## Common Questions'), 'Should have new section header');
       assert.ok(result.includes('Replaced'), 'Should have new content');
     });
 
