@@ -15,8 +15,8 @@
 <a href="https://www.npmjs.com/package/@lap-platform/lapsh"><img src="https://img.shields.io/npm/v/@lap-platform/lapsh?style=for-the-badge&color=blue" alt="npm"></a>
 <br>
 <a href="https://github.com/Lap-Platform/lap/tree/main/skills/lap"><img src="https://img.shields.io/badge/Claude%20Code-skill-orange?style=for-the-badge" alt="Claude Code Skill"></a>
-<a href="https://github.com/Lap-Platform/lap/tree/main/skills/cursor"><img src="https://img.shields.io/badge/Cursor-skill-orange?style=for-the-badge" alt="Cursor Skill"></a>
 <a href="https://clawhub.ai/mickmicksh/lap"><img src="https://img.shields.io/badge/OpenClaw-skill-orange?style=for-the-badge" alt="OpenClaw Skill"></a>
+<a href="https://github.com/Lap-Platform/lap/tree/main/skills/cursor"><img src="https://img.shields.io/badge/Cursor-Rules-black?style=for-the-badge" alt="Cursor Rules"></a>
 <br>
 <a href="https://github.com/Lap-Platform/lap/pulls"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge" alt="PRs Welcome"></a>
 <a href="https://github.com/Lap-Platform/lap"><img src="https://img.shields.io/badge/%E2%AD%90_Star-this_repo-yellow?style=for-the-badge" alt="Star this repo"></a>
