@@ -875,8 +875,7 @@ def cmd_init(args):
     """Set up LAP in your IDE (installs skill and config)."""
     target = getattr(args, "target", None) or "claude"
     _install_builtin_skill("lap", target, None)
-    # NOTE: Hook auto-registration removed. Users should configure hooks manually.
-    # See _register_session_hook if needed in the future.
+    _register_session_hook(target)
 
 
 def cmd_skill_install(args):

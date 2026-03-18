@@ -655,8 +655,13 @@ async function cmdInit(args: string[]): Promise<void> {
   copyDirRecursive(src, installDir);
   info(`Installed skill to ${installDir}`);
 
-  // NOTE: Hook auto-registration removed. Users should configure hooks manually.
-  // See registerClaudeHook / registerCursorHook if needed in the future.
+  // Register session-start hook for update checking
+  const hookCommand = 'npx @lap-platform/lapsh check --silent-if-clean';
+  if (resolvedTarget === 'cursor') {
+    registerCursorHook(hookCommand);
+  } else {
+    registerClaudeHook(hookCommand);
+  }
 }
 
 export function registerClaudeHook(command: string): void {
