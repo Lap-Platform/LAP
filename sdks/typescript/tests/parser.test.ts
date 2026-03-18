@@ -43,7 +43,7 @@ describe('Stripe Charges - detailed', () => {
     assert.strictEqual(spec.apiName, 'Stripe Charges API');
     assert.strictEqual(spec.baseUrl, 'https://api.stripe.com');
     assert.strictEqual(spec.apiVersion, '2024-12-18');
-    assert.strictEqual(spec.auth, 'Bearer bearer');
+    assert.strictEqual(spec.auth, 'Bearer');
   });
 
   it('should find POST /v1/charges', () => {
