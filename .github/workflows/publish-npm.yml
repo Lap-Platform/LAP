@@ -22,6 +22,18 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Generate test fixtures
+        working-directory: .
+        run: |
+          mkdir -p output
+          pip install pyyaml
+          python -c "
+          from lap.core.compilers.openapi import compile_openapi
+          spec = compile_openapi('examples/verbose/openapi/stripe-charges.yaml')
+          with open('output/stripe-charges.lap', 'w') as f:
+            f.write(spec.to_lap())
+          "
+
       - name: Build and test
         run: npm test
 
