@@ -7,6 +7,7 @@ Compile, inspect, and convert LAP API specifications.
 
 import argparse
 import glob
+import hashlib
 import json
 import os
 import re
@@ -14,10 +15,10 @@ import sys
 from contextlib import contextmanager
 from pathlib import Path
 
-from lap import __version__
-
 # Add project root to path so `lap.*` imports work when run as script
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
+
+from lap import __version__
 
 try:
     from rich.console import Console
@@ -740,6 +741,58 @@ def _install_builtin_skill(name, target, custom_dir):
     info(f"Installed {count} files to {install_dir}")
 
 
+# ── Metadata helpers ─────────────────────────────────────────────────
+
+def _metadata_path(target: str) -> Path:
+    """Return path to lap-metadata.json for the given target platform."""
+    if target == "cursor":
+        return Path.home() / ".cursor" / "lap-metadata.json"
+    return Path.home() / ".claude" / "lap-metadata.json"
+
+
+def _read_metadata(target: str) -> dict:
+    """Read lap-metadata.json for the given target. Returns {"skills": {}} if missing/corrupt."""
+    p = _metadata_path(target)
+    if not p.exists():
+        return {"skills": {}}
+    try:
+        data = json.loads(p.read_text(encoding="utf-8"))
+        if not isinstance(data, dict) or "skills" not in data:
+            return {"skills": {}}
+        return data
+    except (json.JSONDecodeError, OSError):
+        print(f"Warning: corrupt metadata at {p}, resetting.", file=sys.stderr)
+        return {"skills": {}}
+
+
+def _write_metadata(target: str, data: dict) -> None:
+    """Atomically write lap-metadata.json for the given target."""
+    p = _metadata_path(target)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    tmp = p.with_suffix(".tmp")
+    tmp.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    tmp.replace(p)
+
+
+def _compute_spec_hash(content: str) -> str:
+    """Compute SHA-256 hex digest of spec content."""
+    return "sha256:" + hashlib.sha256(content.encode("utf-8")).hexdigest()
+
+
+def _is_valid_skill_name(name: str) -> bool:
+    """Check if skill name is safe (no path traversal)."""
+    return bool(re.match(r'^[a-zA-Z0-9._-]+$', name))
+
+
+def _validate_registry_url(url: str) -> str:
+    """Ensure registry URL uses HTTPS (except localhost for dev)."""
+    if url.startswith("http://localhost") or url.startswith("http://127.0.0.1"):
+        return url
+    if not url.startswith("https://"):
+        raise ValueError(f"Registry URL must use HTTPS: {url}")
+    return url
+
+
 def cmd_init(args):
     """Set up LAP in your IDE (installs skill and config)."""
     target = getattr(args, "target", None) or "claude"
@@ -786,6 +839,127 @@ def cmd_skill_install(args):
         out.write_text(content, encoding='utf-8')
 
     info(f"Installed {len(skill.file_map)} files to {install_dir} ({skill.token_count:,} tokens)")
+
+
+def cmd_check(args):
+    """Check for LAP skill updates."""
+    from lap.cli.auth import get_registry_url
+    import urllib.request
+
+    silent = getattr(args, "silent_if_clean", False)
+    json_output = getattr(args, "json", False)
+    target_arg = getattr(args, "target", None)
+
+    targets = []
+    if target_arg and target_arg != "auto":
+        targets = [target_arg]
+    else:
+        for t in ["claude", "cursor"]:
+            if _metadata_path(t).exists():
+                targets.append(t)
+
+    if not targets:
+        if not silent:
+            print("No LAP metadata found. Install skills first with: lapsh skill-install <name>")
+        return
+
+    skills_to_check = []
+    skill_targets = {}
+
+    for t in targets:
+        meta = _read_metadata(t)
+        for name, skill_info in meta.get("skills", {}).items():
+            if skill_info.get("pinned", False):
+                continue
+            skills_to_check.append({"name": name, "version": skill_info.get("registryVersion", "")})
+            skill_targets[name] = t
+
+    if not skills_to_check:
+        if not silent:
+            print("All skills are up to date (or pinned).")
+        return
+
+    registry = get_registry_url()
+    try:
+        registry = _validate_registry_url(registry)
+    except ValueError as e:
+        if not silent:
+            print(f"Error: {e}", file=sys.stderr)
+        return
+
+    try:
+        url = f"{registry}/v1/skills/check"
+        payload = json.dumps({"skills": skills_to_check}).encode("utf-8")
+        req = urllib.request.Request(url, data=payload, headers={
+            "Content-Type": "application/json",
+            "User-Agent": "lapsh"
+        }, method="POST")
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            result = json.loads(resp.read().decode("utf-8"))
+    except Exception:
+        if silent:
+            return
+        print("Warning: Could not reach LAP registry for update check.", file=sys.stderr)
+        return
+
+    updates = [r for r in result.get("results", []) if r.get("has_update")]
+
+    if not updates:
+        if json_output:
+            print(json.dumps({"updates": []}, indent=2))
+        elif not silent:
+            print("All skills are up to date.")
+        return
+
+    if json_output:
+        print(json.dumps({"updates": updates}, indent=2))
+        return
+
+    if len(updates) == 1:
+        u = updates[0]
+        print(f"LAP skill update available:")
+        print(f"  {u['name']}: {u['installed_version']} -> {u['latest_version']}")
+        print()
+        print(f"  Update:  lapsh skill-install {u['name']}")
+        print(f"  Changes: lapsh diff {u['name']}")
+        print(f"  Pin:     lapsh pin {u['name']}")
+    else:
+        print(f"{len(updates)} LAP skills have updates:")
+        names = []
+        for u in updates:
+            name = u['name']
+            names.append(name)
+            print(f"  {name:<20s} {u['installed_version']} -> {u['latest_version']}")
+        print()
+        print(f"  Update all: lapsh skill-install {' '.join(names)}")
+        print(f"  See changes: lapsh diff <skill>")
+        print(f"  Pin a skill: lapsh pin <skill>")
+
+
+def cmd_pin(args):
+    """Pin a skill to skip update checks."""
+    from lap.core.compilers.skill import detect_target
+    name = args.name
+    target = getattr(args, "target", None) or detect_target()
+    meta = _read_metadata(target)
+    if name not in meta.get("skills", {}):
+        error(f"Skill '{name}' is not installed. Install it first: lapsh skill-install {name}")
+    meta["skills"][name]["pinned"] = True
+    _write_metadata(target, meta)
+    info(f"Pinned '{name}'. It will be skipped during update checks.")
+
+
+def cmd_unpin(args):
+    """Unpin a skill to resume update checks."""
+    from lap.core.compilers.skill import detect_target
+    name = args.name
+    target = getattr(args, "target", None) or detect_target()
+    meta = _read_metadata(target)
+    if name not in meta.get("skills", {}):
+        error(f"Skill '{name}' is not installed. Install it first: lapsh skill-install {name}")
+    meta["skills"][name]["pinned"] = False
+    _write_metadata(target, meta)
+    info(f"Unpinned '{name}'. It will be included in update checks.")
 
 
 def _format_search_results(results, total, offset):
@@ -1181,6 +1355,22 @@ def main():
     p = sub.add_parser("benchmark-skill-all", help="Benchmark skills for all specs in a directory")
     p.add_argument("directory", help="Directory containing spec files")
 
+    # check
+    p = sub.add_parser("check", help="Check for LAP skill updates")
+    p.add_argument("--silent-if-clean", action="store_true", help="No output if everything is up to date")
+    p.add_argument("--json", action="store_true", help="Machine-readable JSON output")
+    p.add_argument("--target", choices=["auto", "claude", "cursor"], default="auto", help="Target platform")
+
+    # pin
+    p = sub.add_parser("pin", help="Pin a skill to skip update checks")
+    p.add_argument("name", help="Skill name to pin")
+    p.add_argument("--target", choices=["claude", "cursor"], default=None, help="Target platform")
+
+    # unpin
+    p = sub.add_parser("unpin", help="Unpin a skill to resume update checks")
+    p.add_argument("name", help="Skill name to unpin")
+    p.add_argument("--target", choices=["claude", "cursor"], default=None, help="Target platform")
+
     args = parser.parse_args()
 
     commands = {
@@ -1201,6 +1391,9 @@ def main():
         "search": cmd_search,
         "benchmark-skill": cmd_benchmark_skill,
         "benchmark-skill-all": cmd_benchmark_skill_all,
+        "check": cmd_check,
+        "pin": cmd_pin,
+        "unpin": cmd_unpin,
     }
 
     commands[args.command](args)
