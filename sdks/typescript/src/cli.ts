@@ -169,11 +169,9 @@ export function readMetadata(target: SkillTarget): LapMetadata {
 
 export function writeMetadata(target: SkillTarget, data: LapMetadata): void {
   const p = metadataPath(target);
-  if (fs.existsSync(p) && fs.lstatSync(p).isSymbolicLink()) {
-    throw new Error(`Refusing to write: ${p} is a symlink`);
-  }
+  try { if (fs.lstatSync(p).isSymbolicLink()) throw new Error(`Refusing to write: ${p} is a symlink`); } catch (e: unknown) { if (e instanceof Error && e.message.includes('symlink')) throw e; /* file does not exist -- OK */ }
   const dir = path.dirname(p);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  fs.mkdirSync(dir, { recursive: true });
   const tmp = p + '.tmp';
   fs.writeFileSync(tmp, JSON.stringify(data, null, 2), 'utf-8');
   try {
@@ -656,6 +654,77 @@ async function cmdInit(args: string[]): Promise<void> {
 
   copyDirRecursive(src, installDir);
   info(`Installed skill to ${installDir}`);
+
+  // NOTE: Hook auto-registration removed. Users should configure hooks manually.
+  // See registerClaudeHook / registerCursorHook if needed in the future.
+}
+
+export function registerClaudeHook(command: string): void {
+  const configPath = path.join(os.homedir(), '.claude', 'settings.json');
+  let config: any = {};
+
+  if (fs.existsSync(configPath)) {
+    try {
+      config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+    } catch { /* start fresh */ }
+  }
+
+  if (typeof config !== 'object' || config === null) config = {};
+
+  if (!config.hooks) config.hooks = {};
+  if (!config.hooks.SessionStart) config.hooks.SessionStart = [];
+
+  // Idempotent: check if already registered
+  const exists = config.hooks.SessionStart.some(
+    (h: any) => typeof h === 'object' && h.command && h.command.includes('lapsh check')
+  );
+  if (exists) {
+    console.log('Session hook already registered.');
+    return;
+  }
+
+  config.hooks.SessionStart.push({ command });
+
+  const dir = path.dirname(configPath);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  const tmp = configPath + '.tmp';
+  fs.writeFileSync(tmp, JSON.stringify(config, null, 2), 'utf-8');
+  try { fs.renameSync(tmp, configPath); } catch { try { fs.unlinkSync(configPath); } catch {} fs.renameSync(tmp, configPath); }
+  console.log('Registered session-start hook for update checking.');
+}
+
+export function registerCursorHook(command: string): void {
+  const configPath = path.join(os.homedir(), '.cursor', 'hooks.json');
+  let config: any = {};
+
+  if (fs.existsSync(configPath)) {
+    try {
+      config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+    } catch { /* start fresh */ }
+  }
+
+  if (typeof config !== 'object' || config === null) config = {};
+
+  if (!config.version) config.version = 1;
+  if (!config.hooks) config.hooks = {};
+  if (!config.hooks.sessionStart) config.hooks.sessionStart = [];
+
+  const exists = config.hooks.sessionStart.some(
+    (h: any) => typeof h === 'object' && h.command && h.command.includes('lapsh check')
+  );
+  if (exists) {
+    console.log('Session hook already registered.');
+    return;
+  }
+
+  config.hooks.sessionStart.push({ command, timeout: 10 });
+
+  const dir = path.dirname(configPath);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  const tmp = configPath + '.tmp';
+  fs.writeFileSync(tmp, JSON.stringify(config, null, 2), 'utf-8');
+  try { fs.renameSync(tmp, configPath); } catch { try { fs.unlinkSync(configPath); } catch {} fs.renameSync(tmp, configPath); }
+  console.log('Registered session-start hook for update checking.');
 }
 
 async function cmdSkillInstall(args: string[]): Promise<void> {

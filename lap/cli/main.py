@@ -799,10 +799,84 @@ def _validate_registry_url(url: str) -> str:
     return url
 
 
+def _register_session_hook(target: str) -> None:
+    """Register LAP check hook for session start (idempotent)."""
+    hook_command = "npx @lap-platform/lapsh check --silent-if-clean"
+
+    if target == "cursor":
+        config_path = Path.home() / ".cursor" / "hooks.json"
+        _register_cursor_hook(config_path, hook_command)
+    else:
+        config_path = Path.home() / ".claude" / "settings.json"
+        _register_claude_hook(config_path, hook_command)
+
+
+def _register_claude_hook(config_path: Path, command: str) -> None:
+    """Add SessionStart hook to .claude/settings.json (idempotent)."""
+    config = {}
+    if config_path.exists():
+        try:
+            config = json.loads(config_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            pass
+
+    if not isinstance(config, dict):
+        config = {}
+
+    hooks = config.setdefault("hooks", {})
+    session_hooks = hooks.setdefault("SessionStart", [])
+
+    # Check if LAP hook already registered
+    for hook in session_hooks:
+        if isinstance(hook, dict) and "lapsh check" in hook.get("command", ""):
+            info("Session hook already registered.")
+            return
+
+    session_hooks.append({"command": command})
+
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = config_path.with_suffix(".tmp")
+    tmp.write_text(json.dumps(config, indent=2), encoding="utf-8")
+    tmp.replace(config_path)
+    info("Registered session-start hook for update checking.")
+
+
+def _register_cursor_hook(config_path: Path, command: str) -> None:
+    """Add sessionStart hook to .cursor/hooks.json (idempotent)."""
+    config = {}
+    if config_path.exists():
+        try:
+            config = json.loads(config_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            pass
+
+    if not isinstance(config, dict):
+        config = {}
+
+    config.setdefault("version", 1)
+    hooks = config.setdefault("hooks", {})
+    session_hooks = hooks.setdefault("sessionStart", [])
+
+    for hook in session_hooks:
+        if isinstance(hook, dict) and "lapsh check" in hook.get("command", ""):
+            info("Session hook already registered.")
+            return
+
+    session_hooks.append({"command": command, "timeout": 10})
+
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = config_path.with_suffix(".tmp")
+    tmp.write_text(json.dumps(config, indent=2), encoding="utf-8")
+    tmp.replace(config_path)
+    info("Registered session-start hook for update checking.")
+
+
 def cmd_init(args):
     """Set up LAP in your IDE (installs skill and config)."""
     target = getattr(args, "target", None) or "claude"
     _install_builtin_skill("lap", target, None)
+    # NOTE: Hook auto-registration removed. Users should configure hooks manually.
+    # See _register_session_hook if needed in the future.
 
 
 def cmd_skill_install(args):
@@ -1291,6 +1365,8 @@ def _diff_skill(name: str, args) -> None:
         other = "cursor" if target == "claude" else "claude"
         install_dir = _resolve_install_dir(other, name)
         spec_file = install_dir / "references" / "api-spec.lap"
+        if spec_file.exists():
+            target = other  # use the target where spec was found
 
     if not spec_file.exists():
         error(f"No installed spec found for '{name}'. Install it first: lapsh skill-install {name}")
@@ -1314,7 +1390,7 @@ def _diff_skill(name: str, args) -> None:
 
     new_spec = parse_lap(new_text)
 
-    # Get version info from metadata
+    # Get version info from metadata (use target where spec was found)
     meta = _read_metadata(target)
     old_version = meta.get("skills", {}).get(name, {}).get("registryVersion", "installed")
 

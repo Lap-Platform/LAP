@@ -5,6 +5,20 @@ All notable changes to LAP (Lean API Platform) will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.3] - 2026-03-18
+
+### Added
+- **`lapsh check` command** -- check installed skills for available updates via batch registry API
+- **`lapsh pin/unpin` commands** -- pin skills to skip update checks, unpin to resume
+- **`lapsh diff` command** -- diff installed spec vs registry latest, or two local LAP files
+- **`[community]` badge** in CLI search output for community-contributed specs (Python and TypeScript)
+- **TypeScript SDK CI** -- added Node 18/20 test matrix in GitHub Actions, npm publish now requires tests to pass
+
+### Changed
+- **Search scoring** -- registry now scores against provider_slug and provider_domain fields, fixing queries like `discord.com` that previously returned no results
+- **Search weights** -- tuned scoring: name 1.0, provider slug 0.85, provider domain 0.7, description 0.7, threshold raised from 0.2 to 0.3
+- **fuzzyScore** -- added empty-string guard to avoid unnecessary computation on specs with missing provider fields
+
 ## [0.5.0] - 2026-03-18
 
 ### Added

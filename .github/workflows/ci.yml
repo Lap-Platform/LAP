@@ -7,8 +7,8 @@ on:
     branches: [main]
 
 jobs:
-  test:
-    name: Tests (Python ${{ matrix.python-version }})
+  python-tests:
+    name: Python Tests (${{ matrix.python-version }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -37,3 +37,27 @@ jobs:
         run: |
           python -m pytest tests/test_integration.py -q --timeout=120
         timeout-minutes: 5
+
+  typescript-tests:
+    name: TypeScript SDK Tests (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: ["18", "20"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install dependencies
+        working-directory: sdks/typescript
+        run: npm ci
+
+      - name: Run test suite
+        working-directory: sdks/typescript
+        run: npm test
+        timeout-minutes: 10

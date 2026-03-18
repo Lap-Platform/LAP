@@ -16,6 +16,8 @@ import {
   isValidSkillName,
   validateRegistryUrl,
   printSpecDiff,
+  registerClaudeHook,
+  registerCursorHook,
 } from '../src/cli';
 
 const OUTPUT_DIR = path.resolve(__dirname, '../../../../output');
@@ -838,6 +840,108 @@ describe('printSpecDiff', () => {
     const output = lines.join('\n');
     assert.ok(output.includes('Token impact:'), 'Should include token impact line');
     assert.ok(output.includes('tokens'), 'Token impact should mention tokens');
+  });
+});
+
+describe('Hook registration', () => {
+  const claudeConfig = path.join(os.homedir(), '.claude', 'settings.json');
+  const cursorConfig = path.join(os.homedir(), '.cursor', 'hooks.json');
+
+  it('T7a: registerClaudeHook adds SessionStart hook', () => {
+    // Backup
+    let backup: string | null = null;
+    if (fs.existsSync(claudeConfig)) backup = fs.readFileSync(claudeConfig, 'utf-8');
+
+    try {
+      // Start fresh
+      if (fs.existsSync(claudeConfig)) fs.unlinkSync(claudeConfig);
+      registerClaudeHook('npx @lap-platform/lapsh check --silent-if-clean');
+
+      const config = JSON.parse(fs.readFileSync(claudeConfig, 'utf-8'));
+      assert.ok(config.hooks?.SessionStart?.length >= 1, 'SessionStart hook should exist');
+      const hook = config.hooks.SessionStart.find((h: any) => h.command?.includes('lapsh check'));
+      assert.ok(hook, 'LAP hook should be registered');
+    } finally {
+      if (backup !== null) fs.writeFileSync(claudeConfig, backup, 'utf-8');
+      else if (fs.existsSync(claudeConfig)) fs.unlinkSync(claudeConfig);
+    }
+  });
+
+  it('T7b: registerClaudeHook is idempotent', () => {
+    let backup: string | null = null;
+    if (fs.existsSync(claudeConfig)) backup = fs.readFileSync(claudeConfig, 'utf-8');
+
+    try {
+      if (fs.existsSync(claudeConfig)) fs.unlinkSync(claudeConfig);
+      registerClaudeHook('npx @lap-platform/lapsh check --silent-if-clean');
+      registerClaudeHook('npx @lap-platform/lapsh check --silent-if-clean');
+
+      const config = JSON.parse(fs.readFileSync(claudeConfig, 'utf-8'));
+      const hooks = config.hooks.SessionStart.filter((h: any) => h.command?.includes('lapsh check'));
+      assert.strictEqual(hooks.length, 1, 'Should not duplicate hook');
+    } finally {
+      if (backup !== null) fs.writeFileSync(claudeConfig, backup, 'utf-8');
+      else if (fs.existsSync(claudeConfig)) fs.unlinkSync(claudeConfig);
+    }
+  });
+
+  it('T7c: registerClaudeHook preserves existing hooks', () => {
+    let backup: string | null = null;
+    if (fs.existsSync(claudeConfig)) backup = fs.readFileSync(claudeConfig, 'utf-8');
+
+    try {
+      const existing = { hooks: { SessionStart: [{ command: 'echo hello' }] } };
+      const dir = path.dirname(claudeConfig);
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(claudeConfig, JSON.stringify(existing), 'utf-8');
+
+      registerClaudeHook('npx @lap-platform/lapsh check --silent-if-clean');
+
+      const config = JSON.parse(fs.readFileSync(claudeConfig, 'utf-8'));
+      assert.strictEqual(config.hooks.SessionStart.length, 2, 'Should have both hooks');
+      assert.strictEqual(config.hooks.SessionStart[0].command, 'echo hello', 'Existing hook preserved');
+    } finally {
+      if (backup !== null) fs.writeFileSync(claudeConfig, backup, 'utf-8');
+      else if (fs.existsSync(claudeConfig)) fs.unlinkSync(claudeConfig);
+    }
+  });
+
+  it('T8a: registerCursorHook adds sessionStart hook', () => {
+    let backup: string | null = null;
+    if (fs.existsSync(cursorConfig)) backup = fs.readFileSync(cursorConfig, 'utf-8');
+
+    try {
+      if (fs.existsSync(cursorConfig)) fs.unlinkSync(cursorConfig);
+      registerCursorHook('npx @lap-platform/lapsh check --silent-if-clean');
+
+      const config = JSON.parse(fs.readFileSync(cursorConfig, 'utf-8'));
+      assert.strictEqual(config.version, 1, 'Should set version');
+      assert.ok(config.hooks?.sessionStart?.length >= 1, 'sessionStart hook should exist');
+      const hook = config.hooks.sessionStart.find((h: any) => h.command?.includes('lapsh check'));
+      assert.ok(hook, 'LAP hook should be registered');
+      assert.strictEqual(hook.timeout, 10, 'Cursor hook should have timeout');
+    } finally {
+      if (backup !== null) fs.writeFileSync(cursorConfig, backup, 'utf-8');
+      else if (fs.existsSync(cursorConfig)) fs.unlinkSync(cursorConfig);
+    }
+  });
+
+  it('T8b: registerCursorHook is idempotent', () => {
+    let backup: string | null = null;
+    if (fs.existsSync(cursorConfig)) backup = fs.readFileSync(cursorConfig, 'utf-8');
+
+    try {
+      if (fs.existsSync(cursorConfig)) fs.unlinkSync(cursorConfig);
+      registerCursorHook('npx @lap-platform/lapsh check --silent-if-clean');
+      registerCursorHook('npx @lap-platform/lapsh check --silent-if-clean');
+
+      const config = JSON.parse(fs.readFileSync(cursorConfig, 'utf-8'));
+      const hooks = config.hooks.sessionStart.filter((h: any) => h.command?.includes('lapsh check'));
+      assert.strictEqual(hooks.length, 1, 'Should not duplicate hook');
+    } finally {
+      if (backup !== null) fs.writeFileSync(cursorConfig, backup, 'utf-8');
+      else if (fs.existsSync(cursorConfig)) fs.unlinkSync(cursorConfig);
+    }
   });
 });
 

@@ -11,7 +11,7 @@
 **Agent-Native API specs. Verified, compressed, ready to install.**
 
 <a href="https://pypi.org/project/lapsh/"><img src="https://img.shields.io/pypi/v/lapsh?style=for-the-badge&color=blue" alt="PyPI"></a>
-<a href="https://github.com/Lap-Platform/lap/actions/workflows/ci.yml"><img src="https://img.shields.io/badge/tests-1%2C101%20passed-brightgreen?style=for-the-badge" alt="Tests"></a>
+<a href="https://github.com/Lap-Platform/lap/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/Lap-Platform/lap/ci.yml?branch=main&style=for-the-badge&label=tests" alt="Tests"></a>
 <a href="https://www.npmjs.com/package/@lap-platform/lapsh"><img src="https://img.shields.io/npm/v/@lap-platform/lapsh?style=for-the-badge&color=blue" alt="npm"></a>
 <br>
 <a href="https://github.com/Lap-Platform/lap/tree/main/skills/lap"><img src="https://img.shields.io/badge/Claude%20Code-skill-orange?style=for-the-badge" alt="Claude Code Skill"></a>
@@ -255,13 +255,41 @@ Cost is the least important argument. The core value is typed contracts: `enum(s
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). The test suite has 1,101 tests across 190+ example specs in 6 formats.
+See [CONTRIBUTING.md](CONTRIBUTING.md). CI runs on every push and PR -- Python 3.11/3.12 and Node 18/20.
+
+**Python** (18 test files, 1,083 tests):
+
+| Suite | What it covers |
+|-------|----------------|
+| **Compilers** | OpenAPI, GraphQL, AsyncAPI, Protobuf, Postman, Smithy |
+| **Round-trip** | Compile → parse → re-emit across 190+ specs |
+| **Skill & Tool** | Skill compiler, tool format, MCP manifest, skill updates |
+| **Agent** | Agent implementation verification (enum, nested, array handling) |
+| **Differ** | Breaking change detection, compatibility checking |
+| **CLI** | Auth, search, version, integration (subprocess) |
+| **Quality** | Regression tests for compiler bug fixes |
+
+**TypeScript SDK** (14 test files -- full compiler parity):
+
+| Suite | What it covers |
+|-------|----------------|
+| **Compilers** | OpenAPI, GraphQL, AsyncAPI, Protobuf, Postman, Smithy, AWS SDK |
+| **Parser & Serializer** | LAP text round-trip in TypeScript |
+| **Skills** | Skill compilation, LLM integration |
+| **CLI & Auth** | CLI commands, credential management |
+| **Search** | Registry search helpers |
 
 ```bash
 git clone https://github.com/Lap-Platform/lap.git
 cd lap
+
+# Python tests
 pip install -e ".[dev]"
 pytest
+
+# TypeScript SDK tests
+cd sdks/typescript
+npm ci && npm test
 ```
 
 ## License
