@@ -1,6 +1,6 @@
 {
   "name": "@lap-platform/lapsh",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "TypeScript SDK for LAP (Lean API Platform) -- Parse and work with LAP API specifications",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -8,6 +8,7 @@
     "dist/src/**/*.js",
     "dist/src/**/*.d.ts",
     "dist/src/**/*.js.map",
+    "dist/package.json",
     "README.md",
     "skills/**/*.md",
     "skills/**/*.mdc"
@@ -16,7 +17,9 @@
     "lapsh": "dist/src/cli.js"
   },
   "scripts": {
-    "build": "tsc",
+    "copy-skills": "node -e \"const fs=require('fs');fs.cpSync('../../lap/skills','skills',{recursive:true,force:true})\"",
+    "build": "npm run copy-skills && tsc",
+    "prepublishOnly": "npm run build && node -e \"require('./dist/src/cli.js')\"",
     "test": "tsc && node dist/tests/parser.test.js && node dist/tests/serializer.test.js && node dist/tests/skill.test.js && node dist/tests/openapi.test.js && node dist/tests/aws-sdk.test.js && node dist/tests/postman.test.js && node dist/tests/asyncapi.test.js && node dist/tests/graphql.test.js && node dist/tests/protobuf.test.js && node dist/tests/smithy.test.js && node dist/tests/skill_llm.test.js && node dist/tests/cli.test.js && node dist/tests/search.test.js && node dist/tests/auth.test.js"
   },
   "keywords": [

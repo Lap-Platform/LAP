@@ -13,6 +13,7 @@ import os
 import re
 import sys
 from contextlib import contextmanager
+from datetime import datetime, timezone
 from pathlib import Path
 
 # Add project root to path so `lap.*` imports work when run as script
@@ -797,6 +798,79 @@ def cmd_init(args):
     """Set up LAP in your IDE (installs skill and config)."""
     target = getattr(args, "target", None) or "claude"
     _install_builtin_skill("lap", target, None)
+    _register_session_hook(target)
+
+
+def _register_session_hook(target: str) -> None:
+    """Register LAP check hook for session start (idempotent)."""
+    hook_command = "npx @lap-platform/lapsh check --silent-if-clean"
+
+    if target == "cursor":
+        config_path = Path.home() / ".cursor" / "hooks.json"
+        _register_cursor_hook(config_path, hook_command)
+    else:
+        config_path = Path.home() / ".claude" / "settings.json"
+        _register_claude_hook(config_path, hook_command)
+
+
+def _register_claude_hook(config_path: Path, command: str) -> None:
+    """Add SessionStart hook to .claude/settings.json (idempotent)."""
+    config = {}
+    if config_path.exists():
+        try:
+            config = json.loads(config_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            pass
+
+    if not isinstance(config, dict):
+        config = {}
+
+    hooks = config.setdefault("hooks", {})
+    session_hooks = hooks.setdefault("SessionStart", [])
+
+    # Check if LAP hook already registered
+    for hook in session_hooks:
+        if isinstance(hook, dict) and "lapsh check" in hook.get("command", ""):
+            info("Session hook already registered.")
+            return
+
+    session_hooks.append({"command": command})
+
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = config_path.with_suffix(".tmp")
+    tmp.write_text(json.dumps(config, indent=2), encoding="utf-8")
+    tmp.replace(config_path)
+    info("Registered session-start hook for update checking.")
+
+
+def _register_cursor_hook(config_path: Path, command: str) -> None:
+    """Add sessionStart hook to .cursor/hooks.json (idempotent)."""
+    config = {}
+    if config_path.exists():
+        try:
+            config = json.loads(config_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            pass
+
+    if not isinstance(config, dict):
+        config = {}
+
+    config.setdefault("version", 1)
+    hooks = config.setdefault("hooks", {})
+    session_hooks = hooks.setdefault("sessionStart", [])
+
+    for hook in session_hooks:
+        if isinstance(hook, dict) and "lapsh check" in hook.get("command", ""):
+            info("Session hook already registered.")
+            return
+
+    session_hooks.append({"command": command, "timeout": 10})
+
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = config_path.with_suffix(".tmp")
+    tmp.write_text(json.dumps(config, indent=2), encoding="utf-8")
+    tmp.replace(config_path)
+    info("Registered session-start hook for update checking.")
 
 
 def cmd_skill_install(args):
@@ -839,6 +913,31 @@ def cmd_skill_install(args):
         out.write_text(content, encoding='utf-8')
 
     info(f"Installed {len(skill.file_map)} files to {install_dir} ({skill.token_count:,} tokens)")
+
+    # Write metadata
+    try:
+        spec_hash = _compute_spec_hash(spec_text) if spec_text else ""
+
+        # Fetch version from registry (JSON response)
+        try:
+            json_url = f"{registry}/v1/apis/{quote(name, safe='')}"
+            json_req = urllib.request.Request(json_url, headers={"Accept": "application/json", "User-Agent": "lapsh"})
+            with urllib.request.urlopen(json_req, timeout=10) as json_resp:
+                api_info = json.loads(json_resp.read().decode("utf-8"))
+                registry_version = api_info.get("version", "unknown")
+        except Exception:
+            registry_version = "unknown"
+
+        meta = _read_metadata(target)
+        meta["skills"][name] = {
+            "registryVersion": registry_version,
+            "specHash": spec_hash,
+            "installedAt": datetime.now(timezone.utc).isoformat(),
+            "pinned": False,
+        }
+        _write_metadata(target, meta)
+    except Exception as e:
+        print(f"Warning: could not write metadata: {e}", file=sys.stderr)
 
 
 def cmd_check(args):
@@ -979,15 +1078,16 @@ def _format_search_results(results, total, offset):
         else:
             ratio_str = ""
         skill = " [skill]" if r.get("has_skill") else ""
-        rows.append((name, prov_str, ep_str, ratio_str, desc, skill))
+        community = " [community]" if r.get("is_community") else ""
+        rows.append((name, prov_str, ep_str, ratio_str, desc, skill, community))
 
     name_w = max((len(r[0]) for r in rows), default=0)
     prov_w = max((len(r[1]) for r in rows), default=0)
     ep_w = max((len(r[2]) for r in rows), default=0)
     ratio_w = max((len(r[3]) for r in rows), default=0)
 
-    for name, prov_str, ep_str, ratio_str, desc, skill in rows:
-        print(f"  {name:<{name_w}}  {prov_str:<{prov_w}}  {ep_str:>{ep_w}}  {ratio_str:>{ratio_w}}   {desc}{skill}")
+    for name, prov_str, ep_str, ratio_str, desc, skill, community in rows:
+        print(f"  {name:<{name_w}}  {prov_str:<{prov_w}}  {ep_str:>{ep_w}}  {ratio_str:>{ratio_w}}   {desc}{skill}{community}")
 
     shown = offset + len(results)
     if shown < total:
@@ -1165,10 +1265,19 @@ def cmd_benchmark_skill_all(args):
 
 
 def cmd_diff(args):
-    """Diff two LAP files."""
+    """Diff two LAP files or compare installed skill vs registry latest."""
     from lap.core.parser import parse_lap
     from lap.core.differ import diff_specs, generate_changelog, check_compatibility
 
+    # Smart overload: single arg that doesn't look like a file path = skill name
+    if args.new is None:
+        name = args.old
+        if name.endswith('.lap') or '/' in name or '\\' in name:
+            error("Need two files to diff. Usage: lapsh diff old.lap new.lap")
+        _diff_skill(name, args)
+        return
+
+    # Existing two-file diff behavior
     old_path, new_path = Path(args.old), Path(args.new)
     if not old_path.exists():
         error(f"File not found: {args.old}")
@@ -1192,13 +1301,13 @@ def cmd_diff(args):
         if diff.breaking_changes:
             console.print("[bold red]Breaking Changes:[/]")
             for c in diff.breaking_changes:
-                console.print(f"  [red]✗[/] {c.detail}")
+                console.print(f"  [red]x[/] {c.detail}")
             console.print()
 
         if diff.non_breaking_changes:
             console.print("[bold green]Non-breaking Changes:[/]")
             for c in diff.non_breaking_changes:
-                console.print(f"  [green]✓[/] {c.detail}")
+                console.print(f"  [green]o[/] {c.detail}")
             console.print()
 
         if not diff.changes:
@@ -1211,6 +1320,88 @@ def cmd_diff(args):
             print(f"  {c.detail}")
         if not diff.changes:
             print("No changes detected.")
+
+
+def _diff_skill(name: str, args) -> None:
+    """Compare installed skill spec vs registry latest."""
+    from lap.cli.auth import get_registry_url
+    from lap.core.parser import parse_lap
+    from lap.core.differ import diff_specs, check_compatibility
+    from lap.core.compilers.skill import detect_target
+    from urllib.parse import quote
+    import urllib.request
+
+    if not _is_valid_skill_name(name):
+        error(f"Invalid skill name: {name}")
+
+    # Find installed spec
+    target = detect_target()
+    install_dir = _resolve_install_dir(target, name)
+    spec_file = install_dir / "references" / "api-spec.lap"
+
+    if not spec_file.exists():
+        # Try other target
+        other = "cursor" if target == "claude" else "claude"
+        install_dir = _resolve_install_dir(other, name)
+        spec_file = install_dir / "references" / "api-spec.lap"
+
+    if not spec_file.exists():
+        error(f"No installed spec found for '{name}'. Install it first: lapsh skill-install {name}")
+
+    old_text = spec_file.read_text(encoding='utf-8')
+    old_spec = parse_lap(old_text)
+
+    # Fetch latest from registry
+    registry = get_registry_url()
+    try:
+        url = f"{registry}/v1/apis/{quote(name, safe='')}"
+        req = urllib.request.Request(url, headers={"Accept": "text/lap", "User-Agent": "lapsh"})
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            new_text = resp.read().decode("utf-8")
+    except Exception:
+        error(f"Failed to fetch latest spec for '{name}' from registry.")
+
+    new_spec = parse_lap(new_text)
+
+    # Get version info from metadata
+    meta = _read_metadata(target)
+    old_version = meta.get("skills", {}).get(name, {}).get("registryVersion", "installed")
+
+    diff = diff_specs(old_spec, new_spec)
+
+    print(f"{name}: {old_version} -> latest")
+    print()
+
+    if diff.added_endpoints:
+        print(f"  Added ({len(diff.added_endpoints)}):")
+        for ep in diff.added_endpoints:
+            print(f"    + {ep}")
+
+    if diff.removed_endpoints:
+        print(f"  Removed ({len(diff.removed_endpoints)}):")
+        for ep in diff.removed_endpoints:
+            print(f"    - {ep}")
+
+    changes = diff.changes
+    if changes:
+        print(f"  Changed ({len(changes)}):")
+        for c in changes[:10]:
+            print(f"    ~ {c.endpoint} -- {c.detail}")
+        if len(changes) > 10:
+            print(f"    ... and {len(changes) - 10} more")
+
+    if not diff.added_endpoints and not diff.removed_endpoints and not changes:
+        print("  No differences found.")
+
+    # Token impact
+    from lap.core.utils import count_tokens
+    old_tokens = count_tokens(old_text)
+    new_tokens = count_tokens(new_text)
+    if old_tokens and new_tokens:
+        delta = new_tokens - old_tokens
+        pct = (delta / old_tokens * 100) if old_tokens else 0
+        sign = "+" if delta >= 0 else ""
+        print(f"\n  Token impact: {old_tokens:,} -> {new_tokens:,} tokens ({sign}{pct:.0f}%)")
 
 
 # ── Main ─────────────────────────────────────────────────────────────
@@ -1251,9 +1442,9 @@ def main():
     p.add_argument("-o", "--output", help="Output file path")
 
     # diff
-    p = sub.add_parser("diff", help="Diff two LAP files")
-    p.add_argument("old", help="Path to old .lap file")
-    p.add_argument("new", help="Path to new .lap file")
+    p = sub.add_parser("diff", help="Diff two LAP files or compare installed skill vs registry")
+    p.add_argument("old", help="Path to old .lap file or skill name")
+    p.add_argument("new", nargs="?", default=None, help="Path to new .lap file (omit for skill diff)")
     p.add_argument("--format", choices=["summary", "changelog"], default="summary", help="Output format")
     p.add_argument("--version", help="Version label for changelog")
 

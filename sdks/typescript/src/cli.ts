@@ -12,10 +12,17 @@
  *   lapsh skill-batch <dir> -o <outdir>   # Batch generate skills
  *   lapsh init                            # Set up LAP in your IDE
  *   lapsh skill-install <name>            # Install skill from registry
+ *   lapsh check [--silent-if-clean]       # Check for skill updates
+ *   lapsh pin <name>                      # Pin a skill (skip update checks)
+ *   lapsh unpin <name>                    # Unpin a skill (resume update checks)
+ *   lapsh diff <skill>                    # Diff installed vs registry spec
+ *   lapsh diff <old.lap> <new.lap>        # Diff two local LAP files
  */
 
 import * as fs from 'fs';
 import * as path from 'path';
+import * as os from 'os';
+import * as crypto from 'crypto';
 import {
   loadCredentials,
   saveCredentials,
@@ -61,8 +68,8 @@ function resolveLayer(explicit: number | undefined): number {
 }
 
 function resolveSkillsDir(): string | null {
-  // Development: repo root (dist/src/cli.js -> 4 levels up to repo root)
-  const devDir = path.resolve(__dirname, '..', '..', '..', '..', 'skills');
+  // Development: skills live at <repo>/lap/skills/ (dist/src/cli.js -> 4 levels up + lap/skills)
+  const devDir = path.resolve(__dirname, '..', '..', '..', '..', 'lap', 'skills');
   if (fs.existsSync(devDir)) return devDir;
   // Installed npm package: skills/ next to dist/
   const pkgDir = path.resolve(__dirname, '..', '..', 'skills');
@@ -116,10 +123,71 @@ Commands:
   get <name> [-o output] [--lean]        Download a LAP spec from the registry
   search <query> [--tag t] [--sort s]   Search the LAP registry for APIs
     [--limit n] [--offset n] [--json]   Pagination and JSON output
+  check [--silent-if-clean] [--json]    Check installed skills for updates
+    [--target claude|cursor]            Limit check to one target
+  pin <name> [--target claude|cursor]   Pin a skill to skip update checks
+  unpin <name> [--target claude|cursor] Unpin a skill to resume update checks
+  diff <skill>                          Diff installed spec vs registry latest
+  diff <old.lap> <new.lap>              Diff two local LAP files
 
 Environment:
   LAP_REGISTRY                          Registry URL (default: https://registry.lap.sh)`);
   process.exit(0);
+}
+
+// ── Metadata Helpers ────────────────────────────────────────────────
+
+export function metadataPath(target: SkillTarget): string {
+  const home = os.homedir();
+  if (target === 'cursor') return path.join(home, '.cursor', 'lap-metadata.json');
+  return path.join(home, '.claude', 'lap-metadata.json');
+}
+
+export interface SkillMetadataEntry {
+  registryVersion: string;
+  specHash: string;
+  installedAt: string;
+  pinned: boolean;
+}
+
+export interface LapMetadata {
+  skills: Record<string, SkillMetadataEntry>;
+}
+
+export function readMetadata(target: SkillTarget): LapMetadata {
+  const p = metadataPath(target);
+  if (!fs.existsSync(p)) return { skills: {} };
+  try {
+    const data = JSON.parse(fs.readFileSync(p, 'utf-8'));
+    if (!data || typeof data !== 'object' || !data.skills) return { skills: {} };
+    return data as LapMetadata;
+  } catch {
+    console.error(`Warning: corrupt metadata at ${p}, resetting.`);
+    return { skills: {} };
+  }
+}
+
+export function writeMetadata(target: SkillTarget, data: LapMetadata): void {
+  const p = metadataPath(target);
+  const dir = path.dirname(p);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  const tmp = p + '.tmp';
+  fs.writeFileSync(tmp, JSON.stringify(data, null, 2), 'utf-8');
+  fs.renameSync(tmp, p);
+}
+
+export function computeSpecHash(content: string): string {
+  return 'sha256:' + crypto.createHash('sha256').update(content, 'utf-8').digest('hex');
+}
+
+export function isValidSkillName(name: string): boolean {
+  return /^[a-zA-Z0-9._-]+$/.test(name);
+}
+
+export function validateRegistryUrl(url: string): string {
+  if (url.startsWith('http://localhost') || url.startsWith('http://127.0.0.1')) return url;
+  if (!url.startsWith('https://')) throw new Error(`Registry URL must use HTTPS: ${url}`);
+  return url;
 }
 
 // ── Auth Commands ───────────────────────────────────────────────────
@@ -491,7 +559,8 @@ async function cmdSearch(args: string[]): Promise<void> {
     const ratio = (typeof size === 'number' && typeof lean === 'number' && lean)
       ? `${(size / lean).toFixed(1)}x compressed` : '';
     const skill = r.has_skill ? ' [skill]' : '';
-    return { name, prov, ep, ratio, desc, skill };
+    const community = r.is_community ? ' [community]' : '';
+    return { name, prov, ep, ratio, desc, skill, community };
   });
 
   const nameW = Math.max(...rows.map(r => r.name.length));
@@ -499,8 +568,8 @@ async function cmdSearch(args: string[]): Promise<void> {
   const epW = Math.max(...rows.map(r => r.ep.length));
   const ratioW = Math.max(...rows.map(r => r.ratio.length));
 
-  for (const { name, prov, ep, ratio, desc, skill } of rows) {
-    console.log(`  ${name.padEnd(nameW)}  ${prov.padEnd(provW)}  ${ep.padStart(epW)}  ${ratio.padStart(ratioW)}   ${desc}${skill}`);
+  for (const { name, prov, ep, ratio, desc, skill, community } of rows) {
+    console.log(`  ${name.padEnd(nameW)}  ${prov.padEnd(provW)}  ${ep.padStart(epW)}  ${ratio.padStart(ratioW)}   ${desc}${skill}${community}`);
   }
 
   const shown = (result.offset || 0) + result.results.length;
@@ -574,6 +643,86 @@ async function cmdInit(args: string[]): Promise<void> {
 
   copyDirRecursive(src, installDir);
   info(`Installed skill to ${installDir}`);
+
+  // Register session-start hook
+  registerSessionHook(resolvedTarget);
+}
+
+function registerSessionHook(target: SkillTarget): void {
+  const hookCommand = 'npx @lap-platform/lapsh check --silent-if-clean';
+  if (target === 'cursor') {
+    registerCursorHook(hookCommand);
+  } else {
+    registerClaudeHook(hookCommand);
+  }
+}
+
+export function registerClaudeHook(command: string): void {
+  const configPath = path.join(os.homedir(), '.claude', 'settings.json');
+  let config: any = {};
+
+  if (fs.existsSync(configPath)) {
+    try {
+      config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+    } catch { /* start fresh */ }
+  }
+
+  if (typeof config !== 'object' || config === null) config = {};
+
+  if (!config.hooks) config.hooks = {};
+  if (!config.hooks.SessionStart) config.hooks.SessionStart = [];
+
+  // Idempotent: check if already registered
+  const exists = config.hooks.SessionStart.some(
+    (h: any) => typeof h === 'object' && h.command && h.command.includes('lapsh check')
+  );
+  if (exists) {
+    console.log('Session hook already registered.');
+    return;
+  }
+
+  config.hooks.SessionStart.push({ command });
+
+  const dir = path.dirname(configPath);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  const tmp = configPath + '.tmp';
+  fs.writeFileSync(tmp, JSON.stringify(config, null, 2), 'utf-8');
+  fs.renameSync(tmp, configPath);
+  console.log('Registered session-start hook for update checking.');
+}
+
+export function registerCursorHook(command: string): void {
+  const configPath = path.join(os.homedir(), '.cursor', 'hooks.json');
+  let config: any = {};
+
+  if (fs.existsSync(configPath)) {
+    try {
+      config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+    } catch { /* start fresh */ }
+  }
+
+  if (typeof config !== 'object' || config === null) config = {};
+
+  if (!config.version) config.version = 1;
+  if (!config.hooks) config.hooks = {};
+  if (!config.hooks.sessionStart) config.hooks.sessionStart = [];
+
+  const exists = config.hooks.sessionStart.some(
+    (h: any) => typeof h === 'object' && h.command && h.command.includes('lapsh check')
+  );
+  if (exists) {
+    console.log('Session hook already registered.');
+    return;
+  }
+
+  config.hooks.sessionStart.push({ command, timeout: 10 });
+
+  const dir = path.dirname(configPath);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  const tmp = configPath + '.tmp';
+  fs.writeFileSync(tmp, JSON.stringify(config, null, 2), 'utf-8');
+  fs.renameSync(tmp, configPath);
+  console.log('Registered session-start hook for update checking.');
 }
 
 async function cmdSkillInstall(args: string[]): Promise<void> {
@@ -632,6 +781,271 @@ async function cmdSkillInstall(args: string[]): Promise<void> {
   }
 
   info(`Installed ${Object.keys(skill.fileMap).length} files to ${installDir} (${skill.tokenCount.toLocaleString()} tokens)`);
+
+  // Write metadata
+  try {
+    const specHash = computeSpecHash(specText);
+
+    // Fetch version from registry JSON endpoint
+    let registryVersion = 'unknown';
+    try {
+      const jsonResp = await fetch(`${registryUrl}/v1/apis/${encodeURIComponent(name)}`, {
+        headers: { 'Accept': 'application/json', 'User-Agent': 'lapsh' },
+      });
+      if (jsonResp.ok) {
+        const apiInfo = await jsonResp.json() as any;
+        registryVersion = apiInfo.version || 'unknown';
+      }
+    } catch { /* best effort */ }
+
+    const meta = readMetadata(resolvedTarget);
+    meta.skills[name] = {
+      registryVersion,
+      specHash,
+      installedAt: new Date().toISOString(),
+      pinned: false,
+    };
+    writeMetadata(resolvedTarget, meta);
+  } catch (e) {
+    console.error(`Warning: could not write metadata: ${e}`);
+  }
+}
+
+// ── Check / Pin / Unpin Commands ────────────────────────────────────
+
+async function cmdCheck(args: string[]): Promise<void> {
+  let silentIfClean = false;
+  let jsonOutput = false;
+  let targetArg = 'auto';
+
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--silent-if-clean') silentIfClean = true;
+    else if (args[i] === '--json') jsonOutput = true;
+    else if (args[i] === '--target') targetArg = args[++i];
+  }
+
+  const targets: SkillTarget[] = [];
+  if (targetArg && targetArg !== 'auto') {
+    targets.push(targetArg as SkillTarget);
+  } else {
+    for (const t of VALID_TARGETS) {
+      if (fs.existsSync(metadataPath(t))) targets.push(t);
+    }
+  }
+
+  if (!targets.length) {
+    if (!silentIfClean) console.log('No LAP metadata found. Install skills first with: lapsh skill-install <name>');
+    return;
+  }
+
+  const skillsToCheck: { name: string; version: string }[] = [];
+  const skillTargets: Record<string, SkillTarget> = {};
+
+  for (const t of targets) {
+    const meta = readMetadata(t);
+    for (const [name, info] of Object.entries(meta.skills)) {
+      if (info.pinned) continue;
+      skillsToCheck.push({ name, version: info.registryVersion || '' });
+      skillTargets[name] = t;
+    }
+  }
+
+  if (!skillsToCheck.length) {
+    if (!silentIfClean) console.log('All skills are up to date (or pinned).');
+    return;
+  }
+
+  let registryUrl: string;
+  try {
+    registryUrl = getRegistryUrl();
+    validateRegistryUrl(registryUrl);
+  } catch (e: unknown) {
+    if (!silentIfClean) console.error(`Error: ${e instanceof Error ? e.message : String(e)}`);
+    return;
+  }
+
+  let result: { results?: { name: string; has_update: boolean; installed_version: string; latest_version: string }[] };
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+    const resp = await fetch(`${registryUrl}/v1/skills/check`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'User-Agent': 'lapsh' },
+      body: JSON.stringify({ skills: skillsToCheck }),
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    result = await resp.json() as typeof result;
+  } catch {
+    if (silentIfClean) return;
+    console.error('Warning: Could not reach LAP registry for update check.');
+    return;
+  }
+
+  const updates = (result.results || []).filter((r) => r.has_update);
+
+  if (!updates.length) {
+    if (jsonOutput) console.log(JSON.stringify({ updates: [] }, null, 2));
+    else if (!silentIfClean) console.log('All skills are up to date.');
+    return;
+  }
+
+  if (jsonOutput) {
+    console.log(JSON.stringify({ updates }, null, 2));
+    return;
+  }
+
+  if (updates.length === 1) {
+    const u = updates[0];
+    console.log('LAP skill update available:');
+    console.log(`  ${u.name}: ${u.installed_version} -> ${u.latest_version}`);
+    console.log();
+    console.log(`  Update:  lapsh skill-install ${u.name}`);
+    console.log(`  Changes: lapsh diff ${u.name}`);
+    console.log(`  Pin:     lapsh pin ${u.name}`);
+  } else {
+    console.log(`${updates.length} LAP skills have updates:`);
+    const names: string[] = [];
+    for (const u of updates) {
+      names.push(u.name);
+      console.log(`  ${u.name.padEnd(20)} ${u.installed_version} -> ${u.latest_version}`);
+    }
+    console.log();
+    console.log(`  Update all: lapsh skill-install ${names.join(' ')}`);
+    console.log(`  See changes: lapsh diff <skill>`);
+    console.log(`  Pin a skill: lapsh pin <skill>`);
+  }
+}
+
+async function cmdSetPinned(args: string[], pinned: boolean): Promise<void> {
+  let name = '';
+  let target: string | undefined;
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--target') target = args[++i];
+    else if (!args[i].startsWith('-')) name = args[i];
+  }
+  const verb = pinned ? 'pin' : 'unpin';
+  if (!name) error(`Missing skill name. Usage: lapsh ${verb} <skill>`);
+  const resolvedTarget = (target as SkillTarget) ?? detectTarget();
+  const meta = readMetadata(resolvedTarget);
+  if (!meta.skills[name]) error(`Skill '${name}' is not installed. Install it first: lapsh skill-install ${name}`);
+  meta.skills[name].pinned = pinned;
+  writeMetadata(resolvedTarget, meta);
+  const msg = pinned ? 'skipped during update checks' : 'included in update checks';
+  console.log(`${pinned ? 'Pinned' : 'Unpinned'} '${name}'. It will be ${msg}.`);
+}
+
+// ── Diff Command ────────────────────────────────────────────────────
+
+export function printSpecDiff(oldSpec: any, newSpec: any, oldLabel: string, newLabel: string): void {
+  const oldEndpoints = new Set((oldSpec.endpoints || []).map((e: any) => `${e.method.toUpperCase()} ${e.path}`));
+  const newEndpoints = new Set((newSpec.endpoints || []).map((e: any) => `${e.method.toUpperCase()} ${e.path}`));
+
+  const added = [...newEndpoints].filter(e => !oldEndpoints.has(e));
+  const removed = [...oldEndpoints].filter(e => !newEndpoints.has(e));
+
+  if (added.length) {
+    console.log(`  Added (${added.length}):`);
+    for (const ep of added) console.log(`    + ${ep}`);
+  }
+
+  if (removed.length) {
+    console.log(`  Removed (${removed.length}):`);
+    for (const ep of removed) console.log(`    - ${ep}`);
+  }
+
+  if (!added.length && !removed.length) {
+    console.log('  No endpoint differences found.');
+  }
+
+  // Token impact
+  const oldTokens = Math.ceil(JSON.stringify(oldSpec).length / 4);
+  const newTokens = Math.ceil(JSON.stringify(newSpec).length / 4);
+  const delta = newTokens - oldTokens;
+  const pct = oldTokens ? ((delta / oldTokens) * 100) : 0;
+  const sign = delta >= 0 ? '+' : '';
+  console.log(`\n  Token impact: ${oldTokens.toLocaleString()} -> ${newTokens.toLocaleString()} tokens (${sign}${pct.toFixed(0)}%)`);
+}
+
+async function diffSkill(name: string): Promise<void> {
+  if (!isValidSkillName(name)) error(`Invalid skill name: ${name}`);
+
+  const target = detectTarget();
+  const home = os.homedir();
+
+  // Find installed spec
+  let specFile = '';
+  for (const t of VALID_TARGETS) {
+    const dir = t === 'cursor'
+      ? path.join(home, '.cursor', 'rules', name)
+      : path.join(home, '.claude', 'skills', name);
+    const candidate = path.join(dir, 'references', 'api-spec.lap');
+    if (fs.existsSync(candidate)) {
+      specFile = candidate;
+      break;
+    }
+  }
+
+  if (!specFile) error(`No installed spec found for '${name}'. Install it first: lapsh skill-install ${name}`);
+
+  const oldText = fs.readFileSync(specFile, 'utf-8');
+
+  // Fetch latest from registry
+  const registryUrl = getRegistryUrl();
+  let newText: string;
+  try {
+    const resp = await fetch(`${registryUrl}/v1/apis/${encodeURIComponent(name)}`, {
+      headers: { 'Accept': 'text/lap', 'User-Agent': 'lapsh' },
+    });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    newText = await resp.text();
+  } catch {
+    error(`Failed to fetch latest spec for '${name}' from registry.`);
+    return; // unreachable but helps TS
+  }
+
+  const { parse: parseLap } = await import('./parser');
+  const oldSpec = parseLap(oldText);
+  const newSpec = parseLap(newText);
+
+  // Get version info from metadata
+  const meta = readMetadata(target);
+  const oldVersion = meta.skills[name]?.registryVersion || 'installed';
+
+  console.log(`${name}: ${oldVersion} -> latest\n`);
+  printSpecDiff(oldSpec, newSpec, `installed (${oldVersion})`, 'registry (latest)');
+}
+
+async function cmdDiff(args: string[]): Promise<void> {
+  let firstArg = '';
+  let secondArg = '';
+
+  for (let i = 0; i < args.length; i++) {
+    if (args[i].startsWith('-')) continue;
+    if (!firstArg) firstArg = args[i];
+    else secondArg = args[i];
+  }
+
+  if (!firstArg) error('Usage: lapsh diff <skill> or lapsh diff old.lap new.lap');
+
+  // Smart detection: single arg, no file extension, no path separators = skill name
+  if (!secondArg) {
+    if (firstArg.endsWith('.lap') || firstArg.includes('/') || firstArg.includes('\\')) {
+      error('Need two files to diff. Usage: lapsh diff old.lap new.lap');
+    }
+    await diffSkill(firstArg);
+    return;
+  }
+
+  // Two-file diff
+  if (!fs.existsSync(firstArg)) error(`File not found: ${firstArg}`);
+  if (!fs.existsSync(secondArg)) error(`File not found: ${secondArg}`);
+
+  const { parse: parseLap } = await import('./parser');
+  const oldSpec = parseLap(fs.readFileSync(firstArg, 'utf-8'));
+  const newSpec = parseLap(fs.readFileSync(secondArg, 'utf-8'));
+
+  printSpecDiff(oldSpec, newSpec, firstArg, secondArg);
 }
 
 // ── Main ────────────────────────────────────────────────────────────
@@ -684,6 +1098,18 @@ async function main(): Promise<void> {
       case 'search':
         await cmdSearch(args.slice(1));
         break;
+      case 'check':
+        await cmdCheck(args.slice(1));
+        break;
+      case 'pin':
+        await cmdSetPinned(args.slice(1), true);
+        break;
+      case 'unpin':
+        await cmdSetPinned(args.slice(1), false);
+        break;
+      case 'diff':
+        await cmdDiff(args.slice(1));
+        break;
       default:
         console.error(`Unknown command: ${command}`);
         usage();
@@ -694,4 +1120,6 @@ async function main(): Promise<void> {
   }
 }
 
-main();
+if (require.main === module) {
+  main();
+}

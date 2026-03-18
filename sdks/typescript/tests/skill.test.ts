@@ -1,12 +1,24 @@
 import { describe, it } from 'node:test';
 import * as assert from 'node:assert';
 import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
 import { parse } from '../src/parser';
 import { generateSkill, slugify, singularize, VALID_TARGETS } from '../src/skill';
 import type { SkillOptions } from '../src/skill';
 import { compile } from '../src/compilers/index';
 import { groupName } from '../src/serializer';
+import {
+  metadataPath,
+  readMetadata,
+  writeMetadata,
+  computeSpecHash,
+  isValidSkillName,
+  validateRegistryUrl,
+  registerClaudeHook,
+  registerCursorHook,
+  printSpecDiff,
+} from '../src/cli';
 
 const OUTPUT_DIR = path.resolve(__dirname, '../../../../output');
 const STRIPE_FILE = path.join(OUTPUT_DIR, 'stripe-charges.lap');
@@ -402,14 +414,14 @@ describe('Skill Generation', () => {
 
   describe('init', () => {
     it('skills directory is resolvable', () => {
-      const skillsDir = path.resolve(__dirname, '../../../../skills');
+      const skillsDir = path.resolve(__dirname, '../../../../lap/skills');
       assert.ok(fs.existsSync(skillsDir), `Skills dir should exist at ${skillsDir}`);
       assert.ok(fs.existsSync(path.join(skillsDir, 'cursor', 'lap.mdc')), 'Cursor skill should exist');
       assert.ok(fs.existsSync(path.join(skillsDir, 'lap', 'SKILL.md')), 'Claude skill should exist');
     });
 
     it('each target has reference files', () => {
-      const skillsDir = path.resolve(__dirname, '../../../../skills');
+      const skillsDir = path.resolve(__dirname, '../../../../lap/skills');
       const targets = [
         { name: 'claude', dir: path.join(skillsDir, 'lap') },
         { name: 'cursor', dir: path.join(skillsDir, 'cursor') },
@@ -546,6 +558,433 @@ describe('Resource/group extraction', () => {
     assert.strictEqual(singularize('queries'), 'query');
     // -ses with preceding vowel -> drop final 's'
     assert.strictEqual(singularize('processes'), 'process');
+  });
+});
+
+describe('Metadata helpers', () => {
+  describe('metadataPath', () => {
+    it('returns claude path for claude target', () => {
+      const p = metadataPath('claude');
+      assert.ok(p.includes('.claude'), 'Should include .claude directory');
+      assert.ok(p.endsWith('lap-metadata.json'), 'Should end with lap-metadata.json');
+    });
+
+    it('returns cursor path for cursor target', () => {
+      const p = metadataPath('cursor');
+      assert.ok(p.includes('.cursor'), 'Should include .cursor directory');
+      assert.ok(p.endsWith('lap-metadata.json'), 'Should end with lap-metadata.json');
+    });
+
+    it('uses os.homedir() as root', () => {
+      const home = os.homedir();
+      assert.ok(metadataPath('claude').startsWith(home), 'Claude path should start with home dir');
+      assert.ok(metadataPath('cursor').startsWith(home), 'Cursor path should start with home dir');
+    });
+  });
+
+  describe('readMetadata', () => {
+    it('T1: returns parsed data for valid file', () => {
+      // Write metadata to the real claude path and read it back.
+      const p = metadataPath('claude');
+      const backup = p + '.bak.t1.' + Date.now();
+      const existed = fs.existsSync(p);
+      if (existed) fs.renameSync(p, backup);
+
+      try {
+        const data: import('../src/cli').LapMetadata = {
+          skills: {
+            'stripe-com': {
+              registryVersion: '1.2.3',
+              specHash: 'sha256:abc',
+              installedAt: '2026-01-01T00:00:00Z',
+              pinned: false,
+            },
+          },
+        };
+        writeMetadata('claude', data);
+        const result = readMetadata('claude');
+        assert.strictEqual(result.skills['stripe-com'].registryVersion, '1.2.3');
+        assert.strictEqual(result.skills['stripe-com'].pinned, false);
+      } finally {
+        if (fs.existsSync(p)) fs.unlinkSync(p);
+        if (existed) fs.renameSync(backup, p);
+      }
+    });
+
+    it('T1b: returns {skills: {}} for missing file', () => {
+      const p = metadataPath('claude');
+      const backup = p + '.bak.missing.' + Date.now();
+      const existed = fs.existsSync(p);
+      if (existed) fs.renameSync(p, backup);
+
+      try {
+        if (fs.existsSync(p)) fs.unlinkSync(p);
+        const result = readMetadata('claude');
+        assert.deepStrictEqual(result, { skills: {} });
+      } finally {
+        if (existed) fs.renameSync(backup, p);
+      }
+    });
+
+    it('T1c: returns {skills: {}} for corrupt JSON', () => {
+      // Write valid metadata, then corrupt the file, then call readMetadata.
+      const p = metadataPath('claude');
+      const backup = p + '.bak.corrupt.' + Date.now();
+      const existed = fs.existsSync(p);
+      if (existed) fs.renameSync(p, backup);
+
+      try {
+        // Ensure parent directory exists
+        const dir = path.dirname(p);
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        // Write corrupt JSON directly to the metadata path
+        fs.writeFileSync(p, '{ not valid json !!!', 'utf-8');
+        const result = readMetadata('claude');
+        assert.deepStrictEqual(result, { skills: {} }, 'Corrupt JSON should return empty skills');
+      } finally {
+        if (fs.existsSync(p)) fs.unlinkSync(p);
+        if (existed) fs.renameSync(backup, p);
+      }
+    });
+  });
+
+  describe('writeMetadata + readMetadata round-trip', () => {
+    it('T1d: writeMetadata creates file with correct JSON', () => {
+      // We use the real metadata path for 'claude'. Back it up if it exists.
+      const p = metadataPath('claude');
+      const backup = p + '.bak.' + Date.now();
+      const existed = fs.existsSync(p);
+      if (existed) fs.renameSync(p, backup);
+
+      try {
+        const data: import('../src/cli').LapMetadata = {
+          skills: {
+            'stripe-com': {
+              registryVersion: '2.0.0',
+              specHash: 'sha256:deadbeef',
+              installedAt: '2026-03-18T00:00:00Z',
+              pinned: true,
+            },
+          },
+        };
+        writeMetadata('claude', data);
+        assert.ok(fs.existsSync(p), 'Metadata file should be created');
+
+        const readBack = readMetadata('claude');
+        assert.strictEqual(readBack.skills['stripe-com'].registryVersion, '2.0.0');
+        assert.strictEqual(readBack.skills['stripe-com'].pinned, true);
+        assert.strictEqual(readBack.skills['stripe-com'].specHash, 'sha256:deadbeef');
+      } finally {
+        // Clean up: remove the test file, restore backup if existed
+        if (fs.existsSync(p)) fs.unlinkSync(p);
+        if (existed) fs.renameSync(backup, p);
+      }
+    });
+  });
+
+  describe('computeSpecHash', () => {
+    it('T2: returns correct sha256 hash with prefix', () => {
+      const hash = computeSpecHash('hello');
+      // sha256('hello') = 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824
+      assert.strictEqual(
+        hash,
+        'sha256:2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824',
+      );
+    });
+
+    it('different content produces different hash', () => {
+      const h1 = computeSpecHash('abc');
+      const h2 = computeSpecHash('xyz');
+      assert.notStrictEqual(h1, h2);
+    });
+
+    it('empty string produces deterministic hash', () => {
+      const h1 = computeSpecHash('');
+      const h2 = computeSpecHash('');
+      assert.strictEqual(h1, h2);
+      assert.ok(h1.startsWith('sha256:'), 'Should have sha256: prefix');
+    });
+  });
+
+  describe('isValidSkillName', () => {
+    it('T4a: accepts valid skill names', () => {
+      assert.strictEqual(isValidSkillName('stripe-com'), true);
+      assert.strictEqual(isValidSkillName('my_skill'), true);
+      assert.strictEqual(isValidSkillName('api.v2'), true);
+      assert.strictEqual(isValidSkillName('Skill123'), true);
+    });
+
+    it('T4b: rejects path traversal and special chars', () => {
+      assert.strictEqual(isValidSkillName('../hack'), false);
+      assert.strictEqual(isValidSkillName('skill/bad'), false);
+      assert.strictEqual(isValidSkillName('skill name'), false);
+      assert.strictEqual(isValidSkillName('skill@bad'), false);
+      assert.strictEqual(isValidSkillName(''), false);
+    });
+  });
+
+  describe('validateRegistryUrl', () => {
+    it('T5a: accepts HTTPS URLs and returns them', () => {
+      const url = 'https://registry.lap.sh';
+      assert.strictEqual(validateRegistryUrl(url), url);
+    });
+
+    it('T5b: rejects plain HTTP URLs', () => {
+      assert.throws(
+        () => validateRegistryUrl('http://registry.lap.sh'),
+        /must use HTTPS/,
+      );
+    });
+
+    it('T5c: allows localhost HTTP URLs', () => {
+      const local = 'http://localhost:8080';
+      assert.strictEqual(validateRegistryUrl(local), local);
+    });
+
+    it('allows 127.0.0.1 HTTP URLs', () => {
+      const loopback = 'http://127.0.0.1:3000';
+      assert.strictEqual(validateRegistryUrl(loopback), loopback);
+    });
+
+    it('rejects FTP or other schemes', () => {
+      assert.throws(
+        () => validateRegistryUrl('ftp://registry.lap.sh'),
+        /must use HTTPS/,
+      );
+    });
+  });
+});
+
+describe('Hook registration', () => {
+  describe('registerClaudeHook', () => {
+    it('T7a: creates settings.json with hook when file does not exist', () => {
+      const tmpDir = path.join(os.tmpdir(), `lap-test-${Date.now()}`);
+      const claudeDir = path.join(tmpDir, '.claude');
+      const configPath = path.join(claudeDir, 'settings.json');
+      fs.mkdirSync(claudeDir, { recursive: true });
+
+      // Temporarily redirect os.homedir via env var trick -- instead, use
+      // a wrapper: write the file directly and call a path-based approach.
+      // Since registerClaudeHook uses os.homedir(), we test by calling it
+      // with the real path and then inspecting the result. For isolation
+      // we back up and restore the real settings.json.
+      const realConfigPath = path.join(os.homedir(), '.claude', 'settings.json');
+      const backup = realConfigPath + `.bak.t7a.${Date.now()}`;
+      const existed = fs.existsSync(realConfigPath);
+      if (existed) fs.renameSync(realConfigPath, backup);
+
+      try {
+        // Remove if exists from a previous run
+        if (fs.existsSync(realConfigPath)) fs.unlinkSync(realConfigPath);
+
+        registerClaudeHook('npx @lap-platform/lapsh check --silent-if-clean');
+
+        assert.ok(fs.existsSync(realConfigPath), 'settings.json should be created');
+        const config = JSON.parse(fs.readFileSync(realConfigPath, 'utf-8'));
+        assert.ok(config.hooks, 'Should have hooks key');
+        assert.ok(Array.isArray(config.hooks.SessionStart), 'SessionStart should be an array');
+        assert.strictEqual(config.hooks.SessionStart.length, 1, 'Should have one hook');
+        assert.ok(
+          config.hooks.SessionStart[0].command.includes('lapsh check'),
+          'Hook command should include lapsh check',
+        );
+      } finally {
+        if (fs.existsSync(realConfigPath)) fs.unlinkSync(realConfigPath);
+        if (existed) fs.renameSync(backup, realConfigPath);
+        fs.rmdirSync(tmpDir, { recursive: true });
+      }
+    });
+
+    it('T7b: registerClaudeHook is idempotent', () => {
+      const realConfigPath = path.join(os.homedir(), '.claude', 'settings.json');
+      const backup = realConfigPath + `.bak.t7b.${Date.now()}`;
+      const existed = fs.existsSync(realConfigPath);
+      if (existed) fs.renameSync(realConfigPath, backup);
+
+      try {
+        if (fs.existsSync(realConfigPath)) fs.unlinkSync(realConfigPath);
+
+        registerClaudeHook('npx @lap-platform/lapsh check --silent-if-clean');
+        registerClaudeHook('npx @lap-platform/lapsh check --silent-if-clean');
+
+        const config = JSON.parse(fs.readFileSync(realConfigPath, 'utf-8'));
+        assert.strictEqual(
+          config.hooks.SessionStart.length,
+          1,
+          'Calling twice should not duplicate the hook entry',
+        );
+      } finally {
+        if (fs.existsSync(realConfigPath)) fs.unlinkSync(realConfigPath);
+        if (existed) fs.renameSync(backup, realConfigPath);
+      }
+    });
+
+    it('T7c: registerClaudeHook preserves existing hooks', () => {
+      const realConfigPath = path.join(os.homedir(), '.claude', 'settings.json');
+      const backup = realConfigPath + `.bak.t7c.${Date.now()}`;
+      const existed = fs.existsSync(realConfigPath);
+      if (existed) fs.renameSync(realConfigPath, backup);
+
+      try {
+        // Pre-populate with an existing hook
+        const existing = {
+          hooks: {
+            SessionStart: [{ command: 'echo hello' }],
+            PreToolUse: [{ command: 'echo pre' }],
+          },
+        };
+        const dir = path.dirname(realConfigPath);
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(realConfigPath, JSON.stringify(existing, null, 2), 'utf-8');
+
+        registerClaudeHook('npx @lap-platform/lapsh check --silent-if-clean');
+
+        const config = JSON.parse(fs.readFileSync(realConfigPath, 'utf-8'));
+        // Original hook still present
+        assert.strictEqual(config.hooks.SessionStart.length, 2, 'Should have 2 hooks (existing + new)');
+        assert.ok(
+          config.hooks.SessionStart.some((h: any) => h.command === 'echo hello'),
+          'Original hook should be preserved',
+        );
+        assert.ok(
+          config.hooks.SessionStart.some((h: any) => h.command.includes('lapsh check')),
+          'New lapsh hook should be added',
+        );
+        // Other hook types preserved
+        assert.ok(Array.isArray(config.hooks.PreToolUse), 'PreToolUse hooks should be preserved');
+        assert.strictEqual(config.hooks.PreToolUse.length, 1, 'PreToolUse should still have 1 hook');
+      } finally {
+        if (fs.existsSync(realConfigPath)) fs.unlinkSync(realConfigPath);
+        if (existed) fs.renameSync(backup, realConfigPath);
+      }
+    });
+  });
+
+  describe('registerCursorHook', () => {
+    it('T8a: creates hooks.json with hook when file does not exist', () => {
+      const realConfigPath = path.join(os.homedir(), '.cursor', 'hooks.json');
+      const backup = realConfigPath + `.bak.t8a.${Date.now()}`;
+      const existed = fs.existsSync(realConfigPath);
+      if (existed) fs.renameSync(realConfigPath, backup);
+
+      try {
+        if (fs.existsSync(realConfigPath)) fs.unlinkSync(realConfigPath);
+
+        registerCursorHook('npx @lap-platform/lapsh check --silent-if-clean');
+
+        assert.ok(fs.existsSync(realConfigPath), 'hooks.json should be created');
+        const config = JSON.parse(fs.readFileSync(realConfigPath, 'utf-8'));
+        assert.ok(config.hooks, 'Should have hooks key');
+        assert.ok(Array.isArray(config.hooks.sessionStart), 'sessionStart should be an array');
+        assert.strictEqual(config.hooks.sessionStart.length, 1, 'Should have one hook');
+        assert.ok(
+          config.hooks.sessionStart[0].command.includes('lapsh check'),
+          'Hook command should include lapsh check',
+        );
+        assert.strictEqual(config.hooks.sessionStart[0].timeout, 10, 'Should have timeout: 10');
+        assert.strictEqual(config.version, 1, 'Should have version: 1');
+      } finally {
+        if (fs.existsSync(realConfigPath)) fs.unlinkSync(realConfigPath);
+        if (existed) fs.renameSync(backup, realConfigPath);
+      }
+    });
+
+    it('T8b: registerCursorHook is idempotent', () => {
+      const realConfigPath = path.join(os.homedir(), '.cursor', 'hooks.json');
+      const backup = realConfigPath + `.bak.t8b.${Date.now()}`;
+      const existed = fs.existsSync(realConfigPath);
+      if (existed) fs.renameSync(realConfigPath, backup);
+
+      try {
+        if (fs.existsSync(realConfigPath)) fs.unlinkSync(realConfigPath);
+
+        registerCursorHook('npx @lap-platform/lapsh check --silent-if-clean');
+        registerCursorHook('npx @lap-platform/lapsh check --silent-if-clean');
+
+        const config = JSON.parse(fs.readFileSync(realConfigPath, 'utf-8'));
+        assert.strictEqual(
+          config.hooks.sessionStart.length,
+          1,
+          'Calling twice should not duplicate the hook entry',
+        );
+      } finally {
+        if (fs.existsSync(realConfigPath)) fs.unlinkSync(realConfigPath);
+        if (existed) fs.renameSync(backup, realConfigPath);
+      }
+    });
+  });
+});
+
+describe('printSpecDiff', () => {
+  it('T9a: reports added endpoints', () => {
+    const oldSpec = { endpoints: [{ method: 'GET', path: '/items' }] };
+    const newSpec = {
+      endpoints: [
+        { method: 'GET', path: '/items' },
+        { method: 'POST', path: '/items' },
+      ],
+    };
+    const lines: string[] = [];
+    const origLog = console.log;
+    console.log = (...a: any[]) => lines.push(a.join(' '));
+    try {
+      printSpecDiff(oldSpec, newSpec, 'old', 'new');
+    } finally {
+      console.log = origLog;
+    }
+    const output = lines.join('\n');
+    assert.ok(output.includes('Added (1)'), 'Should report 1 added endpoint');
+    assert.ok(output.includes('POST /items'), 'Should list the added endpoint');
+  });
+
+  it('T9b: reports removed endpoints', () => {
+    const oldSpec = {
+      endpoints: [
+        { method: 'GET', path: '/items' },
+        { method: 'DELETE', path: '/items/{id}' },
+      ],
+    };
+    const newSpec = { endpoints: [{ method: 'GET', path: '/items' }] };
+    const lines: string[] = [];
+    const origLog = console.log;
+    console.log = (...a: any[]) => lines.push(a.join(' '));
+    try {
+      printSpecDiff(oldSpec, newSpec, 'old', 'new');
+    } finally {
+      console.log = origLog;
+    }
+    const output = lines.join('\n');
+    assert.ok(output.includes('Removed (1)'), 'Should report 1 removed endpoint');
+    assert.ok(output.includes('DELETE /items/{id}'), 'Should list the removed endpoint');
+  });
+
+  it('T9c: reports no differences when specs are identical', () => {
+    const spec = { endpoints: [{ method: 'GET', path: '/status' }] };
+    const lines: string[] = [];
+    const origLog = console.log;
+    console.log = (...a: any[]) => lines.push(a.join(' '));
+    try {
+      printSpecDiff(spec, spec, 'old', 'new');
+    } finally {
+      console.log = origLog;
+    }
+    const output = lines.join('\n');
+    assert.ok(output.includes('No endpoint differences found'), 'Should report no differences');
+  });
+
+  it('T9d: includes token impact line', () => {
+    const spec = { endpoints: [{ method: 'GET', path: '/status' }] };
+    const lines: string[] = [];
+    const origLog = console.log;
+    console.log = (...a: any[]) => lines.push(a.join(' '));
+    try {
+      printSpecDiff(spec, spec, 'old', 'new');
+    } finally {
+      console.log = origLog;
+    }
+    const output = lines.join('\n');
+    assert.ok(output.includes('Token impact:'), 'Should include token impact line');
+    assert.ok(output.includes('tokens'), 'Token impact should mention tokens');
   });
 });
 

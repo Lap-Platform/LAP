@@ -31,7 +31,7 @@ from lap.cli.main import cmd_search, cmd_get, _format_search_results
 
 # ── Paths ───────────────────────────────────────────────────────────
 
-SKILL_DIR = Path(__file__).parent.parent / "skills" / "lap"
+SKILL_DIR = Path(__file__).parent.parent / "lap" / "skills" / "lap"
 SKILL_MD = SKILL_DIR / "SKILL.md"
 REF_DIR = SKILL_DIR / "references"
 AGENT_FLOW_MD = REF_DIR / "agent-flow.md"
