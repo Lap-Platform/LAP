@@ -169,11 +169,20 @@ export function readMetadata(target: SkillTarget): LapMetadata {
 
 export function writeMetadata(target: SkillTarget, data: LapMetadata): void {
   const p = metadataPath(target);
+  if (fs.existsSync(p) && fs.lstatSync(p).isSymbolicLink()) {
+    throw new Error(`Refusing to write: ${p} is a symlink`);
+  }
   const dir = path.dirname(p);
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   const tmp = p + '.tmp';
   fs.writeFileSync(tmp, JSON.stringify(data, null, 2), 'utf-8');
-  fs.renameSync(tmp, p);
+  try {
+    fs.renameSync(tmp, p);
+  } catch {
+    // Windows: renameSync may fail if target exists; fall back to unlink + rename
+    try { fs.unlinkSync(p); } catch { /* may not exist */ }
+    fs.renameSync(tmp, p);
+  }
 }
 
 export function computeSpecHash(content: string): string {
@@ -181,11 +190,15 @@ export function computeSpecHash(content: string): string {
 }
 
 export function isValidSkillName(name: string): boolean {
-  return /^[a-zA-Z0-9._-]+$/.test(name);
+  return /^[a-zA-Z0-9][a-zA-Z0-9._-]*$/.test(name);
 }
 
 export function validateRegistryUrl(url: string): string {
-  if (url.startsWith('http://localhost') || url.startsWith('http://127.0.0.1')) return url;
+  const localPrefixes = ['http://localhost:', 'http://localhost/', 'http://127.0.0.1:', 'http://127.0.0.1/'];
+  for (const prefix of localPrefixes) {
+    if (url.startsWith(prefix)) return url;
+  }
+  if (url === 'http://localhost' || url === 'http://127.0.0.1') return url;
   if (!url.startsWith('https://')) throw new Error(`Registry URL must use HTTPS: ${url}`);
   return url;
 }
@@ -643,86 +656,6 @@ async function cmdInit(args: string[]): Promise<void> {
 
   copyDirRecursive(src, installDir);
   info(`Installed skill to ${installDir}`);
-
-  // Register session-start hook
-  registerSessionHook(resolvedTarget);
-}
-
-function registerSessionHook(target: SkillTarget): void {
-  const hookCommand = 'npx @lap-platform/lapsh check --silent-if-clean';
-  if (target === 'cursor') {
-    registerCursorHook(hookCommand);
-  } else {
-    registerClaudeHook(hookCommand);
-  }
-}
-
-export function registerClaudeHook(command: string): void {
-  const configPath = path.join(os.homedir(), '.claude', 'settings.json');
-  let config: any = {};
-
-  if (fs.existsSync(configPath)) {
-    try {
-      config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-    } catch { /* start fresh */ }
-  }
-
-  if (typeof config !== 'object' || config === null) config = {};
-
-  if (!config.hooks) config.hooks = {};
-  if (!config.hooks.SessionStart) config.hooks.SessionStart = [];
-
-  // Idempotent: check if already registered
-  const exists = config.hooks.SessionStart.some(
-    (h: any) => typeof h === 'object' && h.command && h.command.includes('lapsh check')
-  );
-  if (exists) {
-    console.log('Session hook already registered.');
-    return;
-  }
-
-  config.hooks.SessionStart.push({ command });
-
-  const dir = path.dirname(configPath);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  const tmp = configPath + '.tmp';
-  fs.writeFileSync(tmp, JSON.stringify(config, null, 2), 'utf-8');
-  fs.renameSync(tmp, configPath);
-  console.log('Registered session-start hook for update checking.');
-}
-
-export function registerCursorHook(command: string): void {
-  const configPath = path.join(os.homedir(), '.cursor', 'hooks.json');
-  let config: any = {};
-
-  if (fs.existsSync(configPath)) {
-    try {
-      config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-    } catch { /* start fresh */ }
-  }
-
-  if (typeof config !== 'object' || config === null) config = {};
-
-  if (!config.version) config.version = 1;
-  if (!config.hooks) config.hooks = {};
-  if (!config.hooks.sessionStart) config.hooks.sessionStart = [];
-
-  const exists = config.hooks.sessionStart.some(
-    (h: any) => typeof h === 'object' && h.command && h.command.includes('lapsh check')
-  );
-  if (exists) {
-    console.log('Session hook already registered.');
-    return;
-  }
-
-  config.hooks.sessionStart.push({ command, timeout: 10 });
-
-  const dir = path.dirname(configPath);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  const tmp = configPath + '.tmp';
-  fs.writeFileSync(tmp, JSON.stringify(config, null, 2), 'utf-8');
-  fs.renameSync(tmp, configPath);
-  console.log('Registered session-start hook for update checking.');
 }
 
 async function cmdSkillInstall(args: string[]): Promise<void> {
@@ -737,6 +670,7 @@ async function cmdSkillInstall(args: string[]): Promise<void> {
   }
 
   if (!name) error('Missing skill name. Usage: lapsh skill-install <name> [--dir <path>] [--target t]');
+  if (!isValidSkillName(name)) error(`Invalid skill name: ${name}`);
 
   const resolvedTarget = target ?? detectTarget();
 
@@ -744,6 +678,7 @@ async function cmdSkillInstall(args: string[]): Promise<void> {
 
   // Fetch LAP spec from registry
   const registryUrl = getRegistryUrl();
+  validateRegistryUrl(registryUrl);
   const http = await import('http');
   const https = await import('https');
   const url = `${registryUrl}/v1/apis/${encodeURIComponent(name)}`;
@@ -789,13 +724,19 @@ async function cmdSkillInstall(args: string[]): Promise<void> {
     // Fetch version from registry JSON endpoint
     let registryVersion = 'unknown';
     try {
-      const jsonResp = await fetch(`${registryUrl}/v1/apis/${encodeURIComponent(name)}`, {
-        headers: { 'Accept': 'application/json', 'User-Agent': 'lapsh' },
+      const jsonUrl = `${registryUrl}/v1/apis/${encodeURIComponent(name)}`;
+      const jsonFetcher = jsonUrl.startsWith('https') ? https : http;
+      const jsonBody = await new Promise<string>((resolve, reject) => {
+        const req = jsonFetcher.get(jsonUrl, { headers: { 'Accept': 'application/json', 'User-Agent': 'lapsh' } }, (res) => {
+          if (res.statusCode && res.statusCode >= 400) { reject(new Error(`HTTP ${res.statusCode}`)); res.resume(); return; }
+          const chunks: Buffer[] = [];
+          res.on('data', (chunk: Buffer) => chunks.push(chunk));
+          res.on('end', () => resolve(Buffer.concat(chunks).toString('utf-8')));
+        });
+        req.on('error', reject);
       });
-      if (jsonResp.ok) {
-        const apiInfo = await jsonResp.json() as any;
-        registryVersion = apiInfo.version || 'unknown';
-      }
+      const apiInfo = JSON.parse(jsonBody);
+      registryVersion = apiInfo.version || 'unknown';
     } catch { /* best effort */ }
 
     const meta = readMetadata(resolvedTarget);
@@ -826,6 +767,9 @@ async function cmdCheck(args: string[]): Promise<void> {
 
   const targets: SkillTarget[] = [];
   if (targetArg && targetArg !== 'auto') {
+    if (!(VALID_TARGETS as readonly string[]).includes(targetArg)) {
+      error(`Invalid --target value: ${targetArg}. Must be one of: ${VALID_TARGETS.join(', ')}`);
+    }
     targets.push(targetArg as SkillTarget);
   } else {
     for (const t of VALID_TARGETS) {
@@ -866,16 +810,30 @@ async function cmdCheck(args: string[]): Promise<void> {
 
   let result: { results?: { name: string; has_update: boolean; installed_version: string; latest_version: string }[] };
   try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10000);
-    const resp = await fetch(`${registryUrl}/v1/skills/check`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'User-Agent': 'lapsh' },
-      body: JSON.stringify({ skills: skillsToCheck }),
-      signal: controller.signal,
+    const httpMod = await import('http');
+    const httpsMod = await import('https');
+    const checkUrl = `${registryUrl}/v1/skills/check`;
+    const checkFetcher = checkUrl.startsWith('https') ? httpsMod : httpMod;
+    const payload = JSON.stringify({ skills: skillsToCheck });
+    const parsedUrl = new URL(checkUrl);
+    const checkBody = await new Promise<string>((resolve, reject) => {
+      const timer = setTimeout(() => { req.destroy(); reject(new Error('timeout')); }, 10000);
+      const req = checkFetcher.request({
+        hostname: parsedUrl.hostname,
+        port: parsedUrl.port || (parsedUrl.protocol === 'https:' ? 443 : 80),
+        path: parsedUrl.pathname,
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'User-Agent': 'lapsh', 'Content-Length': Buffer.byteLength(payload) },
+      }, (res) => {
+        const chunks: Buffer[] = [];
+        res.on('data', (chunk: Buffer) => chunks.push(chunk));
+        res.on('end', () => { clearTimeout(timer); resolve(Buffer.concat(chunks).toString('utf-8')); });
+      });
+      req.on('error', (e) => { clearTimeout(timer); reject(e); });
+      req.write(payload);
+      req.end();
     });
-    clearTimeout(timeout);
-    result = await resp.json() as typeof result;
+    result = JSON.parse(checkBody) as typeof result;
   } catch {
     if (silentIfClean) return;
     console.error('Warning: Could not reach LAP registry for update check.');
@@ -926,6 +884,10 @@ async function cmdSetPinned(args: string[], pinned: boolean): Promise<void> {
   }
   const verb = pinned ? 'pin' : 'unpin';
   if (!name) error(`Missing skill name. Usage: lapsh ${verb} <skill>`);
+  if (!isValidSkillName(name)) error(`Invalid skill name: ${name}`);
+  if (target && !(VALID_TARGETS as readonly string[]).includes(target)) {
+    error(`Invalid --target value: ${target}. Must be one of: ${VALID_TARGETS.join(', ')}`);
+  }
   const resolvedTarget = (target as SkillTarget) ?? detectTarget();
   const meta = readMetadata(resolvedTarget);
   if (!meta.skills[name]) error(`Skill '${name}' is not installed. Install it first: lapsh skill-install ${name}`);
@@ -992,21 +954,29 @@ async function diffSkill(name: string): Promise<void> {
 
   // Fetch latest from registry
   const registryUrl = getRegistryUrl();
+  validateRegistryUrl(registryUrl);
   let newText: string;
   try {
-    const resp = await fetch(`${registryUrl}/v1/apis/${encodeURIComponent(name)}`, {
-      headers: { 'Accept': 'text/lap', 'User-Agent': 'lapsh' },
+    const httpMod = await import('http');
+    const httpsMod = await import('https');
+    const diffUrl = `${registryUrl}/v1/apis/${encodeURIComponent(name)}`;
+    const diffFetcher = diffUrl.startsWith('https') ? httpsMod : httpMod;
+    newText = await new Promise<string>((resolve, reject) => {
+      const req = diffFetcher.get(diffUrl, { headers: { 'Accept': 'text/lap', 'User-Agent': 'lapsh' } }, (res) => {
+        if (res.statusCode && res.statusCode >= 400) { reject(new Error(`HTTP ${res.statusCode}`)); res.resume(); return; }
+        const chunks: Buffer[] = [];
+        res.on('data', (chunk: Buffer) => chunks.push(chunk));
+        res.on('end', () => resolve(Buffer.concat(chunks).toString('utf-8')));
+      });
+      req.on('error', reject);
     });
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    newText = await resp.text();
   } catch {
     error(`Failed to fetch latest spec for '${name}' from registry.`);
     return; // unreachable but helps TS
   }
 
-  const { parse: parseLap } = await import('./parser');
-  const oldSpec = parseLap(oldText);
-  const newSpec = parseLap(newText);
+  const oldSpec = parse(oldText);
+  const newSpec = parse(newText);
 
   // Get version info from metadata
   const meta = readMetadata(target);
@@ -1041,9 +1011,8 @@ async function cmdDiff(args: string[]): Promise<void> {
   if (!fs.existsSync(firstArg)) error(`File not found: ${firstArg}`);
   if (!fs.existsSync(secondArg)) error(`File not found: ${secondArg}`);
 
-  const { parse: parseLap } = await import('./parser');
-  const oldSpec = parseLap(fs.readFileSync(firstArg, 'utf-8'));
-  const newSpec = parseLap(fs.readFileSync(secondArg, 'utf-8'));
+  const oldSpec = parse(fs.readFileSync(firstArg, 'utf-8'));
+  const newSpec = parse(fs.readFileSync(secondArg, 'utf-8'));
 
   printSpecDiff(oldSpec, newSpec, firstArg, secondArg);
 }

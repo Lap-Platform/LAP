@@ -769,6 +769,8 @@ def _read_metadata(target: str) -> dict:
 def _write_metadata(target: str, data: dict) -> None:
     """Atomically write lap-metadata.json for the given target."""
     p = _metadata_path(target)
+    if p.exists() and p.is_symlink():
+        raise RuntimeError(f"Refusing to write: {p} is a symlink")
     p.parent.mkdir(parents=True, exist_ok=True)
     tmp = p.with_suffix(".tmp")
     tmp.write_text(json.dumps(data, indent=2), encoding="utf-8")
@@ -781,13 +783,16 @@ def _compute_spec_hash(content: str) -> str:
 
 
 def _is_valid_skill_name(name: str) -> bool:
-    """Check if skill name is safe (no path traversal)."""
-    return bool(re.match(r'^[a-zA-Z0-9._-]+$', name))
+    """Check if skill name is safe (no path traversal, no hidden files)."""
+    return bool(re.match(r'^[a-zA-Z0-9][a-zA-Z0-9._-]*$', name))
 
 
 def _validate_registry_url(url: str) -> str:
     """Ensure registry URL uses HTTPS (except localhost for dev)."""
-    if url.startswith("http://localhost") or url.startswith("http://127.0.0.1"):
+    for prefix in ("http://localhost:", "http://localhost/", "http://127.0.0.1:", "http://127.0.0.1/"):
+        if url.startswith(prefix):
+            return url
+    if url in ("http://localhost", "http://127.0.0.1"):
         return url
     if not url.startswith("https://"):
         raise ValueError(f"Registry URL must use HTTPS: {url}")
@@ -798,93 +803,26 @@ def cmd_init(args):
     """Set up LAP in your IDE (installs skill and config)."""
     target = getattr(args, "target", None) or "claude"
     _install_builtin_skill("lap", target, None)
-    _register_session_hook(target)
-
-
-def _register_session_hook(target: str) -> None:
-    """Register LAP check hook for session start (idempotent)."""
-    hook_command = "npx @lap-platform/lapsh check --silent-if-clean"
-
-    if target == "cursor":
-        config_path = Path.home() / ".cursor" / "hooks.json"
-        _register_cursor_hook(config_path, hook_command)
-    else:
-        config_path = Path.home() / ".claude" / "settings.json"
-        _register_claude_hook(config_path, hook_command)
-
-
-def _register_claude_hook(config_path: Path, command: str) -> None:
-    """Add SessionStart hook to .claude/settings.json (idempotent)."""
-    config = {}
-    if config_path.exists():
-        try:
-            config = json.loads(config_path.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
-            pass
-
-    if not isinstance(config, dict):
-        config = {}
-
-    hooks = config.setdefault("hooks", {})
-    session_hooks = hooks.setdefault("SessionStart", [])
-
-    # Check if LAP hook already registered
-    for hook in session_hooks:
-        if isinstance(hook, dict) and "lapsh check" in hook.get("command", ""):
-            info("Session hook already registered.")
-            return
-
-    session_hooks.append({"command": command})
-
-    config_path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = config_path.with_suffix(".tmp")
-    tmp.write_text(json.dumps(config, indent=2), encoding="utf-8")
-    tmp.replace(config_path)
-    info("Registered session-start hook for update checking.")
-
-
-def _register_cursor_hook(config_path: Path, command: str) -> None:
-    """Add sessionStart hook to .cursor/hooks.json (idempotent)."""
-    config = {}
-    if config_path.exists():
-        try:
-            config = json.loads(config_path.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
-            pass
-
-    if not isinstance(config, dict):
-        config = {}
-
-    config.setdefault("version", 1)
-    hooks = config.setdefault("hooks", {})
-    session_hooks = hooks.setdefault("sessionStart", [])
-
-    for hook in session_hooks:
-        if isinstance(hook, dict) and "lapsh check" in hook.get("command", ""):
-            info("Session hook already registered.")
-            return
-
-    session_hooks.append({"command": command, "timeout": 10})
-
-    config_path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = config_path.with_suffix(".tmp")
-    tmp.write_text(json.dumps(config, indent=2), encoding="utf-8")
-    tmp.replace(config_path)
-    info("Registered session-start hook for update checking.")
 
 
 def cmd_skill_install(args):
     """Install a skill from the LAP registry."""
-    from lap.cli.auth import api_request, get_registry_url
+    from lap.cli.auth import get_registry_url
     from lap.core.compilers.skill import generate_skill, SkillOptions, detect_target
     from lap.core.parser import parse_lap as parse
     from urllib.parse import quote
     import urllib.request
 
     name = args.name
+    if not _is_valid_skill_name(name):
+        error(f"Invalid skill name: {name}")
     target = getattr(args, "target", None) or detect_target()
 
     registry = get_registry_url()
+    try:
+        registry = _validate_registry_url(registry)
+    except ValueError as e:
+        error(str(e))
     print(f"Fetching spec for {name} (target: {target})...")
 
     # Fetch LAP spec from registry
@@ -1016,19 +954,24 @@ def cmd_check(args):
 
     if len(updates) == 1:
         u = updates[0]
+        sn = _sanitize(str(u.get('name', '')))
+        si = _sanitize(str(u.get('installed_version', '')))
+        sl = _sanitize(str(u.get('latest_version', '')))
         print(f"LAP skill update available:")
-        print(f"  {u['name']}: {u['installed_version']} -> {u['latest_version']}")
+        print(f"  {sn}: {si} -> {sl}")
         print()
-        print(f"  Update:  lapsh skill-install {u['name']}")
-        print(f"  Changes: lapsh diff {u['name']}")
-        print(f"  Pin:     lapsh pin {u['name']}")
+        print(f"  Update:  lapsh skill-install {sn}")
+        print(f"  Changes: lapsh diff {sn}")
+        print(f"  Pin:     lapsh pin {sn}")
     else:
         print(f"{len(updates)} LAP skills have updates:")
         names = []
         for u in updates:
-            name = u['name']
-            names.append(name)
-            print(f"  {name:<20s} {u['installed_version']} -> {u['latest_version']}")
+            sn = _sanitize(str(u.get('name', '')))
+            si = _sanitize(str(u.get('installed_version', '')))
+            sl = _sanitize(str(u.get('latest_version', '')))
+            names.append(sn)
+            print(f"  {sn:<20s} {si} -> {sl}")
         print()
         print(f"  Update all: lapsh skill-install {' '.join(names)}")
         print(f"  See changes: lapsh diff <skill>")
@@ -1039,6 +982,8 @@ def cmd_pin(args):
     """Pin a skill to skip update checks."""
     from lap.core.compilers.skill import detect_target
     name = args.name
+    if not _is_valid_skill_name(name):
+        error(f"Invalid skill name: {name}")
     target = getattr(args, "target", None) or detect_target()
     meta = _read_metadata(target)
     if name not in meta.get("skills", {}):
@@ -1052,6 +997,8 @@ def cmd_unpin(args):
     """Unpin a skill to resume update checks."""
     from lap.core.compilers.skill import detect_target
     name = args.name
+    if not _is_valid_skill_name(name):
+        error(f"Invalid skill name: {name}")
     target = getattr(args, "target", None) or detect_target()
     meta = _read_metadata(target)
     if name not in meta.get("skills", {}):
@@ -1353,6 +1300,10 @@ def _diff_skill(name: str, args) -> None:
 
     # Fetch latest from registry
     registry = get_registry_url()
+    try:
+        registry = _validate_registry_url(registry)
+    except ValueError as e:
+        error(str(e))
     try:
         url = f"{registry}/v1/apis/{quote(name, safe='')}"
         req = urllib.request.Request(url, headers={"Accept": "text/lap", "User-Agent": "lapsh"})

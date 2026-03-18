@@ -15,8 +15,6 @@ import {
   computeSpecHash,
   isValidSkillName,
   validateRegistryUrl,
-  registerClaudeHook,
-  registerCursorHook,
   printSpecDiff,
 } from '../src/cli';
 
@@ -720,6 +718,10 @@ describe('Metadata helpers', () => {
       assert.strictEqual(isValidSkillName('skill name'), false);
       assert.strictEqual(isValidSkillName('skill@bad'), false);
       assert.strictEqual(isValidSkillName(''), false);
+      assert.strictEqual(isValidSkillName('.hidden'), false);
+      assert.strictEqual(isValidSkillName('..'), false);
+      assert.strictEqual(isValidSkillName('-dash-start'), false);
+      assert.strictEqual(isValidSkillName('_under_start'), false);
     });
   });
 
@@ -752,165 +754,16 @@ describe('Metadata helpers', () => {
         /must use HTTPS/,
       );
     });
-  });
-});
 
-describe('Hook registration', () => {
-  describe('registerClaudeHook', () => {
-    it('T7a: creates settings.json with hook when file does not exist', () => {
-      const tmpDir = path.join(os.tmpdir(), `lap-test-${Date.now()}`);
-      const claudeDir = path.join(tmpDir, '.claude');
-      const configPath = path.join(claudeDir, 'settings.json');
-      fs.mkdirSync(claudeDir, { recursive: true });
-
-      // Temporarily redirect os.homedir via env var trick -- instead, use
-      // a wrapper: write the file directly and call a path-based approach.
-      // Since registerClaudeHook uses os.homedir(), we test by calling it
-      // with the real path and then inspecting the result. For isolation
-      // we back up and restore the real settings.json.
-      const realConfigPath = path.join(os.homedir(), '.claude', 'settings.json');
-      const backup = realConfigPath + `.bak.t7a.${Date.now()}`;
-      const existed = fs.existsSync(realConfigPath);
-      if (existed) fs.renameSync(realConfigPath, backup);
-
-      try {
-        // Remove if exists from a previous run
-        if (fs.existsSync(realConfigPath)) fs.unlinkSync(realConfigPath);
-
-        registerClaudeHook('npx @lap-platform/lapsh check --silent-if-clean');
-
-        assert.ok(fs.existsSync(realConfigPath), 'settings.json should be created');
-        const config = JSON.parse(fs.readFileSync(realConfigPath, 'utf-8'));
-        assert.ok(config.hooks, 'Should have hooks key');
-        assert.ok(Array.isArray(config.hooks.SessionStart), 'SessionStart should be an array');
-        assert.strictEqual(config.hooks.SessionStart.length, 1, 'Should have one hook');
-        assert.ok(
-          config.hooks.SessionStart[0].command.includes('lapsh check'),
-          'Hook command should include lapsh check',
-        );
-      } finally {
-        if (fs.existsSync(realConfigPath)) fs.unlinkSync(realConfigPath);
-        if (existed) fs.renameSync(backup, realConfigPath);
-        fs.rmdirSync(tmpDir, { recursive: true });
-      }
-    });
-
-    it('T7b: registerClaudeHook is idempotent', () => {
-      const realConfigPath = path.join(os.homedir(), '.claude', 'settings.json');
-      const backup = realConfigPath + `.bak.t7b.${Date.now()}`;
-      const existed = fs.existsSync(realConfigPath);
-      if (existed) fs.renameSync(realConfigPath, backup);
-
-      try {
-        if (fs.existsSync(realConfigPath)) fs.unlinkSync(realConfigPath);
-
-        registerClaudeHook('npx @lap-platform/lapsh check --silent-if-clean');
-        registerClaudeHook('npx @lap-platform/lapsh check --silent-if-clean');
-
-        const config = JSON.parse(fs.readFileSync(realConfigPath, 'utf-8'));
-        assert.strictEqual(
-          config.hooks.SessionStart.length,
-          1,
-          'Calling twice should not duplicate the hook entry',
-        );
-      } finally {
-        if (fs.existsSync(realConfigPath)) fs.unlinkSync(realConfigPath);
-        if (existed) fs.renameSync(backup, realConfigPath);
-      }
-    });
-
-    it('T7c: registerClaudeHook preserves existing hooks', () => {
-      const realConfigPath = path.join(os.homedir(), '.claude', 'settings.json');
-      const backup = realConfigPath + `.bak.t7c.${Date.now()}`;
-      const existed = fs.existsSync(realConfigPath);
-      if (existed) fs.renameSync(realConfigPath, backup);
-
-      try {
-        // Pre-populate with an existing hook
-        const existing = {
-          hooks: {
-            SessionStart: [{ command: 'echo hello' }],
-            PreToolUse: [{ command: 'echo pre' }],
-          },
-        };
-        const dir = path.dirname(realConfigPath);
-        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-        fs.writeFileSync(realConfigPath, JSON.stringify(existing, null, 2), 'utf-8');
-
-        registerClaudeHook('npx @lap-platform/lapsh check --silent-if-clean');
-
-        const config = JSON.parse(fs.readFileSync(realConfigPath, 'utf-8'));
-        // Original hook still present
-        assert.strictEqual(config.hooks.SessionStart.length, 2, 'Should have 2 hooks (existing + new)');
-        assert.ok(
-          config.hooks.SessionStart.some((h: any) => h.command === 'echo hello'),
-          'Original hook should be preserved',
-        );
-        assert.ok(
-          config.hooks.SessionStart.some((h: any) => h.command.includes('lapsh check')),
-          'New lapsh hook should be added',
-        );
-        // Other hook types preserved
-        assert.ok(Array.isArray(config.hooks.PreToolUse), 'PreToolUse hooks should be preserved');
-        assert.strictEqual(config.hooks.PreToolUse.length, 1, 'PreToolUse should still have 1 hook');
-      } finally {
-        if (fs.existsSync(realConfigPath)) fs.unlinkSync(realConfigPath);
-        if (existed) fs.renameSync(backup, realConfigPath);
-      }
-    });
-  });
-
-  describe('registerCursorHook', () => {
-    it('T8a: creates hooks.json with hook when file does not exist', () => {
-      const realConfigPath = path.join(os.homedir(), '.cursor', 'hooks.json');
-      const backup = realConfigPath + `.bak.t8a.${Date.now()}`;
-      const existed = fs.existsSync(realConfigPath);
-      if (existed) fs.renameSync(realConfigPath, backup);
-
-      try {
-        if (fs.existsSync(realConfigPath)) fs.unlinkSync(realConfigPath);
-
-        registerCursorHook('npx @lap-platform/lapsh check --silent-if-clean');
-
-        assert.ok(fs.existsSync(realConfigPath), 'hooks.json should be created');
-        const config = JSON.parse(fs.readFileSync(realConfigPath, 'utf-8'));
-        assert.ok(config.hooks, 'Should have hooks key');
-        assert.ok(Array.isArray(config.hooks.sessionStart), 'sessionStart should be an array');
-        assert.strictEqual(config.hooks.sessionStart.length, 1, 'Should have one hook');
-        assert.ok(
-          config.hooks.sessionStart[0].command.includes('lapsh check'),
-          'Hook command should include lapsh check',
-        );
-        assert.strictEqual(config.hooks.sessionStart[0].timeout, 10, 'Should have timeout: 10');
-        assert.strictEqual(config.version, 1, 'Should have version: 1');
-      } finally {
-        if (fs.existsSync(realConfigPath)) fs.unlinkSync(realConfigPath);
-        if (existed) fs.renameSync(backup, realConfigPath);
-      }
-    });
-
-    it('T8b: registerCursorHook is idempotent', () => {
-      const realConfigPath = path.join(os.homedir(), '.cursor', 'hooks.json');
-      const backup = realConfigPath + `.bak.t8b.${Date.now()}`;
-      const existed = fs.existsSync(realConfigPath);
-      if (existed) fs.renameSync(realConfigPath, backup);
-
-      try {
-        if (fs.existsSync(realConfigPath)) fs.unlinkSync(realConfigPath);
-
-        registerCursorHook('npx @lap-platform/lapsh check --silent-if-clean');
-        registerCursorHook('npx @lap-platform/lapsh check --silent-if-clean');
-
-        const config = JSON.parse(fs.readFileSync(realConfigPath, 'utf-8'));
-        assert.strictEqual(
-          config.hooks.sessionStart.length,
-          1,
-          'Calling twice should not duplicate the hook entry',
-        );
-      } finally {
-        if (fs.existsSync(realConfigPath)) fs.unlinkSync(realConfigPath);
-        if (existed) fs.renameSync(backup, realConfigPath);
-      }
+    it('rejects localhost prefix confusion', () => {
+      assert.throws(
+        () => validateRegistryUrl('http://localhost.evil.com'),
+        /must use HTTPS/,
+      );
+      assert.throws(
+        () => validateRegistryUrl('http://localhost-attacker.com'),
+        /must use HTTPS/,
+      );
     });
   });
 });
