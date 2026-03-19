@@ -11,7 +11,7 @@
 **Agent-Native API specs. Verified, compressed, ready to install.**
 
 <a href="https://pypi.org/project/lapsh/"><img src="https://img.shields.io/pypi/v/lapsh?style=for-the-badge&color=blue" alt="PyPI"></a>
-<a href="https://github.com/Lap-Platform/lap/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/Lap-Platform/lap/ci.yml?branch=main&style=for-the-badge&label=tests" alt="Tests"></a>
+<a href="https://github.com/Lap-Platform/lap/actions/workflows/ci.yml"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FLap-Platform%2FBADGE_GIST_ID%2Fraw%2Flap-test-results.json&style=for-the-badge" alt="Tests"></a>
 <a href="https://www.npmjs.com/package/@lap-platform/lapsh"><img src="https://img.shields.io/npm/v/@lap-platform/lapsh?style=for-the-badge&color=blue" alt="npm"></a>
 <br>
 <a href="https://github.com/Lap-Platform/lap/tree/main/skills/lap"><img src="https://img.shields.io/badge/Claude%20Code-skill-orange?style=for-the-badge" alt="Claude Code Skill"></a>
@@ -164,17 +164,20 @@ LAP is more than a compiler:
 
 | Component | What | Command |
 |-----------|------|---------|
-| **Init** | Set up LAP in your IDE | `lapsh init` / `lapsh init --target cursor` |
+| **Init** | Set up LAP in your IDE | `lapsh init --target claude` |
 | **Search** | Find APIs in the registry | `lapsh search payment` |
 | **Get** | Download a spec by name | `lapsh get stripe-com` |
-| **Skill Install** | Install an API skill | `lapsh skill-install stripe-com` |
+| **Skill Install** | Install an API skill | `lapsh skill-install stripe-com --target claude` |
+| **Check** | Check installed skills for updates | `lapsh check [--target claude\|cursor]` |
+| **Diff** | Compare installed skill vs registry | `lapsh diff stripe-com` |
+| **Pin / Unpin** | Skip or resume update checks | `lapsh pin stripe-com` |
 | **Compiler** | Any spec → `.lap` | `lapsh compile api.yaml` |
 | **Skill Generator** | Create agent-ready skills from any spec | `lapsh skill api.yaml --install` |
 | **API Differ** | Detect breaking API changes | `lapsh diff old.lap new.lap` |
 | **Round-trip** | Convert LAP back to OpenAPI | `lapsh convert api.lap -f openapi` |
 | **Publish** | Share specs to the registry | `lapsh publish api.yaml --provider acme` |
 
-> **Claude Code & Cursor:** The `lap` skill is included -- run `lapsh init` and your agent can search and install APIs directly.
+> **Claude Code & Cursor:** The `lap` skill is included -- run `lapsh init` and your agent can search, install, and auto-check for API skill updates directly.
 
 ## Supported Formats
 

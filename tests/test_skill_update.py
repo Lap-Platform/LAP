@@ -722,7 +722,7 @@ def test_register_cursor_hook(tmp_path):
     # Cursor uses flat format: command + type + timeout at top level
     assert entries[0]["type"] == "command"
     assert "lapsh check" in entries[0]["command"]
-    assert entries[0]["timeout"] == 10
+    assert entries[0]["timeout"] == 30
 
 
 def test_register_cursor_hook_idempotent(tmp_path):
