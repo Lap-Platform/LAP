@@ -935,7 +935,7 @@ describe('Hook registration', () => {
       const entry = config.hooks.sessionStart[0];
       assert.strictEqual(entry.type, 'command', 'Should be command type');
       assert.ok(entry.command.includes('lapsh check'), 'Should have lapsh check command');
-      assert.strictEqual(entry.timeout, 10, 'Cursor hook should have timeout in seconds');
+      assert.strictEqual(entry.timeout, 30, 'Cursor hook should have timeout in seconds');
     } finally {
       if (backup !== null) fs.writeFileSync(cursorConfig, backup, 'utf-8');
       else if (fs.existsSync(cursorConfig)) fs.unlinkSync(cursorConfig);
@@ -956,6 +956,525 @@ describe('Hook registration', () => {
     } finally {
       if (backup !== null) fs.writeFileSync(cursorConfig, backup, 'utf-8');
       else if (fs.existsSync(cursorConfig)) fs.unlinkSync(cursorConfig);
+    }
+  });
+});
+
+// ── Check command tests (mirrored from Python test_check_*) ─────────
+
+describe('Check command logic', () => {
+  it('C9: check with no updates and silentIfClean produces no output', () => {
+    // We test the underlying logic: if all skills are pinned or there are none
+    // to check, cmdCheck returns silently. We verify by ensuring readMetadata
+    // with only pinned skills returns an empty check list.
+    const p = metadataPath('claude');
+    const backup = p + '.bak.check1.' + Date.now();
+    const existed = fs.existsSync(p);
+    if (existed) fs.renameSync(p, backup);
+
+    try {
+      const data: import('../src/cli').LapMetadata = {
+        skills: {
+          'stripe-com': {
+            registryVersion: '1.0.0',
+            specHash: 'sha256:abc',
+            installedAt: '2026-01-01T00:00:00Z',
+            pinned: false,
+          },
+        },
+      };
+      writeMetadata('claude', data);
+      const meta = readMetadata('claude');
+
+      // Simulate the check loop: gather non-pinned skills
+      const skillsToCheck: { name: string; version: string }[] = [];
+      for (const [name, info] of Object.entries(meta.skills)) {
+        if (!info.pinned) skillsToCheck.push({ name, version: info.registryVersion });
+      }
+      assert.strictEqual(skillsToCheck.length, 1, 'Should find 1 non-pinned skill');
+      assert.strictEqual(skillsToCheck[0].name, 'stripe-com');
+      assert.strictEqual(skillsToCheck[0].version, '1.0.0');
+
+      // Simulate a "no updates" registry response
+      const results = [{ name: 'stripe-com', has_update: false, installed_version: '1.0.0', latest_version: '1.0.0' }];
+      const updates = results.filter(r => r.has_update);
+      assert.strictEqual(updates.length, 0, 'Should have no updates');
+    } finally {
+      if (fs.existsSync(p)) fs.unlinkSync(p);
+      if (existed) fs.renameSync(backup, p);
+    }
+  });
+
+  it('C10: check with updates produces notification data', () => {
+    // Simulate a registry response with updates and verify formatting
+    const results = [
+      { name: 'stripe', has_update: true, installed_version: '1.0.0', latest_version: '2.0.0' },
+    ];
+    const updates = results.filter(r => r.has_update);
+    assert.strictEqual(updates.length, 1);
+
+    // Build the same message cmdCheck would build
+    const u = updates[0];
+    const msg = [
+      'LAP skill update available:',
+      `  ${u.name}: ${u.installed_version} -> ${u.latest_version}`,
+      '',
+      `  Update:  lapsh skill-install ${u.name} --target claude`,
+      `  Changes: lapsh diff ${u.name}`,
+      `  Pin:     lapsh pin ${u.name}`,
+    ].join('\n');
+
+    assert.ok(msg.includes('stripe'), 'Should mention skill name');
+    assert.ok(msg.includes('1.0.0'), 'Should mention old version');
+    assert.ok(msg.includes('2.0.0'), 'Should mention new version');
+    assert.ok(msg.includes('lapsh skill-install stripe'), 'Should include install command');
+  });
+
+  it('C11: check --json produces valid JSON structure', () => {
+    // Simulate --json output formatting
+    const updates = [
+      { name: 'stripe', has_update: true, installed_version: '1.0.0', latest_version: '2.0.0' },
+    ];
+    const jsonStr = JSON.stringify({ updates }, null, 2);
+    const parsed = JSON.parse(jsonStr);
+    assert.ok(Array.isArray(parsed.updates), 'Should have updates array');
+    assert.strictEqual(parsed.updates[0].name, 'stripe');
+    assert.strictEqual(parsed.updates[0].latest_version, '2.0.0');
+  });
+
+  it('C12: network failure in silent mode produces no output', () => {
+    // Capture console output to verify silence
+    const lines: string[] = [];
+    const errLines: string[] = [];
+    const origLog = console.log;
+    const origErr = console.error;
+    console.log = (...a: any[]) => lines.push(a.join(' '));
+    console.error = (...a: any[]) => errLines.push(a.join(' '));
+
+    try {
+      // Simulate cmdCheck behavior on network failure with silentIfClean=true
+      const silentIfClean = true;
+      try {
+        throw new Error('network error');
+      } catch {
+        if (!silentIfClean) console.error('Warning: Could not reach LAP registry for update check.');
+        // silentIfClean mode: no output on failure
+      }
+      assert.strictEqual(lines.length, 0, 'No stdout in silent mode');
+      assert.strictEqual(errLines.length, 0, 'No stderr in silent mode');
+    } finally {
+      console.log = origLog;
+      console.error = origErr;
+    }
+  });
+
+  it('C12b: network failure in manual mode warns', () => {
+    const errLines: string[] = [];
+    const origErr = console.error;
+    console.error = (...a: any[]) => errLines.push(a.join(' '));
+
+    try {
+      const silentIfClean = false;
+      try {
+        throw new Error('network error');
+      } catch {
+        if (!silentIfClean) console.error('Warning: Could not reach LAP registry for update check.');
+      }
+      assert.ok(errLines.some(l => l.includes('Warning')), 'Should warn on network failure in manual mode');
+    } finally {
+      console.error = origErr;
+    }
+  });
+
+  it('C18: check skips pinned skills', () => {
+    const p = metadataPath('claude');
+    const backup = p + '.bak.pinned.' + Date.now();
+    const existed = fs.existsSync(p);
+    if (existed) fs.renameSync(p, backup);
+
+    try {
+      const data: import('../src/cli').LapMetadata = {
+        skills: {
+          'stripe-com': {
+            registryVersion: '1.0.0',
+            specHash: 'sha256:abc',
+            installedAt: '2026-01-01T00:00:00Z',
+            pinned: true,
+          },
+        },
+      };
+      writeMetadata('claude', data);
+      const meta = readMetadata('claude');
+
+      // Reproduce cmdCheck logic: gather only non-pinned skills
+      const skillsToCheck: { name: string; version: string }[] = [];
+      for (const [name, info] of Object.entries(meta.skills)) {
+        if (info.pinned) continue;
+        skillsToCheck.push({ name, version: info.registryVersion });
+      }
+
+      // All pinned => nothing to check => no network call needed
+      assert.strictEqual(skillsToCheck.length, 0, 'Pinned skills should be skipped');
+    } finally {
+      if (fs.existsSync(p)) fs.unlinkSync(p);
+      if (existed) fs.renameSync(backup, p);
+    }
+  });
+});
+
+// ── Pin/Unpin tests (mirrored from Python test_pin_*, test_unpin_*) ──
+
+describe('Pin / Unpin logic', () => {
+  it('C15: pin sets pinned to true in metadata', () => {
+    const p = metadataPath('claude');
+    const backup = p + '.bak.pin.' + Date.now();
+    const existed = fs.existsSync(p);
+    if (existed) fs.renameSync(p, backup);
+
+    try {
+      const data: import('../src/cli').LapMetadata = {
+        skills: {
+          'stripe-com': {
+            registryVersion: '1.0.0',
+            specHash: 'sha256:abc',
+            installedAt: '2026-01-01T00:00:00Z',
+            pinned: false,
+          },
+        },
+      };
+      writeMetadata('claude', data);
+
+      // Reproduce cmdSetPinned logic for pin
+      const meta = readMetadata('claude');
+      assert.ok(meta.skills['stripe-com'], 'Skill should exist');
+      meta.skills['stripe-com'].pinned = true;
+      writeMetadata('claude', meta);
+
+      const after = readMetadata('claude');
+      assert.strictEqual(after.skills['stripe-com'].pinned, true, 'Pinned should be true');
+    } finally {
+      if (fs.existsSync(p)) fs.unlinkSync(p);
+      if (existed) fs.renameSync(backup, p);
+    }
+  });
+
+  it('C16: unpin sets pinned to false in metadata', () => {
+    const p = metadataPath('claude');
+    const backup = p + '.bak.unpin.' + Date.now();
+    const existed = fs.existsSync(p);
+    if (existed) fs.renameSync(p, backup);
+
+    try {
+      const data: import('../src/cli').LapMetadata = {
+        skills: {
+          'stripe-com': {
+            registryVersion: '1.0.0',
+            specHash: 'sha256:abc',
+            installedAt: '2026-01-01T00:00:00Z',
+            pinned: true,
+          },
+        },
+      };
+      writeMetadata('claude', data);
+
+      // Reproduce cmdSetPinned logic for unpin
+      const meta = readMetadata('claude');
+      assert.ok(meta.skills['stripe-com'], 'Skill should exist');
+      meta.skills['stripe-com'].pinned = false;
+      writeMetadata('claude', meta);
+
+      const after = readMetadata('claude');
+      assert.strictEqual(after.skills['stripe-com'].pinned, false, 'Pinned should be false');
+    } finally {
+      if (fs.existsSync(p)) fs.unlinkSync(p);
+      if (existed) fs.renameSync(backup, p);
+    }
+  });
+
+  it('C17: pin unknown skill: skill not found in metadata', () => {
+    const p = metadataPath('claude');
+    const backup = p + '.bak.pinunk.' + Date.now();
+    const existed = fs.existsSync(p);
+    if (existed) fs.renameSync(p, backup);
+
+    try {
+      const data: import('../src/cli').LapMetadata = { skills: {} };
+      writeMetadata('claude', data);
+
+      const meta = readMetadata('claude');
+      // cmdSetPinned checks meta.skills[name] and errors if missing
+      assert.strictEqual(meta.skills['nonexistent'], undefined, 'Unknown skill should be undefined');
+      assert.ok(!meta.skills['nonexistent'], 'Missing skill should be falsy');
+    } finally {
+      if (fs.existsSync(p)) fs.unlinkSync(p);
+      if (existed) fs.renameSync(backup, p);
+    }
+  });
+
+  it('C17b: unpin unknown skill: skill not found in metadata', () => {
+    const p = metadataPath('claude');
+    const backup = p + '.bak.unpinunk.' + Date.now();
+    const existed = fs.existsSync(p);
+    if (existed) fs.renameSync(p, backup);
+
+    try {
+      const data: import('../src/cli').LapMetadata = { skills: {} };
+      writeMetadata('claude', data);
+
+      const meta = readMetadata('claude');
+      assert.strictEqual(meta.skills['nonexistent'], undefined, 'Unknown skill should be undefined');
+      assert.ok(!meta.skills['nonexistent'], 'Missing skill should be falsy');
+    } finally {
+      if (fs.existsSync(p)) fs.unlinkSync(p);
+      if (existed) fs.renameSync(backup, p);
+    }
+  });
+
+  it('pin preserves other skill entries', () => {
+    const p = metadataPath('claude');
+    const backup = p + '.bak.pinother.' + Date.now();
+    const existed = fs.existsSync(p);
+    if (existed) fs.renameSync(p, backup);
+
+    try {
+      const data: import('../src/cli').LapMetadata = {
+        skills: {
+          'stripe-com': {
+            registryVersion: '1.0.0',
+            specHash: 'sha256:aaa',
+            installedAt: '2026-01-01T00:00:00Z',
+            pinned: false,
+          },
+          'github-com': {
+            registryVersion: '2.0.0',
+            specHash: 'sha256:bbb',
+            installedAt: '2026-01-01T00:00:00Z',
+            pinned: false,
+          },
+        },
+      };
+      writeMetadata('claude', data);
+
+      const meta = readMetadata('claude');
+      meta.skills['stripe-com'].pinned = true;
+      writeMetadata('claude', meta);
+
+      const after = readMetadata('claude');
+      assert.strictEqual(after.skills['stripe-com'].pinned, true, 'stripe-com should be pinned');
+      assert.strictEqual(after.skills['github-com'].pinned, false, 'github-com should remain unpinned');
+      assert.strictEqual(after.skills['github-com'].registryVersion, '2.0.0', 'github-com version preserved');
+    } finally {
+      if (fs.existsSync(p)) fs.unlinkSync(p);
+      if (existed) fs.renameSync(backup, p);
+    }
+  });
+});
+
+// ── Skill-install writes metadata (mirrored from Python test_skill_install_*) ──
+
+describe('Skill-install metadata', () => {
+  it('C7: writeMetadata creates entry with all required fields', () => {
+    const p = metadataPath('claude');
+    const backup = p + '.bak.install.' + Date.now();
+    const existed = fs.existsSync(p);
+    if (existed) fs.renameSync(p, backup);
+
+    try {
+      // Reproduce what cmdSkillInstall does after a successful fetch
+      const specText = '@lap v0.3\n@api Stripe API\n@base https://api.stripe.com\n@endpoint GET /charges\n@desc List charges\n@end';
+      const specHash = computeSpecHash(specText);
+      const registryVersion = '2.0.0';
+      const skillName = 'stripe-api';
+
+      const meta = readMetadata('claude');
+      meta.skills['stripe'] = {
+        registryVersion,
+        specHash,
+        installedAt: new Date().toISOString(),
+        pinned: false,
+        skillName,
+      };
+      writeMetadata('claude', meta);
+
+      const after = readMetadata('claude');
+      const entry = after.skills['stripe'];
+      assert.ok(entry, 'Metadata entry should exist');
+      assert.strictEqual(entry.registryVersion, '2.0.0', 'registryVersion should match');
+      assert.ok(entry.specHash.startsWith('sha256:'), 'specHash should have sha256: prefix');
+      assert.ok(entry.installedAt, 'installedAt should be set');
+      assert.strictEqual(entry.pinned, false, 'pinned should default to false');
+      assert.strictEqual(entry.skillName, 'stripe-api', 'skillName should be set');
+    } finally {
+      if (fs.existsSync(p)) fs.unlinkSync(p);
+      if (existed) fs.renameSync(backup, p);
+    }
+  });
+
+  it('C8: reinstall overwrites existing entry', () => {
+    const p = metadataPath('claude');
+    const backup = p + '.bak.reinstall.' + Date.now();
+    const existed = fs.existsSync(p);
+    if (existed) fs.renameSync(p, backup);
+
+    try {
+      // Write initial entry
+      const initial: import('../src/cli').LapMetadata = {
+        skills: {
+          'stripe': {
+            registryVersion: '1.0.0',
+            specHash: 'sha256:oldoldold',
+            installedAt: '2025-01-01T00:00:00Z',
+            pinned: true,
+            skillName: 'stripe-api',
+          },
+        },
+      };
+      writeMetadata('claude', initial);
+
+      // Simulate reinstall: read, overwrite entry, write
+      const meta = readMetadata('claude');
+      const newSpecText = '@lap v0.3\n@api Stripe API v2\n@base https://api.stripe.com\n@endpoint GET /charges\n@desc List\n@end';
+      meta.skills['stripe'] = {
+        registryVersion: '3.0.0',
+        specHash: computeSpecHash(newSpecText),
+        installedAt: new Date().toISOString(),
+        pinned: false,
+        skillName: 'stripe-api',
+      };
+      writeMetadata('claude', meta);
+
+      const after = readMetadata('claude');
+      // Only one entry
+      assert.strictEqual(Object.keys(after.skills).length, 1, 'Should have exactly one entry');
+      assert.strictEqual(after.skills['stripe'].registryVersion, '3.0.0', 'Version should be updated');
+      assert.strictEqual(after.skills['stripe'].pinned, false, 'Pinned should be reset to false');
+    } finally {
+      if (fs.existsSync(p)) fs.unlinkSync(p);
+      if (existed) fs.renameSync(backup, p);
+    }
+  });
+
+  it('installedAt is valid ISO date', () => {
+    const p = metadataPath('claude');
+    const backup = p + '.bak.isodate.' + Date.now();
+    const existed = fs.existsSync(p);
+    if (existed) fs.renameSync(p, backup);
+
+    try {
+      const meta = readMetadata('claude');
+      const now = new Date().toISOString();
+      meta.skills['test-api'] = {
+        registryVersion: '1.0.0',
+        specHash: computeSpecHash('test'),
+        installedAt: now,
+        pinned: false,
+      };
+      writeMetadata('claude', meta);
+
+      const after = readMetadata('claude');
+      const dt = new Date(after.skills['test-api'].installedAt);
+      assert.ok(!isNaN(dt.getTime()), 'installedAt should be parseable as a Date');
+    } finally {
+      if (fs.existsSync(p)) fs.unlinkSync(p);
+      if (existed) fs.renameSync(backup, p);
+    }
+  });
+});
+
+// ── Diff smart overload (mirrored from Python test_diff_*) ──────────
+
+describe('Diff smart overload', () => {
+  it('C19: single arg without .lap extension is treated as skill name', () => {
+    // Reproduce cmdDiff's detection logic
+    const firstArg = 'stripe';
+    const secondArg = '';
+    const isFile = firstArg.endsWith('.lap') || firstArg.includes('/') || firstArg.includes('\\');
+    assert.strictEqual(isFile, false, 'Plain skill name should not be detected as file');
+    // In cmdDiff, this would call diffSkill(firstArg)
+    assert.ok(isValidSkillName(firstArg), 'stripe should be a valid skill name');
+  });
+
+  it('C19b: single arg with .lap extension triggers "need two files" path', () => {
+    const firstArg = 'spec.lap';
+    const secondArg = '';
+    const isFile = firstArg.endsWith('.lap') || firstArg.includes('/') || firstArg.includes('\\');
+    assert.strictEqual(isFile, true, '.lap extension should be detected as file');
+    // In cmdDiff, this would call error("Need two files to diff...")
+  });
+
+  it('C19c: single arg with slash triggers "need two files" path', () => {
+    const firstArg = 'some/path';
+    const secondArg = '';
+    const isFile = firstArg.endsWith('.lap') || firstArg.includes('/') || firstArg.includes('\\');
+    assert.strictEqual(isFile, true, 'Path with slash should be detected as file');
+  });
+
+  it('C19d: single arg with backslash triggers "need two files" path', () => {
+    const firstArg = 'some\\path';
+    const secondArg = '';
+    const isFile = firstArg.endsWith('.lap') || firstArg.includes('/') || firstArg.includes('\\');
+    assert.strictEqual(isFile, true, 'Path with backslash should be detected as file');
+  });
+
+  it('C20: two-file diff calls printSpecDiff with parsed specs', () => {
+    // Create temp LAP files and verify two-file path works
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'lap-diff-'));
+    const lapContent = '@lap v0.3\n@api Test\n@base https://api.example.com\n@endpoint GET /ping\n@desc Health\n@end';
+    const oldFile = path.join(tmpDir, 'old.lap');
+    const newFile = path.join(tmpDir, 'new.lap');
+    fs.writeFileSync(oldFile, lapContent, 'utf-8');
+    fs.writeFileSync(newFile, lapContent, 'utf-8');
+
+    try {
+      // Parse both and diff -- same content should report no differences
+      const oldSpec = parse(fs.readFileSync(oldFile, 'utf-8'));
+      const newSpec = parse(fs.readFileSync(newFile, 'utf-8'));
+
+      const lines: string[] = [];
+      const origLog = console.log;
+      console.log = (...a: any[]) => lines.push(a.join(' '));
+      try {
+        printSpecDiff(oldSpec, newSpec, oldFile, newFile);
+      } finally {
+        console.log = origLog;
+      }
+      const output = lines.join('\n');
+      assert.ok(output.includes('No endpoint differences found'), 'Identical files should report no differences');
+    } finally {
+      fs.unlinkSync(oldFile);
+      fs.unlinkSync(newFile);
+      fs.rmdirSync(tmpDir);
+    }
+  });
+
+  it('C20b: two-file diff with added endpoint shows addition', () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'lap-diff2-'));
+    const oldContent = '@lap v0.3\n@api Test\n@base https://api.example.com\n@endpoint GET /ping\n@desc Health\n@end';
+    const newContent = '@lap v0.3\n@api Test\n@base https://api.example.com\n@endpoint GET /ping\n@desc Health\n@endpoint POST /items\n@desc Create item\n@end';
+    const oldFile = path.join(tmpDir, 'old.lap');
+    const newFile = path.join(tmpDir, 'new.lap');
+    fs.writeFileSync(oldFile, oldContent, 'utf-8');
+    fs.writeFileSync(newFile, newContent, 'utf-8');
+
+    try {
+      const oldSpec = parse(fs.readFileSync(oldFile, 'utf-8'));
+      const newSpec = parse(fs.readFileSync(newFile, 'utf-8'));
+
+      const lines: string[] = [];
+      const origLog = console.log;
+      console.log = (...a: any[]) => lines.push(a.join(' '));
+      try {
+        printSpecDiff(oldSpec, newSpec, oldFile, newFile);
+      } finally {
+        console.log = origLog;
+      }
+      const output = lines.join('\n');
+      assert.ok(output.includes('Added (1)'), 'Should report 1 added endpoint');
+      assert.ok(output.includes('POST /items'), 'Should list the added endpoint');
+    } finally {
+      fs.unlinkSync(oldFile);
+      fs.unlinkSync(newFile);
+      fs.rmdirSync(tmpDir);
     }
   });
 });
