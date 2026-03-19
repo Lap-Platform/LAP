@@ -895,7 +895,7 @@ _LAP_HOOK_INSTRUCTION = f"""
 {_LAP_HOOK_MARKER}
 ## LAP API Skill Updates
 
-If a SessionStart hook injects LAP API skill update notifications into your context, you MUST present them to the user in your first response. Do not skip, defer, or wait to be asked.
+If a SessionStart hook injects LAP API skill update notifications into your context, you MUST present them to the user in your first response. Do not skip, defer, or wait to be asked. Include the full notification exactly as provided -- the update command, the diff command, and the pin command.
 """
 
 
@@ -921,7 +921,8 @@ def _ensure_cursor_update_rule() -> None:
     rule_path.write_text(
         '---\ndescription: "LAP API skill update notifications"\nalwaysApply: true\n---\n\n'
         "If a sessionStart hook injects LAP API skill update notifications into your context, "
-        "you MUST present them to the user in your first response. Do not skip, defer, or wait to be asked.\n",
+        "you MUST present them to the user in your first response. Do not skip, defer, or wait to be asked. "
+        "Include the full notification exactly as provided -- the update command, the diff command, and the pin command.\n",
         encoding="utf-8",
     )
     info("Added LAP update rule to ~/.cursor/rules/lap-updates.mdc")

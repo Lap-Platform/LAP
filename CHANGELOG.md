@@ -5,6 +5,20 @@ All notable changes to LAP (Lean API Platform) will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.1] - 2026-03-19
+
+### Fixed
+- **Hook instruction clarity** -- CLAUDE.md and Cursor rule now explicitly tell agents to include diff and pin commands in skill update notifications
+- **Cursor rule instruction** -- aligned with CLAUDE.md instruction wording
+
+## [0.6.0] - 2026-03-19
+
+### Added
+- **Automatic skill update checking** -- SessionStart hook runs `lapsh check` on every new conversation, notifying users of available skill updates
+- **Hook installation** -- `lapsh init` registers a SessionStart hook in `.claude/settings.json` or `.cursor/hooks.json` (idempotent, preserves existing hooks)
+- **CLAUDE.md instruction injection** -- `lapsh init` adds a marker-based instruction block to `~/.claude/CLAUDE.md` telling agents to present update notifications
+- **Cursor update rule** -- `lapsh init --target cursor` creates an always-apply rule in `~/.cursor/rules/lap-updates.mdc`
+
 ## [0.5.3] - 2026-03-18
 
 ### Added
