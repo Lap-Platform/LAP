@@ -54,15 +54,16 @@ LAP Lean scored **0.851** (vs 0.825 raw) while using **35% less cost** and **29%
 ## Quick Start
 
 ```bash
+# Set up LAP in your IDE
+npx @lap-platform/lapsh init                    # Claude Code
+npx @lap-platform/lapsh init --target cursor    # Cursor
+
 # Search the registry for an API
 npx @lap-platform/lapsh search payment
 
 # Download a spec
 npx @lap-platform/lapsh get stripe-com -o stripe.lap
 
-# Set up LAP in your IDE
-npx @lap-platform/lapsh init                    # Claude Code
-npx @lap-platform/lapsh init --target cursor    # Cursor
 
 # Install an API skill
 npx @lap-platform/lapsh skill-install stripe-com
