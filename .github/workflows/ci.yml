@@ -13,9 +13,6 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.11", "3.12"]
-    outputs:
-      passed: ${{ steps.results.outputs.passed }}
-      failed: ${{ steps.results.outputs.failed }}
 
     steps:
       - uses: actions/checkout@v4
@@ -32,8 +29,7 @@ jobs:
 
       - name: Run test suite
         run: |
-          set -o pipefail
-          python -m pytest tests/ -q --timeout=60 --ignore=tests/test_integration.py 2>&1 | tee pytest-output.txt
+          python -m pytest tests/ -q --timeout=60 --ignore=tests/test_integration.py
         timeout-minutes: 10
 
       - name: Run integration tests (allow failure)
@@ -42,24 +38,12 @@ jobs:
           python -m pytest tests/test_integration.py -q --timeout=120
         timeout-minutes: 5
 
-      - name: Parse test results
-        if: always() && matrix.python-version == '3.12'
-        id: results
-        run: |
-          SUMMARY=$(grep -E '(\d+ passed|\d+ failed)' pytest-output.txt | tail -1)
-          PASSED=$(echo "$SUMMARY" | grep -oP '\d+(?= passed)' || echo "0")
-          FAILED=$(echo "$SUMMARY" | grep -oP '\d+(?= failed)' || echo "0")
-          echo "passed=${PASSED}" >> $GITHUB_OUTPUT
-          echo "failed=${FAILED}" >> $GITHUB_OUTPUT
-
   typescript-tests:
     name: TypeScript SDK Tests (Node ${{ matrix.node-version }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
         node-version: ["18", "20"]
-    outputs:
-      passed: ${{ steps.results.outputs.passed }}
 
     steps:
       - uses: actions/checkout@v4
@@ -86,49 +70,5 @@ jobs:
 
       - name: Run test suite
         working-directory: sdks/typescript
-        run: |
-          set -o pipefail
-          npm test 2>&1 | tee test-output.txt
+        run: npm test
         timeout-minutes: 10
-
-      - name: Parse test results
-        if: always() && matrix.node-version == '20'
-        id: results
-        working-directory: sdks/typescript
-        run: |
-          PASSED=$(grep -oP '# pass \K\d+' test-output.txt | paste -sd+ | bc || echo "0")
-          echo "passed=${PASSED}" >> $GITHUB_OUTPUT
-
-  update-badge:
-    name: Update test badge
-    needs: [python-tests, typescript-tests]
-    if: always() && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Calculate totals
-        id: totals
-        run: |
-          PY_PASSED="${{ needs.python-tests.outputs.passed }}"
-          PY_FAILED="${{ needs.python-tests.outputs.failed }}"
-          TS_PASSED="${{ needs.typescript-tests.outputs.passed }}"
-          PY_PASSED=${PY_PASSED:-0}
-          PY_FAILED=${PY_FAILED:-0}
-          TS_PASSED=${TS_PASSED:-0}
-          TOTAL=$((PY_PASSED + TS_PASSED))
-          if [ "$PY_FAILED" = "0" ] || [ -z "$PY_FAILED" ]; then
-            echo "color=brightgreen" >> $GITHUB_OUTPUT
-            echo "message=${TOTAL} passed" >> $GITHUB_OUTPUT
-          else
-            echo "color=red" >> $GITHUB_OUTPUT
-            echo "message=${TOTAL} passed, ${PY_FAILED} failed" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Update badge gist
-        uses: schneegans/dynamic-badges-action@v1.7.0
-        with:
-          auth: ${{ secrets.GIST_SECRET }}
-          gistID: ${{ vars.BADGE_GIST_ID }}
-          filename: lap-test-results.json
-          label: tests
-          message: ${{ steps.totals.outputs.message }}
-          color: ${{ steps.totals.outputs.color }}

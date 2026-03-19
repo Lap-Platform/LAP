@@ -11,7 +11,7 @@
 **Agent-Native API specs. Verified, compressed, ready to install.**
 
 <a href="https://pypi.org/project/lapsh/"><img src="https://img.shields.io/pypi/v/lapsh?style=for-the-badge&color=blue" alt="PyPI"></a>
-<a href="https://github.com/Lap-Platform/lap/actions/workflows/ci.yml"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FLap-Platform%2FBADGE_GIST_ID%2Fraw%2Flap-test-results.json&style=for-the-badge" alt="Tests"></a>
+<a href="https://github.com/Lap-Platform/lap/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/Lap-Platform/lap/ci.yml?branch=main&style=for-the-badge&label=tests" alt="Tests"></a>
 <a href="https://www.npmjs.com/package/@lap-platform/lapsh"><img src="https://img.shields.io/npm/v/@lap-platform/lapsh?style=for-the-badge&color=blue" alt="npm"></a>
 <br>
 <a href="https://github.com/Lap-Platform/lap/tree/main/skills/lap"><img src="https://img.shields.io/badge/Claude%20Code-skill-orange?style=for-the-badge" alt="Claude Code Skill"></a>
