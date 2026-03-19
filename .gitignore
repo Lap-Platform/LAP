@@ -35,9 +35,6 @@ output/
 /test*.lap
 /scratch_*.py
 
-# Temporary test playbooks
-auto-update/
-
 # Generated reports
 **/*_REPORT.html
 
