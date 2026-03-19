@@ -62,7 +62,7 @@ Human-readable output columns:
 Best when: the search result has a `[skill]` marker and you want to use the API immediately.
 
 ```bash
-lapsh skill-install stripe
+lapsh skill-install stripe --target claude
 # Installs to ~/.claude/skills/stripe/
 ```
 
@@ -72,7 +72,7 @@ The installed skill contains:
 
 Custom install location:
 ```bash
-lapsh skill-install stripe --dir ./project-skills/stripe
+lapsh skill-install stripe --target claude --dir ./project-skills/stripe
 ```
 
 ### Option B: Download the Spec
@@ -166,7 +166,7 @@ lapsh search payment --sort popularity
 #   ...
 
 # 2. Install the Stripe skill (has [skill] marker)
-lapsh skill-install stripe
+lapsh skill-install stripe --target claude
 
 # 3. The skill is now at ~/.claude/skills/stripe/
 # Claude Code auto-discovers it for Stripe API tasks
@@ -185,7 +185,7 @@ lapsh compile my-openapi.yaml -o my-api.lap --lean
 lapsh search ai --tag ai --json | jq '.results[] | select(.has_skill) | {name, endpoints, description}'
 
 # Install the one you want
-lapsh skill-install openai
+lapsh skill-install openai --target claude
 ```
 
 ---

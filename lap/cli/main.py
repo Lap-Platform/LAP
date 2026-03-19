@@ -826,13 +826,24 @@ def _register_claude_hook(config_path: Path, command: str) -> None:
     hooks = config.setdefault("hooks", {})
     session_hooks = hooks.setdefault("SessionStart", [])
 
-    # Check if LAP hook already registered
-    for hook in session_hooks:
-        if isinstance(hook, dict) and "lapsh check" in hook.get("command", ""):
+    # Check if LAP hook already registered (check both old and new format)
+    for entry in session_hooks:
+        if not isinstance(entry, dict):
+            continue
+        # New format: matcher + hooks array
+        for h in entry.get("hooks", []):
+            if isinstance(h, dict) and "lapsh check" in h.get("command", ""):
+                info("Session hook already registered.")
+                return
+        # Old format: direct command (migrate if found)
+        if "lapsh check" in entry.get("command", ""):
             info("Session hook already registered.")
             return
 
-    session_hooks.append({"command": command})
+    session_hooks.append({
+        "matcher": "",
+        "hooks": [{"type": "command", "command": command}],
+    })
 
     config_path.parent.mkdir(parents=True, exist_ok=True)
     tmp = config_path.with_suffix(".tmp")
@@ -857,12 +868,21 @@ def _register_cursor_hook(config_path: Path, command: str) -> None:
     hooks = config.setdefault("hooks", {})
     session_hooks = hooks.setdefault("sessionStart", [])
 
-    for hook in session_hooks:
-        if isinstance(hook, dict) and "lapsh check" in hook.get("command", ""):
+    for entry in session_hooks:
+        if not isinstance(entry, dict):
+            continue
+        for h in entry.get("hooks", []):
+            if isinstance(h, dict) and "lapsh check" in h.get("command", ""):
+                info("Session hook already registered.")
+                return
+        if "lapsh check" in entry.get("command", ""):
             info("Session hook already registered.")
             return
 
-    session_hooks.append({"command": command, "timeout": 10})
+    session_hooks.append({
+        "matcher": "",
+        "hooks": [{"type": "command", "command": command, "timeout": 10000}],
+    })
 
     config_path.parent.mkdir(parents=True, exist_ok=True)
     tmp = config_path.with_suffix(".tmp")
@@ -915,6 +935,10 @@ def cmd_skill_install(args):
     options = SkillOptions(target=target)
     skill = generate_skill(spec, options)
 
+    # Use raw fetched spec as reference (avoid lossy parse->serialize roundtrip)
+    if "references/api-spec.lap" in skill.file_map:
+        skill.file_map["references/api-spec.lap"] = spec_text
+
     # Determine install directory
     install_dir = _resolve_install_dir(target, skill.name, getattr(args, "dir", None))
 
@@ -945,6 +969,7 @@ def cmd_skill_install(args):
             "specHash": spec_hash,
             "installedAt": datetime.now(timezone.utc).isoformat(),
             "pinned": False,
+            "skillName": skill.name,
         }
         _write_metadata(target, meta)
     except Exception as e:
@@ -1025,40 +1050,59 @@ def cmd_check(args):
         print(json.dumps({"updates": updates}, indent=2))
         return
 
+    # Build human-readable message
+    lines = []
     if len(updates) == 1:
         u = updates[0]
         sn = _sanitize(str(u.get('name', '')))
         si = _sanitize(str(u.get('installed_version', '')))
         sl = _sanitize(str(u.get('latest_version', '')))
-        print(f"LAP skill update available:")
-        print(f"  {sn}: {si} -> {sl}")
-        print()
-        print(f"  Update:  lapsh skill-install {sn}")
-        print(f"  Changes: lapsh diff {sn}")
-        print(f"  Pin:     lapsh pin {sn}")
+        lines.append("LAP skill update available:")
+        lines.append(f"  {sn}: {si} -> {sl}")
+        lines.append("")
+        lines.append(f"  Update:  lapsh skill-install {sn} --target claude")
+        lines.append(f"  Changes: lapsh diff {sn}")
+        lines.append(f"  Pin:     lapsh pin {sn}")
     else:
-        print(f"{len(updates)} LAP skills have updates:")
+        lines.append(f"{len(updates)} LAP skills have updates:")
         names = []
         for u in updates:
             sn = _sanitize(str(u.get('name', '')))
             si = _sanitize(str(u.get('installed_version', '')))
             sl = _sanitize(str(u.get('latest_version', '')))
             names.append(sn)
-            print(f"  {sn:<20s} {si} -> {sl}")
-        print()
-        print(f"  Update all: lapsh skill-install {' '.join(names)}")
-        print(f"  See changes: lapsh diff <skill>")
-        print(f"  Pin a skill: lapsh pin <skill>")
+            lines.append(f"  {sn:<20s} {si} -> {sl}")
+        lines.append("")
+        lines.append(f"  Update all: lapsh skill-install {' '.join(names)} --target claude")
+        lines.append("  See changes: lapsh diff <skill>")
+        lines.append("  Pin a skill: lapsh pin <skill>")
+
+    msg = "\n".join(lines)
+
+    print(msg)
+
+
+def _resolve_skill_target(name: str, explicit_target=None):
+    """Find which target has the skill installed. Returns (target, metadata)."""
+    from lap.core.compilers.skill import detect_target
+    target = explicit_target or detect_target()
+    meta = _read_metadata(target)
+    if name in meta.get("skills", {}):
+        return target, meta
+    # Try other target
+    other = "cursor" if target == "claude" else "claude"
+    other_meta = _read_metadata(other)
+    if name in other_meta.get("skills", {}):
+        return other, other_meta
+    return target, meta  # return original (will fail the "not found" check)
 
 
 def cmd_pin(args):
     """Pin a skill to skip update checks."""
-    from lap.core.compilers.skill import detect_target
     name = args.name
     if not _is_valid_skill_name(name):
         error(f"Invalid skill name: {name}")
-    target = getattr(args, "target", None) or detect_target()
-    meta = _read_metadata(target)
+    target, meta = _resolve_skill_target(name, getattr(args, "target", None))
     if name not in meta.get("skills", {}):
         error(f"Skill '{name}' is not installed. Install it first: lapsh skill-install {name}")
     meta["skills"][name]["pinned"] = True
@@ -1068,12 +1112,10 @@ def cmd_pin(args):
 
 def cmd_unpin(args):
     """Unpin a skill to resume update checks."""
-    from lap.core.compilers.skill import detect_target
     name = args.name
     if not _is_valid_skill_name(name):
         error(f"Invalid skill name: {name}")
-    target = getattr(args, "target", None) or detect_target()
-    meta = _read_metadata(target)
+    target, meta = _resolve_skill_target(name, getattr(args, "target", None))
     if name not in meta.get("skills", {}):
         error(f"Skill '{name}' is not installed. Install it first: lapsh skill-install {name}")
     meta["skills"][name]["pinned"] = False
@@ -1354,18 +1396,24 @@ def _diff_skill(name: str, args) -> None:
     if not _is_valid_skill_name(name):
         error(f"Invalid skill name: {name}")
 
-    # Find installed spec
+    # Find installed spec -- use skillName from metadata if available (folder may differ from registry name)
     target = detect_target()
-    install_dir = _resolve_install_dir(target, name)
+    meta = _read_metadata(target)
+    folder_name = meta.get("skills", {}).get(name, {}).get("skillName", name)
+
+    install_dir = _resolve_install_dir(target, folder_name)
     spec_file = install_dir / "references" / "api-spec.lap"
 
     if not spec_file.exists():
         # Try other target
         other = "cursor" if target == "claude" else "claude"
-        install_dir = _resolve_install_dir(other, name)
+        other_meta = _read_metadata(other)
+        folder_name = other_meta.get("skills", {}).get(name, {}).get("skillName", name)
+        install_dir = _resolve_install_dir(other, folder_name)
         spec_file = install_dir / "references" / "api-spec.lap"
         if spec_file.exists():
-            target = other  # use the target where spec was found
+            target = other
+            meta = other_meta
 
     if not spec_file.exists():
         error(f"No installed spec found for '{name}'. Install it first: lapsh skill-install {name}")
@@ -1389,8 +1437,7 @@ def _diff_skill(name: str, args) -> None:
 
     new_spec = parse_lap(new_text)
 
-    # Get version info from metadata (use target where spec was found)
-    meta = _read_metadata(target)
+    # Get version info from metadata (already read above)
     old_version = meta.get("skills", {}).get(name, {}).get("registryVersion", "installed")
 
     diff = diff_specs(old_spec, new_spec)

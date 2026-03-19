@@ -61,7 +61,7 @@ lapsh search payment --json | jq '.results[] | select(.has_skill) | .name'
 
 **Option A -- Install a skill** (if `[skill]` marker present):
 ```bash
-lapsh skill-install <name>
+lapsh skill-install <name> --target claude
 # Installs to ~/.claude/skills/<name>/
 ```
 
@@ -174,8 +174,8 @@ lapsh skill-batch specs/ -o skills/
 
 | Command | Description |
 |---------|-------------|
-| `init` | Set up LAP in your IDE (auto-detects target) |
-| `init --target cursor` | Set up LAP for a specific IDE |
+| `init --target claude` | Set up LAP for Claude Code |
+| `init --target cursor` | Set up LAP for Cursor |
 
 ### Skill Commands
 
@@ -183,7 +183,7 @@ lapsh skill-batch specs/ -o skills/
 |---------|-------------|
 | `skill <spec>` | Generate Claude Code skill from spec |
 | `skill-batch <dir>` | Batch generate skills |
-| `skill-install <name>` | Install skill from registry |
+| `skill-install <name> --target claude` | Install skill from registry to Claude Code |
 
 ---
 

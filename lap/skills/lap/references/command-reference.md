@@ -232,7 +232,7 @@ lapsh init [OPTIONS]
 **Examples:**
 
 ```bash
-lapsh init
+lapsh init --target claude
 lapsh init --target cursor
 ```
 
@@ -253,8 +253,8 @@ lapsh skill-install <name> [OPTIONS]
 **Examples:**
 
 ```bash
-lapsh skill-install stripe
-lapsh skill-install stripe --dir ./my-skills/stripe
+lapsh skill-install stripe --target claude
+lapsh skill-install stripe --target claude --dir ./my-skills/stripe
 ```
 
 ---

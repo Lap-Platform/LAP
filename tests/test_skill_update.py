@@ -636,6 +636,17 @@ def test_diff_two_files_missing_old_errors(tmp_path):
 # ── C21-C23: Hook registration ──────────────────────────────────────
 
 
+def _find_lap_hook(entries):
+    """Helper: find the LAP hook command in new-format hook entries."""
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        for h in entry.get("hooks", []):
+            if isinstance(h, dict) and "lapsh check" in h.get("command", ""):
+                return h
+    return None
+
+
 def test_register_claude_hook(tmp_path):
     """C21: init registers SessionStart hook in .claude/settings.json."""
     config_path = tmp_path / "settings.json"
@@ -644,9 +655,13 @@ def test_register_claude_hook(tmp_path):
     config = json.loads(config_path.read_text(encoding="utf-8"))
     assert "hooks" in config
     assert "SessionStart" in config["hooks"]
-    hooks = config["hooks"]["SessionStart"]
-    assert len(hooks) == 1
-    assert "lapsh check" in hooks[0]["command"]
+    entries = config["hooks"]["SessionStart"]
+    assert len(entries) == 1
+    assert entries[0]["matcher"] == ""
+    hook = _find_lap_hook(entries)
+    assert hook is not None, "LAP hook not found"
+    assert hook["type"] == "command"
+    assert "lapsh check" in hook["command"]
 
 
 def test_register_claude_hook_idempotent(tmp_path):
@@ -656,9 +671,8 @@ def test_register_claude_hook_idempotent(tmp_path):
     _register_claude_hook(config_path, "npx @lap-platform/lapsh check --silent-if-clean")
 
     config = json.loads(config_path.read_text(encoding="utf-8"))
-    hooks = config["hooks"]["SessionStart"]
-    lap_hooks = [h for h in hooks if "lapsh check" in h.get("command", "")]
-    assert len(lap_hooks) == 1, "Hook should not be duplicated"
+    entries = config["hooks"]["SessionStart"]
+    assert len(entries) == 1, "Hook should not be duplicated"
 
 
 def test_register_claude_hook_preserves_existing(tmp_path):
@@ -666,8 +680,12 @@ def test_register_claude_hook_preserves_existing(tmp_path):
     config_path = tmp_path / "settings.json"
     existing = {
         "hooks": {
-            "SessionStart": [{"command": "echo hello"}],
-            "PreToolUse": [{"command": "lint-check"}],
+            "SessionStart": [
+                {"matcher": "Bash", "hooks": [{"type": "command", "command": "echo hello"}]},
+            ],
+            "PreToolUse": [
+                {"matcher": "Edit|Write", "hooks": [{"type": "command", "command": "lint-check"}]},
+            ],
         },
         "customSetting": True,
     }
@@ -677,12 +695,15 @@ def test_register_claude_hook_preserves_existing(tmp_path):
 
     config = json.loads(config_path.read_text(encoding="utf-8"))
     # Original SessionStart hook preserved
-    assert config["hooks"]["SessionStart"][0]["command"] == "echo hello"
+    assert config["hooks"]["SessionStart"][0]["matcher"] == "Bash"
+    assert config["hooks"]["SessionStart"][0]["hooks"][0]["command"] == "echo hello"
     # LAP hook appended
     assert len(config["hooks"]["SessionStart"]) == 2
-    assert "lapsh check" in config["hooks"]["SessionStart"][1]["command"]
+    lap = _find_lap_hook(config["hooks"]["SessionStart"])
+    assert lap is not None
     # Other hook arrays untouched
-    assert config["hooks"]["PreToolUse"] == [{"command": "lint-check"}]
+    assert len(config["hooks"]["PreToolUse"]) == 1
+    assert config["hooks"]["PreToolUse"][0]["hooks"][0]["command"] == "lint-check"
     # Non-hook settings untouched
     assert config["customSetting"] is True
 
@@ -696,10 +717,13 @@ def test_register_cursor_hook(tmp_path):
     assert config["version"] == 1
     assert "hooks" in config
     assert "sessionStart" in config["hooks"]
-    hooks = config["hooks"]["sessionStart"]
-    assert len(hooks) == 1
-    assert "lapsh check" in hooks[0]["command"]
-    assert hooks[0]["timeout"] == 10
+    entries = config["hooks"]["sessionStart"]
+    assert len(entries) == 1
+    assert entries[0]["matcher"] == ""
+    hook = _find_lap_hook(entries)
+    assert hook is not None
+    assert "lapsh check" in hook["command"]
+    assert hook["timeout"] == 10000
 
 
 def test_register_cursor_hook_idempotent(tmp_path):
@@ -709,9 +733,8 @@ def test_register_cursor_hook_idempotent(tmp_path):
     _register_cursor_hook(config_path, "npx @lap-platform/lapsh check --silent-if-clean")
 
     config = json.loads(config_path.read_text(encoding="utf-8"))
-    hooks = config["hooks"]["sessionStart"]
-    lap_hooks = [h for h in hooks if "lapsh check" in h.get("command", "")]
-    assert len(lap_hooks) == 1, "Hook should not be duplicated"
+    entries = config["hooks"]["sessionStart"]
+    assert len(entries) == 1, "Hook should not be duplicated"
 
 
 def test_register_cursor_hook_preserves_existing(tmp_path):
@@ -720,7 +743,9 @@ def test_register_cursor_hook_preserves_existing(tmp_path):
     existing = {
         "version": 1,
         "hooks": {
-            "sessionStart": [{"command": "echo cursor-hello", "timeout": 5}],
+            "sessionStart": [
+                {"matcher": "", "hooks": [{"type": "command", "command": "echo cursor-hello", "timeout": 5000}]},
+            ],
         },
         "otherKey": 42,
     }
@@ -730,11 +755,11 @@ def test_register_cursor_hook_preserves_existing(tmp_path):
 
     config = json.loads(config_path.read_text(encoding="utf-8"))
     # Original hook preserved
-    assert config["hooks"]["sessionStart"][0]["command"] == "echo cursor-hello"
-    assert config["hooks"]["sessionStart"][0]["timeout"] == 5
+    assert config["hooks"]["sessionStart"][0]["hooks"][0]["command"] == "echo cursor-hello"
     # LAP hook appended
     assert len(config["hooks"]["sessionStart"]) == 2
-    assert "lapsh check" in config["hooks"]["sessionStart"][1]["command"]
+    lap = _find_lap_hook(config["hooks"]["sessionStart"])
+    assert lap is not None
     # Other keys untouched
     assert config["otherKey"] == 42
 
@@ -748,7 +773,7 @@ def test_register_claude_hook_corrupt_config(tmp_path):
 
     config = json.loads(config_path.read_text(encoding="utf-8"))
     assert len(config["hooks"]["SessionStart"]) == 1
-    assert "lapsh check" in config["hooks"]["SessionStart"][0]["command"]
+    assert _find_lap_hook(config["hooks"]["SessionStart"]) is not None
 
 
 def test_register_claude_hook_creates_missing_file(tmp_path):
@@ -761,5 +786,6 @@ def test_register_claude_hook_creates_missing_file(tmp_path):
     assert config_path.exists()
     config = json.loads(config_path.read_text(encoding="utf-8"))
     assert len(config["hooks"]["SessionStart"]) == 1
+    assert _find_lap_hook(config["hooks"]["SessionStart"]) is not None
 
 

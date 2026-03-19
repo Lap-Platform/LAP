@@ -222,7 +222,7 @@ lapsh publish api.yaml --provider mycompany.com --skill --skill-ai
 lapsh search mycompany
 
 # 6. Test the full loop -- install your own skill
-lapsh skill-install mycompany
+lapsh skill-install mycompany --target claude
 ```
 
 **Scenario**: Batch publish multiple APIs

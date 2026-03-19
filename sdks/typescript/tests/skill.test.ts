@@ -847,20 +847,32 @@ describe('Hook registration', () => {
   const claudeConfig = path.join(os.homedir(), '.claude', 'settings.json');
   const cursorConfig = path.join(os.homedir(), '.cursor', 'hooks.json');
 
-  it('T7a: registerClaudeHook adds SessionStart hook', () => {
-    // Backup
+  function findLapHook(entries: any[]): any {
+    for (const entry of entries) {
+      if (!entry || typeof entry !== 'object') continue;
+      for (const h of (entry.hooks || [])) {
+        if (h?.command?.includes('lapsh check')) return h;
+      }
+    }
+    return null;
+  }
+
+  it('T7a: registerClaudeHook adds SessionStart hook in new format', () => {
     let backup: string | null = null;
     if (fs.existsSync(claudeConfig)) backup = fs.readFileSync(claudeConfig, 'utf-8');
 
     try {
-      // Start fresh
       if (fs.existsSync(claudeConfig)) fs.unlinkSync(claudeConfig);
       registerClaudeHook('npx @lap-platform/lapsh check --silent-if-clean');
 
       const config = JSON.parse(fs.readFileSync(claudeConfig, 'utf-8'));
-      assert.ok(config.hooks?.SessionStart?.length >= 1, 'SessionStart hook should exist');
-      const hook = config.hooks.SessionStart.find((h: any) => h.command?.includes('lapsh check'));
-      assert.ok(hook, 'LAP hook should be registered');
+      assert.ok(config.hooks?.SessionStart?.length >= 1, 'SessionStart should have entries');
+      const entry = config.hooks.SessionStart[0];
+      assert.strictEqual(entry.matcher, '', 'Should have empty matcher');
+      assert.ok(Array.isArray(entry.hooks), 'Should have hooks array');
+      const hook = findLapHook(config.hooks.SessionStart);
+      assert.ok(hook, 'LAP hook should be found');
+      assert.strictEqual(hook.type, 'command', 'Hook type should be command');
     } finally {
       if (backup !== null) fs.writeFileSync(claudeConfig, backup, 'utf-8');
       else if (fs.existsSync(claudeConfig)) fs.unlinkSync(claudeConfig);
@@ -877,8 +889,7 @@ describe('Hook registration', () => {
       registerClaudeHook('npx @lap-platform/lapsh check --silent-if-clean');
 
       const config = JSON.parse(fs.readFileSync(claudeConfig, 'utf-8'));
-      const hooks = config.hooks.SessionStart.filter((h: any) => h.command?.includes('lapsh check'));
-      assert.strictEqual(hooks.length, 1, 'Should not duplicate hook');
+      assert.strictEqual(config.hooks.SessionStart.length, 1, 'Should not duplicate');
     } finally {
       if (backup !== null) fs.writeFileSync(claudeConfig, backup, 'utf-8');
       else if (fs.existsSync(claudeConfig)) fs.unlinkSync(claudeConfig);
@@ -890,7 +901,9 @@ describe('Hook registration', () => {
     if (fs.existsSync(claudeConfig)) backup = fs.readFileSync(claudeConfig, 'utf-8');
 
     try {
-      const existing = { hooks: { SessionStart: [{ command: 'echo hello' }] } };
+      const existing = { hooks: { SessionStart: [
+        { matcher: 'Bash', hooks: [{ type: 'command', command: 'echo hello' }] }
+      ] } };
       const dir = path.dirname(claudeConfig);
       if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
       fs.writeFileSync(claudeConfig, JSON.stringify(existing), 'utf-8');
@@ -898,15 +911,16 @@ describe('Hook registration', () => {
       registerClaudeHook('npx @lap-platform/lapsh check --silent-if-clean');
 
       const config = JSON.parse(fs.readFileSync(claudeConfig, 'utf-8'));
-      assert.strictEqual(config.hooks.SessionStart.length, 2, 'Should have both hooks');
-      assert.strictEqual(config.hooks.SessionStart[0].command, 'echo hello', 'Existing hook preserved');
+      assert.strictEqual(config.hooks.SessionStart.length, 2, 'Should have both entries');
+      assert.strictEqual(config.hooks.SessionStart[0].hooks[0].command, 'echo hello', 'Existing preserved');
+      assert.ok(findLapHook(config.hooks.SessionStart), 'LAP hook appended');
     } finally {
       if (backup !== null) fs.writeFileSync(claudeConfig, backup, 'utf-8');
       else if (fs.existsSync(claudeConfig)) fs.unlinkSync(claudeConfig);
     }
   });
 
-  it('T8a: registerCursorHook adds sessionStart hook', () => {
+  it('T8a: registerCursorHook adds sessionStart hook in new format', () => {
     let backup: string | null = null;
     if (fs.existsSync(cursorConfig)) backup = fs.readFileSync(cursorConfig, 'utf-8');
 
@@ -916,10 +930,10 @@ describe('Hook registration', () => {
 
       const config = JSON.parse(fs.readFileSync(cursorConfig, 'utf-8'));
       assert.strictEqual(config.version, 1, 'Should set version');
-      assert.ok(config.hooks?.sessionStart?.length >= 1, 'sessionStart hook should exist');
-      const hook = config.hooks.sessionStart.find((h: any) => h.command?.includes('lapsh check'));
-      assert.ok(hook, 'LAP hook should be registered');
-      assert.strictEqual(hook.timeout, 10, 'Cursor hook should have timeout');
+      assert.ok(config.hooks?.sessionStart?.length >= 1, 'sessionStart should have entries');
+      const hook = findLapHook(config.hooks.sessionStart);
+      assert.ok(hook, 'LAP hook should be found');
+      assert.strictEqual(hook.timeout, 10000, 'Cursor hook should have timeout in ms');
     } finally {
       if (backup !== null) fs.writeFileSync(cursorConfig, backup, 'utf-8');
       else if (fs.existsSync(cursorConfig)) fs.unlinkSync(cursorConfig);
@@ -936,8 +950,7 @@ describe('Hook registration', () => {
       registerCursorHook('npx @lap-platform/lapsh check --silent-if-clean');
 
       const config = JSON.parse(fs.readFileSync(cursorConfig, 'utf-8'));
-      const hooks = config.hooks.sessionStart.filter((h: any) => h.command?.includes('lapsh check'));
-      assert.strictEqual(hooks.length, 1, 'Should not duplicate hook');
+      assert.strictEqual(config.hooks.sessionStart.length, 1, 'Should not duplicate');
     } finally {
       if (backup !== null) fs.writeFileSync(cursorConfig, backup, 'utf-8');
       else if (fs.existsSync(cursorConfig)) fs.unlinkSync(cursorConfig);
