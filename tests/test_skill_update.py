@@ -711,7 +711,7 @@ def test_register_claude_hook_preserves_existing(tmp_path):
 def test_register_cursor_hook(tmp_path):
     """C21 (Cursor): init registers sessionStart hook in .cursor/hooks.json."""
     config_path = tmp_path / "hooks.json"
-    _register_cursor_hook(config_path, "npx @lap-platform/lapsh check --silent-if-clean")
+    _register_cursor_hook(config_path, "npx @lap-platform/lapsh check --silent-if-clean --hook")
 
     config = json.loads(config_path.read_text(encoding="utf-8"))
     assert config["version"] == 1
@@ -719,18 +719,17 @@ def test_register_cursor_hook(tmp_path):
     assert "sessionStart" in config["hooks"]
     entries = config["hooks"]["sessionStart"]
     assert len(entries) == 1
-    assert entries[0]["matcher"] == ""
-    hook = _find_lap_hook(entries)
-    assert hook is not None
-    assert "lapsh check" in hook["command"]
-    assert hook["timeout"] == 10000
+    # Cursor uses flat format: command + type + timeout at top level
+    assert entries[0]["type"] == "command"
+    assert "lapsh check" in entries[0]["command"]
+    assert entries[0]["timeout"] == 10
 
 
 def test_register_cursor_hook_idempotent(tmp_path):
     """C22 (Cursor): Running init twice does not duplicate the hook."""
     config_path = tmp_path / "hooks.json"
-    _register_cursor_hook(config_path, "npx @lap-platform/lapsh check --silent-if-clean")
-    _register_cursor_hook(config_path, "npx @lap-platform/lapsh check --silent-if-clean")
+    _register_cursor_hook(config_path, "npx @lap-platform/lapsh check --silent-if-clean --hook")
+    _register_cursor_hook(config_path, "npx @lap-platform/lapsh check --silent-if-clean --hook")
 
     config = json.loads(config_path.read_text(encoding="utf-8"))
     entries = config["hooks"]["sessionStart"]
@@ -744,22 +743,21 @@ def test_register_cursor_hook_preserves_existing(tmp_path):
         "version": 1,
         "hooks": {
             "sessionStart": [
-                {"matcher": "", "hooks": [{"type": "command", "command": "echo cursor-hello", "timeout": 5000}]},
+                {"command": "echo cursor-hello", "type": "command", "timeout": 5},
             ],
         },
         "otherKey": 42,
     }
     config_path.write_text(json.dumps(existing), encoding="utf-8")
 
-    _register_cursor_hook(config_path, "npx @lap-platform/lapsh check --silent-if-clean")
+    _register_cursor_hook(config_path, "npx @lap-platform/lapsh check --silent-if-clean --hook")
 
     config = json.loads(config_path.read_text(encoding="utf-8"))
     # Original hook preserved
-    assert config["hooks"]["sessionStart"][0]["hooks"][0]["command"] == "echo cursor-hello"
+    assert config["hooks"]["sessionStart"][0]["command"] == "echo cursor-hello"
     # LAP hook appended
     assert len(config["hooks"]["sessionStart"]) == 2
-    lap = _find_lap_hook(config["hooks"]["sessionStart"])
-    assert lap is not None
+    assert "lapsh check" in config["hooks"]["sessionStart"][1]["command"]
     # Other keys untouched
     assert config["otherKey"] == 42
 

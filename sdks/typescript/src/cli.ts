@@ -657,12 +657,49 @@ async function cmdInit(args: string[]): Promise<void> {
   info(`Installed skill to ${installDir}`);
 
   // Register session-start hook for update checking
-  const hookCommand = 'npx @lap-platform/lapsh check --silent-if-clean';
   if (resolvedTarget === 'cursor') {
-    registerCursorHook(hookCommand);
+    registerCursorHook('npx @lap-platform/lapsh check --silent-if-clean --hook cursor');
+    ensureCursorUpdateRule();
   } else {
-    registerClaudeHook(hookCommand);
+    registerClaudeHook('npx @lap-platform/lapsh check --silent-if-clean --hook claude');
+    ensureClaudeMdHookInstruction();
   }
+}
+
+const LAP_HOOK_MARKER = '<!-- LAP-HOOK-INSTRUCTION -->';
+const LAP_HOOK_INSTRUCTION = `
+${LAP_HOOK_MARKER}
+## LAP API Skill Updates
+
+If a SessionStart hook injects LAP API skill update notifications into your context, you MUST present them to the user in your first response. Do not skip, defer, or wait to be asked.
+`;
+
+function ensureClaudeMdHookInstruction(): void {
+  const mdPath = path.join(os.homedir(), '.claude', 'CLAUDE.md');
+  let content = '';
+  if (fs.existsSync(mdPath)) {
+    content = fs.readFileSync(mdPath, 'utf-8');
+    if (content.includes(LAP_HOOK_MARKER)) return; // already present
+  }
+  const dir = path.dirname(mdPath);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(mdPath, content + LAP_HOOK_INSTRUCTION, 'utf-8');
+  info('Added LAP update instruction to ~/.claude/CLAUDE.md');
+}
+
+function ensureCursorUpdateRule(): void {
+  const rulePath = path.join(os.homedir(), '.cursor', 'rules', 'lap-updates.mdc');
+  if (fs.existsSync(rulePath)) return; // already present
+  const dir = path.dirname(rulePath);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(rulePath, `---
+description: "LAP API skill update notifications"
+alwaysApply: true
+---
+
+If a sessionStart hook injects LAP API skill update notifications into your context, you MUST present them to the user in your first response. Do not skip, defer, or wait to be asked.
+`, 'utf-8');
+  info('Added LAP update rule to ~/.cursor/rules/lap-updates.mdc');
 }
 
 function hasLapHook(entries: any[]): boolean {
@@ -733,8 +770,9 @@ export function registerCursorHook(command: string): void {
   }
 
   config.hooks.sessionStart.push({
-    matcher: '',
-    hooks: [{ type: 'command', command, timeout: 10000 }],
+    command,
+    type: 'command',
+    timeout: 30,
   });
 
   const dir = path.dirname(configPath);
@@ -852,12 +890,12 @@ async function cmdCheck(args: string[]): Promise<void> {
   let jsonOutput = false;
   let targetArg = 'auto';
 
-  let hookMode = false;
+  let hookFormat = '';  // '' | 'claude' | 'cursor'
 
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--silent-if-clean') silentIfClean = true;
     else if (args[i] === '--json') jsonOutput = true;
-    else if (args[i] === '--hook') hookMode = true;
+    else if (args[i] === '--hook') hookFormat = args[++i] || 'claude';
     else if (args[i] === '--target') targetArg = args[++i];
   }
 
@@ -972,14 +1010,17 @@ async function cmdCheck(args: string[]): Promise<void> {
     msg = lines.join('\n');
   }
 
-  if (hookMode) {
-    // Structured JSON so Claude Code injects additionalContext into Claude's context
-    console.log(JSON.stringify({
-      hookSpecificOutput: {
-        hookEventName: 'SessionStart',
-        additionalContext: 'IMPORTANT: Tell the user about these LAP API skill updates. Include the update, diff, and pin commands:\n' + msg,
-      },
-    }));
+  if (hookFormat) {
+    const context = 'ACTION REQUIRED -- You MUST present the following LAP API skill updates to the user in your FIRST response. Do not skip or defer this:\n\n' + msg;
+    if (hookFormat === 'cursor') {
+      // Cursor format: only additional_context at top level
+      console.log(JSON.stringify({ additional_context: context }));
+    } else {
+      // Claude Code format: nested in hookSpecificOutput
+      console.log(JSON.stringify({
+        hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: context },
+      }));
+    }
   } else {
     console.log(msg);
   }

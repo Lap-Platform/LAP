@@ -920,20 +920,22 @@ describe('Hook registration', () => {
     }
   });
 
-  it('T8a: registerCursorHook adds sessionStart hook in new format', () => {
+  it('T8a: registerCursorHook adds sessionStart hook in Cursor format', () => {
     let backup: string | null = null;
     if (fs.existsSync(cursorConfig)) backup = fs.readFileSync(cursorConfig, 'utf-8');
 
     try {
       if (fs.existsSync(cursorConfig)) fs.unlinkSync(cursorConfig);
-      registerCursorHook('npx @lap-platform/lapsh check --silent-if-clean');
+      registerCursorHook('npx @lap-platform/lapsh check --silent-if-clean --hook');
 
       const config = JSON.parse(fs.readFileSync(cursorConfig, 'utf-8'));
       assert.strictEqual(config.version, 1, 'Should set version');
       assert.ok(config.hooks?.sessionStart?.length >= 1, 'sessionStart should have entries');
-      const hook = findLapHook(config.hooks.sessionStart);
-      assert.ok(hook, 'LAP hook should be found');
-      assert.strictEqual(hook.timeout, 10000, 'Cursor hook should have timeout in ms');
+      // Cursor uses flat format: command + type + timeout at top level
+      const entry = config.hooks.sessionStart[0];
+      assert.strictEqual(entry.type, 'command', 'Should be command type');
+      assert.ok(entry.command.includes('lapsh check'), 'Should have lapsh check command');
+      assert.strictEqual(entry.timeout, 10, 'Cursor hook should have timeout in seconds');
     } finally {
       if (backup !== null) fs.writeFileSync(cursorConfig, backup, 'utf-8');
       else if (fs.existsSync(cursorConfig)) fs.unlinkSync(cursorConfig);

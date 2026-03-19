@@ -801,14 +801,12 @@ def _validate_registry_url(url: str) -> str:
 
 def _register_session_hook(target: str) -> None:
     """Register LAP check hook for session start (idempotent)."""
-    hook_command = "npx @lap-platform/lapsh check --silent-if-clean"
-
     if target == "cursor":
         config_path = Path.home() / ".cursor" / "hooks.json"
-        _register_cursor_hook(config_path, hook_command)
+        _register_cursor_hook(config_path, "npx @lap-platform/lapsh check --silent-if-clean --hook cursor")
     else:
         config_path = Path.home() / ".claude" / "settings.json"
-        _register_claude_hook(config_path, hook_command)
+        _register_claude_hook(config_path, "npx @lap-platform/lapsh check --silent-if-clean --hook claude")
 
 
 def _register_claude_hook(config_path: Path, command: str) -> None:
@@ -880,8 +878,9 @@ def _register_cursor_hook(config_path: Path, command: str) -> None:
             return
 
     session_hooks.append({
-        "matcher": "",
-        "hooks": [{"type": "command", "command": command, "timeout": 10000}],
+        "command": command,
+        "type": "command",
+        "timeout": 30,
     })
 
     config_path.parent.mkdir(parents=True, exist_ok=True)
@@ -891,11 +890,52 @@ def _register_cursor_hook(config_path: Path, command: str) -> None:
     info("Registered session-start hook for update checking.")
 
 
+_LAP_HOOK_MARKER = "<!-- LAP-HOOK-INSTRUCTION -->"
+_LAP_HOOK_INSTRUCTION = f"""
+{_LAP_HOOK_MARKER}
+## LAP API Skill Updates
+
+If a SessionStart hook injects LAP API skill update notifications into your context, you MUST present them to the user in your first response. Do not skip, defer, or wait to be asked.
+"""
+
+
+def _ensure_claude_md_hook_instruction() -> None:
+    """Add LAP hook instruction to ~/.claude/CLAUDE.md (idempotent)."""
+    md_path = Path.home() / ".claude" / "CLAUDE.md"
+    content = ""
+    if md_path.exists():
+        content = md_path.read_text(encoding="utf-8")
+        if _LAP_HOOK_MARKER in content:
+            return
+    md_path.parent.mkdir(parents=True, exist_ok=True)
+    md_path.write_text(content + _LAP_HOOK_INSTRUCTION, encoding="utf-8")
+    info("Added LAP update instruction to ~/.claude/CLAUDE.md")
+
+
+def _ensure_cursor_update_rule() -> None:
+    """Add LAP update always-apply rule to ~/.cursor/rules/ (idempotent)."""
+    rule_path = Path.home() / ".cursor" / "rules" / "lap-updates.mdc"
+    if rule_path.exists():
+        return
+    rule_path.parent.mkdir(parents=True, exist_ok=True)
+    rule_path.write_text(
+        '---\ndescription: "LAP API skill update notifications"\nalwaysApply: true\n---\n\n'
+        "If a sessionStart hook injects LAP API skill update notifications into your context, "
+        "you MUST present them to the user in your first response. Do not skip, defer, or wait to be asked.\n",
+        encoding="utf-8",
+    )
+    info("Added LAP update rule to ~/.cursor/rules/lap-updates.mdc")
+
+
 def cmd_init(args):
     """Set up LAP in your IDE (installs skill and config)."""
     target = getattr(args, "target", None) or "claude"
     _install_builtin_skill("lap", target, None)
     _register_session_hook(target)
+    if target == "cursor":
+        _ensure_cursor_update_rule()
+    else:
+        _ensure_claude_md_hook_instruction()
 
 
 def cmd_skill_install(args):
