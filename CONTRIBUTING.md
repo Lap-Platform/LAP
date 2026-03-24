@@ -37,6 +37,10 @@ Open a GitHub issue with:
 - What happened instead
 - Minimal reproduction steps
 
+## Security Issues
+
+If you discover a security vulnerability, **do not open a public issue**. See [SECURITY.md](SECURITY.md) for how to report it privately.
+
 ## License
 
 By contributing, you agree that your contributions will be licensed under the Apache License 2.0.

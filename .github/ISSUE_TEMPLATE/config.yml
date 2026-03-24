@@ -9,3 +9,6 @@ contact_links:
   - name: npm Package
     url: https://www.npmjs.com/package/@lap-platform/lapsh
     about: Check the latest published version on npm
+  - name: Security Vulnerability
+    url: https://github.com/Lap-Platform/lap/security/advisories/new
+    about: Report a security vulnerability privately (do not open a public issue)
