@@ -18,6 +18,7 @@ from lap.cli.main import (
     _metadata_path,
     _read_metadata,
     _register_claude_hook,
+    _register_codex_hook,
     _register_cursor_hook,
     _remove_hook_entries,
     _validate_registry_url,
@@ -44,6 +45,11 @@ def test_metadata_path_claude():
 def test_metadata_path_cursor():
     p = _metadata_path("cursor")
     assert p == Path.home() / ".cursor" / "lap-metadata.json"
+
+
+def test_metadata_path_codex():
+    p = _metadata_path("codex")
+    assert p == Path.home() / ".codex" / "lap-metadata.json"
 
 
 # ── C1: _read_metadata() valid file ──────────────────────────────────
@@ -788,6 +794,90 @@ def test_register_claude_hook_creates_missing_file(tmp_path):
     config = json.loads(config_path.read_text(encoding="utf-8"))
     assert len(config["hooks"]["SessionStart"]) == 1
     assert _find_lap_hook(config["hooks"]["SessionStart"]) is not None
+
+
+# ── Codex hook registration tests ─────────────────────────────────
+
+
+def test_register_codex_hook(tmp_path):
+    """Codex hook registers both SessionStart and TaskStarted."""
+    config_path = tmp_path / "hooks.json"
+    _register_codex_hook(config_path, "npx @lap-platform/lapsh check --silent-if-clean --hook codex")
+
+    config = json.loads(config_path.read_text(encoding="utf-8"))
+    assert "hooks" in config
+    assert "SessionStart" in config["hooks"]
+    assert "TaskStarted" in config["hooks"]
+
+    ss = config["hooks"]["SessionStart"]
+    assert len(ss) == 1
+    assert ss[0]["matcher"] == ""
+    hook = _find_lap_hook(ss)
+    assert hook is not None, "LAP hook not found in SessionStart"
+    assert hook["type"] == "command"
+    assert "lapsh check" in hook["command"]
+
+    ts = config["hooks"]["TaskStarted"]
+    assert len(ts) == 1
+    assert _find_lap_hook(ts) is not None, "LAP hook not found in TaskStarted"
+
+
+def test_register_codex_hook_idempotent(tmp_path):
+    """Running init twice does not duplicate codex hooks."""
+    config_path = tmp_path / "hooks.json"
+    _register_codex_hook(config_path, "npx @lap-platform/lapsh check --silent-if-clean --hook codex")
+    _register_codex_hook(config_path, "npx @lap-platform/lapsh check --silent-if-clean --hook codex")
+
+    config = json.loads(config_path.read_text(encoding="utf-8"))
+    assert len(config["hooks"]["SessionStart"]) == 1, "SessionStart should not duplicate"
+    assert len(config["hooks"]["TaskStarted"]) == 1, "TaskStarted should not duplicate"
+
+
+def test_register_codex_hook_preserves_existing(tmp_path):
+    """Existing hooks in codex config are not overwritten."""
+    config_path = tmp_path / "hooks.json"
+    existing = {
+        "hooks": {
+            "SessionStart": [
+                {"matcher": "Bash", "hooks": [{"type": "command", "command": "echo codex-hello"}]},
+            ],
+        },
+    }
+    config_path.write_text(json.dumps(existing), encoding="utf-8")
+
+    _register_codex_hook(config_path, "npx @lap-platform/lapsh check --silent-if-clean --hook codex")
+
+    config = json.loads(config_path.read_text(encoding="utf-8"))
+    # Original hook preserved, LAP hook appended
+    assert len(config["hooks"]["SessionStart"]) == 2
+    assert config["hooks"]["SessionStart"][0]["hooks"][0]["command"] == "echo codex-hello"
+    assert _find_lap_hook(config["hooks"]["SessionStart"]) is not None
+    # TaskStarted created fresh
+    assert len(config["hooks"]["TaskStarted"]) == 1
+    assert _find_lap_hook(config["hooks"]["TaskStarted"]) is not None
+
+
+def test_check_codex_target(tmp_path, monkeypatch):
+    """check command correctly reads codex metadata."""
+    meta_file = tmp_path / "lap-metadata.json"
+    data = {"skills": {
+        "stripe": {"registryVersion": "1.0.0", "pinned": False, "specHash": "sha256:abc"},
+        "twilio": {"registryVersion": "2.0.0", "pinned": True, "specHash": "sha256:def"},
+    }}
+    meta_file.write_text(json.dumps(data), encoding="utf-8")
+
+    monkeypatch.setattr("lap.cli.main._metadata_path", lambda t: meta_file if t == "codex" else tmp_path / "nope.json")
+
+    meta = _read_metadata("codex")
+    # Reproduce check logic: gather non-pinned skills
+    skills_to_check = [
+        {"name": n, "version": e["registryVersion"]}
+        for n, e in meta.get("skills", {}).items()
+        if not e.get("pinned")
+    ]
+    assert len(skills_to_check) == 1
+    assert skills_to_check[0]["name"] == "stripe"
+    assert skills_to_check[0]["version"] == "1.0.0"
 
 
 # ── skill-uninstall tests ──────────────────────────────────────────
