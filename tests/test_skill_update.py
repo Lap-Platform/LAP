@@ -19,6 +19,7 @@ from lap.cli.main import (
     _read_metadata,
     _register_claude_hook,
     _register_cursor_hook,
+    _remove_hook_entries,
     _validate_registry_url,
     _write_metadata,
     cmd_check,
@@ -26,6 +27,8 @@ from lap.cli.main import (
     cmd_init,
     cmd_pin,
     cmd_skill_install,
+    cmd_skill_uninstall,
+    cmd_uninstall,
     cmd_unpin,
 )
 
@@ -785,5 +788,159 @@ def test_register_claude_hook_creates_missing_file(tmp_path):
     config = json.loads(config_path.read_text(encoding="utf-8"))
     assert len(config["hooks"]["SessionStart"]) == 1
     assert _find_lap_hook(config["hooks"]["SessionStart"]) is not None
+
+
+# ── skill-uninstall tests ──────────────────────────────────────────
+
+
+def test_skill_uninstall_removes_dir_and_metadata(tmp_path, monkeypatch):
+    """skill-uninstall removes skill directory and metadata entry."""
+    meta_file = tmp_path / "lap-metadata.json"
+    data = {"skills": {"stripe": {"registryVersion": "1.0.0", "pinned": False, "skillName": "stripe"}}}
+    meta_file.write_text(json.dumps(data), encoding="utf-8")
+
+    skill_dir = tmp_path / "skills" / "stripe"
+    skill_dir.mkdir(parents=True)
+    (skill_dir / "SKILL.md").write_text("# stripe", encoding="utf-8")
+
+    monkeypatch.setattr("lap.cli.main._metadata_path", lambda t: meta_file)
+    monkeypatch.setattr("lap.cli.main._resolve_install_dir", lambda t, n, d=None: tmp_path / "skills" / n)
+
+    args = SimpleNamespace(names=["stripe"], target="claude")
+    cmd_skill_uninstall(args)
+
+    assert not skill_dir.exists()
+    meta = json.loads(meta_file.read_text(encoding="utf-8"))
+    assert "stripe" not in meta["skills"]
+
+
+def test_skill_uninstall_unknown_skill_exits(tmp_path, monkeypatch):
+    """skill-uninstall exits 1 for unknown skill."""
+    meta_file = tmp_path / "lap-metadata.json"
+    data = {"skills": {}}
+    meta_file.write_text(json.dumps(data), encoding="utf-8")
+
+    monkeypatch.setattr("lap.cli.main._metadata_path", lambda t: meta_file)
+
+    args = SimpleNamespace(names=["nonexistent"], target="claude")
+    with pytest.raises(SystemExit) as exc_info:
+        cmd_skill_uninstall(args)
+    assert exc_info.value.code == 1
+
+
+def test_skill_uninstall_missing_dir_cleans_metadata(tmp_path, monkeypatch):
+    """If skill directory is already gone, metadata is still cleaned."""
+    meta_file = tmp_path / "lap-metadata.json"
+    data = {"skills": {"stripe": {"registryVersion": "1.0.0", "pinned": False, "skillName": "stripe"}}}
+    meta_file.write_text(json.dumps(data), encoding="utf-8")
+
+    # No skill directory exists
+    monkeypatch.setattr("lap.cli.main._metadata_path", lambda t: meta_file)
+    monkeypatch.setattr("lap.cli.main._resolve_install_dir", lambda t, n, d=None: tmp_path / "skills" / n)
+
+    args = SimpleNamespace(names=["stripe"], target="claude")
+    cmd_skill_uninstall(args)
+
+    meta = json.loads(meta_file.read_text(encoding="utf-8"))
+    assert "stripe" not in meta["skills"]
+
+
+# ── uninstall tests ────────────────────────────────────────────────
+
+
+def test_uninstall_removes_all_skills(tmp_path, monkeypatch):
+    """uninstall removes all skill directories and metadata file."""
+    meta_file = tmp_path / "lap-metadata.json"
+    data = {"skills": {
+        "stripe": {"registryVersion": "1.0.0", "skillName": "stripe"},
+        "twilio": {"registryVersion": "2.0.0", "skillName": "twilio"},
+    }}
+    meta_file.write_text(json.dumps(data), encoding="utf-8")
+
+    for name in ("stripe", "twilio", "lap"):
+        d = tmp_path / "skills" / name
+        d.mkdir(parents=True)
+        (d / "SKILL.md").write_text(f"# {name}", encoding="utf-8")
+
+    monkeypatch.setattr("lap.cli.main._metadata_path", lambda t: meta_file)
+    monkeypatch.setattr("lap.cli.main._resolve_install_dir", lambda t, n, d=None: tmp_path / "skills" / n)
+    monkeypatch.setattr("lap.cli.main._remove_session_hook", lambda t: None)
+    monkeypatch.setattr("lap.cli.main._remove_md_hook_instruction", lambda *a: None)
+
+    args = SimpleNamespace(target="claude")
+    cmd_uninstall(args)
+
+    assert not (tmp_path / "skills" / "stripe").exists()
+    assert not (tmp_path / "skills" / "twilio").exists()
+    assert not (tmp_path / "skills" / "lap").exists()
+    assert not meta_file.exists()
+
+
+def test_uninstall_removes_claude_hook(tmp_path):
+    """uninstall removes LAP hook from settings.json, preserving other hooks."""
+    config_path = tmp_path / "settings.json"
+    config = {
+        "hooks": {
+            "SessionStart": [
+                {"matcher": "Bash", "hooks": [{"type": "command", "command": "echo hello"}]},
+                {"matcher": "", "hooks": [{"type": "command", "command": "npx @lap-platform/lapsh check --silent-if-clean --hook claude"}]},
+            ],
+            "PreToolUse": [
+                {"matcher": "Edit", "hooks": [{"type": "command", "command": "lint"}]},
+            ],
+        },
+        "otherSetting": True,
+    }
+    config_path.write_text(json.dumps(config), encoding="utf-8")
+
+    _remove_hook_entries(config_path, ["SessionStart"])
+
+    result = json.loads(config_path.read_text(encoding="utf-8"))
+    # LAP hook removed, other SessionStart hook preserved
+    assert len(result["hooks"]["SessionStart"]) == 1
+    assert result["hooks"]["SessionStart"][0]["hooks"][0]["command"] == "echo hello"
+    # Other hook arrays and settings untouched
+    assert len(result["hooks"]["PreToolUse"]) == 1
+    assert result["otherSetting"] is True
+
+
+def test_uninstall_removes_claude_md_instruction(tmp_path, monkeypatch):
+    """uninstall removes LAP instruction block from CLAUDE.md, preserving surrounding content."""
+    from lap.cli.main import _LAP_HOOK_INSTRUCTION, _remove_md_hook_instruction
+
+    claude_dir = tmp_path / ".claude"
+    claude_dir.mkdir(parents=True)
+    md_path = claude_dir / "CLAUDE.md"
+    preamble = "## My Instructions\n\nSome existing content.\n"
+    postamble = "\n## Other Stuff\n\nMore content after LAP block.\n"
+    content = preamble + _LAP_HOOK_INSTRUCTION + postamble
+    md_path.write_text(content, encoding="utf-8")
+
+    monkeypatch.setattr("lap.cli.main.Path.home", lambda: tmp_path)
+
+    # Call the REAL function
+    _remove_md_hook_instruction(".claude", "CLAUDE.md")
+
+    result = md_path.read_text(encoding="utf-8")
+    assert "LAP-HOOK-INSTRUCTION" not in result
+    assert "My Instructions" in result
+    # Content after the LAP block must be preserved (critical bug fix)
+    assert "Other Stuff" in result
+
+
+def test_uninstall_removes_claude_md_instruction_file_deleted_when_empty(tmp_path, monkeypatch):
+    """If CLAUDE.md only contains the LAP block, the file is deleted."""
+    from lap.cli.main import _LAP_HOOK_INSTRUCTION, _remove_md_hook_instruction
+
+    claude_dir = tmp_path / ".claude"
+    claude_dir.mkdir(parents=True)
+    md_path = claude_dir / "CLAUDE.md"
+    md_path.write_text(_LAP_HOOK_INSTRUCTION, encoding="utf-8")
+
+    monkeypatch.setattr("lap.cli.main.Path.home", lambda: tmp_path)
+
+    _remove_md_hook_instruction(".claude", "CLAUDE.md")
+
+    assert not md_path.exists()
 
 

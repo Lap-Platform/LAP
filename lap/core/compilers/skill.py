@@ -19,7 +19,7 @@ from lap.core.utils import count_tokens, AUTH_PARAM_NAMES
 _AUTH_PARAM_NAMES = AUTH_PARAM_NAMES | {"key"}
 
 SKILL_MD_TOKEN_BUDGET = 3000
-VALID_TARGETS = {"claude", "cursor"}
+VALID_TARGETS = {"claude", "cursor", "codex"}
 
 
 def detect_target() -> str:
@@ -31,9 +31,12 @@ def detect_target() -> str:
     3. PATH entries containing IDE binary paths (cross-platform)
     4. .cursor project directory (walk up to .git root)
     5. ~/.cursor/ in home directory (Cursor installed on this machine)
-    6. Default: 'claude'
+    6. Codex env vars (CODEX_SANDBOX, CODEX_SESSION_ID)
+    7. Codex in PATH or ~/.codex/ home directory
+    8. Default: 'claude'
     """
     import os
+    import shutil
 
     # 1. TERM_PROGRAM (macOS/Linux)
     term = os.environ.get("TERM_PROGRAM", "").lower()
@@ -62,6 +65,17 @@ def detect_target() -> str:
     if cursor_home.is_dir():
         return "cursor"
 
+    # 6. Codex env vars
+    if os.environ.get("CODEX_SANDBOX") or os.environ.get("CODEX_SESSION_ID"):
+        return "codex"
+
+    # 7. Codex in PATH or home directory
+    if shutil.which("codex"):
+        return "codex"
+    codex_home = Path.home() / ".codex"
+    if codex_home.is_dir():
+        return "codex"
+
     return "claude"
 
 
@@ -71,7 +85,7 @@ class SkillOptions:
     lean: bool = True
     clawhub: bool = False    # include metadata.openclaw block
     version: str = "1.0.0"   # skill version in frontmatter
-    target: str = "claude"   # "claude" | "cursor"
+    target: str = "claude"   # "claude" | "cursor" | "codex"
 
 
 @dataclass

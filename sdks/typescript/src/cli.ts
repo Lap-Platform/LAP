@@ -17,6 +17,8 @@
  *   lapsh unpin <name>                    # Unpin a skill (resume update checks)
  *   lapsh diff <skill>                    # Diff installed vs registry spec
  *   lapsh diff <old.lap> <new.lap>        # Diff two local LAP files
+ *   lapsh skill-uninstall <name> [...]    # Uninstall one or more skills
+ *   lapsh uninstall                       # Fully remove LAP from your IDE
  */
 
 import * as fs from 'fs';
@@ -44,6 +46,7 @@ import { LAPClient } from './client';
 
 const BUILTIN_TARGET_DIRS: Record<SkillTarget, string> = {
   claude: 'lap',
+  codex: 'codex',
   cursor: 'cursor',
 };
 
@@ -96,6 +99,9 @@ function resolveInstallDir(target: SkillTarget, skillName: string, customDir?: s
   if (target === 'cursor') {
     return path.join(homeDir, '.cursor', 'rules', skillName);
   }
+  if (target === 'codex') {
+    return path.join(homeDir, '.codex', 'skills', skillName);
+  }
   return path.join(homeDir, '.claude', 'skills', skillName);
 }
 
@@ -113,22 +119,25 @@ Commands:
     [-f format]                         Force format (openapi, graphql, etc.)
   skill <spec> [-o dir] [--layer 1|2]   Generate an AI IDE skill
     [--full-spec] [--install]           Include full spec / install to target IDE dir
-    [--target claude|cursor]            Target IDE (default: claude)
+    [--target claude|codex|cursor]            Target IDE (default: claude)
     [-f format]                         Force spec format
   skill-batch <dir> -o <outdir>         Batch generate skills
     [--layer 1|2] [--target t] [-v]    Layer, target IDE, verbose mode
-  init [--target claude|cursor]          Set up LAP in your IDE
+  init [--target claude|codex|cursor]          Set up LAP in your IDE
   skill-install <name> [--dir <path>]   Install skill from registry
-    [--target claude|cursor]            Target IDE (default: auto-detect)
+    [--target claude|codex|cursor]            Target IDE (default: auto-detect)
   get <name> [-o output] [--lean]        Download a LAP spec from the registry
   search <query> [--tag t] [--sort s]   Search the LAP registry for APIs
     [--limit n] [--offset n] [--json]   Pagination and JSON output
   check [--silent-if-clean] [--json]    Check installed skills for updates
-    [--target claude|cursor]            Limit check to one target
-  pin <name> [--target claude|cursor]   Pin a skill to skip update checks
-  unpin <name> [--target claude|cursor] Unpin a skill to resume update checks
+    [--target claude|codex|cursor]            Limit check to one target
+  pin <name> [--target claude|codex|cursor]   Pin a skill to skip update checks
+  unpin <name> [--target claude|codex|cursor] Unpin a skill to resume update checks
   diff <skill>                          Diff installed spec vs registry latest
   diff <old.lap> <new.lap>              Diff two local LAP files
+  skill-uninstall <name> [name2 ...]    Uninstall one or more skills
+    [--target claude|codex|cursor]            Target IDE (default: auto-detect)
+  uninstall [--target claude|codex|cursor]    Fully remove LAP from your IDE
 
 Environment:
   LAP_REGISTRY                          Registry URL (default: https://registry.lap.sh)`);
@@ -140,6 +149,7 @@ Environment:
 export function metadataPath(target: SkillTarget): string {
   const home = os.homedir();
   if (target === 'cursor') return path.join(home, '.cursor', 'lap-metadata.json');
+  if (target === 'codex') return path.join(home, '.codex', 'lap-metadata.json');
   return path.join(home, '.claude', 'lap-metadata.json');
 }
 
@@ -660,22 +670,25 @@ async function cmdInit(args: string[]): Promise<void> {
   if (resolvedTarget === 'cursor') {
     registerCursorHook('npx @lap-platform/lapsh check --silent-if-clean --hook cursor');
     ensureCursorUpdateRule();
+  } else if (resolvedTarget === 'codex') {
+    registerCodexHook('npx @lap-platform/lapsh check --silent-if-clean --hook codex');
+    ensureMdHookInstruction('.codex', 'AGENTS.md');
   } else {
     registerClaudeHook('npx @lap-platform/lapsh check --silent-if-clean --hook claude');
-    ensureClaudeMdHookInstruction();
+    ensureMdHookInstruction('.claude', 'CLAUDE.md');
   }
 }
 
-const LAP_HOOK_MARKER = '<!-- LAP-HOOK-INSTRUCTION -->';
-const LAP_HOOK_INSTRUCTION = `
+export const LAP_HOOK_MARKER = '<!-- LAP-HOOK-INSTRUCTION -->';
+export const LAP_HOOK_INSTRUCTION = `
 ${LAP_HOOK_MARKER}
 ## LAP API Skill Updates
 
 If a SessionStart hook injects LAP API skill update notifications into your context, you MUST present them to the user in your first response. Do not skip, defer, or wait to be asked.
 `;
 
-function ensureClaudeMdHookInstruction(): void {
-  const mdPath = path.join(os.homedir(), '.claude', 'CLAUDE.md');
+function ensureMdHookInstruction(dotDir: string, filename: string): void {
+  const mdPath = path.join(os.homedir(), dotDir, filename);
   let content = '';
   if (fs.existsSync(mdPath)) {
     content = fs.readFileSync(mdPath, 'utf-8');
@@ -684,7 +697,7 @@ function ensureClaudeMdHookInstruction(): void {
   const dir = path.dirname(mdPath);
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(mdPath, content + LAP_HOOK_INSTRUCTION, 'utf-8');
-  info('Added LAP update instruction to ~/.claude/CLAUDE.md');
+  info(`Added LAP update instruction to ~/${dotDir}/${filename}`);
 }
 
 function ensureCursorUpdateRule(): void {
@@ -781,6 +794,257 @@ export function registerCursorHook(command: string): void {
   fs.writeFileSync(tmp, JSON.stringify(config, null, 2), 'utf-8');
   try { fs.renameSync(tmp, configPath); } catch { try { fs.unlinkSync(configPath); } catch {} fs.renameSync(tmp, configPath); }
   console.log('Registered session-start hook for update checking.');
+}
+
+export function registerCodexHook(command: string): void {
+  const configPath = path.join(os.homedir(), '.codex', 'hooks.json');
+  let config: any = {};
+
+  if (fs.existsSync(configPath)) {
+    try {
+      config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+    } catch { /* start fresh */ }
+  }
+
+  if (typeof config !== 'object' || config === null) config = {};
+
+  if (!config.hooks) config.hooks = {};
+
+  // Register under both SessionStart (experimental v0.114.0+) and TaskStarted (stable fallback)
+  for (const eventKey of ['SessionStart', 'TaskStarted']) {
+    if (!config.hooks[eventKey]) config.hooks[eventKey] = [];
+
+    if (hasLapHook(config.hooks[eventKey])) continue;
+
+    config.hooks[eventKey].push({
+      matcher: '',
+      hooks: [{ type: 'command', command }],
+    });
+  }
+
+  const dir = path.dirname(configPath);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  const tmp = configPath + '.tmp';
+  fs.writeFileSync(tmp, JSON.stringify(config, null, 2), 'utf-8');
+  try { fs.renameSync(tmp, configPath); } catch { try { fs.unlinkSync(configPath); } catch {} fs.renameSync(tmp, configPath); }
+  console.log('Registered session hooks for update checking (SessionStart + TaskStarted).');
+}
+
+
+// ── Uninstall Helpers ────────────────────────────────────────────────
+
+function resolveSkillTarget(name: string, explicitTarget?: SkillTarget): { target: SkillTarget; meta: LapMetadata } {
+  const target = explicitTarget ?? detectTarget();
+  const meta = readMetadata(target);
+  if (meta.skills[name]) return { target, meta };
+  for (const other of VALID_TARGETS) {
+    if (other === target) continue;
+    const otherMeta = readMetadata(other);
+    if (otherMeta.skills[name]) return { target: other, meta: otherMeta };
+  }
+  return { target, meta };
+}
+
+export function entryHasLapsh(entry: any): boolean {
+  if (typeof entry !== 'object' || entry === null) return false;
+  for (const h of (entry.hooks || [])) {
+    if (typeof h === 'object' && h !== null && typeof h.command === 'string' && h.command.includes('lapsh')) return true;
+  }
+  if (typeof entry.command === 'string' && entry.command.includes('lapsh')) return true;
+  return false;
+}
+
+export function removeHookEntries(configPath: string, eventKeys: string[]): void {
+  if (!fs.existsSync(configPath)) return;
+  let config: any;
+  try {
+    config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+  } catch {
+    return;
+  }
+  if (typeof config !== 'object' || config === null) return;
+
+  const hooks = config.hooks || {};
+  let changed = false;
+
+  for (const key of eventKeys) {
+    const eventHooks = hooks[key];
+    if (!Array.isArray(eventHooks) || eventHooks.length === 0) continue;
+    const filtered = eventHooks.filter((e: any) => !entryHasLapsh(e));
+    if (filtered.length !== eventHooks.length) changed = true;
+    if (filtered.length > 0) {
+      hooks[key] = filtered;
+    } else {
+      delete hooks[key];
+    }
+  }
+
+  if (!changed) return;
+
+  if (Object.keys(hooks).length === 0) {
+    delete config.hooks;
+  }
+
+  const tmp = configPath + '.tmp';
+  fs.writeFileSync(tmp, JSON.stringify(config, null, 2), 'utf-8');
+  try { fs.renameSync(tmp, configPath); } catch { try { fs.unlinkSync(configPath); } catch {} fs.renameSync(tmp, configPath); }
+  info(`Removed LAP session hook from ${path.basename(configPath)}`);
+}
+
+export function removeSessionHook(target: SkillTarget): void {
+  const home = os.homedir();
+  if (target === 'cursor') {
+    removeHookEntries(path.join(home, '.cursor', 'hooks.json'), ['sessionStart']);
+  } else if (target === 'codex') {
+    removeHookEntries(path.join(home, '.codex', 'hooks.json'), ['SessionStart', 'TaskStarted']);
+  } else {
+    removeHookEntries(path.join(home, '.claude', 'settings.json'), ['SessionStart']);
+  }
+}
+
+export function removeMdHookInstruction(dotDir: string, filename: string, homeOverride?: string): void {
+  const home = homeOverride || os.homedir();
+  const mdPath = path.join(home, dotDir, filename);
+  if (!fs.existsSync(mdPath)) return;
+  const content = fs.readFileSync(mdPath, 'utf-8');
+  if (!content.includes(LAP_HOOK_MARKER)) return;
+  const newContent = content.replace(LAP_HOOK_INSTRUCTION, '').replace(/\n+$/, '') + '\n';
+  if (newContent.trim()) {
+    const tmp = mdPath + '.tmp';
+    fs.writeFileSync(tmp, newContent, 'utf-8');
+    try { fs.renameSync(tmp, mdPath); } catch { try { fs.unlinkSync(mdPath); } catch {} fs.renameSync(tmp, mdPath); }
+  } else {
+    try { fs.unlinkSync(mdPath); } catch {}
+  }
+  info(`Removed LAP instruction from ~/${dotDir}/${filename}`);
+}
+
+export function removeCursorUpdateRule(homeOverride?: string): void {
+  const home = homeOverride || os.homedir();
+  const rulePath = path.join(home, '.cursor', 'rules', 'lap-updates.mdc');
+  try {
+    fs.unlinkSync(rulePath);
+    info('Removed ~/.cursor/rules/lap-updates.mdc');
+  } catch {
+    // file doesn't exist -- OK
+  }
+}
+
+// ── Skill Uninstall Command ─────────────────────────────────────────
+
+async function cmdSkillUninstall(args: string[]): Promise<void> {
+  const names: string[] = [];
+  let target: SkillTarget | undefined;
+
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--target') { target = parseTargetArg(args, i); i++; }
+    else if (!args[i].startsWith('-')) { names.push(args[i]); }
+  }
+
+  if (names.length === 0) error('Missing skill name(s). Usage: lapsh skill-uninstall <name> [name2 ...] [--target t]');
+
+  let failed = 0;
+
+  for (const name of names) {
+    if (!isValidSkillName(name)) {
+      warn(`Invalid skill name: ${name}`);
+      failed++;
+      continue;
+    }
+
+    const { target: resolvedTarget, meta } = resolveSkillTarget(name, target);
+
+    if (!meta.skills[name]) {
+      warn(`Skill '${name}' is not installed.`);
+      failed++;
+      continue;
+    }
+
+    const skillDirName = meta.skills[name].skillName || name;
+    const installDir = resolveInstallDir(resolvedTarget, skillDirName);
+
+    if (fs.existsSync(installDir) && fs.statSync(installDir).isDirectory()) {
+      try {
+        fs.rmSync(installDir, { recursive: true, force: true });
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        warn(`Failed to remove ${installDir}: ${msg}`);
+        failed++;
+        continue;
+      }
+    }
+
+    delete meta.skills[name];
+    writeMetadata(resolvedTarget, meta);
+    info(`Uninstalled '${name}' from ${resolvedTarget}`);
+  }
+
+  if (failed) process.exit(1);
+}
+
+// ── Full Uninstall Command ──────────────────────────────────────────
+
+async function cmdUninstall(args: string[]): Promise<void> {
+  let target: SkillTarget | undefined;
+
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--target') { target = parseTargetArg(args, i); i++; }
+  }
+
+  const resolvedTarget = target ?? detectTarget();
+
+  // 1. Remove all installed API skills (using metadata)
+  const meta = readMetadata(resolvedTarget);
+  for (const [name, entry] of Object.entries(meta.skills)) {
+    const skillDirName = entry.skillName || name;
+    const installDir = resolveInstallDir(resolvedTarget, skillDirName);
+    if (fs.existsSync(installDir) && fs.statSync(installDir).isDirectory()) {
+      try {
+        fs.rmSync(installDir, { recursive: true, force: true });
+        info(`Removed skill '${name}'`);
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        warn(`Failed to remove skill '${name}': ${msg}`);
+      }
+    } else {
+      info(`Removed skill '${name}' (directory already gone)`);
+    }
+  }
+
+  // 2. Remove built-in LAP skill directory
+  const lapSkillDir = resolveInstallDir(resolvedTarget, 'lap');
+  if (fs.existsSync(lapSkillDir) && fs.statSync(lapSkillDir).isDirectory()) {
+    try {
+      fs.rmSync(lapSkillDir, { recursive: true, force: true });
+      info('Removed built-in LAP skill');
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      warn(`Failed to remove built-in LAP skill: ${msg}`);
+    }
+  }
+
+  // 3. Remove metadata file
+  const metaFile = metadataPath(resolvedTarget);
+  try {
+    fs.unlinkSync(metaFile);
+    info(`Removed ${metaFile}`);
+  } catch {
+    // file doesn't exist -- OK
+  }
+
+  // 4. Remove session hook from config
+  removeSessionHook(resolvedTarget);
+
+  // 5. Remove CLAUDE.md instruction / Cursor update rule / Codex AGENTS.md
+  if (resolvedTarget === 'claude') {
+    removeMdHookInstruction('.claude', 'CLAUDE.md');
+  } else if (resolvedTarget === 'codex') {
+    removeMdHookInstruction('.codex', 'AGENTS.md');
+  } else {
+    removeCursorUpdateRule();
+  }
+
+  info(`LAP fully uninstalled from ${resolvedTarget}`);
 }
 
 async function cmdSkillInstall(args: string[]): Promise<void> {
@@ -995,7 +1259,7 @@ async function cmdCheck(args: string[]): Promise<void> {
       'LAP skill update available:',
       `  ${u.name}: ${u.installed_version} -> ${u.latest_version}`,
       '',
-      `  Update:  lapsh skill-install ${u.name} --target claude`,
+      `  Update:  lapsh skill-install ${u.name} --target ${skillTargets[u.name] || 'claude'}`,
       `  Changes: lapsh diff ${u.name}`,
       `  Pin:     lapsh pin ${u.name}`,
     ].join('\n');
@@ -1006,7 +1270,7 @@ async function cmdCheck(args: string[]): Promise<void> {
       names.push(u.name);
       lines.push(`  ${u.name.padEnd(20)} ${u.installed_version} -> ${u.latest_version}`);
     }
-    lines.push('', `  Update all: lapsh skill-install ${names.join(' ')} --target claude`, '  See changes: lapsh diff <skill>', '  Pin a skill: lapsh pin <skill>');
+    lines.push('', `  Update all: lapsh skill-install ${names.join(' ')} --target ${skillTargets[names[0]] || 'claude'}`, '  See changes: lapsh diff <skill>', '  Pin a skill: lapsh pin <skill>');
     msg = lines.join('\n');
   }
 
@@ -1042,13 +1306,19 @@ async function cmdSetPinned(args: string[], pinned: boolean): Promise<void> {
   let resolvedTarget = (target as SkillTarget) ?? detectTarget();
   let meta = readMetadata(resolvedTarget);
   if (!meta.skills[name]) {
-    // Try other target before erroring
-    const other: SkillTarget = resolvedTarget === 'claude' ? 'cursor' : 'claude';
-    const otherMeta = readMetadata(other);
-    if (otherMeta.skills[name]) {
-      resolvedTarget = other;
-      meta = otherMeta;
-    } else {
+    // Try other targets before erroring
+    let found = false;
+    for (const other of VALID_TARGETS) {
+      if (other === resolvedTarget) continue;
+      const otherMeta = readMetadata(other);
+      if (otherMeta.skills[name]) {
+        resolvedTarget = other;
+        meta = otherMeta;
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
       error(`Skill '${name}' is not installed. Install it first: lapsh skill-install ${name}`);
     }
   }
@@ -1103,6 +1373,8 @@ async function diffSkill(name: string): Promise<void> {
     const folderName = meta.skills[name]?.skillName || name;
     const dir = t === 'cursor'
       ? path.join(home, '.cursor', 'rules', folderName)
+      : t === 'codex'
+      ? path.join(home, '.codex', 'skills', folderName)
       : path.join(home, '.claude', 'skills', folderName);
     const candidate = path.join(dir, 'references', 'api-spec.lap');
     if (fs.existsSync(candidate)) {
@@ -1241,6 +1513,13 @@ async function main(): Promise<void> {
         break;
       case 'diff':
         await cmdDiff(args.slice(1));
+        break;
+      case 'skill-uninstall':
+      case 'skill-remove':
+        await cmdSkillUninstall(args.slice(1));
+        break;
+      case 'uninstall':
+        await cmdUninstall(args.slice(1));
         break;
       default:
         console.error(`Unknown command: ${command}`);

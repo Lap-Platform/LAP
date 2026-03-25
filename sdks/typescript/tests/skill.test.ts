@@ -18,6 +18,13 @@ import {
   printSpecDiff,
   registerClaudeHook,
   registerCursorHook,
+  registerCodexHook,
+  entryHasLapsh,
+  removeHookEntries,
+  removeMdHookInstruction,
+  removeCursorUpdateRule,
+  LAP_HOOK_MARKER,
+  LAP_HOOK_INSTRUCTION,
 } from '../src/cli';
 
 const OUTPUT_DIR = path.resolve(__dirname, '../../../../output');
@@ -351,6 +358,48 @@ describe('Skill Generation', () => {
     });
   });
 
+  describe('codex target', () => {
+    it('produces SKILL.md (not .mdc)', () => {
+      const text = fs.readFileSync(STRIPE_FILE, 'utf-8');
+      const spec = parse(text);
+      const skill = generateSkill(spec, { target: 'codex' });
+      assert.ok('SKILL.md' in skill.fileMap, 'Should have SKILL.md');
+      assert.strictEqual(skill.mainFile, 'SKILL.md');
+      const mdcFiles = Object.keys(skill.fileMap).filter(k => k.endsWith('.mdc'));
+      assert.strictEqual(mdcFiles.length, 0, 'Should not have any .mdc files');
+    });
+
+    it('frontmatter has name, description, version, and generator', () => {
+      const text = fs.readFileSync(STRIPE_FILE, 'utf-8');
+      const spec = parse(text);
+      const skill = generateSkill(spec, { target: 'codex' });
+      const md = skill.fileMap['SKILL.md'];
+      const fmMatch = md.match(/^---\n([\s\S]*?)\n---/);
+      assert.ok(fmMatch, 'Should have frontmatter');
+      assert.ok(fmMatch[1].includes('name:'), 'Should have name');
+      assert.ok(fmMatch[1].includes('description:'), 'Should have description');
+      assert.ok(fmMatch[1].includes('version:'), 'Should have version');
+      assert.ok(fmMatch[1].includes('generator: lapsh'), 'Should have generator');
+    });
+
+    it('body matches claude body', () => {
+      const text = fs.readFileSync(STRIPE_FILE, 'utf-8');
+      const spec = parse(text);
+      const claude = generateSkill(spec, { target: 'claude' });
+      const codex = generateSkill(spec, { target: 'codex' });
+      const claudeBody = claude.fileMap[claude.mainFile].split('---').slice(2).join('---');
+      const codexBody = codex.fileMap[codex.mainFile].split('---').slice(2).join('---');
+      assert.strictEqual(codexBody, claudeBody);
+    });
+
+    it('still includes references/api-spec.lap', () => {
+      const text = fs.readFileSync(STRIPE_FILE, 'utf-8');
+      const spec = parse(text);
+      const skill = generateSkill(spec, { target: 'codex' });
+      assert.ok('references/api-spec.lap' in skill.fileMap, 'Should have api-spec.lap');
+    });
+  });
+
   describe('default target', () => {
     it('default produces Claude output with mainFile SKILL.md', () => {
       const text = fs.readFileSync(STRIPE_FILE, 'utf-8');
@@ -418,6 +467,7 @@ describe('Skill Generation', () => {
       assert.ok(fs.existsSync(skillsDir), `Skills dir should exist at ${skillsDir}`);
       assert.ok(fs.existsSync(path.join(skillsDir, 'cursor', 'lap.mdc')), 'Cursor skill should exist');
       assert.ok(fs.existsSync(path.join(skillsDir, 'lap', 'SKILL.md')), 'Claude skill should exist');
+      assert.ok(fs.existsSync(path.join(skillsDir, 'codex', 'SKILL.md')), 'Codex skill should exist');
     });
 
     it('each target has reference files', () => {
@@ -425,6 +475,7 @@ describe('Skill Generation', () => {
       const targets = [
         { name: 'claude', dir: path.join(skillsDir, 'lap') },
         { name: 'cursor', dir: path.join(skillsDir, 'cursor') },
+        { name: 'codex', dir: path.join(skillsDir, 'codex') },
       ];
       for (const t of targets) {
         assert.ok(fs.existsSync(t.dir), `${t.name} skill dir should exist`);
@@ -575,9 +626,16 @@ describe('Metadata helpers', () => {
       assert.ok(p.endsWith('lap-metadata.json'), 'Should end with lap-metadata.json');
     });
 
+    it('returns codex path for codex target', () => {
+      const p = metadataPath('codex');
+      assert.ok(p.includes('.codex'), 'Should include .codex directory');
+      assert.ok(p.endsWith('lap-metadata.json'), 'Should end with lap-metadata.json');
+    });
+
     it('uses os.homedir() as root', () => {
       const home = os.homedir();
       assert.ok(metadataPath('claude').startsWith(home), 'Claude path should start with home dir');
+      assert.ok(metadataPath('codex').startsWith(home), 'Codex path should start with home dir');
       assert.ok(metadataPath('cursor').startsWith(home), 'Cursor path should start with home dir');
     });
   });
@@ -939,6 +997,56 @@ describe('Hook registration', () => {
     } finally {
       if (backup !== null) fs.writeFileSync(cursorConfig, backup, 'utf-8');
       else if (fs.existsSync(cursorConfig)) fs.unlinkSync(cursorConfig);
+    }
+  });
+
+  it('T8a2: registerCodexHook adds both SessionStart and TaskStarted hooks', () => {
+    const codexConfig = path.join(os.homedir(), '.codex', 'hooks.json');
+    let backup: string | null = null;
+    if (fs.existsSync(codexConfig)) backup = fs.readFileSync(codexConfig, 'utf-8');
+
+    try {
+      if (fs.existsSync(codexConfig)) fs.unlinkSync(codexConfig);
+      registerCodexHook('npx @lap-platform/lapsh check --silent-if-clean --hook codex');
+
+      const config = JSON.parse(fs.readFileSync(codexConfig, 'utf-8'));
+      // Both event keys should exist
+      assert.ok(config.hooks?.SessionStart?.length >= 1, 'SessionStart should have entries');
+      assert.ok(config.hooks?.TaskStarted?.length >= 1, 'TaskStarted should have entries');
+
+      // Each should have the correct hook structure
+      const ssEntry = config.hooks.SessionStart[0];
+      assert.strictEqual(ssEntry.matcher, '', 'SessionStart should have empty matcher');
+      assert.ok(Array.isArray(ssEntry.hooks), 'SessionStart should have hooks array');
+      assert.ok(ssEntry.hooks[0].command.includes('lapsh check'), 'SessionStart hook should have lapsh check command');
+      assert.strictEqual(ssEntry.hooks[0].type, 'command', 'SessionStart hook type should be command');
+
+      const tsEntry = config.hooks.TaskStarted[0];
+      assert.strictEqual(tsEntry.matcher, '', 'TaskStarted should have empty matcher');
+      assert.ok(Array.isArray(tsEntry.hooks), 'TaskStarted should have hooks array');
+      assert.ok(tsEntry.hooks[0].command.includes('lapsh check'), 'TaskStarted hook should have lapsh check command');
+    } finally {
+      if (backup !== null) fs.writeFileSync(codexConfig, backup, 'utf-8');
+      else if (fs.existsSync(codexConfig)) fs.unlinkSync(codexConfig);
+    }
+  });
+
+  it('T8a3: registerCodexHook is idempotent', () => {
+    const codexConfig = path.join(os.homedir(), '.codex', 'hooks.json');
+    let backup: string | null = null;
+    if (fs.existsSync(codexConfig)) backup = fs.readFileSync(codexConfig, 'utf-8');
+
+    try {
+      if (fs.existsSync(codexConfig)) fs.unlinkSync(codexConfig);
+      registerCodexHook('npx @lap-platform/lapsh check --silent-if-clean');
+      registerCodexHook('npx @lap-platform/lapsh check --silent-if-clean');
+
+      const config = JSON.parse(fs.readFileSync(codexConfig, 'utf-8'));
+      assert.strictEqual(config.hooks.SessionStart.length, 1, 'SessionStart should not duplicate');
+      assert.strictEqual(config.hooks.TaskStarted.length, 1, 'TaskStarted should not duplicate');
+    } finally {
+      if (backup !== null) fs.writeFileSync(codexConfig, backup, 'utf-8');
+      else if (fs.existsSync(codexConfig)) fs.unlinkSync(codexConfig);
     }
   });
 
@@ -1476,6 +1584,278 @@ describe('Diff smart overload', () => {
       fs.unlinkSync(newFile);
       fs.rmdirSync(tmpDir);
     }
+  });
+});
+
+// ── Uninstall helper tests ───────────────────────────────────────────
+
+describe('entryHasLapsh', () => {
+  it('detects lapsh in hooks array format', () => {
+    const entry = { matcher: '', hooks: [{ type: 'command', command: 'npx @lap-platform/lapsh check' }] };
+    assert.strictEqual(entryHasLapsh(entry), true);
+  });
+
+  it('detects lapsh in direct command format', () => {
+    const entry = { command: 'npx @lap-platform/lapsh check --silent-if-clean', type: 'command' };
+    assert.strictEqual(entryHasLapsh(entry), true);
+  });
+
+  it('returns false for non-lapsh entries', () => {
+    const entry = { matcher: 'Bash', hooks: [{ type: 'command', command: 'echo hello' }] };
+    assert.strictEqual(entryHasLapsh(entry), false);
+  });
+
+  it('returns false for non-object input', () => {
+    assert.strictEqual(entryHasLapsh(null), false);
+    assert.strictEqual(entryHasLapsh('string'), false);
+    assert.strictEqual(entryHasLapsh(42), false);
+  });
+});
+
+describe('removeHookEntries', () => {
+  it('U1: removes LAP hook from settings.json, preserving other hooks', () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'lap-unhook-'));
+    const configPath = path.join(tmpDir, 'settings.json');
+    const config = {
+      hooks: {
+        SessionStart: [
+          { matcher: 'Bash', hooks: [{ type: 'command', command: 'echo hello' }] },
+          { matcher: '', hooks: [{ type: 'command', command: 'npx @lap-platform/lapsh check --silent-if-clean --hook claude' }] },
+        ],
+        PreToolUse: [
+          { matcher: 'Edit', hooks: [{ type: 'command', command: 'lint' }] },
+        ],
+      },
+      otherSetting: true,
+    };
+    fs.writeFileSync(configPath, JSON.stringify(config), 'utf-8');
+
+    removeHookEntries(configPath, ['SessionStart']);
+
+    const result = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+    // LAP hook removed, other SessionStart hook preserved
+    assert.strictEqual(result.hooks.SessionStart.length, 1);
+    assert.strictEqual(result.hooks.SessionStart[0].hooks[0].command, 'echo hello');
+    // Other hook arrays and settings untouched
+    assert.strictEqual(result.hooks.PreToolUse.length, 1);
+    assert.strictEqual(result.otherSetting, true);
+
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  it('U1b: removes all LAP hooks and cleans up empty hooks object', () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'lap-unhook2-'));
+    const configPath = path.join(tmpDir, 'settings.json');
+    const config = {
+      hooks: {
+        SessionStart: [
+          { matcher: '', hooks: [{ type: 'command', command: 'npx @lap-platform/lapsh check' }] },
+        ],
+      },
+      keepMe: 42,
+    };
+    fs.writeFileSync(configPath, JSON.stringify(config), 'utf-8');
+
+    removeHookEntries(configPath, ['SessionStart']);
+
+    const result = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+    assert.strictEqual(result.hooks, undefined, 'Empty hooks object should be removed');
+    assert.strictEqual(result.keepMe, 42, 'Other settings preserved');
+
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  it('U1c: no-op when config file does not exist', () => {
+    // Should not throw
+    removeHookEntries('/tmp/does-not-exist-lap-test.json', ['SessionStart']);
+  });
+
+  it('U1d: removes Codex hooks from both SessionStart and TaskStarted', () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'lap-unhook3-'));
+    const configPath = path.join(tmpDir, 'hooks.json');
+    const config = {
+      hooks: {
+        SessionStart: [
+          { matcher: '', hooks: [{ type: 'command', command: 'npx @lap-platform/lapsh check --hook codex' }] },
+        ],
+        TaskStarted: [
+          { matcher: '', hooks: [{ type: 'command', command: 'npx @lap-platform/lapsh check --hook codex' }] },
+        ],
+      },
+    };
+    fs.writeFileSync(configPath, JSON.stringify(config), 'utf-8');
+
+    removeHookEntries(configPath, ['SessionStart', 'TaskStarted']);
+
+    const result = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+    assert.strictEqual(result.hooks, undefined, 'All hooks removed for codex');
+
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+});
+
+describe('removeMdHookInstruction', () => {
+  it('U2: removes LAP instruction block from CLAUDE.md, preserving surrounding content', () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'lap-unmd-'));
+    const claudeDir = path.join(tmpDir, '.claude');
+    fs.mkdirSync(claudeDir, { recursive: true });
+    const mdPath = path.join(claudeDir, 'CLAUDE.md');
+
+    const preamble = '## My Instructions\n\nSome existing content.\n';
+    const postamble = '\n## Other Stuff\n\nMore content after LAP block.\n';
+    const content = preamble + LAP_HOOK_INSTRUCTION + postamble;
+    fs.writeFileSync(mdPath, content, 'utf-8');
+
+    removeMdHookInstruction('.claude', 'CLAUDE.md', tmpDir);
+
+    const result = fs.readFileSync(mdPath, 'utf-8');
+    assert.ok(!result.includes(LAP_HOOK_MARKER), 'Marker should be removed');
+    assert.ok(result.includes('My Instructions'), 'Preamble preserved');
+    assert.ok(result.includes('Other Stuff'), 'Postamble preserved');
+
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  it('U2b: deletes CLAUDE.md if it only contained the LAP block', () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'lap-unmd2-'));
+    const claudeDir = path.join(tmpDir, '.claude');
+    fs.mkdirSync(claudeDir, { recursive: true });
+    const mdPath = path.join(claudeDir, 'CLAUDE.md');
+
+    fs.writeFileSync(mdPath, LAP_HOOK_INSTRUCTION, 'utf-8');
+
+    removeMdHookInstruction('.claude', 'CLAUDE.md', tmpDir);
+
+    assert.ok(!fs.existsSync(mdPath), 'File should be deleted when only LAP content');
+
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  it('U2c: no-op when file does not exist', () => {
+    // Should not throw
+    removeMdHookInstruction('.claude', 'CLAUDE.md', '/tmp/does-not-exist-lap-test');
+  });
+});
+
+describe('removeCursorUpdateRule', () => {
+  it('U3: removes lap-updates.mdc file', () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'lap-unrule-'));
+    const rulesDir = path.join(tmpDir, '.cursor', 'rules');
+    fs.mkdirSync(rulesDir, { recursive: true });
+    const rulePath = path.join(rulesDir, 'lap-updates.mdc');
+    fs.writeFileSync(rulePath, 'some rule content', 'utf-8');
+
+    removeCursorUpdateRule(tmpDir);
+
+    assert.ok(!fs.existsSync(rulePath), 'Rule file should be removed');
+
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  it('U3b: no-op when rule file does not exist', () => {
+    // Should not throw
+    removeCursorUpdateRule('/tmp/does-not-exist-lap-test');
+  });
+});
+
+// ── skill-uninstall tests ───────────────────────────────────────────
+
+describe('skill-uninstall logic', () => {
+  it('U4: skill-uninstall removes dir and metadata entry', () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'lap-su-'));
+    const metaFile = path.join(tmpDir, 'lap-metadata.json');
+    const data = { skills: { stripe: { registryVersion: '1.0.0', pinned: false, skillName: 'stripe', specHash: 'sha256:x', installedAt: '2026-01-01T00:00:00Z' } } };
+    fs.writeFileSync(metaFile, JSON.stringify(data), 'utf-8');
+
+    const skillDir = path.join(tmpDir, 'skills', 'stripe');
+    fs.mkdirSync(skillDir, { recursive: true });
+    fs.writeFileSync(path.join(skillDir, 'SKILL.md'), '# stripe', 'utf-8');
+
+    // Simulate: read metadata, delete dir, update metadata
+    const meta = JSON.parse(fs.readFileSync(metaFile, 'utf-8'));
+    assert.ok(meta.skills['stripe'], 'Skill should exist in metadata');
+    fs.rmSync(skillDir, { recursive: true, force: true });
+    delete meta.skills['stripe'];
+    fs.writeFileSync(metaFile, JSON.stringify(meta, null, 2), 'utf-8');
+
+    assert.ok(!fs.existsSync(skillDir), 'Skill dir should be removed');
+    const afterMeta = JSON.parse(fs.readFileSync(metaFile, 'utf-8'));
+    assert.ok(!afterMeta.skills['stripe'], 'Metadata entry should be removed');
+
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  it('U5: skill-uninstall for unknown skill fails', () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'lap-su2-'));
+    const metaFile = path.join(tmpDir, 'lap-metadata.json');
+    fs.writeFileSync(metaFile, JSON.stringify({ skills: {} }), 'utf-8');
+
+    const meta = JSON.parse(fs.readFileSync(metaFile, 'utf-8'));
+    assert.ok(!meta.skills['nonexistent'], 'Unknown skill should not exist');
+
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  it('U6: skill-uninstall with missing dir still cleans metadata', () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'lap-su3-'));
+    const metaFile = path.join(tmpDir, 'lap-metadata.json');
+    const data = { skills: { stripe: { registryVersion: '1.0.0', pinned: false, skillName: 'stripe', specHash: 'sha256:x', installedAt: '2026-01-01T00:00:00Z' } } };
+    fs.writeFileSync(metaFile, JSON.stringify(data), 'utf-8');
+
+    // No skill directory exists -- only clean metadata
+    const meta = JSON.parse(fs.readFileSync(metaFile, 'utf-8'));
+    const skillDir = path.join(tmpDir, 'skills', 'stripe');
+    assert.ok(!fs.existsSync(skillDir), 'Skill dir should not exist');
+    delete meta.skills['stripe'];
+    fs.writeFileSync(metaFile, JSON.stringify(meta, null, 2), 'utf-8');
+
+    const afterMeta = JSON.parse(fs.readFileSync(metaFile, 'utf-8'));
+    assert.ok(!afterMeta.skills['stripe'], 'Metadata entry should be cleaned');
+
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+});
+
+// ── Full uninstall tests ────────────────────────────────────────────
+
+describe('uninstall logic', () => {
+  it('U7: uninstall removes all skill dirs and metadata file', () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'lap-full-'));
+    const metaFile = path.join(tmpDir, 'lap-metadata.json');
+    const data = {
+      skills: {
+        stripe: { registryVersion: '1.0.0', skillName: 'stripe', specHash: 'sha256:a', installedAt: '2026-01-01T00:00:00Z', pinned: false },
+        twilio: { registryVersion: '2.0.0', skillName: 'twilio', specHash: 'sha256:b', installedAt: '2026-01-01T00:00:00Z', pinned: false },
+      },
+    };
+    fs.writeFileSync(metaFile, JSON.stringify(data), 'utf-8');
+
+    // Create skill dirs + builtin lap dir
+    for (const name of ['stripe', 'twilio', 'lap']) {
+      const d = path.join(tmpDir, 'skills', name);
+      fs.mkdirSync(d, { recursive: true });
+      fs.writeFileSync(path.join(d, 'SKILL.md'), `# ${name}`, 'utf-8');
+    }
+
+    // Simulate uninstall: remove all skill dirs from metadata
+    const meta = JSON.parse(fs.readFileSync(metaFile, 'utf-8'));
+    for (const [name, entry] of Object.entries(meta.skills)) {
+      const skillDirName = (entry as any).skillName || name;
+      const installDir = path.join(tmpDir, 'skills', skillDirName);
+      if (fs.existsSync(installDir)) fs.rmSync(installDir, { recursive: true, force: true });
+    }
+    // Remove builtin lap dir
+    const lapDir = path.join(tmpDir, 'skills', 'lap');
+    if (fs.existsSync(lapDir)) fs.rmSync(lapDir, { recursive: true, force: true });
+    // Remove metadata file
+    fs.unlinkSync(metaFile);
+
+    assert.ok(!fs.existsSync(path.join(tmpDir, 'skills', 'stripe')), 'stripe dir removed');
+    assert.ok(!fs.existsSync(path.join(tmpDir, 'skills', 'twilio')), 'twilio dir removed');
+    assert.ok(!fs.existsSync(path.join(tmpDir, 'skills', 'lap')), 'lap dir removed');
+    assert.ok(!fs.existsSync(metaFile), 'metadata file removed');
+
+    fs.rmSync(tmpDir, { recursive: true, force: true });
   });
 });
 

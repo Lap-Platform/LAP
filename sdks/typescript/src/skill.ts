@@ -9,7 +9,7 @@ import * as path from 'path';
 
 // ── Public interfaces ─────────────────────────────────────────────────────────
 
-export const VALID_TARGETS = ['claude', 'cursor'] as const;
+export const VALID_TARGETS = ['claude', 'codex', 'cursor'] as const;
 export type SkillTarget = typeof VALID_TARGETS[number];
 
 /**
@@ -49,6 +49,11 @@ export function detectTarget(): SkillTarget {
   const homeDir = process.env.HOME || process.env.USERPROFILE;
   if (homeDir && fs.existsSync(path.join(homeDir, '.cursor'))) return 'cursor';
 
+  // 6. Codex CLI detection
+  if (process.env.CODEX_SANDBOX || process.env.CODEX_SESSION_ID) return 'codex';
+  if (pathEnv.includes('codex')) return 'codex';
+  if (homeDir && fs.existsSync(path.join(homeDir, '.codex'))) return 'codex';
+
   return 'claude';
 }
 
@@ -57,7 +62,7 @@ export interface SkillOptions {
   lean?: boolean;
   clawhub?: boolean;  // include metadata.openclaw block
   version?: string;   // skill version in frontmatter (default: "1.0.0")
-  target?: SkillTarget;  // "claude" | "cursor" (default: "claude")
+  target?: SkillTarget;  // "claude" | "cursor" | "codex" (default: "claude")
 }
 
 export interface SkillOutput {
@@ -292,7 +297,7 @@ function buildDescription(spec: LAPSpec): string {
 function generateFrontmatter(spec: LAPSpec, options?: SkillOptions): string {
   const target = options?.target ?? 'claude';
   if (target === 'cursor') return generateCursorFrontmatter(spec);
-  return generateClaudeFrontmatter(spec, options);
+  return generateClaudeFrontmatter(spec, options); // claude and codex use same frontmatter
 }
 
 function generateClaudeFrontmatter(spec: LAPSpec, options?: SkillOptions): string {

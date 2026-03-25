@@ -692,6 +692,7 @@ def cmd_skill_batch(args):
 _BUILTIN_TARGET_DIRS = {
     "claude": "lap",
     "cursor": "cursor",
+    "codex": "codex",
 }
 
 
@@ -714,6 +715,8 @@ def _resolve_install_dir(target, name, custom_dir=None):
         return Path(custom_dir)
     if target == "cursor":
         return Path.home() / ".cursor" / "rules" / name
+    if target == "codex":
+        return Path.home() / ".codex" / "skills" / name
     return Path.home() / ".claude" / "skills" / name
 
 
@@ -748,6 +751,8 @@ def _metadata_path(target: str) -> Path:
     """Return path to lap-metadata.json for the given target platform."""
     if target == "cursor":
         return Path.home() / ".cursor" / "lap-metadata.json"
+    if target == "codex":
+        return Path.home() / ".codex" / "lap-metadata.json"
     return Path.home() / ".claude" / "lap-metadata.json"
 
 
@@ -804,9 +809,25 @@ def _register_session_hook(target: str) -> None:
     if target == "cursor":
         config_path = Path.home() / ".cursor" / "hooks.json"
         _register_cursor_hook(config_path, "npx @lap-platform/lapsh check --silent-if-clean --hook cursor")
+    elif target == "codex":
+        config_path = Path.home() / ".codex" / "hooks.json"
+        _register_codex_hook(config_path, "npx @lap-platform/lapsh check --silent-if-clean --hook codex")
     else:
         config_path = Path.home() / ".claude" / "settings.json"
         _register_claude_hook(config_path, "npx @lap-platform/lapsh check --silent-if-clean --hook claude")
+
+
+def _has_lap_hook(entries: list) -> bool:
+    """Check if any entry in a hook list contains a lapsh check command."""
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        for h in entry.get("hooks", []):
+            if isinstance(h, dict) and "lapsh check" in h.get("command", ""):
+                return True
+        if "lapsh check" in entry.get("command", ""):
+            return True
+    return False
 
 
 def _register_claude_hook(config_path: Path, command: str) -> None:
@@ -824,19 +845,9 @@ def _register_claude_hook(config_path: Path, command: str) -> None:
     hooks = config.setdefault("hooks", {})
     session_hooks = hooks.setdefault("SessionStart", [])
 
-    # Check if LAP hook already registered (check both old and new format)
-    for entry in session_hooks:
-        if not isinstance(entry, dict):
-            continue
-        # New format: matcher + hooks array
-        for h in entry.get("hooks", []):
-            if isinstance(h, dict) and "lapsh check" in h.get("command", ""):
-                info("Session hook already registered.")
-                return
-        # Old format: direct command (migrate if found)
-        if "lapsh check" in entry.get("command", ""):
-            info("Session hook already registered.")
-            return
+    if _has_lap_hook(session_hooks):
+        info("Session hook already registered.")
+        return
 
     session_hooks.append({
         "matcher": "",
@@ -866,22 +877,45 @@ def _register_cursor_hook(config_path: Path, command: str) -> None:
     hooks = config.setdefault("hooks", {})
     session_hooks = hooks.setdefault("sessionStart", [])
 
-    for entry in session_hooks:
-        if not isinstance(entry, dict):
-            continue
-        for h in entry.get("hooks", []):
-            if isinstance(h, dict) and "lapsh check" in h.get("command", ""):
-                info("Session hook already registered.")
-                return
-        if "lapsh check" in entry.get("command", ""):
-            info("Session hook already registered.")
-            return
+    if _has_lap_hook(session_hooks):
+        info("Session hook already registered.")
+        return
 
     session_hooks.append({
         "command": command,
         "type": "command",
         "timeout": 30,
     })
+
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = config_path.with_suffix(".tmp")
+    tmp.write_text(json.dumps(config, indent=2), encoding="utf-8")
+    tmp.replace(config_path)
+    info("Registered session-start hook for update checking.")
+
+
+def _register_codex_hook(config_path: Path, command: str) -> None:
+    """Add SessionStart and TaskStarted hooks to .codex/hooks.json (idempotent)."""
+    config = {}
+    if config_path.exists():
+        try:
+            config = json.loads(config_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            pass
+
+    if not isinstance(config, dict):
+        config = {}
+
+    hooks = config.setdefault("hooks", {})
+
+    for event_key in ("SessionStart", "TaskStarted"):
+        event_hooks = hooks.setdefault(event_key, [])
+
+        if not _has_lap_hook(event_hooks):
+            event_hooks.append({
+                "matcher": "",
+                "hooks": [{"type": "command", "command": command}],
+            })
 
     config_path.parent.mkdir(parents=True, exist_ok=True)
     tmp = config_path.with_suffix(".tmp")
@@ -899,9 +933,9 @@ If a SessionStart hook injects LAP API skill update notifications into your cont
 """
 
 
-def _ensure_claude_md_hook_instruction() -> None:
-    """Add LAP hook instruction to ~/.claude/CLAUDE.md (idempotent)."""
-    md_path = Path.home() / ".claude" / "CLAUDE.md"
+def _ensure_md_hook_instruction(dot_dir: str, filename: str) -> None:
+    """Add LAP hook instruction to a markdown config file (idempotent)."""
+    md_path = Path.home() / dot_dir / filename
     content = ""
     if md_path.exists():
         content = md_path.read_text(encoding="utf-8")
@@ -909,7 +943,7 @@ def _ensure_claude_md_hook_instruction() -> None:
             return
     md_path.parent.mkdir(parents=True, exist_ok=True)
     md_path.write_text(content + _LAP_HOOK_INSTRUCTION, encoding="utf-8")
-    info("Added LAP update instruction to ~/.claude/CLAUDE.md")
+    info(f"Added LAP update instruction to ~/{dot_dir}/{filename}")
 
 
 def _ensure_cursor_update_rule() -> None:
@@ -935,8 +969,10 @@ def cmd_init(args):
     _register_session_hook(target)
     if target == "cursor":
         _ensure_cursor_update_rule()
+    elif target == "codex":
+        _ensure_md_hook_instruction(".codex", "AGENTS.md")
     else:
-        _ensure_claude_md_hook_instruction()
+        _ensure_md_hook_instruction(".claude", "CLAUDE.md")
 
 
 def cmd_skill_install(args):
@@ -1017,6 +1053,190 @@ def cmd_skill_install(args):
         print(f"Warning: could not write metadata: {e}", file=sys.stderr)
 
 
+def cmd_skill_uninstall(args):
+    """Uninstall one or more skills."""
+    import shutil
+
+    explicit_target = getattr(args, "target", None)
+    failed = 0
+
+    for name in args.names:
+        if not _is_valid_skill_name(name):
+            warn(f"Invalid skill name: {name}")
+            failed += 1
+            continue
+
+        target, meta = _resolve_skill_target(name, explicit_target)
+
+        if name not in meta.get("skills", {}):
+            warn(f"Skill '{name}' is not installed.")
+            failed += 1
+            continue
+
+        # Resolve directory using skillName from metadata (may differ from registry name)
+        skill_entry = meta["skills"][name]
+        skill_dir_name = skill_entry.get("skillName", name)
+        install_dir = _resolve_install_dir(target, skill_dir_name)
+
+        # Remove skill directory
+        if install_dir.is_dir():
+            try:
+                shutil.rmtree(install_dir)
+            except OSError as e:
+                warn(f"Failed to remove {install_dir}: {e}")
+                failed += 1
+                continue
+
+        # Remove metadata entry
+        del meta["skills"][name]
+        _write_metadata(target, meta)
+
+        info(f"Uninstalled '{name}' from {target}")
+
+    if failed:
+        sys.exit(1)
+
+
+def _entry_has_lapsh(entry: dict) -> bool:
+    """Check if a hook entry contains a lapsh command (any format)."""
+    if not isinstance(entry, dict):
+        return False
+    for h in entry.get("hooks", []):
+        if isinstance(h, dict) and "lapsh" in h.get("command", ""):
+            return True
+    return "lapsh" in entry.get("command", "")
+
+
+def _remove_hook_entries(config_path: Path, event_keys: list) -> None:
+    """Remove LAP hook entries from a JSON config file."""
+    if not config_path.exists():
+        return
+    try:
+        config = json.loads(config_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return
+    if not isinstance(config, dict):
+        return
+
+    hooks = config.get("hooks", {})
+    changed = False
+
+    for key in event_keys:
+        event_hooks = hooks.get(key, [])
+        if not event_hooks:
+            continue
+        filtered = [e for e in event_hooks if not _entry_has_lapsh(e)]
+        if len(filtered) != len(event_hooks):
+            changed = True
+        if filtered:
+            hooks[key] = filtered
+        else:
+            hooks.pop(key, None)
+
+    if not changed:
+        return
+
+    if not hooks:
+        config.pop("hooks", None)
+
+    tmp = config_path.with_suffix(".tmp")
+    tmp.write_text(json.dumps(config, indent=2), encoding="utf-8")
+    tmp.replace(config_path)
+    info(f"Removed LAP session hook from {config_path.name}")
+
+
+def _remove_session_hook(target: str) -> None:
+    """Remove LAP check hook for the given target."""
+    if target == "cursor":
+        _remove_hook_entries(Path.home() / ".cursor" / "hooks.json", ["sessionStart"])
+    elif target == "codex":
+        _remove_hook_entries(Path.home() / ".codex" / "hooks.json", ["SessionStart", "TaskStarted"])
+    else:
+        _remove_hook_entries(Path.home() / ".claude" / "settings.json", ["SessionStart"])
+
+
+def _remove_md_hook_instruction(dot_dir: str, filename: str) -> None:
+    """Remove LAP hook instruction from a markdown config file."""
+    md_path = Path.home() / dot_dir / filename
+    if not md_path.exists():
+        return
+    content = md_path.read_text(encoding="utf-8")
+    if _LAP_HOOK_MARKER not in content:
+        return
+    new_content = content.replace(_LAP_HOOK_INSTRUCTION, "").rstrip("\n") + "\n"
+    if new_content.strip():
+        tmp = md_path.with_suffix(".tmp")
+        tmp.write_text(new_content, encoding="utf-8")
+        tmp.replace(md_path)
+    else:
+        md_path.unlink(missing_ok=True)
+    info(f"Removed LAP instruction from ~/{dot_dir}/{filename}")
+
+
+def _remove_cursor_update_rule() -> None:
+    """Remove LAP update rule from ~/.cursor/rules/."""
+    rule_path = Path.home() / ".cursor" / "rules" / "lap-updates.mdc"
+    try:
+        rule_path.unlink()
+        info("Removed ~/.cursor/rules/lap-updates.mdc")
+    except FileNotFoundError:
+        pass
+
+
+
+
+def cmd_uninstall(args):
+    """Fully remove LAP from your IDE."""
+    import shutil
+    from lap.core.compilers.skill import detect_target
+
+    target = getattr(args, "target", None) or detect_target()
+
+    # 1. Remove all installed API skills (using metadata)
+    meta = _read_metadata(target)
+    for name, entry in list(meta.get("skills", {}).items()):
+        skill_dir_name = entry.get("skillName", name)
+        install_dir = _resolve_install_dir(target, skill_dir_name)
+        if install_dir.is_dir():
+            try:
+                shutil.rmtree(install_dir)
+                info(f"Removed skill '{name}'")
+            except OSError as e:
+                warn(f"Failed to remove skill '{name}': {e}")
+        else:
+            info(f"Removed skill '{name}' (directory already gone)")
+
+    # 2. Remove built-in LAP skill directory
+    lap_skill_dir = _resolve_install_dir(target, "lap")
+    if lap_skill_dir.is_dir():
+        try:
+            shutil.rmtree(lap_skill_dir)
+            info("Removed built-in LAP skill")
+        except OSError as e:
+            warn(f"Failed to remove built-in LAP skill: {e}")
+
+    # 3. Remove metadata file
+    meta_path = _metadata_path(target)
+    try:
+        meta_path.unlink()
+        info(f"Removed {meta_path}")
+    except FileNotFoundError:
+        pass
+
+    # 4. Remove session hook from config
+    _remove_session_hook(target)
+
+    # 5. Remove CLAUDE.md instruction / Cursor update rule / Codex AGENTS.md
+    if target == "claude":
+        _remove_md_hook_instruction(".claude", "CLAUDE.md")
+    elif target == "codex":
+        _remove_md_hook_instruction(".codex", "AGENTS.md")
+    else:
+        _remove_cursor_update_rule()
+
+    info(f"LAP fully uninstalled from {target}")
+
+
 def cmd_check(args):
     """Check for LAP skill updates."""
     from lap.cli.auth import get_registry_url
@@ -1030,7 +1250,7 @@ def cmd_check(args):
     if target_arg and target_arg != "auto":
         targets = [target_arg]
     else:
-        for t in ["claude", "cursor"]:
+        for t in ["claude", "cursor", "codex"]:
             if _metadata_path(t).exists():
                 targets.append(t)
 
@@ -1098,23 +1318,27 @@ def cmd_check(args):
         sn = _sanitize(str(u.get('name', '')))
         si = _sanitize(str(u.get('installed_version', '')))
         sl = _sanitize(str(u.get('latest_version', '')))
+        st = skill_targets.get(sn, "claude")
         lines.append("LAP skill update available:")
         lines.append(f"  {sn}: {si} -> {sl}")
         lines.append("")
-        lines.append(f"  Update:  lapsh skill-install {sn} --target claude")
+        lines.append(f"  Update:  lapsh skill-install {sn} --target {st}")
         lines.append(f"  Changes: lapsh diff {sn}")
         lines.append(f"  Pin:     lapsh pin {sn}")
     else:
         lines.append(f"{len(updates)} LAP skills have updates:")
         names = []
+        update_targets = set()
         for u in updates:
             sn = _sanitize(str(u.get('name', '')))
             si = _sanitize(str(u.get('installed_version', '')))
             sl = _sanitize(str(u.get('latest_version', '')))
             names.append(sn)
+            update_targets.add(skill_targets.get(sn, "claude"))
             lines.append(f"  {sn:<20s} {si} -> {sl}")
         lines.append("")
-        lines.append(f"  Update all: lapsh skill-install {' '.join(names)} --target claude")
+        common_target = next(iter(update_targets)) if len(update_targets) == 1 else "claude"
+        lines.append(f"  Update all: lapsh skill-install {' '.join(names)} --target {common_target}")
         lines.append("  See changes: lapsh diff <skill>")
         lines.append("  Pin a skill: lapsh pin <skill>")
 
@@ -1130,11 +1354,13 @@ def _resolve_skill_target(name: str, explicit_target=None):
     meta = _read_metadata(target)
     if name in meta.get("skills", {}):
         return target, meta
-    # Try other target
-    other = "cursor" if target == "claude" else "claude"
-    other_meta = _read_metadata(other)
-    if name in other_meta.get("skills", {}):
-        return other, other_meta
+    # Try other targets
+    for other in ("claude", "cursor", "codex"):
+        if other == target:
+            continue
+        other_meta = _read_metadata(other)
+        if name in other_meta.get("skills", {}):
+            return other, other_meta
     return target, meta  # return original (will fail the "not found" check)
 
 
@@ -1446,15 +1672,18 @@ def _diff_skill(name: str, args) -> None:
     spec_file = install_dir / "references" / "api-spec.lap"
 
     if not spec_file.exists():
-        # Try other target
-        other = "cursor" if target == "claude" else "claude"
-        other_meta = _read_metadata(other)
-        folder_name = other_meta.get("skills", {}).get(name, {}).get("skillName", name)
-        install_dir = _resolve_install_dir(other, folder_name)
-        spec_file = install_dir / "references" / "api-spec.lap"
-        if spec_file.exists():
-            target = other
-            meta = other_meta
+        # Try other targets
+        for other in ("claude", "cursor", "codex"):
+            if other == target:
+                continue
+            other_meta = _read_metadata(other)
+            folder_name = other_meta.get("skills", {}).get(name, {}).get("skillName", name)
+            install_dir = _resolve_install_dir(other, folder_name)
+            spec_file = install_dir / "references" / "api-spec.lap"
+            if spec_file.exists():
+                target = other
+                meta = other_meta
+                break
 
     if not spec_file.exists():
         error(f"No installed spec found for '{name}'. Install it first: lapsh skill-install {name}")
@@ -1605,7 +1834,7 @@ def main():
     p.add_argument("--install", action="store_true", help="Install skill to target IDE directory")
     p.add_argument("--version", dest="skill_version", default="1.0.0",
                    help="Skill version (default: 1.0.0)")
-    p.add_argument("--target", choices=["claude", "cursor"],
+    p.add_argument("--target", choices=["claude", "cursor", "codex"],
                    default=None,
                    help="Target IDE for skill output (default: auto-detect)")
 
@@ -1620,21 +1849,33 @@ def main():
     p.add_argument("--layer", type=int, default=None, choices=[1, 2],
                    help=argparse.SUPPRESS)  # deprecated
     p.add_argument("--verbose", "-v", action="store_true", help="Print full tracebacks on failure")
-    p.add_argument("--target", choices=["claude", "cursor"],
+    p.add_argument("--target", choices=["claude", "cursor", "codex"],
                    default=None,
                    help="Target IDE for skill output (default: auto-detect)")
 
     # init
     p = sub.add_parser("init", help="Set up LAP in your IDE (installs skill and config)")
-    p.add_argument("--target", choices=["claude", "cursor"], default=None,
+    p.add_argument("--target", choices=["claude", "cursor", "codex"], default=None,
                    help="Target IDE (default: auto-detect)")
 
     # skill-install
     p = sub.add_parser("skill-install", help="Install a skill from the LAP registry")
     p.add_argument("name", help="API name from the registry")
     p.add_argument("--dir", help="Custom install directory")
-    p.add_argument("--target", choices=["claude", "cursor"],
+    p.add_argument("--target", choices=["claude", "cursor", "codex"],
                    default=None,
+                   help="Target IDE (default: auto-detect)")
+
+    # skill-uninstall / skill-remove
+    p = sub.add_parser("skill-uninstall", aliases=["skill-remove"],
+                        help="Uninstall one or more skills")
+    p.add_argument("names", nargs="+", help="Skill name(s) to uninstall")
+    p.add_argument("--target", choices=["claude", "cursor", "codex"], default=None,
+                   help="Target IDE (default: auto-detect)")
+
+    # uninstall
+    p = sub.add_parser("uninstall", help="Fully remove LAP from your IDE")
+    p.add_argument("--target", choices=["claude", "cursor", "codex"], default=None,
                    help="Target IDE (default: auto-detect)")
 
     # get
@@ -1664,17 +1905,17 @@ def main():
     p = sub.add_parser("check", help="Check for LAP skill updates")
     p.add_argument("--silent-if-clean", action="store_true", help="No output if everything is up to date")
     p.add_argument("--json", action="store_true", help="Machine-readable JSON output")
-    p.add_argument("--target", choices=["auto", "claude", "cursor"], default="auto", help="Target platform")
+    p.add_argument("--target", choices=["auto", "claude", "cursor", "codex"], default="auto", help="Target platform")
 
     # pin
     p = sub.add_parser("pin", help="Pin a skill to skip update checks")
     p.add_argument("name", help="Skill name to pin")
-    p.add_argument("--target", choices=["claude", "cursor"], default=None, help="Target platform")
+    p.add_argument("--target", choices=["claude", "cursor", "codex"], default=None, help="Target platform")
 
     # unpin
     p = sub.add_parser("unpin", help="Unpin a skill to resume update checks")
     p.add_argument("name", help="Skill name to unpin")
-    p.add_argument("--target", choices=["claude", "cursor"], default=None, help="Target platform")
+    p.add_argument("--target", choices=["claude", "cursor", "codex"], default=None, help="Target platform")
 
     args = parser.parse_args()
 
@@ -1692,6 +1933,9 @@ def main():
         "skill-batch": cmd_skill_batch,
         "init": cmd_init,
         "skill-install": cmd_skill_install,
+        "skill-uninstall": cmd_skill_uninstall,
+        "skill-remove": cmd_skill_uninstall,
+        "uninstall": cmd_uninstall,
         "get": cmd_get,
         "search": cmd_search,
         "benchmark-skill": cmd_benchmark_skill,

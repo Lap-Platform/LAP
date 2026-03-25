@@ -678,8 +678,8 @@ class TestCliSection:
         assert f"lapsh search {slug}" in md
 
     def test_cli_section_in_all_targets(self, minimal_spec):
-        """CLI section appears in Claude and Cursor outputs."""
-        for target in ("claude", "cursor"):
+        """CLI section appears in Claude, Cursor, and Codex outputs."""
+        for target in ("claude", "cursor", "codex"):
             result = generate_skill(minimal_spec, SkillOptions(target=target))
             assert "## CLI" in result.file_map[result.main_file], f"CLI section missing for {target}"
 
@@ -738,12 +738,87 @@ class TestInit:
         content = (dest / "lap.mdc").read_text(encoding="utf-8")
         assert "~/.claude/skills/" not in content
 
+    def test_builtin_install_codex(self, tmp_path):
+        """Installing 'lap' for codex creates SKILL.md with references (same as claude)."""
+        from lap.cli.main import _install_builtin_skill
+        dest = tmp_path / "codex-out"
+        _install_builtin_skill("lap", "codex", str(dest))
+        assert (dest / "SKILL.md").exists()
+        assert (dest / "references" / "agent-flow.md").exists()
+        assert (dest / "references" / "command-reference.md").exists()
+        assert (dest / "references" / "publisher-flow.md").exists()
+
+    def test_builtin_codex_no_claude_paths(self, tmp_path):
+        """Codex skill file should not contain ~/.claude/ paths."""
+        from lap.cli.main import _install_builtin_skill
+        dest = tmp_path / "check"
+        _install_builtin_skill("lap", "codex", str(dest))
+        content = (dest / "SKILL.md").read_text(encoding="utf-8")
+        assert "~/.claude/skills/" not in content
+
     def test_builtin_file_count(self, tmp_path):
         """Each target installs exactly 4 files (main + 3 references)."""
         from lap.cli.main import _install_builtin_skill
-        for target in ("claude", "cursor"):
+        for target in ("claude", "cursor", "codex"):
             dest = tmp_path / target
             _install_builtin_skill("lap", target, str(dest))
             files = list(dest.rglob("*"))
             file_count = sum(1 for f in files if f.is_file())
             assert file_count == 4, f"{target} should have 4 files, got {file_count}"
+
+
+# -- Target: Codex ---------------------------------------------------------------
+
+class TestCodexTarget:
+    """Tests for --target codex output."""
+
+    def test_codex_file_extension(self, minimal_spec):
+        """Codex target produces SKILL.md (same as Claude)."""
+        result = generate_skill(minimal_spec, SkillOptions(target="codex"))
+        assert "SKILL.md" in result.file_map
+        assert result.main_file == "SKILL.md"
+
+    def test_codex_frontmatter_has_name(self, minimal_spec):
+        """Codex frontmatter has name field."""
+        result = generate_skill(minimal_spec, SkillOptions(target="codex"))
+        md = result.file_map["SKILL.md"]
+        parts = md.split("---", 2)
+        frontmatter = parts[1]
+        assert "name:" in frontmatter
+
+    def test_codex_frontmatter_has_generator(self, minimal_spec):
+        """Codex frontmatter has generator: lapsh."""
+        result = generate_skill(minimal_spec, SkillOptions(target="codex"))
+        md = result.file_map["SKILL.md"]
+        parts = md.split("---", 2)
+        frontmatter = parts[1]
+        assert "generator: lapsh" in frontmatter
+
+    def test_codex_frontmatter_has_version(self, minimal_spec):
+        """Codex frontmatter has version field."""
+        result = generate_skill(minimal_spec, SkillOptions(target="codex"))
+        md = result.file_map["SKILL.md"]
+        parts = md.split("---", 2)
+        frontmatter = parts[1]
+        assert "version:" in frontmatter
+
+    def test_codex_frontmatter_no_always_apply(self, minimal_spec):
+        """Codex frontmatter should NOT have alwaysApply (unlike Cursor)."""
+        result = generate_skill(minimal_spec, SkillOptions(target="codex"))
+        md = result.file_map["SKILL.md"]
+        parts = md.split("---", 2)
+        frontmatter = parts[1]
+        assert "alwaysApply" not in frontmatter
+
+    def test_codex_reference_file_present(self, minimal_spec):
+        """Codex target includes references/api-spec.lap."""
+        result = generate_skill(minimal_spec, SkillOptions(target="codex"))
+        assert "references/api-spec.lap" in result.file_map
+
+    def test_codex_body_matches_claude(self, minimal_spec):
+        """Codex body content (after frontmatter) matches Claude body."""
+        claude = generate_skill(minimal_spec, SkillOptions(target="claude"))
+        codex = generate_skill(minimal_spec, SkillOptions(target="codex"))
+        claude_body = claude.file_map[claude.main_file].split("---", 2)[2]
+        codex_body = codex.file_map[codex.main_file].split("---", 2)[2]
+        assert claude_body == codex_body
