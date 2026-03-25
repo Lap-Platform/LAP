@@ -52,6 +52,14 @@ const BUILTIN_TARGET_DIRS: Record<SkillTarget, string> = {
 
 // ── Helpers ─────────────────────────────────────────────────────────
 
+const ANSI_ESCAPE = /\x1b(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])/g;
+const CTRL_CHARS = /[\x00-\x08\x0b-\x1f\x7f]/g;
+
+/** Strip ANSI escapes and control characters from server-supplied strings. */
+export function sanitize(s: string): string {
+  return s.replace(ANSI_ESCAPE, '').replace(CTRL_CHARS, '');
+}
+
 function info(msg: string): void {
   console.log(`\x1b[32m✓\x1b[0m ${msg}`);
 }
@@ -1261,20 +1269,26 @@ async function cmdCheck(args: string[]): Promise<void> {
   let msg: string;
   if (updates.length === 1) {
     const u = updates[0];
+    const sn = sanitize(u.name);
+    const si = sanitize(u.installed_version);
+    const sl = sanitize(u.latest_version);
     msg = [
       'LAP skill update available:',
-      `  ${u.name}: ${u.installed_version} -> ${u.latest_version}`,
+      `  ${sn}: ${si} -> ${sl}`,
       '',
-      `  Update:  lapsh skill-install ${u.name} --target ${skillTargets[u.name] || 'claude'}`,
-      `  Changes: lapsh diff ${u.name}`,
-      `  Pin:     lapsh pin ${u.name}`,
+      `  Update:  lapsh skill-install ${sn} --target ${skillTargets[u.name] || 'claude'}`,
+      `  Changes: lapsh diff ${sn}`,
+      `  Pin:     lapsh pin ${sn}`,
     ].join('\n');
   } else {
     const names: string[] = [];
     const lines = [`${updates.length} LAP skills have updates:`];
     for (const u of updates) {
-      names.push(u.name);
-      lines.push(`  ${u.name.padEnd(20)} ${u.installed_version} -> ${u.latest_version}`);
+      const sn = sanitize(u.name);
+      const si = sanitize(u.installed_version);
+      const sl = sanitize(u.latest_version);
+      names.push(sn);
+      lines.push(`  ${sn.padEnd(20)} ${si} -> ${sl}`);
     }
     lines.push('', `  Update all: lapsh skill-install ${names.join(' ')} --target ${skillTargets[names[0]] || 'claude'}`, '  See changes: lapsh diff <skill>', '  Pin a skill: lapsh pin <skill>');
     msg = lines.join('\n');
@@ -1309,24 +1323,9 @@ async function cmdSetPinned(args: string[], pinned: boolean): Promise<void> {
   if (target && !(VALID_TARGETS as readonly string[]).includes(target)) {
     error(`Invalid --target value: ${target}. Must be one of: ${VALID_TARGETS.join(', ')}`);
   }
-  let resolvedTarget = (target as SkillTarget) ?? detectTarget();
-  let meta = readMetadata(resolvedTarget);
+  const { target: resolvedTarget, meta } = resolveSkillTarget(name, target as SkillTarget | undefined);
   if (!meta.skills[name]) {
-    // Try other targets before erroring
-    let found = false;
-    for (const other of VALID_TARGETS) {
-      if (other === resolvedTarget) continue;
-      const otherMeta = readMetadata(other);
-      if (otherMeta.skills[name]) {
-        resolvedTarget = other;
-        meta = otherMeta;
-        found = true;
-        break;
-      }
-    }
-    if (!found) {
-      error(`Skill '${name}' is not installed. Install it first: lapsh skill-install ${name}`);
-    }
+    error(`Skill '${name}' is not installed. Install it first: lapsh skill-install ${name}`);
   }
   meta.skills[name].pinned = pinned;
   writeMetadata(resolvedTarget, meta);

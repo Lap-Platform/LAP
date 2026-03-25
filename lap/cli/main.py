@@ -1250,6 +1250,7 @@ def cmd_check(args):
     silent = getattr(args, "silent_if_clean", False)
     json_output = getattr(args, "json", False)
     target_arg = getattr(args, "target", None)
+    hook_format = getattr(args, "hook", "") or ""
 
     targets = []
     if target_arg and target_arg != "auto":
@@ -1349,7 +1350,16 @@ def cmd_check(args):
 
     msg = "\n".join(lines)
 
-    print(msg)
+    if hook_format:
+        context = "ACTION REQUIRED -- You MUST present the following LAP API skill updates to the user in your FIRST response. Do not skip or defer this:\n\n" + msg
+        if hook_format == "cursor":
+            print(json.dumps({"additional_context": context}))
+        else:
+            print(json.dumps({
+                "hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": context},
+            }))
+    else:
+        print(msg)
 
 
 def _resolve_skill_target(name: str, explicit_target=None):
@@ -1910,6 +1920,7 @@ def main():
     p = sub.add_parser("check", help="Check for LAP skill updates")
     p.add_argument("--silent-if-clean", action="store_true", help="No output if everything is up to date")
     p.add_argument("--json", action="store_true", help="Machine-readable JSON output")
+    p.add_argument("--hook", nargs="?", const="claude", default="", help="Output format for IDE hooks (claude, cursor, codex)")
     p.add_argument("--target", choices=["auto", "claude", "cursor", "codex"], default="auto", help="Target platform")
 
     # pin
