@@ -1859,4 +1859,54 @@ describe('uninstall logic', () => {
   });
 });
 
+// ── Cross-language parity tests ──────────────────────────────────────
+// Prevent Python/TypeScript constant drift that caused the CLAUDE.md removal bug.
+
+describe('Cross-language parity', () => {
+  const pyCliPath = path.resolve(__dirname, '..', '..', '..', '..', 'lap', 'cli', 'main.py');
+
+  it('P1: LAP_HOOK_MARKER matches Python _LAP_HOOK_MARKER', () => {
+    const pySource = fs.readFileSync(pyCliPath, 'utf-8');
+    const match = pySource.match(/_LAP_HOOK_MARKER\s*=\s*"([^"]+)"/);
+    assert.ok(match, 'Should find _LAP_HOOK_MARKER in Python source');
+    assert.strictEqual(LAP_HOOK_MARKER, match[1], 'Hook markers must match across languages');
+  });
+
+  it('P2: LAP_HOOK_INSTRUCTION body matches Python _LAP_HOOK_INSTRUCTION', () => {
+    const pySource = fs.readFileSync(pyCliPath, 'utf-8').replace(/\r\n/g, '\n');
+    // Extract the Python f-string content between the triple quotes
+    const match = pySource.match(/_LAP_HOOK_INSTRUCTION\s*=\s*f"""([\s\S]*?)"""/);
+    assert.ok(match, 'Should find _LAP_HOOK_INSTRUCTION in Python source');
+    // Normalize: replace {_LAP_HOOK_MARKER} with actual marker value, trim
+    const pyBody = match[1].replace('{_LAP_HOOK_MARKER}', LAP_HOOK_MARKER).trim();
+    const tsBody = LAP_HOOK_INSTRUCTION.trim();
+    assert.strictEqual(tsBody, pyBody, 'Hook instruction text must match across languages');
+  });
+
+  it('P3: Cursor update rule body matches Python _ensure_cursor_update_rule', () => {
+    const pySource = fs.readFileSync(pyCliPath, 'utf-8').replace(/\r\n/g, '\n');
+    // Python writes the cursor rule as concatenated string literals -- extract all lines between the quotes
+    const pyMatch = pySource.match(/_ensure_cursor_update_rule[\s\S]*?write_text\(\s*\n([\s\S]*?)\n\s*encoding=/);
+    assert.ok(pyMatch, 'Should find cursor rule write_text block in Python source');
+    // Join the concatenated Python strings: strip quotes, join
+    const pyText = pyMatch[1]
+      .split('\n')
+      .map(line => line.trim().replace(/^['"]|['"],?\s*$/g, ''))
+      .join('')
+      .replace(/---\\n.*?---\\n\\n/, '')  // strip frontmatter
+      .replace(/\\n/g, '\n')
+      .trim();
+
+    // Extract same from TypeScript
+    const tsSource = fs.readFileSync(path.resolve(__dirname, '..', '..', 'src', 'cli.ts'), 'utf-8').replace(/\r\n/g, '\n');
+    const tsMatch = tsSource.match(/ensureCursorUpdateRule[\s\S]*?writeFileSync\(rulePath,\s*`([\s\S]*?)`,/);
+    assert.ok(tsMatch, 'Should find cursor rule template in TypeScript source');
+    const tsText = tsMatch[1]
+      .replace(/---[\s\S]*?---\s*\n*/, '')  // strip frontmatter
+      .trim();
+
+    assert.strictEqual(tsText, pyText, 'Cursor update rule text must match across languages');
+  });
+});
+
 console.log('\n-- Skill tests complete --');

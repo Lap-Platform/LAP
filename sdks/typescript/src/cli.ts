@@ -684,7 +684,7 @@ export const LAP_HOOK_INSTRUCTION = `
 ${LAP_HOOK_MARKER}
 ## LAP API Skill Updates
 
-If a SessionStart hook injects LAP API skill update notifications into your context, you MUST present them to the user in your first response. Do not skip, defer, or wait to be asked.
+If a SessionStart hook injects LAP API skill update notifications into your context, you MUST present them to the user in your first response. Do not skip, defer, or wait to be asked. Include the full notification exactly as provided -- the update command, the diff command, and the pin command.
 `;
 
 function ensureMdHookInstruction(dotDir: string, filename: string): void {
@@ -710,7 +710,7 @@ description: "LAP API skill update notifications"
 alwaysApply: true
 ---
 
-If a sessionStart hook injects LAP API skill update notifications into your context, you MUST present them to the user in your first response. Do not skip, defer, or wait to be asked.
+If a sessionStart hook injects LAP API skill update notifications into your context, you MUST present them to the user in your first response. Do not skip, defer, or wait to be asked. Include the full notification exactly as provided -- the update command, the diff command, and the pin command.
 `, 'utf-8');
   info('Added LAP update rule to ~/.cursor/rules/lap-updates.mdc');
 }
@@ -908,7 +908,13 @@ export function removeMdHookInstruction(dotDir: string, filename: string, homeOv
   if (!fs.existsSync(mdPath)) return;
   const content = fs.readFileSync(mdPath, 'utf-8');
   if (!content.includes(LAP_HOOK_MARKER)) return;
-  const newContent = content.replace(LAP_HOOK_INSTRUCTION, '').replace(/\n+$/, '') + '\n';
+  // Try exact match first, then fall back to regex removal from marker to end of block
+  let newContent = content.replace(LAP_HOOK_INSTRUCTION, '');
+  if (newContent.includes(LAP_HOOK_MARKER)) {
+    // Exact match failed (different version wrote the block) -- strip from marker to next section or EOF
+    newContent = newContent.replace(/\n*<!-- LAP-HOOK-INSTRUCTION -->[\s\S]*?(?=\n## (?!LAP API Skill)|$)/, '');
+  }
+  newContent = newContent.replace(/\n+$/, '') + '\n';
   if (newContent.trim()) {
     const tmp = mdPath + '.tmp';
     fs.writeFileSync(tmp, newContent, 'utf-8');

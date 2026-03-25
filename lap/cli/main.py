@@ -1163,7 +1163,12 @@ def _remove_md_hook_instruction(dot_dir: str, filename: str) -> None:
     content = md_path.read_text(encoding="utf-8")
     if _LAP_HOOK_MARKER not in content:
         return
-    new_content = content.replace(_LAP_HOOK_INSTRUCTION, "").rstrip("\n") + "\n"
+    import re
+    new_content = content.replace(_LAP_HOOK_INSTRUCTION, "")
+    if _LAP_HOOK_MARKER in new_content:
+        # Exact match failed (different version wrote the block) -- strip from marker
+        new_content = re.sub(r"\n*<!-- LAP-HOOK-INSTRUCTION -->[\s\S]*?(?=\n## (?!LAP API Skill)|$)", "", new_content)
+    new_content = new_content.rstrip("\n") + "\n"
     if new_content.strip():
         tmp = md_path.with_suffix(".tmp")
         tmp.write_text(new_content, encoding="utf-8")
