@@ -17,6 +17,7 @@
 <a href="https://github.com/Lap-Platform/lap/tree/main/skills/lap"><img src="https://img.shields.io/badge/Claude%20Code-skill-orange?style=for-the-badge" alt="Claude Code Skill"></a>
 <a href="https://clawhub.ai/mickmicksh/lap"><img src="https://img.shields.io/badge/OpenClaw-skill-orange?style=for-the-badge" alt="OpenClaw Skill"></a>
 <a href="https://github.com/Lap-Platform/lap/tree/main/skills/cursor"><img src="https://img.shields.io/badge/Cursor-Rules-black?style=for-the-badge" alt="Cursor Rules"></a>
+<a href="https://github.com/Lap-Platform/lap/tree/main/skills/codex"><img src="https://img.shields.io/badge/Codex-skill-green?style=for-the-badge" alt="Codex Skill"></a>
 <br>
 <a href="https://github.com/Lap-Platform/lap/pulls"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge" alt="PRs Welcome"></a>
 <a href="https://github.com/Lap-Platform/lap"><img src="https://img.shields.io/badge/%E2%AD%90_Star-this_repo-yellow?style=for-the-badge" alt="Star this repo"></a>
@@ -57,6 +58,7 @@ LAP Lean scored **0.851** (vs 0.825 raw) while using **35% less cost** and **29%
 # Set up LAP in your IDE
 npx @lap-platform/lapsh init                    # Claude Code
 npx @lap-platform/lapsh init --target cursor    # Cursor
+npx @lap-platform/lapsh init --target codex     # Codex
 
 # Search the registry for an API
 npx @lap-platform/lapsh search payment
@@ -85,6 +87,13 @@ npx @lap-platform/lapsh init
 ```bash
 npx @lap-platform/lapsh init --target cursor
 ```
+
+**Codex (CLI & VS Code extension):**
+```bash
+npx @lap-platform/lapsh init --target codex
+```
+
+Codex agents use curl for registry operations (search, get, check) instead of npx -- instant in the sandbox. Skills install to `~/.codex/skills/`. Auto-update hooks are pre-configured for when Codex enables its hooks engine (`codex_hooks` feature flag is currently experimental).
 
 **OpenClaw:** install from [ClawHub](https://clawhub.ai/mickmicksh/lap) or copy manually:
 ```bash
@@ -169,7 +178,9 @@ LAP is more than a compiler:
 | **Search** | Find APIs in the registry | `lapsh search payment` |
 | **Get** | Download a spec by name | `lapsh get stripe-com` |
 | **Skill Install** | Install an API skill | `lapsh skill-install stripe-com --target claude` |
-| **Check** | Check installed skills for updates | `lapsh check [--target claude\|cursor]` |
+| **Skill Uninstall** | Remove an installed skill | `lapsh skill-uninstall stripe-com` |
+| **Uninstall** | Fully remove LAP from your IDE | `lapsh uninstall --target claude` |
+| **Check** | Check installed skills for updates | `lapsh check [--target claude\|cursor\|codex]` |
 | **Diff** | Compare installed skill vs registry | `lapsh diff stripe-com` |
 | **Pin / Unpin** | Skip or resume update checks | `lapsh pin stripe-com` |
 | **Compiler** | Any spec → `.lap` | `lapsh compile api.yaml` |
@@ -178,7 +189,7 @@ LAP is more than a compiler:
 | **Round-trip** | Convert LAP back to OpenAPI | `lapsh convert api.lap -f openapi` |
 | **Publish** | Share specs to the registry | `lapsh publish api.yaml --provider acme` |
 
-> **Claude Code & Cursor:** The `lap` skill is included -- run `lapsh init` and your agent can search, install, and auto-check for API skill updates directly.
+> **Claude Code, Cursor & Codex:** The `lap` skill is included -- run `lapsh init` and your agent can search, install, and manage API skills directly. Claude Code and Cursor support auto-update checks via SessionStart hooks. Codex hooks are pre-configured and will activate when the `codex_hooks` feature becomes stable.
 
 ## Supported Formats
 

@@ -19,13 +19,15 @@ Bump the version and publish to PyPI + npm.
 
 4. **Update CHANGELOG.md**: Add a new `## [X.Y.Z] - YYYY-MM-DD` section at the top (below the header). Ask the user for a summary of changes, or generate one from recent git log if the user says to auto-generate.
 
-5. **Commit**: Stage the 4 changed files and commit with message: `chore: bump to vX.Y.Z with changelog`
+5. **Update README.md**: Review the changelog for this release. If it includes new features, new commands, new IDE support, or changed behavior that users need to know about, update README.md accordingly (Quick Start, Use as an Agent Skill, Ecosystem table, badges, etc.). If the release is only bug fixes or internal changes, skip this step.
 
-6. **Push**: Push to origin/main.
+6. **Commit**: Stage all changed files and commit with message: `chore: bump to vX.Y.Z with changelog`
 
-7. **Create GitHub Release**: Run `gh release create vX.Y.Z --title "vX.Y.Z" --notes-file CHANGELOG_SECTION` where CHANGELOG_SECTION contains only the new version's changelog section.
+7. **Push**: Push to origin/main.
 
-8. **Monitor publish workflows**: After the release is created, poll the two workflow runs:
+8. **Create GitHub Release**: Run `gh release create vX.Y.Z --title "vX.Y.Z" --notes-file CHANGELOG_SECTION` where CHANGELOG_SECTION contains only the new version's changelog section.
+
+9. **Monitor publish workflows**: After the release is created, poll the two workflow runs:
    - `Publish to PyPI`
    - `Publish to npm`
 
