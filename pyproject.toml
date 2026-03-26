@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lapsh"
-version = "0.6.1"
+version = "0.7.0"
 description = "Lean API Platform -- Token-efficient API specs for AI agents"
 readme = "README.md"
 license = "Apache-2.0"

@@ -5,6 +5,22 @@ All notable changes to LAP (Lean API Platform) will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2026-03-26
+
+### Added
+- **Codex IDE support** -- full `--target codex` support across all commands: init, skill-install, skill-uninstall, uninstall, check, pin, unpin, diff (Python + TypeScript)
+- **`skill-uninstall` command** -- remove individual skills by name, with cross-target lookup (all 3 IDEs)
+- **`uninstall` command** -- fully remove LAP from your IDE: skills, hooks, metadata, CLAUDE.md/AGENTS.md/Cursor rules
+- **Codex curl-first workflow** -- generated skills and builtin Codex SKILL.md use curl for registry operations (search, get, check) instead of npx, which is unusably slow in Codex sandbox
+- **Python `--hook` flag** -- `lapsh check --hook claude/cursor/codex` outputs structured JSON for SessionStart hook injection (cross-language parity with TypeScript)
+- **Output sanitization** -- TypeScript CLI strips ANSI escapes and control chars from registry data (matches Python)
+- **Cross-language parity tests** -- 3 automated tests (P1-P3) read Python source constants and assert TypeScript matches, preventing drift
+
+### Fixed
+- **Hook instruction mismatch** -- Python and TypeScript `LAP_HOOK_INSTRUCTION` constants now identical, preventing CLAUDE.md removal failures
+- **Robust markdown removal** -- both Python and TypeScript fall back to regex if exact string match fails when removing LAP instruction blocks
+- **Redundant pin/unpin fallback** -- TypeScript `cmdSetPinned` now uses `resolveSkillTarget()` instead of duplicating cross-target lookup logic
+
 ## [0.6.1] - 2026-03-19
 
 ### Fixed
