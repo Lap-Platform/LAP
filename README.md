@@ -64,11 +64,11 @@ npx @lap-platform/lapsh init --target codex     # Codex
 npx @lap-platform/lapsh search payment
 
 # Download a spec
-npx @lap-platform/lapsh get stripe-com -o stripe.lap
+npx @lap-platform/lapsh get stripe -o stripe.lap
 
 
 # Install an API skill
-npx @lap-platform/lapsh skill-install stripe-com
+npx @lap-platform/lapsh skill-install stripe
 
 # Or compile your own spec
 npx @lap-platform/lapsh compile api.yaml --lean
@@ -103,7 +103,7 @@ cp -r skills/lap ~/.openclaw/skills/lap
 Once installed, agents auto-trigger the skill when working with APIs -- or invoke it directly with `/lap`. You can also install individual API skills for specific integrations:
 
 ```bash
-npx @lap-platform/lapsh skill-install stripe-com
+npx @lap-platform/lapsh skill-install stripe
 # Agent now knows the full Stripe API
 ```
 
@@ -176,13 +176,13 @@ LAP is more than a compiler:
 |-----------|------|---------|
 | **Init** | Set up LAP in your IDE | `lapsh init --target claude` |
 | **Search** | Find APIs in the registry | `lapsh search payment` |
-| **Get** | Download a spec by name | `lapsh get stripe-com` |
-| **Skill Install** | Install an API skill | `lapsh skill-install stripe-com --target claude` |
-| **Skill Uninstall** | Remove an installed skill | `lapsh skill-uninstall stripe-com` |
+| **Get** | Download a spec by name | `lapsh get stripe` |
+| **Skill Install** | Install an API skill | `lapsh skill-install stripe --target claude` |
+| **Skill Uninstall** | Remove an installed skill | `lapsh skill-uninstall stripe` |
 | **Uninstall** | Fully remove LAP from your IDE | `lapsh uninstall --target claude` |
 | **Check** | Check installed skills for updates | `lapsh check [--target claude\|cursor\|codex]` |
-| **Diff** | Compare installed skill vs registry | `lapsh diff stripe-com` |
-| **Pin / Unpin** | Skip or resume update checks | `lapsh pin stripe-com` |
+| **Diff** | Compare installed skill vs registry | `lapsh diff stripe` |
+| **Pin / Unpin** | Skip or resume update checks | `lapsh pin stripe` |
 | **Compiler** | Any spec → `.lap` | `lapsh compile api.yaml` |
 | **Skill Generator** | Create agent-ready skills from any spec | `lapsh skill api.yaml --install` |
 | **API Differ** | Detect breaking API changes | `lapsh diff old.lap new.lap` |
