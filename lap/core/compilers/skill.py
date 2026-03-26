@@ -175,7 +175,7 @@ def _generate_skill_md(spec: LAPSpec, options: SkillOptions) -> str:
     parts.append("")
 
     # Body
-    parts.append(_generate_skill_body(spec))
+    parts.append(_generate_skill_body(spec, target=options.target))
 
     return "\n".join(parts)
 
@@ -255,7 +255,7 @@ def _generate_cursor_frontmatter(spec: LAPSpec) -> str:
     return "\n".join(lines)
 
 
-def _generate_skill_body(spec: LAPSpec) -> str:
+def _generate_skill_body(spec: LAPSpec, target: str = "claude") -> str:
     """Generate the markdown body of SKILL.md."""
     sections = []
 
@@ -306,7 +306,7 @@ def _generate_skill_body(spec: LAPSpec) -> str:
     sections.append("")
 
     # CLI
-    sections.append(_generate_cli_section(spec))
+    sections.append(_generate_cli_section(spec, target))
     sections.append("")
 
     # References
@@ -481,9 +481,11 @@ def _generate_response_tips(spec: LAPSpec) -> str:
     return "\n".join(tips)
 
 
-def _generate_cli_section(spec: LAPSpec) -> str:
-    """Generate CLI section with npx commands for spec management."""
+def _generate_cli_section(spec: LAPSpec, target: str = "claude") -> str:
+    """Generate CLI section with commands for spec management."""
     slug = _slugify(spec.api_name)
+    if target == "codex":
+        return _generate_codex_cli_section(slug)
     lines = [
         "## CLI",
         "",
@@ -494,6 +496,36 @@ def _generate_cli_section(spec: LAPSpec) -> str:
         "# Search for related APIs",
         f"npx @lap-platform/lapsh search {slug}",
         "```",
+    ]
+    return "\n".join(lines)
+
+
+def _generate_codex_cli_section(slug: str) -> str:
+    """Generate CLI section optimized for Codex sandbox (curl primary, npx fallback)."""
+    lines = [
+        "## CLI",
+        "",
+        "Use curl to manage specs (instant in sandbox, no install needed):",
+        "",
+        "```bash",
+        "# Update this spec to the latest version",
+        f"curl -sH 'Accept: text/lap' https://registry.lap.sh/v1/apis/{slug} -o references/api-spec.lap",
+        "",
+        "# Search for related APIs",
+        f"curl -s 'https://registry.lap.sh/v1/search?q={slug}'",
+        "",
+        "# Check for updates (returns JSON with latest version)",
+        f"curl -sH 'Accept: application/json' https://registry.lap.sh/v1/apis/{slug}",
+        "```",
+        "",
+        "<details><summary>Alternative: npx (slower, downloads package first)</summary>",
+        "",
+        "```bash",
+        f"npx @lap-platform/lapsh get {slug} -o references/api-spec.lap",
+        f"npx @lap-platform/lapsh search {slug}",
+        "```",
+        "",
+        "</details>",
     ]
     return "\n".join(lines)
 

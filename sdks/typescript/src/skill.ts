@@ -322,7 +322,7 @@ function generateCursorFrontmatter(spec: LAPSpec): string {
   return `---\ndescription: "${descEscaped}"\nalwaysApply: false\n---`;
 }
 
-function generateSkillBody(spec: LAPSpec): string {
+function generateSkillBody(spec: LAPSpec, target: SkillTarget = 'claude'): string {
   const sections: string[] = [];
 
   // Title
@@ -363,7 +363,7 @@ function generateSkillBody(spec: LAPSpec): string {
   sections.push('');
 
   // CLI
-  sections.push(generateCliSection(spec));
+  sections.push(generateCliSection(spec, target));
   sections.push('');
 
   // References
@@ -380,8 +380,9 @@ function generateSkillBody(spec: LAPSpec): string {
   return sections.join('\n');
 }
 
-function generateCliSection(spec: LAPSpec): string {
+function generateCliSection(spec: LAPSpec, target: SkillTarget = 'claude'): string {
   const slug = slugify(spec.apiName);
+  if (target === 'codex') return generateCodexCliSection(slug);
   return [
     '## CLI',
     '',
@@ -395,11 +396,39 @@ function generateCliSection(spec: LAPSpec): string {
   ].join('\n');
 }
 
+function generateCodexCliSection(slug: string): string {
+  return [
+    '## CLI',
+    '',
+    'Use curl to manage specs (instant in sandbox, no install needed):',
+    '',
+    '```bash',
+    '# Update this spec to the latest version',
+    `curl -sH 'Accept: text/lap' https://registry.lap.sh/v1/apis/${slug} -o references/api-spec.lap`,
+    '',
+    '# Search for related APIs',
+    `curl -s 'https://registry.lap.sh/v1/search?q=${slug}'`,
+    '',
+    '# Check for updates (returns JSON with latest version)',
+    `curl -sH 'Accept: application/json' https://registry.lap.sh/v1/apis/${slug}`,
+    '```',
+    '',
+    '<details><summary>Alternative: npx (slower, downloads package first)</summary>',
+    '',
+    '```bash',
+    `npx @lap-platform/lapsh get ${slug} -o references/api-spec.lap`,
+    `npx @lap-platform/lapsh search ${slug}`,
+    '```',
+    '',
+    '</details>',
+  ].join('\n');
+}
+
 function generateSkillMd(spec: LAPSpec, options?: SkillOptions): string {
   const parts: string[] = [];
   parts.push(generateFrontmatter(spec, options));
   parts.push('');
-  parts.push(generateSkillBody(spec));
+  parts.push(generateSkillBody(spec, options?.target ?? 'claude'));
   return parts.join('\n');
 }
 

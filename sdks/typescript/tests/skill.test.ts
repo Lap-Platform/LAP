@@ -382,14 +382,50 @@ describe('Skill Generation', () => {
       assert.ok(fmMatch[1].includes('generator: lapsh'), 'Should have generator');
     });
 
-    it('body matches claude body', () => {
+    it('body differs from claude only in CLI section', () => {
       const text = fs.readFileSync(STRIPE_FILE, 'utf-8');
       const spec = parse(text);
       const claude = generateSkill(spec, { target: 'claude' });
       const codex = generateSkill(spec, { target: 'codex' });
       const claudeBody = claude.fileMap[claude.mainFile].split('---').slice(2).join('---');
       const codexBody = codex.fileMap[codex.mainFile].split('---').slice(2).join('---');
-      assert.strictEqual(codexBody, claudeBody);
+      assert.notStrictEqual(codexBody, claudeBody, 'Bodies should differ');
+      const stripCli = (s: string) => s.replace(/## CLI\n[\s\S]*?(?=\n## |\s*$)/, '');
+      assert.strictEqual(stripCli(codexBody), stripCli(claudeBody), 'Only CLI section should differ');
+    });
+
+    it('codex CLI section has curl commands', () => {
+      const text = fs.readFileSync(STRIPE_FILE, 'utf-8');
+      const spec = parse(text);
+      const skill = generateSkill(spec, { target: 'codex' });
+      const md = skill.fileMap['SKILL.md'];
+      assert.ok(md.includes('curl'), 'Codex CLI should have curl');
+      assert.ok(md.includes('registry.lap.sh/v1/apis/'), 'Should reference registry API');
+      assert.ok(md.includes('registry.lap.sh/v1/search'), 'Should reference search API');
+    });
+
+    it('codex CLI section has npx fallback', () => {
+      const text = fs.readFileSync(STRIPE_FILE, 'utf-8');
+      const spec = parse(text);
+      const skill = generateSkill(spec, { target: 'codex' });
+      const md = skill.fileMap['SKILL.md'];
+      assert.ok(md.includes('npx @lap-platform/lapsh'), 'Should have npx fallback');
+    });
+
+    it('claude CLI has no curl', () => {
+      const text = fs.readFileSync(STRIPE_FILE, 'utf-8');
+      const spec = parse(text);
+      const skill = generateSkill(spec, { target: 'claude' });
+      const md = skill.fileMap['SKILL.md'];
+      assert.ok(!md.includes('curl'), 'Claude CLI should NOT have curl');
+    });
+
+    it('cursor CLI has no curl', () => {
+      const text = fs.readFileSync(STRIPE_FILE, 'utf-8');
+      const spec = parse(text);
+      const skill = generateSkill(spec, { target: 'cursor' });
+      const md = skill.fileMap[skill.mainFile];
+      assert.ok(!md.includes('curl'), 'Cursor CLI should NOT have curl');
     });
 
     it('still includes references/api-spec.lap', () => {

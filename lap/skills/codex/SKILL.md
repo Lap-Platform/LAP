@@ -7,7 +7,7 @@ metadata:
   openclaw:
     emoji: "\u26A1"
     requires:
-      anyBins: ["npx", "lapsh"]
+      anyBins: ["curl", "npx", "lapsh"]
     install:
       - id: node
         kind: node
@@ -22,18 +22,20 @@ Compile, search, and manage API specs for AI agents.
 
 ## Command Resolution
 
-Detect the available CLI binary once per session:
+IMPORTANT: Always use curl for registry operations (search, get, check). Do NOT use npx for these -- it downloads the package every time and takes minutes. curl is instant.
 
 ```bash
-# Prefer global install, fall back to npx
-if command -v lapsh &>/dev/null; then
-  LAP_CMD="lapsh"
-else
-  LAP_CMD="npx @lap-platform/lapsh"
-fi
+# Search the registry
+curl -s 'https://registry.lap.sh/v1/search?q=<query>'
+
+# Download a spec
+curl -sH 'Accept: text/lap' https://registry.lap.sh/v1/apis/<name> -o <name>.lap
+
+# Get API metadata (version, endpoint count)
+curl -sH 'Accept: application/json' https://registry.lap.sh/v1/apis/<name>
 ```
 
-Use `$LAP_CMD` (or the resolved form) for all commands below.
+Only use the CLI (`lapsh` or `npx @lap-platform/lapsh`) for operations that require it: compile, publish, skill-install, init.
 
 ---
 
@@ -43,35 +45,38 @@ Use this flow when a user needs to find, download, or work with an API.
 
 ### 1. Discover
 
+**Option A -- curl (fastest)**:
+```bash
+curl -s 'https://registry.lap.sh/v1/search?q=<query>'
+```
+
+**Option B -- CLI**:
 ```bash
 lapsh search <query> [--tag <tag>] [--sort relevance|popularity|date] [--limit <n>]
 ```
 
-Search the LAP registry. Results show name, endpoint count, compression ratio, and a `[skill]` marker for installable skills.
-
-```bash
-# Find payment APIs sorted by popularity
-lapsh search payment --sort popularity
-
-# JSON output for scripting
-lapsh search payment --json | jq '.results[] | select(.has_skill) | .name'
-```
+Results show name, endpoint count, compression ratio, and a `[skill]` marker for installable skills.
 
 ### 2. Acquire
 
-**Option A -- Install a skill** (if `[skill]` marker present):
+**Option A -- curl (fastest)**:
+```bash
+curl -sH 'Accept: text/lap' https://registry.lap.sh/v1/apis/<name> -o <name>.lap
+```
+
+**Option B -- Install a skill** (if `[skill]` marker present):
 ```bash
 lapsh skill-install <name> --target codex
 # Installs to ~/.codex/skills/<name>/
 ```
 
-**Option B -- Download the spec**:
+**Option C -- Download via CLI**:
 ```bash
 lapsh get <name> -o <name>.lap
 lapsh get <name> --lean -o <name>.lean.lap
 ```
 
-**Option C -- Compile a local spec**:
+**Option D -- Compile a local spec**:
 ```bash
 lapsh compile <spec-file> -o output.lap
 lapsh compile <spec-file> -o output.lean.lap --lean

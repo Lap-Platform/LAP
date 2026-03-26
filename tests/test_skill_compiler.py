@@ -815,10 +815,44 @@ class TestCodexTarget:
         result = generate_skill(minimal_spec, SkillOptions(target="codex"))
         assert "references/api-spec.lap" in result.file_map
 
-    def test_codex_body_matches_claude(self, minimal_spec):
-        """Codex body content (after frontmatter) matches Claude body."""
+    def test_codex_body_differs_only_in_cli(self, minimal_spec):
+        """Codex vs Claude body identical except CLI section."""
+        import re
         claude = generate_skill(minimal_spec, SkillOptions(target="claude"))
         codex = generate_skill(minimal_spec, SkillOptions(target="codex"))
         claude_body = claude.file_map[claude.main_file].split("---", 2)[2]
         codex_body = codex.file_map[codex.main_file].split("---", 2)[2]
-        assert claude_body == codex_body
+        assert claude_body != codex_body, "Bodies should differ"
+        strip_cli = lambda s: re.sub(r"## CLI\n[\s\S]*?(?=\n## |\Z)", "", s)
+        assert strip_cli(claude_body) == strip_cli(codex_body), "Only CLI section should differ"
+
+    def test_codex_cli_has_curl(self, minimal_spec):
+        """Codex CLI section contains curl commands."""
+        result = generate_skill(minimal_spec, SkillOptions(target="codex"))
+        md = result.file_map["SKILL.md"]
+        assert "curl" in md
+
+    def test_codex_cli_has_registry_urls(self, minimal_spec):
+        """Codex CLI section references registry API endpoints."""
+        result = generate_skill(minimal_spec, SkillOptions(target="codex"))
+        md = result.file_map["SKILL.md"]
+        assert "registry.lap.sh/v1/apis/" in md
+        assert "registry.lap.sh/v1/search" in md
+
+    def test_codex_cli_has_npx_fallback(self, minimal_spec):
+        """Codex CLI section includes npx as fallback."""
+        result = generate_skill(minimal_spec, SkillOptions(target="codex"))
+        md = result.file_map["SKILL.md"]
+        assert "npx @lap-platform/lapsh" in md
+
+    def test_claude_cli_no_curl(self, minimal_spec):
+        """Claude CLI section does NOT have curl commands."""
+        result = generate_skill(minimal_spec, SkillOptions(target="claude"))
+        md = result.file_map["SKILL.md"]
+        assert "curl" not in md
+
+    def test_cursor_cli_no_curl(self, minimal_spec):
+        """Cursor CLI section does NOT have curl commands."""
+        result = generate_skill(minimal_spec, SkillOptions(target="cursor"))
+        md = result.file_map[result.main_file]
+        assert "curl" not in md
