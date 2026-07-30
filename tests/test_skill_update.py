@@ -463,6 +463,23 @@ def test_validate_registry_url_rejects_localhost_prefix_confusion():
         _validate_registry_url("http://localhost.evil.com")
     with pytest.raises(ValueError, match="HTTPS"):
         _validate_registry_url("http://localhost-attacker.com")
+    with pytest.raises(ValueError, match="credentials"):
+        _validate_registry_url("http://localhost:8787@evil.example")
+    with pytest.raises(ValueError, match="credentials"):
+        _validate_registry_url("http://127.0.0.1@evil.example")
+
+
+def test_validate_registry_url_allows_ipv6_loopback():
+    assert _validate_registry_url("http://[::1]:8787") == "http://[::1]:8787"
+
+
+def test_validate_registry_url_rejects_credentials_and_malformed_values():
+    with pytest.raises(ValueError, match="credentials"):
+        _validate_registry_url("https://user:pass@registry.lap.sh")
+    with pytest.raises(ValueError, match="query string"):
+        _validate_registry_url("https://registry.lap.sh?tenant=other")
+    with pytest.raises(ValueError, match="valid absolute URL"):
+        _validate_registry_url("not a URL")
 
 
 # ── C7: skill-install writes metadata ────────────────────────────────

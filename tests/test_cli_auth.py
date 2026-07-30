@@ -109,6 +109,38 @@ class TestRegistryUrl:
             assert url == "http://localhost:8787"
             assert not url.endswith("/")  # Trailing slash stripped
 
+    @pytest.mark.parametrize("host", ["localhost", "127.0.0.2", "[::1]"])
+    def test_loopback_http_is_allowed(self, host):
+        assert auth.validate_registry_url(f"http://{host}:8787") == f"http://{host}:8787"
+
+    @pytest.mark.parametrize(
+        "url",
+        [
+            "http://registry.lap.sh",
+            "http://localhost:8787@evil.example",
+            "http://127.0.0.1@evil.example",
+            "ftp://registry.lap.sh",
+            "https://user:pass@registry.lap.sh",
+            "https://registry.lap.sh?override=1",
+            "not a URL",
+        ],
+    )
+    def test_untrusted_registry_urls_are_rejected(self, url):
+        with pytest.raises(ValueError):
+            auth.validate_registry_url(url)
+
+    def test_auth_url_requires_https_or_loopback(self):
+        assert auth.validate_auth_url("https://github.com/login/oauth") == (
+            "https://github.com/login/oauth"
+        )
+        assert auth.validate_auth_url("http://[::1]:8787/auth") == (
+            "http://[::1]:8787/auth"
+        )
+        with pytest.raises(ValueError, match="HTTPS"):
+            auth.validate_auth_url("http://evil.example/auth")
+        with pytest.raises(ValueError):
+            auth.validate_auth_url("javascript:alert(1)")
+
 
 # ── SSE parsing ──────────────────────────────────────────────────────
 

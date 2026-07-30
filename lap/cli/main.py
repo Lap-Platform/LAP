@@ -391,7 +391,7 @@ def cmd_login(args):
     """Authenticate with the LAP registry via GitHub OAuth."""
     from lap.cli.auth import (
         api_request, save_credentials, load_credentials,
-        poll_sse_stream, get_registry_url,
+        poll_sse_stream, get_registry_url, validate_auth_url,
     )
     import webbrowser
 
@@ -409,7 +409,10 @@ def cmd_login(args):
     result = api_request("POST", "/auth/cli/session", body=body if body else None)
     session_id = result["session_id"]
     stream_key = result["stream_key"]
-    auth_url = result["auth_url"]
+    try:
+        auth_url = validate_auth_url(result["auth_url"])
+    except (KeyError, ValueError) as exc:
+        error(f"Registry returned an invalid authentication URL: {exc}")
 
     # Open browser
     print(f"Opening browser for GitHub authorization...")
@@ -794,14 +797,9 @@ def _is_valid_skill_name(name: str) -> bool:
 
 def _validate_registry_url(url: str) -> str:
     """Ensure registry URL uses HTTPS (except localhost for dev)."""
-    for prefix in ("http://localhost:", "http://localhost/", "http://127.0.0.1:", "http://127.0.0.1/"):
-        if url.startswith(prefix):
-            return url
-    if url in ("http://localhost", "http://127.0.0.1"):
-        return url
-    if not url.startswith("https://"):
-        raise ValueError(f"Registry URL must use HTTPS: {url}")
-    return url
+    from lap.cli.auth import validate_registry_url
+
+    return validate_registry_url(url)
 
 
 def _register_session_hook(target: str) -> None:

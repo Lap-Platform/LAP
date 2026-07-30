@@ -4,8 +4,8 @@
 
 | Version | Supported |
 |---------|-----------|
-| 0.6.x   | Yes       |
-| < 0.6   | No        |
+| 0.7.x   | Yes       |
+| < 0.7   | No        |
 
 Only the latest release receives security fixes. We recommend always running the most recent version.
 

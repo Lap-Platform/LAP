@@ -10,14 +10,63 @@ import * as path from 'path';
 import * as os from 'os';
 import * as http from 'http';
 import * as https from 'https';
-import { exec } from 'child_process';
+import { execFile } from 'child_process';
 
 const DEFAULT_REGISTRY = 'https://registry.lap.sh';
 const CREDENTIALS_DIR = path.join(os.homedir(), '.lap');
 const CREDENTIALS_FILE = path.join(CREDENTIALS_DIR, 'credentials.json');
 
 export function getRegistryUrl(): string {
-  return (process.env.LAP_REGISTRY || DEFAULT_REGISTRY).replace(/\/$/, '');
+  return validateRegistryUrl(process.env.LAP_REGISTRY || DEFAULT_REGISTRY);
+}
+
+function isLoopbackHostname(hostname: string): boolean {
+  const normalized = hostname.toLowerCase().replace(/^\[|\]$/g, '');
+  if (normalized === 'localhost' || normalized === '::1') return true;
+
+  const octets = normalized.split('.');
+  return (
+    octets.length === 4 &&
+    octets.every((octet) => /^\d{1,3}$/.test(octet) && Number(octet) <= 255) &&
+    Number(octets[0]) === 127
+  );
+}
+
+function parseTrustedWebUrl(value: unknown, label: string): URL {
+  if (
+    typeof value !== 'string' ||
+    value.length === 0 ||
+    value.trim() !== value ||
+    value.includes('\\') ||
+    /[\u0000-\u001f\u007f]/.test(value)
+  ) {
+    throw new Error(`${label} must be a valid absolute URL.`);
+  }
+
+  let parsed: URL;
+  try {
+    parsed = new URL(value);
+  } catch {
+    throw new Error(`${label} must be a valid absolute URL.`);
+  }
+
+  if (!parsed.hostname) {
+    throw new Error(`${label} must be a valid absolute URL.`);
+  }
+  if (parsed.username || parsed.password) {
+    throw new Error(`${label} must not contain credentials.`);
+  }
+  if (parsed.protocol === 'https:') return parsed;
+  if (parsed.protocol === 'http:' && isLoopbackHostname(parsed.hostname)) return parsed;
+  throw new Error(`${label} must use HTTPS (HTTP is allowed only for loopback development).`);
+}
+
+export function validateRegistryUrl(value: string): string {
+  const parsed = parseTrustedWebUrl(value, 'Registry URL');
+  if (parsed.search || parsed.hash) {
+    throw new Error('Registry URL must not contain a query string or fragment.');
+  }
+  return value.replace(/\/+$/, '');
 }
 
 // ── Credentials ─────────────────────────────────────────────────────
@@ -174,10 +223,31 @@ export function pollSseStream(
 
 // ── Browser open ────────────────────────────────────────────────────
 
-export function openBrowser(url: string): void {
-  const cmd =
-    process.platform === 'win32' ? `start "" "${url}"` :
-    process.platform === 'darwin' ? `open "${url}"` :
-    `xdg-open "${url}"`;
-  exec(cmd);
+export interface BrowserLaunchCommand {
+  command: string;
+  args: string[];
+}
+
+export function validateAuthUrl(value: unknown): string {
+  return parseTrustedWebUrl(value, 'Authentication URL').href;
+}
+
+export function getBrowserLaunchCommand(
+  url: unknown,
+  platform: NodeJS.Platform = process.platform
+): BrowserLaunchCommand {
+  const authUrl = validateAuthUrl(url);
+
+  if (platform === 'win32') {
+    return { command: 'rundll32.exe', args: ['url.dll,FileProtocolHandler', authUrl] };
+  }
+  if (platform === 'darwin') {
+    return { command: 'open', args: [authUrl] };
+  }
+  return { command: 'xdg-open', args: [authUrl] };
+}
+
+export function openBrowser(url: unknown): void {
+  const { command, args } = getBrowserLaunchCommand(url);
+  execFile(command, args, { shell: false });
 }

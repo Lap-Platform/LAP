@@ -5,6 +5,16 @@ All notable changes to LAP (Lean API Platform) will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.1] - 2026-07-30
+
+### Security
+- **Registry-controlled command injection** -- launch login URLs with shell-free process APIs and validate server-provided authentication URLs before opening them
+- **Registry URL validation** -- require HTTPS except for real loopback development hosts and reject credentials, malformed URLs, and prefix-bypass payloads
+- **Issue automation SSRF** -- stop privileged GitHub runners from fetching reporter-controlled URLs
+
+### Changed
+- **Dependency hardening** -- update `js-yaml` and pin GitHub Actions to reviewed commit SHAs
+
 ## [0.7.0] - 2026-03-26
 
 ### Added
