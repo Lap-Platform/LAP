@@ -860,6 +860,33 @@ describe('Metadata helpers', () => {
         () => validateRegistryUrl('http://localhost-attacker.com'),
         /must use HTTPS/,
       );
+      assert.throws(
+        () => validateRegistryUrl('http://localhost:8080@evil.example'),
+        /credentials/,
+      );
+      assert.throws(
+        () => validateRegistryUrl('http://127.0.0.1@evil.example'),
+        /credentials/,
+      );
+    });
+
+    it('allows IPv6 loopback and rejects ambiguous base URLs', () => {
+      assert.strictEqual(
+        validateRegistryUrl('http://[::1]:8787'),
+        'http://[::1]:8787',
+      );
+      assert.throws(
+        () => validateRegistryUrl('https://user:pass@registry.lap.sh'),
+        /credentials/,
+      );
+      assert.throws(
+        () => validateRegistryUrl('https://registry.lap.sh?tenant=other'),
+        /query string/,
+      );
+      assert.throws(
+        () => validateRegistryUrl('not a URL'),
+        /valid absolute URL/,
+      );
     });
   });
 });

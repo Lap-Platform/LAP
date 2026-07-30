@@ -10,7 +10,10 @@ import {
   clearCredentials,
   getToken,
   getRegistryUrl,
+  validateRegistryUrl,
   apiRequest,
+  getBrowserLaunchCommand,
+  validateAuthUrl,
 } from '../src/auth';
 
 // ── helpers ─────────────────────────────────────────────────────────────────
@@ -146,6 +149,63 @@ describe('Registry URL', () => {
     process.env.LAP_REGISTRY = 'http://localhost:9000/';
     const url = getRegistryUrl();
     assert.ok(!url.endsWith('/'), `Registry URL should not end with slash, got: ${url}`);
+  });
+
+  it('allows HTTP only for real loopback hosts', () => {
+    assert.strictEqual(validateRegistryUrl('http://127.0.0.2:8787'), 'http://127.0.0.2:8787');
+    assert.strictEqual(validateRegistryUrl('http://[::1]:8787'), 'http://[::1]:8787');
+    assert.throws(() => validateRegistryUrl('http://registry.lap.sh'), /must use HTTPS/);
+    assert.throws(() => validateRegistryUrl('http://localhost:8787@evil.example'), /credentials/);
+    assert.throws(() => validateRegistryUrl('http://127.0.0.1@evil.example'), /credentials/);
+  });
+
+  it('rejects credentials, query strings, fragments, and malformed registry URLs', () => {
+    assert.throws(() => validateRegistryUrl('https://user:pass@registry.lap.sh'), /credentials/);
+    assert.throws(() => validateRegistryUrl('https://registry.lap.sh?tenant=other'), /query string/);
+    assert.throws(() => validateRegistryUrl('https://registry.lap.sh/#other'), /query string/);
+    assert.throws(() => validateRegistryUrl('not a URL'), /valid absolute URL/);
+  });
+});
+
+// ── Browser open ─────────────────────────────────────────────────────────────
+
+describe('Browser open', () => {
+  it('passes an untrusted authentication URL as one argument without a shell', () => {
+    const maliciousUrl = 'https://example.com/"; touch /tmp/pwned; #';
+    const launch = getBrowserLaunchCommand(maliciousUrl, 'linux');
+
+    assert.strictEqual(launch.command, 'xdg-open');
+    assert.deepStrictEqual(launch.args, [new URL(maliciousUrl).href]);
+  });
+
+  it('uses shell-free browser executables on every supported platform', () => {
+    const authUrl = 'https://example.com/authorize?state=a&next=b';
+
+    assert.deepStrictEqual(getBrowserLaunchCommand(authUrl, 'linux'), {
+      command: 'xdg-open',
+      args: [authUrl],
+    });
+    assert.deepStrictEqual(getBrowserLaunchCommand(authUrl, 'darwin'), {
+      command: 'open',
+      args: [authUrl],
+    });
+    assert.deepStrictEqual(getBrowserLaunchCommand(authUrl, 'win32'), {
+      command: 'rundll32.exe',
+      args: ['url.dll,FileProtocolHandler', authUrl],
+    });
+  });
+
+  it('rejects malformed or non-web authentication URLs', () => {
+    assert.throws(() => validateAuthUrl(undefined), /valid absolute URL/);
+    assert.throws(() => validateAuthUrl('not a URL'), /valid absolute URL/);
+    assert.throws(() => validateAuthUrl('file:///tmp/pwned'), /valid absolute URL/);
+    assert.throws(() => validateAuthUrl('javascript:alert(1)'), /valid absolute URL/);
+    assert.throws(() => validateAuthUrl('http://evil.example/authorize'), /must use HTTPS/);
+    assert.throws(() => validateAuthUrl('https://user:pass@example.com/authorize'), /credentials/);
+    assert.strictEqual(
+      validateAuthUrl('http://[::1]:8787/authorize'),
+      'http://[::1]:8787/authorize',
+    );
   });
 });
 

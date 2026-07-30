@@ -6,9 +6,11 @@ Credentials stored in ~/.lap/credentials.json.
 """
 
 import json
+import ipaddress
 import os
 import stat
 import sys
+import urllib.parse
 import urllib.request
 import urllib.error
 import webbrowser
@@ -24,9 +26,55 @@ CREDENTIALS_DIR = Path.home() / ".lap"
 CREDENTIALS_FILE = CREDENTIALS_DIR / "credentials.json"
 
 
+def _validate_web_url(value, *, label, allow_query=True):
+    """Validate a web URL, allowing plaintext HTTP only for loopback hosts."""
+    if not isinstance(value, str) or not value or value != value.strip():
+        raise ValueError(f"{label} must be a valid absolute URL")
+    if "\\" in value or any(ord(char) < 0x20 or ord(char) == 0x7f for char in value):
+        raise ValueError(f"{label} must be a valid absolute URL")
+
+    try:
+        parsed = urllib.parse.urlsplit(value)
+        hostname = parsed.hostname
+        # Accessing port forces urllib to reject malformed/out-of-range ports.
+        parsed.port
+    except ValueError as exc:
+        raise ValueError(f"{label} must be a valid absolute URL") from exc
+
+    if not hostname:
+        raise ValueError(f"{label} must be a valid absolute URL")
+    if parsed.username is not None or parsed.password is not None:
+        raise ValueError(f"{label} must not contain credentials")
+    if not allow_query and (parsed.query or parsed.fragment):
+        raise ValueError(f"{label} must not contain a query string or fragment")
+
+    is_loopback = hostname.lower() == "localhost"
+    if not is_loopback:
+        try:
+            is_loopback = ipaddress.ip_address(hostname).is_loopback
+        except ValueError:
+            pass
+
+    if parsed.scheme == "https":
+        return value
+    if parsed.scheme == "http" and is_loopback:
+        return value
+    raise ValueError(f"{label} must use HTTPS (HTTP is allowed only for loopback development)")
+
+
+def validate_registry_url(value):
+    """Validate a registry base URL and normalize trailing slashes."""
+    return _validate_web_url(value, label="Registry URL", allow_query=False).rstrip("/")
+
+
+def validate_auth_url(value):
+    """Validate a browser authentication URL returned by the registry."""
+    return _validate_web_url(value, label="Authentication URL")
+
+
 def get_registry_url():
-    """Get registry URL from env or default."""
-    return os.environ.get("LAP_REGISTRY", DEFAULT_REGISTRY).rstrip("/")
+    """Get and validate the registry URL from the environment or default."""
+    return validate_registry_url(os.environ.get("LAP_REGISTRY", DEFAULT_REGISTRY))
 
 
 # ── Credentials ─────────────────────────────────────────────────────

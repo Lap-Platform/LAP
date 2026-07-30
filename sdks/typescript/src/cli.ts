@@ -34,6 +34,7 @@ import {
   pollSseStream,
   openBrowser,
   getRegistryUrl,
+  validateRegistryUrl as validateRegistryUrlFromAuth,
 } from './auth';
 import { parse } from './parser';
 import { toLap } from './serializer';
@@ -211,13 +212,7 @@ export function isValidSkillName(name: string): boolean {
 }
 
 export function validateRegistryUrl(url: string): string {
-  const localPrefixes = ['http://localhost:', 'http://localhost/', 'http://127.0.0.1:', 'http://127.0.0.1/'];
-  for (const prefix of localPrefixes) {
-    if (url.startsWith(prefix)) return url;
-  }
-  if (url === 'http://localhost' || url === 'http://127.0.0.1') return url;
-  if (!url.startsWith('https://')) throw new Error(`Registry URL must use HTTPS: ${url}`);
-  return url;
+  return validateRegistryUrlFromAuth(url);
 }
 
 // ── Auth Commands ───────────────────────────────────────────────────
